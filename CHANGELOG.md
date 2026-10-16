@@ -6,6 +6,8 @@ All notable changes to Obtainium+ are documented in this file.
 
 ### ✨ Improvements
 
+- **Floating Nav Bar Depth**: The floating pill nav bar now has proper layered shadows (ambient + key + primary tint glow) that render outside the pill clip, an inner top-edge highlight for depth, and a blur sigma increase for a richer frosted feel. Tab-switch animation speed now adapts to the enhanced-animations setting.
+- **Settings Density Modes**: Compact and comfortable layout modes now produce structurally distinct results. Comfortable mode: grid toggle tiles show a description subtitle, taller touch targets, and more breathing room between card groups. Compact mode: 3-column grid, tighter padding, and dense list tiles. Section header labels switch from ALL-CAPS to sentence-case across all settings components.
 - **Unified Installer Picker**: The separate Shizuku and Root toggles in Installation settings have been replaced by a single radio selector showing System, Shizuku, and Root options, each with a one-line description and a live "Available / Unavailable" chip for Shizuku. Shizuku sub-options (Pretend to be Google Play, Fallback to System, Binder test) appear inline when Shizuku is selected.
 - **Setting Descriptions**: Per-app settings switches and text fields now show a permanent one-line description below the label, so you no longer have to long-press to find out what a setting does. Covered settings include: Auto-filter by architecture, Version detection, APK filter inversion, Fallback to older releases, Refresh before download, Allow insecure connections, Exempt from background updates, Skip update notifications, Stay one version behind, and Shizuku pretend to be Google Play (per-app).
 

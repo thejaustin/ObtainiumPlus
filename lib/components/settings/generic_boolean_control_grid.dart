@@ -34,13 +34,17 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
     return Consumer2<T, PlusSettingsProvider>(
       builder: (context, provider, plusSettings, child) {
         final colorScheme = Theme.of(context).colorScheme;
+        final isCompact = plusSettings.plusUseCompactSettings;
         final screenWidth = MediaQuery.of(context).size.width;
-        final crossAxisCount = screenWidth > 600 ? 3 : 2;
+        final crossAxisCount = screenWidth > 600 ? 3 : (isCompact ? 3 : 2);
+        final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
+            ? plusSettings.plusSettingsCornerRadius
+            : plusSettings.plusGlobalCornerRadius;
 
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6.0),
+          padding: EdgeInsets.symmetric(vertical: isCompact ? 4.0 : 6.0),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(20.0),
+            borderRadius: BorderRadius.circular(cardRadius),
             child: ConditionalBlur(
               sigma: 10,
               enabled: plusSettings.plusEnableGlassmorphism,
@@ -49,7 +53,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
                     ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20.0),
+                  borderRadius: BorderRadius.circular(cardRadius),
                   side: BorderSide(
                     color: colorScheme.outlineVariant.withValues(
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.4 : 0.18,
@@ -58,17 +62,16 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                  padding: EdgeInsets.fromLTRB(16, isCompact ? 10 : 14, 16, isCompact ? 12 : 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Section header: upper-cased label with primary accent
                     Text(
-                      title.toUpperCase(),
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      title,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: colorScheme.primary,
-                        letterSpacing: 1.1,
+                        letterSpacing: 0.3,
                       ),
                     ),
                     // Non-scrolling card grid implemented via Column and Rows
@@ -78,7 +81,12 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                         children: settings.map((s) {
                           final val = s.getValue(provider);
                           return SwitchListTile.adaptive(
-                            secondary: Icon(s.icon),
+                            dense: isCompact,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: isCompact ? 0 : 2,
+                            ),
+                            secondary: Icon(s.icon, size: isCompact ? 20 : 24),
                             title: Text(
                               s.label,
                               style: Theme.of(context)
@@ -87,7 +95,12 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                                   ?.copyWith(fontWeight: FontWeight.w500),
                             ),
                             subtitle: s.description != null
-                                ? Text(s.description!)
+                                ? Text(
+                                    s.description!,
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                    ),
+                                  )
                                 : null,
                             value: val,
                             onChanged: (v) {
@@ -117,6 +130,8 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                                           ? _GridToggleItem<T>(
                                               setting: settings[i + j],
                                               provider: provider,
+                                              isCompact: isCompact,
+                                              cardRadius: cardRadius,
                                             )
                                           : const SizedBox.shrink(),
                                     ),
@@ -150,8 +165,15 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
   })
   setting;
   final T provider;
+  final bool isCompact;
+  final double cardRadius;
 
-  const _GridToggleItem({required this.setting, required this.provider});
+  const _GridToggleItem({
+    required this.setting,
+    required this.provider,
+    this.isCompact = false,
+    this.cardRadius = 20,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -161,6 +183,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
     final animsEnabled = context
         .watch<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
+    final tileRadius = (cardRadius * 0.6).clamp(8.0, 16.0);
 
     return ScaleTouchWrapper(
       child: AnimatedContainer(
@@ -170,7 +193,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
         color: value
             ? colorScheme.primaryContainer.withValues(alpha: 0.45)
             : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(tileRadius),
         border: Border.all(
           color: value
               ? colorScheme.primary.withValues(alpha: 0.55)
@@ -180,15 +203,18 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(tileRadius),
         child: InkWell(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(tileRadius),
           onTap: () {
             AppHaptics.selectionClick();
             setting.setValue(provider, !value);
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 8 : 10,
+              vertical: isCompact ? 6 : 10,
+            ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -245,7 +271,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 5),
+                SizedBox(height: isCompact ? 4 : 6),
                 Text(
                   setting.label,
                   style: theme.textTheme.labelSmall?.copyWith(
@@ -257,6 +283,20 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (!isCompact && setting.description != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    setting.description!,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      color: colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.normal,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ],
             ),
           ),

@@ -196,16 +196,16 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                     children: [
                       if (widget.icon != null) ...[
                         Container(
-                          width: 28,
-                          height: 28,
+                          width: 32,
+                          height: 32,
                           decoration: BoxDecoration(
                             color: colorScheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(9),
                           ),
                           child: Icon(
                             widget.icon,
                             color: colorScheme.primary,
-                            size: 16,
+                            size: 17,
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -215,12 +215,12 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.title!.toUpperCase(),
-                              style: Theme.of(context).textTheme.labelMedium
+                              widget.title!,
+                              style: Theme.of(context).textTheme.labelLarge
                                   ?.copyWith(
                                     color: colorScheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.2,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
                                   ),
                             ),
                             if (widget.description != null ||
@@ -255,7 +255,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             curve: Curves.easeOutCubic,
             child: Card(
             elevation: 0,
-            margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
+            margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 6),
             color: colorScheme.surfaceContainerLow
                     .withValues(
                       alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,

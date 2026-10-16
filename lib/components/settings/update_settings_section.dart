@@ -787,12 +787,11 @@ class UpdateSettingsSection extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
+        title,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
           color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-          fontSize: 12,
-          letterSpacing: 1.2,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
         ),
       ),
     );

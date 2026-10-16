@@ -618,63 +618,73 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(32),
-              child: ConditionalBlur(
-                enabled: enableGlass,
-                sigma: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHigh.withValues(
-                      alpha: enableGlass ? 0.72 : 1.0,
-                    ),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(
-                        alpha: enableGlass ? 0.35 : 0.18,
-                      ),
-                    ),
-                    boxShadow: [
-                      // Ambient shadow — wide and soft
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 36,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 4),
-                      ),
-                      // Key shadow — tighter, more directional
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.14),
-                        blurRadius: 14,
-                        spreadRadius: -4,
-                        offset: const Offset(0, 10),
-                      ),
-                      // Tinted glow when frosted
-                      if (enableGlass)
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.06),
-                          blurRadius: 28,
-                          spreadRadius: 2,
-                          offset: Offset.zero,
-                        ),
-                    ],
+            // Shadows outside ClipRRect so they aren't clipped.
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(32),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 36,
+                    spreadRadius: 0,
+                    offset: const Offset(0, 4),
                   ),
-                  // Inner top-edge highlight — the "layered" depth layer
-                  foregroundDecoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        colorScheme.onSurface.withValues(
-                          alpha: enableGlass ? 0.06 : 0.04,
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.14),
+                    blurRadius: 14,
+                    spreadRadius: -4,
+                    offset: const Offset(0, 10),
+                  ),
+                  if (enableGlass)
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.06),
+                      blurRadius: 28,
+                      spreadRadius: 2,
+                      offset: Offset.zero,
+                    ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: ConditionalBlur(
+                  enabled: enableGlass,
+                  sigma: 20,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHigh.withValues(
+                        alpha: enableGlass ? 0.72 : 1.0,
+                      ),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: enableGlass ? 0.35 : 0.18,
                         ),
-                        Colors.transparent,
+                      ),
+                    ),
+                    child: Stack(
+                      children: [
+                        // Inner top-edge highlight beneath nav content
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  colorScheme.onSurface.withValues(
+                                    alpha: enableGlass ? 0.06 : 0.04,
+                                  ),
+                                  Colors.transparent,
+                                ],
+                                stops: const [0.0, 0.38],
+                              ),
+                            ),
+                          ),
+                        ),
+                        wrapWithFocus(navBar),
                       ],
-                      stops: const [0.0, 0.38],
                     ),
                   ),
-                  child: wrapWithFocus(navBar),
                 ),
               ),
             ),
