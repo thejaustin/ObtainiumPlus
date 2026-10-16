@@ -438,9 +438,8 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   });
                 },
                 decoration: InputDecoration(
-                  helperText: formItem.tooltip != null
-                      ? '${formItem.label}${formItem.required ? ' *' : ''} — ${formItem.tooltip}'
-                      : formItem.label + (formItem.required ? ' *' : ''),
+                  labelText: formItem.label + (formItem.required ? ' *' : ''),
+                  helperText: formItem.tooltip,
                   helperMaxLines: 3,
                   hintText: formItem.hint,
                 ),
@@ -553,14 +552,11 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(item.label),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       item.tooltip!,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurfaceVariant
-                            .withValues(alpha: 0.75),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],

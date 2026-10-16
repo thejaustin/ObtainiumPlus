@@ -13,6 +13,7 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
@@ -140,7 +141,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.tune_rounded,
@@ -168,7 +169,7 @@ class _InstallationSectionState extends State<InstallationSection>
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (detected != null) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 4),
                         Text(
                           'Detected: $detected',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -469,10 +470,10 @@ class _InstallationSectionState extends State<InstallationSection>
           ? Theme.of(context).colorScheme.onPrimaryContainer
           : Theme.of(context).colorScheme.onSurfaceVariant;
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: chipColor,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(99),
         ),
         child: Text(
           label,
@@ -494,41 +495,32 @@ class _InstallationSectionState extends State<InstallationSection>
       bool enabled = true,
     }) {
       final selected = currentMode == mode;
-      return InkWell(
-        onTap: enabled
-            ? () async {
-                if (mode == 'shizuku') {
-                  await onSelectShizuku();
-                } else {
-                  AppHaptics.selectionClick();
-                  behaviorSettings.useShizuku = false;
-                  behaviorSettings.installerMode = mode;
-                }
-              }
-            : null,
+      Future<void> onActivate() async {
+        if (mode == 'shizuku') {
+          await onSelectShizuku();
+        } else {
+          AppHaptics.selectionClick();
+          behaviorSettings.useShizuku = false;
+          behaviorSettings.installerMode = mode;
+        }
+      }
+
+      return ScaleTouchWrapper(
+        scaleDownFactor: 0.98,
+        onTap: enabled ? onActivate : null,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Radio<String>(
                 value: mode,
                 groupValue: currentMode,
-                onChanged: enabled
-                    ? (_) async {
-                        if (mode == 'shizuku') {
-                          await onSelectShizuku();
-                        } else {
-                          AppHaptics.selectionClick();
-                          behaviorSettings.useShizuku = false;
-                          behaviorSettings.installerMode = mode;
-                        }
-                      }
-                    : null,
+                onChanged: enabled ? (_) => onActivate() : null,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 visualDensity: VisualDensity.compact,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -554,7 +546,11 @@ class _InstallationSectionState extends State<InstallationSection>
                                       ? FontWeight.w600
                                       : FontWeight.normal,
                                   color: enabled
-                                      ? null
+                                      ? (selected
+                                          ? Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                          : null)
                                       : Theme.of(context)
                                           .colorScheme
                                           .onSurfaceVariant,
@@ -563,18 +559,18 @@ class _InstallationSectionState extends State<InstallationSection>
                         ),
                         if (chip != null) ...[
                           const SizedBox(width: 6),
-                          chip,
+                          AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 200),
+                            child: KeyedSubtree(key: ValueKey(chip.hashCode), child: chip),
+                          ),
                         ],
                       ],
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant
-                                .withValues(alpha: 0.75),
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                     ),
                   ],
@@ -590,7 +586,7 @@ class _InstallationSectionState extends State<InstallationSection>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 4),
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 2),
           child: Row(
             children: [
               Icon(
@@ -666,20 +662,24 @@ class _InstallationSectionState extends State<InstallationSection>
                   ),
                   child: Material(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(
+                      (plusSettings.plusSettingsCornerRadius * 0.5).clamp(8.0, 20.0),
+                    ),
                     child: Ink(
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme
                             .surfaceContainerHighest
-                            .withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(12),
+                            .withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(
+                          (plusSettings.plusSettingsCornerRadius * 0.5).clamp(8.0, 20.0),
+                        ),
                         border: Border(
                           left: BorderSide(
                             color: Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withValues(alpha: 0.6),
+                                .withValues(alpha: AppConstants.moderate),
                             width: 3,
                           ),
                         ),
@@ -824,16 +824,33 @@ class _InstallationSectionState extends State<InstallationSection>
               : const SizedBox.shrink(),
         ),
 
-        if (currentMode == 'shizuku' && behaviorSettings.shizukuFallbackToSystem)
-          Padding(
+        AnimatedOpacity(
+          opacity: (currentMode == 'shizuku' && behaviorSettings.shizukuFallbackToSystem) ? 1.0 : 0.0,
+          duration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations
+                ? AppConstants.mediumAnimationMs
+                : 0,
+          ),
+          child: Padding(
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
-            child: Text(
-              tr('installerFallbackLabel'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.swap_horiz_rounded,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  tr('installerFallbackLabel'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
             ),
           ),
+        ),
       ],
     );
   }
