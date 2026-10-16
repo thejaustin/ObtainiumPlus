@@ -607,7 +607,10 @@ class _AppPageState extends State<AppPage> {
                                 ),
                                 if (changeLogFn != null || app?.app.releaseDate != null) ...[
                                   const SizedBox(height: 6),
-                                  InkWell(
+                                  ScaleTouchWrapper(
+                                    hapticOnPressDown: changeLogFn != null,
+                                    scaleDownFactor: 0.90,
+                                    child: InkWell(
                                     borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                                     onTap: changeLogFn != null
                                         ? () {
@@ -641,6 +644,7 @@ class _AppPageState extends State<AppPage> {
                                         ],
                                       ),
                                     ),
+                                  ),
                                   ),
                                 ],
                               ],
@@ -1261,7 +1265,10 @@ class _AppPageState extends State<AppPage> {
                           : null,
                     ),
                     child: app?.icon != null
-                        ? InkWell(
+                        ? ScaleTouchWrapper(
+                            hapticOnPressDown: app != null,
+                            scaleDownFactor: 0.92,
+                            child: InkWell(
                             onTap: app == null
                                 ? null
                                 : () => pm.openApp(app.app.id),
@@ -1276,6 +1283,7 @@ class _AppPageState extends State<AppPage> {
                                 filterQuality: FilterQuality.medium,
                               ),
                             ),
+                          ),
                           )
                         : AppIconShimmer(
                             size: iconSize,
@@ -1327,7 +1335,10 @@ class _AppPageState extends State<AppPage> {
           ),
         ),
         const SizedBox(height: 16),
-        InkWell(
+        ScaleTouchWrapper(
+          hapticOnPressDown: app?.app.url != null,
+          scaleDownFactor: 0.95,
+          child: InkWell(
           onTap: () {
             if (app?.app.url != null) {
               launchUrlString(
@@ -1351,6 +1362,7 @@ class _AppPageState extends State<AppPage> {
               color: Theme.of(context).colorScheme.secondary,
               decoration: TextDecoration.underline,
             ),
+          ),
           ),
         ),
         getInfoColumn(),

@@ -925,6 +925,7 @@ class _AppListTileState extends State<AppListTile>
           ),
         ),
       ),
+        ),
       ),
     );
   }
