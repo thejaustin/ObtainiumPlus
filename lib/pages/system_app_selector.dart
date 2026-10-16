@@ -366,7 +366,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       const SizedBox(width: 8),
                       ScaleTouchWrapper(
                         scaleDownFactor: 0.92,
-                        onTap: () => addLabel(controller.text),
+                        hapticOnPressDown: true,
                         child: IconButton.filled(
                           icon: const Icon(Icons.add),
                           tooltip: tr('add'),
