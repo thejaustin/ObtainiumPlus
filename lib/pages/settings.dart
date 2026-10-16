@@ -18,6 +18,7 @@ import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/utils/locale_constants.dart';
@@ -651,14 +652,18 @@ class _SettingsHeaderCard extends StatelessWidget {
             ),
           ),
           ...links.map(
-            (l) => IconButton.filledTonal(
-              tooltip: l.label,
-              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-              icon: Icon(l.icon),
-              onPressed: () {
-                AppHaptics.selectionClick();
-                _openSettingsUrl(l.url);
-              },
+            (l) => ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.90,
+              child: IconButton.filledTonal(
+                tooltip: l.label,
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                icon: Icon(l.icon),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  _openSettingsUrl(l.url);
+                },
+              ),
             ),
           ),
         ],
