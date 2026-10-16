@@ -174,11 +174,11 @@ class GlassDialog extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
             surfaceColor.withValues(alpha: AppOpacity.low),
-            surfaceColor.withValues(alpha: AppOpacity.medium),
+            theme.colorScheme.primaryContainer.withValues(alpha: 0.12),
           ],
         ),
         border: Border(

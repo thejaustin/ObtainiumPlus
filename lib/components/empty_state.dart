@@ -85,13 +85,15 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        colorScheme.primaryContainer.withValues(alpha: 0.35),
-                        colorScheme.tertiaryContainer.withValues(alpha: 0.2),
+                        colorScheme.primaryContainer.withValues(alpha: 0.55),
+                        colorScheme.secondaryContainer.withValues(alpha: 0.35),
+                        colorScheme.tertiaryContainer.withValues(alpha: 0.28),
                       ],
+                      stops: [0.0, 0.5, 1.0],
                     ),
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.25),
+                      color: colorScheme.primary.withValues(alpha: 0.38),
                       width: 2,
                     ),
                     boxShadow: AppShadows.glow(

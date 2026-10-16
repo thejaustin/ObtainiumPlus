@@ -549,6 +549,11 @@ class ThemeSettingsSection extends StatelessWidget {
       ('Amber', const Color(0xFFE8710A)),
       ('Midnight', const Color(0xFF3F51B5)),
       ('Slate', const Color(0xFF4E5D6C)),
+      ('Coral', const Color(0xFFFF4040)),
+      ('Cosmic', const Color(0xFF7C4DFF)),
+      ('Sakura', const Color(0xFFE91E63)),
+      ('Aurora', const Color(0xFF00BFA5)),
+      ('Solar', const Color(0xFFFF6D00)),
     ];
 
     return Consumer<ThemeSettingsProvider>(

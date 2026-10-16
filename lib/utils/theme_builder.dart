@@ -421,11 +421,11 @@ class ThemeBuilder {
       backgroundColor: colorScheme.surfaceContainer,
       surfaceTintColor: Colors.transparent,
       elevation: 3,
-      indicatorColor: colorScheme.secondaryContainer,
+      indicatorColor: colorScheme.primaryContainer,
       indicatorShape: const StadiumBorder(),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return IconThemeData(color: colorScheme.onSecondaryContainer);
+          return IconThemeData(color: colorScheme.onPrimaryContainer);
         }
         return IconThemeData(color: colorScheme.onSurfaceVariant);
       }),
@@ -458,8 +458,8 @@ class ThemeBuilder {
       titleTextStyle: TextStyle(
         color: colorScheme.onSurface,
         fontSize: 22,
-        fontWeight: FontWeight.w400,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.15,
       ),
     );
   }
@@ -499,10 +499,10 @@ class ThemeBuilder {
   ) {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
-      selectedColor: colorScheme.secondaryContainer,
+      selectedColor: colorScheme.primaryContainer,
       disabledColor: colorScheme.onSurface.withValues(alpha: AppOpacity.hint),
       labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-      secondaryLabelStyle: TextStyle(color: colorScheme.onSecondaryContainer),
+      secondaryLabelStyle: TextStyle(color: colorScheme.onPrimaryContainer),
       shape: expressive
           ? const StadiumBorder()
           : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

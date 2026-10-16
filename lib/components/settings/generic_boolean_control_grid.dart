@@ -195,8 +195,8 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  colorScheme.primaryContainer.withValues(alpha: 0.58),
-                  colorScheme.primary.withValues(alpha: 0.10),
+                  colorScheme.primaryContainer.withValues(alpha: 0.72),
+                  colorScheme.primary.withValues(alpha: 0.16),
                 ],
               )
             : LinearGradient(
