@@ -18,7 +18,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
-class AppListTile extends StatelessWidget {
+class AppListTile extends StatefulWidget {
   final AppInMemory appInMemory;
   final bool hasUpdate;
   final VoidCallback? onTap;
@@ -28,6 +28,7 @@ class AppListTile extends StatelessWidget {
   // When provided, overrides the AppsProvider-based selection check.
   // Use this when the caller manages selection state locally (e.g. CategorySections).
   final bool? selected;
+  final Duration entranceDelay;
 
   const AppListTile({
     super.key,
@@ -38,7 +39,69 @@ class AppListTile extends StatelessWidget {
     this.onShowChanges,
     this.categoryColor,
     this.selected,
+    this.entranceDelay = Duration.zero,
   });
+
+  @override
+  State<AppListTile> createState() => _AppListTileState();
+}
+
+class _AppListTileState extends State<AppListTile>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _entranceController;
+  late final Animation<double> _entranceFade;
+  late final Animation<Offset> _entranceSlide;
+
+  @override
+  void initState() {
+    super.initState();
+    _entranceController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _entranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
+    );
+    _entranceSlide = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _entranceController,
+        curve: AppConstants.expressiveDecelerate,
+      ),
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final animsEnabled =
+          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      if (!animsEnabled) {
+        _entranceController.value = 1.0;
+        return;
+      }
+      if (widget.entranceDelay == Duration.zero) {
+        _entranceController.forward();
+      } else {
+        Future.delayed(widget.entranceDelay, () {
+          if (mounted) _entranceController.forward();
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
+  }
+
+  AppInMemory get appInMemory => widget.appInMemory;
+  bool get hasUpdate => widget.hasUpdate;
+  VoidCallback? get onTap => widget.onTap;
+  VoidCallback? get onLongPress => widget.onLongPress;
+  VoidCallback? get onShowChanges => widget.onShowChanges;
+  Color? get categoryColor => widget.categoryColor;
+  bool? get selected => widget.selected;
 
   @override
   Widget build(BuildContext context) {
@@ -367,7 +430,11 @@ class AppListTile extends StatelessWidget {
     );
 
     // --- MODERN UI ---
-    return RepaintBoundary(
+    return FadeTransition(
+      opacity: _entranceFade,
+      child: SlideTransition(
+        position: _entranceSlide,
+        child: RepaintBoundary(
       child: Semantics(
         label:
             '${appInMemory.name}${viewSettings.displayShowAuthor ? ' ${tr('byX', args: [appInMemory.author])}' : ''}. ${hasUpdate ? tr('updateAvailable') : ''} ${appInMemory.app.installedVersion ?? tr('notInstalled')}',
@@ -375,8 +442,6 @@ class AppListTile extends StatelessWidget {
         onTap: onTap,
         onLongPress: onLongPress,
         child: ScaleTouchWrapper(
-          onTap: onTap,
-          onLongPress: onLongPress,
           scaleDownFactor: 0.98,
           hapticOnPressDown: true,
           child: Padding(
@@ -859,6 +924,7 @@ class AppListTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
       ),
     );
   }

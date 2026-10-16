@@ -28,6 +28,7 @@ import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -461,13 +462,17 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   .toList(),
             ),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.settings_rounded),
-                tooltip: tr('settings'),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  pushRoute(context, const SettingsPage());
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  icon: const Icon(Icons.settings_rounded),
+                  tooltip: tr('settings'),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    pushRoute(context, const SettingsPage());
+                  },
+                ),
               ),
             ],
           ),

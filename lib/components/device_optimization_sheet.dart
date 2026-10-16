@@ -11,6 +11,7 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
@@ -400,10 +401,14 @@ class _DeviceOptimizationSheetContentState
                   ],
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.close_rounded),
-                tooltip: tr('close'),
-                onPressed: () => Navigator.of(context).pop(),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  tooltip: tr('close'),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
               ),
             ],
           ),
@@ -587,14 +592,18 @@ class _DeviceOptimizationSheetContentState
                               crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 if (_isBatteryUnrestricted != null) ...[
-                                  InkWell(
-                                    borderRadius: BorderRadius.circular(8),
-                                    onTap: _isBatteryUnrestricted == true
-                                        ? null
-                                        : () async {
-                                            AppHaptics.selectionClick();
-                                            await DeviceCompatibilityService.requestIgnoreBatteryOptimizations();
-                                            final unrestricted = await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+                                  ScaleTouchWrapper(
+                                    hapticOnPressDown:
+                                        _isBatteryUnrestricted != true,
+                                    scaleDownFactor: 0.90,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: _isBatteryUnrestricted == true
+                                          ? null
+                                          : () async {
+                                              AppHaptics.selectionClick();
+                                              await DeviceCompatibilityService.requestIgnoreBatteryOptimizations();
+                                              final unrestricted = await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
                                             if (mounted) {
                                               setState(() => _isBatteryUnrestricted = unrestricted);
                                             }
@@ -645,10 +654,15 @@ class _DeviceOptimizationSheetContentState
                                       ),
                                     ),
                                   ),
+                                  ),
                                 ],
-                                InkWell(
-                                  borderRadius: BorderRadius.circular(8),
-                                  onTap: () => _handleShizukuChipTap(context),
+                                ScaleTouchWrapper(
+                                  hapticOnPressDown: true,
+                                  scaleDownFactor: 0.90,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(8),
+                                    onTap: () =>
+                                        _handleShizukuChipTap(context),
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -683,12 +697,16 @@ class _DeviceOptimizationSheetContentState
                                     ),
                                   ),
                                 ),
+                                ),
                                 if (_shizukuStatus == ShizukuLiveStatus.active ||
                                     _binderLatencyMs != null ||
                                     _isTestingBinder)
-                                  InkWell(
-                                    borderRadius: BorderRadius.circular(8),
-                                    onTap: _testBinderLatency,
+                                  ScaleTouchWrapper(
+                                    hapticOnPressDown: !_isTestingBinder,
+                                    scaleDownFactor: 0.90,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: _testBinderLatency,
                                     child: Container(
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
@@ -729,17 +747,23 @@ class _DeviceOptimizationSheetContentState
                                       ),
                                     ),
                                   ),
-                                TextButton.icon(
-                                  style: TextButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 4,
-                                    ),
                                   ),
-                                  icon: const Icon(Icons.copy_rounded, size: 14),
-                                  label: Text(tr('copySpecs')),
-                                  onPressed: () => _copySpecsToClipboard(context),
+                                ScaleTouchWrapper(
+                                  hapticOnPressDown: true,
+                                  child: TextButton.icon(
+                                    style: TextButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                    ),
+                                    icon: const Icon(
+                                        Icons.copy_rounded, size: 14),
+                                    label: Text(tr('copySpecs')),
+                                    onPressed: () =>
+                                        _copySpecsToClipboard(context),
+                                  ),
                                 ),
                               ],
                             ),

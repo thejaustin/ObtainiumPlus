@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/utils/color_utils.dart' show generateRandomLightColor;
 import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/locale_utils.dart';
@@ -196,13 +198,16 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     Widget? icon,
   }) {
     final cs = Theme.of(context).colorScheme;
-    return Semantics(
-      button: true,
-      selected: selected,
-      child: TvFocusRing(
-        borderRadius: 24,
-        child: InkWell(
-          onTap: onTap,
+    return ScaleTouchWrapper(
+      hapticOnPressDown: onTap != null,
+      scaleDownFactor: 0.82,
+      child: Semantics(
+        button: true,
+        selected: selected,
+        child: TvFocusRing(
+          borderRadius: 24,
+          child: InkWell(
+            onTap: onTap,
           customBorder: const CircleBorder(),
           child: Container(
             width: 40,
@@ -231,6 +236,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -319,27 +325,37 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
               child: Row(
                 children: [
                   if (_isEditing)
-                    TextButton.icon(
-                      onPressed: _delete,
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(tr('remove')),
-                      style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.error,
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      child: TextButton.icon(
+                        onPressed: _delete,
+                        icon: const Icon(Icons.delete_outline),
+                        label: Text(tr('remove')),
+                        style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).colorScheme.error,
+                        ),
                       ),
                     ),
                   const Spacer(),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(tr('cancel')),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(tr('cancel')),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   ValueListenableBuilder<String>(
                     valueListenable: _nameNotifier,
                     builder: (context, value, _) {
                       final canSave = value.trim().isNotEmpty;
-                      return FilledButton(
-                        onPressed: canSave ? _save : null,
-                        child: Text(tr('continue')),
+                      return ScaleTouchWrapper(
+                        hapticOnPressDown: canSave,
+                        child: FilledButton(
+                          onPressed: canSave ? _save : null,
+                          child: Text(tr('continue')),
+                        ),
                       );
                     },
                   ),

@@ -185,6 +185,9 @@ class AppListView extends StatelessWidget {
             child: AppListTile(
               appInMemory: app,
               hasUpdate: hasUpdate,
+              entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                  ? Duration(milliseconds: index < 12 ? index * 30 : 0)
+                  : Duration.zero,
               onTap: () {
                 AppHaptics.selectionClick();
                 if (appsProvider.isSelectionMode) {
