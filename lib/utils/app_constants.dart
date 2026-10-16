@@ -40,6 +40,11 @@ class AppConstants {
   static const Curve expressiveEmphasized = Cubic(0.2, 0.0, 0, 1.0);
   static const Curve expressiveSmooth = Cubic(0.4, 0.0, 0.2, 1.0);
 
+  /// M3 spring-back curve — control points exceed y=1 to produce overshoot.
+  /// Use as the [reverseCurve] for press-release animations (e.g. ScaleTouchWrapper)
+  /// to give a genuine bounce-past-1 feel on release.
+  static const Curve expressiveSpring = Cubic(0.34, 1.56, 0.64, 1.0);
+
   // Spring Physics for Micro-interactions
   /// Spring physics for press animations
   static const SpringDescription pressSpring = SpringDescription(

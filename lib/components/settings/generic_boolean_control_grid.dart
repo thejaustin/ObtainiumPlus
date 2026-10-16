@@ -104,7 +104,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                                 : null,
                             value: val,
                             onChanged: (v) {
-                              AppHaptics.selectionClick();
+                              v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                               s.setValue(provider, v);
                             },
                           );
@@ -190,9 +190,23 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
       duration: Duration(milliseconds: animsEnabled ? 200 : 0),
       curve: Curves.easeOutCubic,
       decoration: BoxDecoration(
-        color: value
-            ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        gradient: value
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colorScheme.primaryContainer.withValues(alpha: 0.58),
+                  colorScheme.primary.withValues(alpha: 0.10),
+                ],
+              )
+            : LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
+                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
+                ],
+              ),
         borderRadius: BorderRadius.circular(tileRadius),
         border: Border.all(
           color: value
@@ -207,7 +221,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(tileRadius),
           onTap: () {
-            AppHaptics.selectionClick();
+            value ? AppHaptics.toggleOff() : AppHaptics.toggleOn();
             setting.setValue(provider, !value);
           },
           child: Padding(

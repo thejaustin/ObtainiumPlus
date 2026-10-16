@@ -278,12 +278,19 @@ class _AppGridTileState extends State<AppGridTile>
                           gradient: LinearGradient(
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
-                            colors: [
-                              _getSourceColor(context).withValues(alpha: 0.10),
-                              Colors.white.withValues(alpha: 0.05),
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.03),
-                            ],
+                            colors: Theme.of(context).brightness == Brightness.dark
+                                ? [
+                                    Colors.white.withValues(alpha: 0.08),
+                                    Colors.white.withValues(alpha: 0.02),
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.04),
+                                  ]
+                                : [
+                                    Colors.white.withValues(alpha: 0.38),
+                                    Colors.white.withValues(alpha: 0.12),
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.02),
+                                  ],
                             stops: const [0.0, 0.2, 0.6, 1.0],
                           ),
                         ),
@@ -301,7 +308,9 @@ class _AppGridTileState extends State<AppGridTile>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              Colors.white.withValues(alpha: 0.35),
+                              Colors.white.withValues(
+                                alpha: Theme.of(context).brightness == Brightness.dark ? 0.18 : 0.50,
+                              ),
                               Colors.white.withValues(alpha: 0.0),
                             ],
                           ),

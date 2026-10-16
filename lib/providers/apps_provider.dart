@@ -1736,7 +1736,7 @@ class AppsProvider with ChangeNotifier {
                     (_downloadCancellations[appId]?.isCancelled ?? false),
           );
       if (context != null && installedIds.isNotEmpty) {
-        AppHaptics.success();
+        AppHaptics.installSuccess();
       }
       return installedIds;
     } catch (errors) {

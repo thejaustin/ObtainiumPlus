@@ -514,7 +514,9 @@ class AppListTile extends StatelessWidget {
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
                                   colors: [
-                                    Colors.white.withValues(alpha: 0.3),
+                                    Colors.white.withValues(
+                                      alpha: Theme.of(context).brightness == Brightness.dark ? 0.18 : 0.50,
+                                    ),
                                     Colors.white.withValues(alpha: 0.0),
                                   ],
                                 ),

@@ -102,16 +102,17 @@ class GlassDialog extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context, bool enableGlass) {
     final theme = Theme.of(context);
-    final surfaceColor = theme.colorScheme.surfaceContainerHighest;
+    final colorScheme = theme.colorScheme;
+    final surfaceColor = colorScheme.surfaceContainerHighest;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [
-            surfaceColor.withValues(alpha: enableGlass ? 0.65 : 1.0),
-            surfaceColor.withValues(alpha: enableGlass ? 0.35 : 0.85),
+            colorScheme.primary.withValues(alpha: enableGlass ? 0.12 : 0.07),
+            surfaceColor.withValues(alpha: enableGlass ? 0.40 : 0.90),
           ],
         ),
         border: Border(

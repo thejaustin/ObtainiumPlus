@@ -47,14 +47,15 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     _isExpanded = widget.initiallyExpanded;
     _expandController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 300),
+      reverseDuration: const Duration(milliseconds: 220),
       value: widget.initiallyExpanded ? 1.0 : 0.0,
     );
     _iconTurnAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
       CurvedAnimation(
         parent: _expandController,
-        curve: Curves.easeOutCubic,
-        reverseCurve: Curves.easeInCubic,
+        curve: Easing.emphasizedDecelerate,
+        reverseCurve: Easing.emphasizedAccelerate,
       ),
     );
   }
@@ -316,10 +317,13 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         shape: const RoundedRectangleBorder(side: BorderSide.none),
         collapsedShape: const RoundedRectangleBorder(side: BorderSide.none),
         expansionAnimationStyle: AnimationStyle(
-          curve: Curves.easeOutCubic,
-          reverseCurve: Curves.easeInCubic,
+          curve: Easing.emphasizedDecelerate,
+          reverseCurve: Easing.emphasizedAccelerate,
           duration: Duration(
-            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0,
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 300 : 0,
+          ),
+          reverseDuration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 220 : 0,
           ),
         ),
         initiallyExpanded: widget.initiallyExpanded,

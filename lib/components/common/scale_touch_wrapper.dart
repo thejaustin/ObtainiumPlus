@@ -50,8 +50,8 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
           CurvedAnimation(
             parent: _controller,
             curve: Curves.easeIn,
-            // M3E spring: overshoots past 1.0 on release for a physical bounce
-            reverseCurve: AppConstants.expressiveDecelerate,
+            // Spring curve: y-control-points > 1.0 produce real overshoot on release.
+            reverseCurve: AppConstants.expressiveSpring,
           ),
         );
   }

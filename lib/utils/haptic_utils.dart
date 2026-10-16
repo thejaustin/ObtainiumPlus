@@ -49,19 +49,36 @@ class AppHaptics {
   /// Subtle cue fired when a UI element begins a shape morph transition.
   static void morphCue() => selectionClick();
 
-  /// Two successive impulses — for warnings or a "double confirm" feel.
-  /// Fires medium then light immediately (OS sequences them on Android).
-  static void warning() {
+  /// Two successive impulses — for warnings or "double confirm" feel.
+  /// Medium immediately, then light 60ms later so both beats are felt.
+  static Future<void> warning() async {
     if (!enabled) return;
     HapticFeedback.mediumImpact();
-    HapticFeedback.lightImpact();
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    if (enabled) HapticFeedback.lightImpact();
   }
 
-  /// Double-beat confirm — light then medium.
-  /// Communicates successful completion of a significant action.
-  static void doubleImpact() {
+  /// Double-beat confirm — light then medium, 60ms apart.
+  /// Communicates completion of a significant action (e.g. batch update done).
+  static Future<void> doubleImpact() async {
     if (!enabled) return;
     HapticFeedback.lightImpact();
-    HapticFeedback.mediumImpact();
+    await Future<void>.delayed(const Duration(milliseconds: 60));
+    if (enabled) HapticFeedback.mediumImpact();
   }
+
+  /// Install / update success: light tap → 80ms → medium confirm.
+  /// More satisfying than a single light tap for a successful install.
+  static Future<void> installSuccess() async {
+    if (!enabled) return;
+    HapticFeedback.lightImpact();
+    await Future<void>.delayed(const Duration(milliseconds: 80));
+    if (enabled) HapticFeedback.mediumImpact();
+  }
+
+  /// Switch toggled ON — slightly heavier than off to feel more decisive.
+  static void toggleOn() => mediumImpact();
+
+  /// Switch toggled OFF — lighter, less assertive than on.
+  static void toggleOff() => lightImpact();
 }
