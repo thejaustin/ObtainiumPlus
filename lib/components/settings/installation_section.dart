@@ -368,302 +368,380 @@ class _InstallationSectionState extends State<InstallationSection>
               onChanged: (v) => behaviorSettings.removeOnExternalUninstall = v,
             ),
 
-          // Shizuku / Sui / ShizukuPlus
-          if (_matches(tr('useShizuku'))) ...[
-            SwitchListTile.adaptive(
-              secondary: Icon(
-                _installedShizukuPkg == AppConstants.shizukuPlusId
-                    ? Icons.electric_bolt_rounded
-                    : Icons.terminal_outlined,
-                color: behaviorSettings.useShizuku
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
+          // Installer method selector — unified radio picker replacing the old
+          // separate Shizuku and Root switches.
+          if (_matches(tr('useShizuku')) ||
+              _matches(tr('rootInstaller')) ||
+              _matches(tr('installMethod')) ||
+              _matches(tr('installerMethodLabel')) ||
+              _matches(tr('shizukuPretendToBeGooglePlay')) ||
+              _matches(tr('shizukuFallbackToSystem')) ||
+              _matches('binder') ||
+              !isSearching)
+            _buildInstallerMethodSelector(
+              context,
+              behaviorSettings,
+              plusSettings,
+            ),
+        ];
+
+        return ExpressiveSettingsGroup(
+          title: isSearching ? null : tr('installation'),
+          persistKey: 'installation',
+          icon: Icons.install_mobile_rounded,
+          isExpandable: !isSearching,
+          initiallyExpanded: true,
+          children: children,
+        );
+      },
+    );
+  }
+
+  /// Unified installer method picker — replaces the old separate Shizuku and
+  /// Root switches with a single radio group that also shows availability.
+  Widget _buildInstallerMethodSelector(
+    BuildContext context,
+    BehaviorSettingsProvider behaviorSettings,
+    PlusSettingsProvider plusSettings,
+  ) {
+    final currentMode = behaviorSettings.installerMode;
+    final shizukuAvailable =
+        _installedShizukuPkg != null && _isShizukuGranted;
+    final shizukuInstalled = _installedShizukuPkg != null;
+    final isShizukuPlus = _installedShizukuPkg == AppConstants.shizukuPlusId;
+    final hasExternal = behaviorSettings.externalInstallerPackage != null &&
+        behaviorSettings.externalInstallerPackage!.isNotEmpty;
+
+    Future<void> onSelectShizuku() async {
+      AppHaptics.selectionClick();
+      final shizukuInstaller = ShizukuInstaller(
+        SettingsProvider(behaviorSettings.prefs),
+      );
+      final resCode = await shizukuInstaller.checkPermissionWithRetry();
+      final isGranted =
+          resCode?.startsWith('authorized') == true ||
+          resCode?.startsWith('granted') == true;
+      if (isGranted) {
+        behaviorSettings.useShizuku = true;
+        behaviorSettings.installerMode = 'shizuku';
+        _checkShizukuStatus();
+        return;
+      }
+      behaviorSettings.useShizuku = false;
+      if (!context.mounted) return;
+      final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
+      if (pkg == null) {
+        _showError(context, ObtainiumError(tr('shizukuNotInstalled')));
+        return;
+      }
+      final isPlus = pkg == AppConstants.shizukuPlusId;
+      switch (resCode) {
+        case 'binder_not_found':
+        case 'services_not_found':
+        case null:
+          _showError(
+            context,
+            ObtainiumError(
+              isPlus
+                  ? tr('shizukuPlusServiceStopped')
+                  : tr('shizukuBinderNotFound'),
+            ),
+          );
+        case 'old_shizuku':
+          _showError(context, ObtainiumError(tr('shizukuOld')));
+        case 'old_android_with_adb':
+          _showError(
+            context,
+            ObtainiumError(tr('shizukuOldAndroidWithADB')),
+          );
+        case 'denied':
+          _showError(context, ObtainiumError(tr('shizukuPermissionDenied')));
+        default:
+          _showError(context, ObtainiumError(tr('shizukuBinderNotFound')));
+      }
+      _checkShizukuStatus();
+    }
+
+    Widget buildChip(String label, {bool available = true, Color? color}) {
+      final chipColor = color ??
+          (available
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).colorScheme.surfaceContainerHighest);
+      final textColor = available
+          ? Theme.of(context).colorScheme.onPrimaryContainer
+          : Theme.of(context).colorScheme.onSurfaceVariant;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(
+          color: chipColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+      );
+    }
+
+    Widget buildOption({
+      required String mode,
+      required IconData icon,
+      required String title,
+      required String description,
+      Widget? chip,
+      bool enabled = true,
+    }) {
+      final selected = currentMode == mode;
+      return InkWell(
+        onTap: enabled
+            ? () async {
+                if (mode == 'shizuku') {
+                  await onSelectShizuku();
+                } else {
+                  AppHaptics.selectionClick();
+                  behaviorSettings.useShizuku = false;
+                  behaviorSettings.installerMode = mode;
+                }
+              }
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Radio<String>(
+                value: mode,
+                groupValue: currentMode,
+                onChanged: enabled
+                    ? (_) async {
+                        if (mode == 'shizuku') {
+                          await onSelectShizuku();
+                        } else {
+                          AppHaptics.selectionClick();
+                          behaviorSettings.useShizuku = false;
+                          behaviorSettings.installerMode = mode;
+                        }
+                      }
+                    : null,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
               ),
-              title: Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      tr('useShizuku'),
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  if (_installedShizukuPkg != null) ...[
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _installedShizukuPkg == AppConstants.shizukuPlusId
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Theme.of(context).colorScheme.secondaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _installedShizukuPkg == AppConstants.shizukuPlusId
-                                ? Icons.electric_bolt_rounded
-                                : Icons.check_circle_outline_rounded,
-                            size: 11,
-                            color: _installedShizukuPkg == AppConstants.shizukuPlusId
-                                ? Theme.of(context).colorScheme.onPrimaryContainer
-                                : Theme.of(context).colorScheme.onSecondaryContainer,
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          icon,
+                          size: 16,
+                          color: selected && enabled
+                              ? Theme.of(context).colorScheme.primary
+                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(
+                                  fontWeight: selected
+                                      ? FontWeight.w600
+                                      : FontWeight.normal,
+                                  color: enabled
+                                      ? null
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .onSurfaceVariant,
+                                ),
                           ),
-                          const SizedBox(width: 3),
-                          Text(
-                            _installedShizukuPkg == AppConstants.shizukuPlusId
-                                ? 'ShizukuPlus'
-                                : 'Shizuku',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: _installedShizukuPkg == AppConstants.shizukuPlusId
-                                  ? Theme.of(context).colorScheme.onPrimaryContainer
-                                  : Theme.of(context).colorScheme.onSecondaryContainer,
-                            ),
-                          ),
+                        ),
+                        if (chip != null) ...[
+                          const SizedBox(width: 6),
+                          chip,
                         ],
-                      ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.75),
+                          ),
                     ),
                   ],
-                ],
+                ),
               ),
-              subtitle: Text(tr('useShizukuDescription')),
-              value: behaviorSettings.useShizuku,
-              onChanged: (enable) async {
-                AppHaptics.selectionClick();
-                if (!enable) {
-                  behaviorSettings.useShizuku = false;
-                  if (behaviorSettings.installerMode == 'shizuku') {
-                    behaviorSettings.installerMode = 'system';
-                  }
-                  return;
-                }
-                final shizukuInstaller = ShizukuInstaller(
-                  SettingsProvider(behaviorSettings.prefs),
-                );
-                final resCode =
-                    await shizukuInstaller.checkPermissionWithRetry();
-                final isGranted =
-                    resCode?.startsWith('authorized') == true ||
-                    resCode?.startsWith('granted') == true;
-                if (isGranted) {
-                  behaviorSettings.useShizuku = true;
-                  behaviorSettings.installerMode = 'shizuku';
-                  _checkShizukuStatus();
-                  return;
-                }
-                behaviorSettings.useShizuku = false;
-                if (!context.mounted) return;
+            ],
+          ),
+        ),
+      );
+    }
 
-                final pkg =
-                    await ShizukuInstaller.getInstalledShizukuPackageId();
-                if (pkg == null) {
-                  _showError(
-                    context,
-                    ObtainiumError(tr('shizukuNotInstalled')),
-                  );
-                  return;
-                }
-                final isPlus = pkg == AppConstants.shizukuPlusId;
-                switch (resCode) {
-                  case 'binder_not_found':
-                  case 'services_not_found':
-                  case null:
-                    _showError(
-                      context,
-                      ObtainiumError(
-                        isPlus
-                            ? tr('shizukuPlusServiceStopped')
-                            : tr('shizukuBinderNotFound'),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 4),
+          child: Row(
+            children: [
+              Icon(
+                Icons.install_mobile_rounded,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                tr('installerMethodLabel'),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+        ),
+
+        buildOption(
+          mode: 'system',
+          icon: Icons.android_rounded,
+          title: tr('installMethodSystem'),
+          description: tr('installMethodSystemDescription'),
+        ),
+
+        buildOption(
+          mode: 'shizuku',
+          icon: isShizukuPlus
+              ? Icons.electric_bolt_rounded
+              : Icons.terminal_outlined,
+          title: shizukuInstalled
+              ? (isShizukuPlus ? 'ShizukuPlus' : tr('installMethodShizuku'))
+              : tr('installMethodShizuku'),
+          description: shizukuAvailable
+              ? tr('installMethodShizukuDescription')
+              : shizukuInstalled
+                  ? tr('shizukuBinderNotFound')
+                  : tr('shizukuNotInstalled'),
+          chip: shizukuAvailable
+              ? buildChip(tr('installerAvailable'))
+              : buildChip(tr('installerUnavailable'), available: false),
+        ),
+
+        buildOption(
+          mode: 'root',
+          icon: Icons.admin_panel_settings_outlined,
+          title: tr('installMethodRoot'),
+          description: tr('installMethodRootDescription'),
+        ),
+
+        if (hasExternal)
+          buildOption(
+            mode: 'external',
+            icon: Icons.open_in_new_rounded,
+            title: tr('installMethodExternal'),
+            description: tr('installMethodExternalDescription'),
+          ),
+
+        // Shizuku sub-options — only shown when mode is shizuku
+        AnimatedSize(
+          duration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0,
+          ),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: currentMode == 'shizuku'
+              ? Padding(
+                  padding: const EdgeInsets.only(
+                    left: 20,
+                    right: 16,
+                    top: 4,
+                    bottom: 8,
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Ink(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .surfaceContainerHighest
+                            .withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border(
+                          left: BorderSide(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.6),
+                            width: 3,
+                          ),
+                        ),
                       ),
-                    );
-                  case 'old_shizuku':
-                    _showError(context, ObtainiumError(tr('shizukuOld')));
-                  case 'old_android_with_adb':
-                    _showError(
-                      context,
-                      ObtainiumError(tr('shizukuOldAndroidWithADB')),
-                    );
-                  case 'denied':
-                    _showError(
-                      context,
-                      ObtainiumError(tr('shizukuPermissionDenied')),
-                    );
-                  default:
-                    _showError(
-                      context,
-                      ObtainiumError(tr('shizukuBinderNotFound')),
-                    );
-                }
-                _checkShizukuStatus();
-              },
-            ),
-
-            if (behaviorSettings.useShizuku &&
-                plusSettings.plusSettingsUseHeroCards)
-              const ShizukuStatusCard(
-                margin: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              ),
-
-            // Animated nested child option: Shizuku Pretend to be Google Play
-            if (_matches(tr('shizukuPretendToBeGooglePlay')))
-              AnimatedSize(
-                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: behaviorSettings.useShizuku
-                    ? Padding(
-                        padding: const EdgeInsets.only(
-                          left: 20,
-                          right: 16,
-                          top: 4,
-                          bottom: 8,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border(
-                                left: BorderSide(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.6),
-                                  width: 3,
-                                ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (plusSettings.plusSettingsUseHeroCards)
+                            const ShizukuStatusCard(
+                              margin: EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 6,
                               ),
                             ),
-                            child: SwitchListTile.adaptive(
-                              dense: true,
-                              secondary: const Icon(Icons.shop_outlined, size: 20),
-                              title: Text(
-                                tr('shizukuPretendToBeGooglePlay'),
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              subtitle: Text(
-                                tr('shizukuPretendToBeGooglePlayDescription'),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              value: behaviorSettings.shizukuPretendToBeGooglePlay,
-                              onChanged: (v) {
-                                AppHaptics.selectionClick();
-                                behaviorSettings.shizukuPretendToBeGooglePlay = v;
-                              },
+
+                          SwitchListTile.adaptive(
+                            dense: true,
+                            secondary: const Icon(Icons.shop_outlined, size: 20),
+                            title: Text(
+                              tr('shizukuPretendToBeGooglePlay'),
+                              style:
+                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
                             ),
+                            subtitle: Text(
+                              tr('shizukuPretendToBeGooglePlayDescription'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            value: behaviorSettings.shizukuPretendToBeGooglePlay,
+                            onChanged: (v) {
+                              AppHaptics.selectionClick();
+                              behaviorSettings.shizukuPretendToBeGooglePlay = v;
+                            },
                           ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
 
-            // Animated nested child: Fallback to stock when binder unavailable
-            if (_matches(tr('shizukuFallbackToSystem'), isAdvanced: true))
-              AnimatedSize(
-                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: behaviorSettings.useShizuku
-                    ? Padding(
-                        padding: const EdgeInsets.only(
-                          left: 20,
-                          right: 16,
-                          top: 4,
-                          bottom: 4,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withValues(alpha: 0.35),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border(
-                                left: BorderSide(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .secondary
-                                      .withValues(alpha: 0.5),
-                                  width: 3,
-                                ),
-                              ),
+                          SwitchListTile.adaptive(
+                            dense: true,
+                            secondary:
+                                const Icon(Icons.swap_horiz_rounded, size: 20),
+                            title: Text(
+                              tr('shizukuFallbackToSystem'),
+                              style:
+                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                      ),
                             ),
-                            child: SwitchListTile.adaptive(
-                              dense: true,
-                              secondary: const Icon(Icons.swap_horiz_rounded, size: 20),
-                              title: Text(
-                                tr('shizukuFallbackToSystem'),
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              subtitle: Text(
-                                tr('shizukuFallbackToSystemDescription'),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              value: behaviorSettings.shizukuFallbackToSystem,
-                              onChanged: (v) {
-                                AppHaptics.selectionClick();
-                                behaviorSettings.shizukuFallbackToSystem = v;
-                              },
+                            subtitle: Text(
+                              tr('shizukuFallbackToSystemDescription'),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
+                            value: behaviorSettings.shizukuFallbackToSystem,
+                            onChanged: (v) {
+                              AppHaptics.selectionClick();
+                              behaviorSettings.shizukuFallbackToSystem = v;
+                            },
                           ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
 
-            // Animated nested child: Binder latency diagnostics button
-            if (_isShizukuGranted && _matches('shizuku binder latency diagnostics test'))
-              AnimatedSize(
-                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: behaviorSettings.useShizuku
-                    ? Padding(
-                        padding: const EdgeInsets.only(
-                          left: 20,
-                          right: 16,
-                          top: 4,
-                          bottom: 8,
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(12),
-                          child: Ink(
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .surfaceContainerHighest
-                                  .withValues(alpha: 0.25),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border(
-                                left: BorderSide(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .tertiary
-                                      .withValues(alpha: 0.5),
-                                  width: 3,
-                                ),
-                              ),
-                            ),
-                            child: ListTile(
+                          if (_isShizukuGranted)
+                            ListTile(
                               dense: true,
                               leading: Icon(
                                 Icons.speed_rounded,
@@ -671,7 +749,12 @@ class _InstallationSectionState extends State<InstallationSection>
                                 color: Theme.of(context).colorScheme.tertiary,
                               ),
                               title: AnimatedSwitcher(
-                                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                                duration: Duration(
+                                  milliseconds:
+                                      plusSettings.plusEnableEnhancedAnimations
+                                          ? 200
+                                          : 0,
+                                ),
                                 child: Text(
                                   _isTestingBinder
                                       ? tr('testingBinder')
@@ -688,28 +771,42 @@ class _InstallationSectionState extends State<InstallationSection>
                                             ? 'result_$_binderLatencyMs'
                                             : 'idle',
                                   ),
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w500,
-                                    color: _binderLatencyMs != null && !_isTestingBinder
-                                        ? (_binderLatencyMs! < 50
-                                            ? Theme.of(context).colorScheme.primary
-                                            : _binderLatencyMs! < 120
-                                                ? Theme.of(context).colorScheme.tertiary
-                                                : Theme.of(context).colorScheme.error)
-                                        : null,
-                                  ),
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: _binderLatencyMs != null &&
+                                                !_isTestingBinder
+                                            ? (_binderLatencyMs! < 50
+                                                ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                                : _binderLatencyMs! < 120
+                                                    ? Theme.of(context)
+                                                        .colorScheme
+                                                        .tertiary
+                                                    : Theme.of(context)
+                                                        .colorScheme
+                                                        .error)
+                                            : null,
+                                      ),
                                 ),
                               ),
                               trailing: _isTestingBinder
                                   ? const SizedBox(
                                       width: 20,
                                       height: 20,
-                                      child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                                      child: ExpressiveCircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
                                     )
                                   : FilledButton.tonal(
                                       style: FilledButton.styleFrom(
                                         visualDensity: VisualDensity.compact,
-                                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
                                       ),
                                       onPressed: () {
                                         AppHaptics.selectionClick();
@@ -721,53 +818,25 @@ class _InstallationSectionState extends State<InstallationSection>
                                       ),
                                     ),
                             ),
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
 
-          // Root Installation
-          if (_matches(tr('rootInstaller')))
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.security_rounded),
-              title: Text(
-                tr('rootInstaller'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('rootInstallerDescription')),
-              value: behaviorSettings.installerMode == 'root',
-              onChanged: (enable) async {
-                AppHaptics.selectionClick();
-                if (!enable) {
-                  behaviorSettings.installerMode = behaviorSettings.useShizuku
-                       ? 'shizuku'
-                      : 'system';
-                  return;
-                }
-                final hasRoot = await RootInstaller(
-                  SettingsProvider(behaviorSettings.prefs),
-                ).checkPermission();
-                if (!context.mounted) return;
-                if (hasRoot) {
-                  behaviorSettings.installerMode = 'root';
-                } else {
-                  _showError(context, ObtainiumError(tr('rootNotDetected')));
-                }
-              },
+        if (currentMode == 'shizuku' && behaviorSettings.shizukuFallbackToSystem)
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 8),
+            child: Text(
+              tr('installerFallbackLabel'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
             ),
-        ];
-
-        return ExpressiveSettingsGroup(
-          title: isSearching ? null : tr('installation'),
-          persistKey: 'installation',
-          icon: Icons.install_mobile_rounded,
-          isExpandable: !isSearching,
-          initiallyExpanded: true,
-          children: children,
-        );
-      },
+          ),
+      ],
     );
   }
 

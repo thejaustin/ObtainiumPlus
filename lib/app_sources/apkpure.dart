@@ -31,6 +31,7 @@ class APKPure extends AppSource {
         'stayOneVersionBehind',
         label: tr('stayOneVersionBehind'),
         value: false,
+        tooltip: tr('stayOneVersionBehindTooltip'),
       ),
     ],
     [
@@ -38,6 +39,7 @@ class APKPure extends AppSource {
         'useFirstApkOfVersion',
         label: tr('useFirstApkOfVersion'),
         value: true,
+        tooltip: tr('useFirstApkOfVersionTooltip'),
       ),
     ],
   ];

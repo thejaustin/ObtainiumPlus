@@ -4,6 +4,11 @@ All notable changes to Obtainium+ are documented in this file.
 
 ## [Unreleased]
 
+### ✨ Improvements
+
+- **Unified Installer Picker**: The separate Shizuku and Root toggles in Installation settings have been replaced by a single radio selector showing System, Shizuku, and Root options, each with a one-line description and a live "Available / Unavailable" chip for Shizuku. Shizuku sub-options (Pretend to be Google Play, Fallback to System, Binder test) appear inline when Shizuku is selected.
+- **Setting Descriptions**: Per-app settings switches and text fields now show a permanent one-line description below the label, so you no longer have to long-press to find out what a setting does. Covered settings include: Auto-filter by architecture, Version detection, APK filter inversion, Fallback to older releases, Refresh before download, Allow insecure connections, Exempt from background updates, Skip update notifications, Stay one version behind, and Shizuku pretend to be Google Play (per-app).
+
 ### 🐛 Bug Fixes & Polish
 
 - **403 Download Errors**: Apps that returned HTTP 403 on download now fail immediately with a clear error message instead of silently retrying three times (15-second waste per app). The probe step now checks the HTTP status code before proceeding, and the retry logic no longer retries client-error (4xx) responses. A 403 from bot-protection (e.g. Cloudflare) no longer shows as "try again in 1 minute" and no longer triggers the batch-update backoff meant for real rate limits.

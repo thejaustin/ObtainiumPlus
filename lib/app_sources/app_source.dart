@@ -203,6 +203,7 @@ abstract class AppSource {
       'fallbackToOlderReleases',
       label: tr('fallbackToOlderReleases'),
       value: true,
+      tooltip: tr('fallbackToOlderReleasesTooltip'),
     ),
   ];
 
@@ -230,6 +231,7 @@ abstract class AppSource {
         'versionDetection',
         label: tr('versionDetectionExplanation'),
         value: true,
+        tooltip: tr('versionDetectionTooltip'),
       ),
     ],
     [
@@ -256,6 +258,7 @@ abstract class AppSource {
         'invertAPKFilter',
         label: '${tr('invertRegEx')} (${tr('filterAPKsByRegEx')})',
         value: false,
+        tooltip: tr('invertAPKFilterTooltip'),
       ),
     ],
     [
@@ -263,6 +266,7 @@ abstract class AppSource {
         'autoApkFilterByArch',
         label: tr('autoApkFilterByArch'),
         value: true,
+        tooltip: tr('autoApkFilterByArchTooltip'),
       ),
     ],
     [
@@ -285,6 +289,7 @@ abstract class AppSource {
         'shizukuPretendToBeGooglePlay',
         label: tr('shizukuPretendToBeGooglePlay'),
         value: false,
+        tooltip: tr('shizukuPretendToBeGooglePlayPerAppTooltip'),
       ),
     ],
     [
@@ -292,6 +297,7 @@ abstract class AppSource {
         'allowInsecure',
         label: tr('allowInsecure'),
         value: false,
+        tooltip: tr('allowInsecureTooltip'),
       ),
     ],
     [
@@ -312,12 +318,14 @@ abstract class AppSource {
       GeneratedFormSwitch(
         'exemptFromBackgroundUpdates',
         label: tr('exemptFromBackgroundUpdates'),
+        tooltip: tr('exemptFromBackgroundUpdatesTooltip'),
       ),
     ],
     [
       GeneratedFormSwitch(
         'skipUpdateNotifications',
         label: tr('skipUpdateNotifications'),
+        tooltip: tr('skipUpdateNotificationsTooltip'),
       ),
     ],
     [GeneratedFormTextField('about', label: tr('about'), required: false)],
@@ -325,6 +333,7 @@ abstract class AppSource {
       GeneratedFormSwitch(
         'refreshBeforeDownload',
         label: tr('refreshBeforeDownload'),
+        tooltip: tr('refreshBeforeDownloadTooltip'),
       ),
     ],
   ];

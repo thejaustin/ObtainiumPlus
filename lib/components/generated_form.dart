@@ -51,6 +51,7 @@ class GeneratedFormTextField extends GeneratedFormItem {
     this.password = false,
     this.textInputType,
     this.autoCompleteOptions,
+    super.tooltip,
   });
 
   @override
@@ -71,6 +72,8 @@ class GeneratedFormTextField extends GeneratedFormItem {
       hint: hint,
       password: password,
       textInputType: textInputType,
+      autoCompleteOptions: autoCompleteOptions,
+      tooltip: tooltip,
     );
   }
 }
@@ -87,6 +90,7 @@ class GeneratedFormDropdown extends GeneratedFormItem {
     String super.defaultValue = '',
     this.disabledOptKeys,
     List<String? Function(String? value)> super.additionalValidators = const [],
+    super.tooltip,
   });
 
   @override
@@ -106,6 +110,7 @@ class GeneratedFormDropdown extends GeneratedFormItem {
           ? List.from(disabledOptKeys!)
           : null,
       additionalValidators: List.from(additionalValidators),
+      tooltip: tooltip,
     );
   }
 }
@@ -433,7 +438,10 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   });
                 },
                 decoration: InputDecoration(
-                  helperText: formItem.label + (formItem.required ? ' *' : ''),
+                  helperText: formItem.tooltip != null
+                      ? '${formItem.label}${formItem.required ? ' *' : ''} — ${formItem.tooltip}'
+                      : formItem.label + (formItem.required ? ' *' : ''),
+                  helperMaxLines: 3,
                   hintText: formItem.hint,
                 ),
                 minLines: formItem.max <= 1 ? null : formItem.max,
@@ -537,28 +545,30 @@ class _GeneratedFormState extends State<GeneratedForm> {
         final item = widget.items[r][e];
         String fieldKey = item.key;
         if (item is GeneratedFormSwitch) {
-          Widget labelWidget = Text(item.label);
-          if (item.tooltip != null) {
-            labelWidget = Tooltip(
-              message: item.tooltip!,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Flexible(child: Text(item.label)),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 16,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                  ),
-                ],
-              ),
-            );
-          }
+          // Show the description inline as a subtitle below the label so it
+          // is always visible without needing to long-press a tooltip icon.
+          final Widget labelWidget = item.tooltip != null
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(item.label),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.tooltip!,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurfaceVariant
+                            .withValues(alpha: 0.75),
+                      ),
+                    ),
+                  ],
+                )
+              : Text(item.label);
           formInputs[r][e] = Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Flexible(child: labelWidget),
               const SizedBox(width: 8),
