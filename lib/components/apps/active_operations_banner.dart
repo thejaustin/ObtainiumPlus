@@ -5,6 +5,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -232,7 +233,10 @@ class ActiveOperationsBanner extends StatelessWidget {
                                       EdgeInsets.symmetric(vertical: 8.0),
                                   child: Divider(height: 1),
                                 ),
-                              InkWell(
+                              ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                scaleDownFactor: 0.98,
+                                child: InkWell(
                                 borderRadius:
                                     BorderRadius.circular(innerRadius),
                                 onTap: () {
@@ -257,6 +261,7 @@ class ActiveOperationsBanner extends StatelessWidget {
                                     );
                                   },
                                 ),
+                              ),
                               ),
                             ],
                             if (activeDownloads.length > 2)
