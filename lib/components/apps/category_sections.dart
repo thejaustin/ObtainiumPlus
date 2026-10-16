@@ -222,6 +222,11 @@ class CategorySections extends StatelessWidget {
                 isAmbiguous:
                     app.app.additionalSettings['isAmbiguousUpdate'] == true,
                 categoryColor: categoryColor,
+                entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                    ? Duration(
+                        milliseconds: appIndex < 10 ? appIndex * 35 : 0,
+                      )
+                    : Duration.zero,
                 onTap: () {
                   if (selectedAppIds.isNotEmpty) {
                     toggleAppSelected(app.app);

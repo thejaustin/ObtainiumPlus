@@ -702,7 +702,9 @@ class _CommandCenterState extends State<CommandCenter> {
             padding: EdgeInsets.only(bottom: 8.0),
             child: const ExpressiveProgressIndicator(),
           ),
-        ..._discoverResults.entries.map((entry) {
+        ..._discoverResults.entries.indexed.map((idxEntry) {
+          final index = idxEntry.$1;
+          final entry = idxEntry.$2;
           final url = entry.key;
           final result = entry.value;
           final name = result.value.isNotEmpty ? result.value[0] : 'Unknown';
@@ -711,8 +713,23 @@ class _CommandCenterState extends State<CommandCenter> {
               ? plusSettings.plusHomeCornerRadius
               : plusSettings.plusGlobalCornerRadius;
           final itemRadius = (radius * 0.66).clamp(8.0, 16.0);
+          final staggerMs = animsEnabled
+              ? (120 + (index < 8 ? index * 40 : 0))
+              : 0;
 
-          return Padding(
+          return TweenAnimationBuilder<double>(
+            key: ValueKey(url),
+            duration: Duration(milliseconds: staggerMs),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutCubic,
+            builder: (context, t, child) => Opacity(
+              opacity: t,
+              child: Transform.translate(
+                offset: Offset(0, (1 - t) * 12),
+                child: child,
+              ),
+            ),
+            child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Material(
               color: theme.colorScheme.surfaceContainer,
@@ -809,6 +826,7 @@ class _CommandCenterState extends State<CommandCenter> {
                 ),
               ),
             ),
+          ),
           );
         }),
       ],
@@ -960,16 +978,20 @@ class _CommandCenterState extends State<CommandCenter> {
         : plusSettings.plusGlobalCornerRadius;
     final chipRadius = CardMetrics.inner(radius);
 
-    return ActionChip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
-      onPressed: () {
-        AppHaptics.selectionClick();
-        onPressed();
-      },
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(chipRadius),
+    return ScaleTouchWrapper(
+      hapticOnPressDown: true,
+      scaleDownFactor: 0.92,
+      child: ActionChip(
+        avatar: Icon(icon, size: 16),
+        label: Text(label),
+        onPressed: () {
+          AppHaptics.selectionClick();
+          onPressed();
+        },
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(chipRadius),
+        ),
       ),
     );
   }
@@ -998,11 +1020,14 @@ class _CommandCenterState extends State<CommandCenter> {
           final isSelected = !settings.searchDeselected.contains(src.name);
           return Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              selected: isSelected,
-              label: Text(src.name),
-              onSelected: (bool selected) {
-                AppHaptics.selectionClick();
+            child: ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.92,
+              child: FilterChip(
+                selected: isSelected,
+                label: Text(src.name),
+                onSelected: (bool selected) {
+                  AppHaptics.selectionClick();
                 final newList = List<String>.from(settings.searchDeselected);
                 if (selected) {
                   newList.remove(src.name);
@@ -1014,8 +1039,9 @@ class _CommandCenterState extends State<CommandCenter> {
                   _handleSearch(_query);
                 }
               },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(chipRadius),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(chipRadius),
+                ),
               ),
             ),
           );
