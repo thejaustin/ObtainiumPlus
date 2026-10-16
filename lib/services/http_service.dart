@@ -297,14 +297,24 @@ class HttpService {
       if (secs != null) return RateLimitError((secs / 60).ceil());
       return RateLimitError(1);
     }
-    // 403 Forbidden: treat as a rate limit only when the server says so via
-    // Retry-After.  Otherwise classify as a hard HTTP error so batch update
-    // loops don't back off and the user sees "403 Forbidden" (e.g. Cloudflare
-    // bot-protection) rather than the misleading "try again in 1 minute".
+    // 403 Forbidden: treat as a rate limit when the server says so explicitly
+    // (Retry-After header, or x-ratelimit-remaining: 0 as GitHub uses).
+    // Anything else is a hard access-denied error — not a transient rate limit —
+    // so batch update loops don't back off on Cloudflare blocks, and the user
+    // sees "403 Forbidden" rather than the misleading "try again in 1 minute".
     if (res.statusCode == 403) {
       final retryAfter = res.headers['retry-after'];
       final secs = retryAfter != null ? int.tryParse(retryAfter) : null;
       if (secs != null) return RateLimitError((secs / 60).ceil());
+      if (res.headers['x-ratelimit-remaining'] == '0') {
+        final reset = int.tryParse(res.headers['x-ratelimit-reset'] ?? '');
+        if (reset != null) {
+          final secsLeft =
+              reset - DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          return RateLimitError((secsLeft / 60).ceil().clamp(1, 60));
+        }
+        return RateLimitError(1);
+      }
       final reason =
           res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty
               ? res.reasonPhrase!
