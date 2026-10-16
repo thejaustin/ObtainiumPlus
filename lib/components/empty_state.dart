@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -129,20 +130,24 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                 if (widget.onActionPressed != null &&
                     widget.actionLabel != null) ...[
                   const SizedBox(height: 48),
-                  FilledButton.icon(
-                    onPressed: () {
-                      AppHaptics.selectionClick();
-                      widget.onActionPressed?.call();
-                    },
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size(220, 56),
-                    ),
-                    icon: const Icon(Icons.add_rounded),
-                    label: Text(
-                      widget.actionLabel!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.95,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        AppHaptics.selectionClick();
+                        widget.onActionPressed?.call();
+                      },
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size(220, 56),
+                      ),
+                      icon: const Icon(Icons.add_rounded),
+                      label: Text(
+                        widget.actionLabel!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ),
                   ),
@@ -150,16 +155,20 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
                 if (widget.onSecondaryActionPressed != null &&
                     widget.secondaryActionLabel != null) ...[
                   const SizedBox(height: 12),
-                  TextButton.icon(
-                    onPressed: () {
-                      AppHaptics.selectionClick();
-                      widget.onSecondaryActionPressed?.call();
-                    },
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(220, 48),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.95,
+                    child: TextButton.icon(
+                      onPressed: () {
+                        AppHaptics.selectionClick();
+                        widget.onSecondaryActionPressed?.call();
+                      },
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(220, 48),
+                      ),
+                      icon: const Icon(Icons.explore_rounded),
+                      label: Text(widget.secondaryActionLabel!),
                     ),
-                    icon: const Icon(Icons.explore_rounded),
-                    label: Text(widget.secondaryActionLabel!),
                   ),
                 ],
               ],

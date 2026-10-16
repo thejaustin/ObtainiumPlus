@@ -731,12 +731,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
                       curve: Curves.easeOutBack,
                       child: ScaleTouchWrapper(
-                        onTap: (_selectedCount == 0 || _isImporting)
-                            ? null
-                            : () {
-                                AppHaptics.selectionClick();
-                                _importSelectedApps(appsProvider);
-                              },
+                        hapticOnPressDown: _selectedCount > 0 && !_isImporting,
                         scaleDownFactor: 0.95,
                         child: Container(
                           decoration: BoxDecoration(
@@ -1088,12 +1083,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
               curve: Curves.easeOutBack,
               child: ScaleTouchWrapper(
-                onTap: (_selectedCount == 0 || _isImporting)
-                    ? null
-                    : () {
-                        AppHaptics.selectionClick();
-                        _importSelectedApps(appsProvider);
-                      },
+                hapticOnPressDown: _selectedCount > 0 && !_isImporting,
                 scaleDownFactor: 0.95,
                 child: Container(
                   decoration: BoxDecoration(
@@ -1187,6 +1177,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     final appLabels = _appLabels[pkg.packageName] ?? [];
 
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       elevation: 0,
@@ -1285,6 +1276,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     final appLabels = _appLabels[pkg.packageName] ?? [];
 
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: Card(
       elevation: 0,
       color: pkg.isSelected

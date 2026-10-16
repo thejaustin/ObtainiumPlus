@@ -285,7 +285,7 @@ class _OnboardingPageState extends State<OnboardingPage>
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: onTap != null ? ScaleTouchWrapper(child: card) : card,
+      child: onTap != null ? ScaleTouchWrapper(hapticOnPressDown: true, child: card) : card,
     );
   }
 
