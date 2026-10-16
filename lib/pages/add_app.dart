@@ -1188,6 +1188,7 @@ class AddAppPageState extends State<AddAppPage> {
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: ScaleTouchWrapper(
+                  hapticOnPressDown: true,
                   child: Material(
                   color: colorScheme.surfaceContainerHighest.withValues(
                     alpha: 0.3,

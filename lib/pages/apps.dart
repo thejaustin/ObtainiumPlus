@@ -785,6 +785,7 @@ class AppsPageState extends State<AppsPage>
     getUpdateButton(int appIndex) {
       return ScaleTouchWrapper(
         scaleDownFactor: 0.92,
+        hapticOnPressDown: !appsProvider.areDownloadsRunning(),
         child: IconButton.filledTonal(
           visualDensity: VisualDensity.compact,
           style: IconButton.styleFrom(
@@ -1575,9 +1576,10 @@ class AppsPageState extends State<AppsPage>
     }
 
     getMainBottomButtons() {
+      final hasObtainWork = getMassObtainFunction() != null;
       return [
         ScaleTouchWrapper(
-          onTap: getMassObtainFunction(),
+          hapticOnPressDown: hasObtainWork,
           child: IconButton(
             visualDensity: VisualDensity.compact,
             onPressed: getMassObtainFunction(),
@@ -1588,15 +1590,7 @@ class AppsPageState extends State<AppsPage>
           ),
         ),
         ScaleTouchWrapper(
-          onTap: selectedAppIds.isEmpty
-              ? null
-              : () {
-                  AppHaptics.heavyImpact();
-                  appsProvider.removeAppsWithModal(
-                    context,
-                    selectedApps.toList(),
-                  );
-                },
+          hapticOnPressDown: selectedAppIds.isNotEmpty,
           child: IconButton(
             visualDensity: VisualDensity.compact,
             onPressed: selectedAppIds.isEmpty
@@ -1613,12 +1607,7 @@ class AppsPageState extends State<AppsPage>
           ),
         ),
         ScaleTouchWrapper(
-          onTap: selectedAppIds.isEmpty
-              ? null
-              : () {
-                  AppHaptics.selectionClick();
-                  launchCategorizeDialog()?.call();
-                },
+          hapticOnPressDown: selectedAppIds.isNotEmpty,
           child: IconButton(
             visualDensity: VisualDensity.compact,
             onPressed: selectedAppIds.isEmpty ? null : launchCategorizeDialog(),
@@ -1627,12 +1616,7 @@ class AppsPageState extends State<AppsPage>
           ),
         ),
         ScaleTouchWrapper(
-          onTap: selectedAppIds.isEmpty
-              ? null
-              : () {
-                  AppHaptics.selectionClick();
-                  showMoreOptionsDialog();
-                },
+          hapticOnPressDown: selectedAppIds.isNotEmpty,
           child: IconButton(
             visualDensity: VisualDensity.compact,
             onPressed: selectedAppIds.isEmpty ? null : showMoreOptionsDialog,
@@ -1747,17 +1731,7 @@ class AppsPageState extends State<AppsPage>
           children: [
             getSelectAllButton(),
             ScaleTouchWrapper(
-              onTap: isFilterOff
-                  ? () {
-                      AppHaptics.selectionClick();
-                      showFilterDialog();
-                    }
-                  : () {
-                      AppHaptics.selectionClick();
-                      setState(() {
-                        filter = AppsFilter();
-                      });
-                    },
+              hapticOnPressDown: true,
               child: IconButton(
                 color: colorScheme.primary,
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
@@ -1781,12 +1755,7 @@ class AppsPageState extends State<AppsPage>
               ),
             ),
             ScaleTouchWrapper(
-              onTap: () {
-                AppHaptics.selectionClick();
-                viewSettings.globalViewMode = isGrid
-                    ? ViewMode.list
-                    : ViewMode.grid;
-              },
+              hapticOnPressDown: true,
               child: IconButton(
                 color: colorScheme.primary,
                 style: const ButtonStyle(visualDensity: VisualDensity.compact),
@@ -2262,6 +2231,7 @@ class AppsPageState extends State<AppsPage>
                   color: cs.surfaceContainer,
                   borderRadius: BorderRadius.circular(itemRadius),
                   child: ScaleTouchWrapper(
+                    hapticOnPressDown: !isPending,
                     child: ListTile(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(itemRadius),

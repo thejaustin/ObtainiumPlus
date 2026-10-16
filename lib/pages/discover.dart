@@ -326,6 +326,7 @@ class DiscoverPageState extends State<DiscoverPage> {
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       onTap: () {
         AppHaptics.selectionClick();
         _openAddApp(url);
@@ -440,6 +441,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                   ),
                 ),
               ScaleTouchWrapper(
+                hapticOnPressDown: true,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(cardRadius),
                   onTap: () {
