@@ -1,5 +1,6 @@
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'dart:convert';
@@ -128,15 +129,19 @@ class _StatisticsPageState extends State<StatisticsPage>
             future: _logsFuture,
             builder: (context, snapshot) {
               if (!snapshot.hasData) return const SizedBox.shrink();
-              return IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () => _exportStats(
-                  snapshot.data!,
-                  totalApps,
-                  installedApps,
-                  updatesAvailable,
+              return ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  icon: const Icon(Icons.share),
+                  onPressed: () => _exportStats(
+                    snapshot.data!,
+                    totalApps,
+                    installedApps,
+                    updatesAvailable,
+                  ),
+                  tooltip: tr('share'),
                 ),
-                tooltip: tr('share'),
               );
             },
           ),

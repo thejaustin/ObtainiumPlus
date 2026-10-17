@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 
@@ -242,11 +243,15 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
             color: cs.onSurfaceVariant.withValues(alpha: 0.7),
           ),
         ),
-        trailing: IconButton.filledTonal(
-          icon: Icon(Icons.delete_outline_rounded, color: cs.error),
-          onPressed: () => pluginProvider.removePlugin(plugin.id),
-          style: IconButton.styleFrom(
-            backgroundColor: cs.errorContainer.withValues(alpha: 0.3),
+        trailing: ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.88,
+          child: IconButton.filledTonal(
+            icon: Icon(Icons.delete_outline_rounded, color: cs.error),
+            onPressed: () => pluginProvider.removePlugin(plugin.id),
+            style: IconButton.styleFrom(
+              backgroundColor: cs.errorContainer.withValues(alpha: 0.3),
+            ),
           ),
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

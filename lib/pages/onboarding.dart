@@ -298,23 +298,27 @@ class _OnboardingPageState extends State<OnboardingPage>
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: FilledButton.tonalIcon(
-        onPressed: onPressed,
-        icon: Icon(
-          isGranted ? Icons.check_circle : icon,
-          color: isGranted ? Theme.of(context).colorScheme.primary : null,
-        ),
-        label: Text(label),
-        style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(48),
-          side: isGranted
-              ? BorderSide(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .primary
-                      .withValues(alpha: AppOpacity.half),
-                )
-              : null,
+      child: ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.96,
+        child: FilledButton.tonalIcon(
+          onPressed: onPressed,
+          icon: Icon(
+            isGranted ? Icons.check_circle : icon,
+            color: isGranted ? Theme.of(context).colorScheme.primary : null,
+          ),
+          label: Text(label),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(48),
+            side: isGranted
+                ? BorderSide(
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: AppOpacity.half),
+                  )
+                : null,
+          ),
         ),
       ),
     );
@@ -561,9 +565,13 @@ class _OnboardingPageState extends State<OnboardingPage>
                                         icon: Icons.error_outline,
                                         content: Text(e.toString()),
                                         actions: [
-                                          FilledButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: const Text('OK'),
+                                          ScaleTouchWrapper(
+                                            hapticOnPressDown: true,
+                                            scaleDownFactor: 0.94,
+                                            child: FilledButton(
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: const Text('OK'),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -579,9 +587,13 @@ class _OnboardingPageState extends State<OnboardingPage>
                                         icon: Icons.error_outline,
                                         content: Text(e.toString()),
                                         actions: [
-                                          FilledButton(
-                                            onPressed: () => Navigator.pop(ctx),
-                                            child: const Text('OK'),
+                                          ScaleTouchWrapper(
+                                            hapticOnPressDown: true,
+                                            scaleDownFactor: 0.94,
+                                            child: FilledButton(
+                                              onPressed: () => Navigator.pop(ctx),
+                                              child: const Text('OK'),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1036,13 +1048,21 @@ class _OnboardingPageState extends State<OnboardingPage>
             '${tr('plusEnableBanWarningsDescription')}\n\nWould you like to enable Dispenser Ban Warnings now for extra protection?',
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text(tr('cancel')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(tr('cancel')),
+              ),
             ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: Text(tr('enable')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(tr('enable')),
+              ),
             ),
           ],
         ),
