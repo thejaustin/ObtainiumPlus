@@ -6,6 +6,7 @@ import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
 class GeneratedFormModal extends StatefulWidget {
@@ -162,28 +163,36 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(null),
-            child: Text(
-              widget.singleNullReturnButton ?? tr('cancel'),
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: Text(
+                widget.singleNullReturnButton ?? tr('cancel'),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
             ),
           ),
           if (widget.singleNullReturnButton == null) ...[
             const SizedBox(width: 8),
-            FilledButton.tonal(
-              style: widget.primaryActionColour == null
-                  ? null
-                  : FilledButton.styleFrom(
-                      backgroundColor: widget.primaryActionColour,
-                    ),
-              onPressed: !valid
-                  ? null
-                  : () {
-                      AppHaptics.selectionClick();
-                      Navigator.of(context).pop(values);
-                    },
-              child: Text(tr('continue')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: valid,
+              scaleDownFactor: 0.94,
+              child: FilledButton.tonal(
+                style: widget.primaryActionColour == null
+                    ? null
+                    : FilledButton.styleFrom(
+                        backgroundColor: widget.primaryActionColour,
+                      ),
+                onPressed: !valid
+                    ? null
+                    : () {
+                        AppHaptics.selectionClick();
+                        Navigator.of(context).pop(values);
+                      },
+                child: Text(tr('continue')),
+              ),
             ),
           ],
         ],

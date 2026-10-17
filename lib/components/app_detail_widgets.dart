@@ -8,6 +8,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
 String appInstalledVersionText(App? app) {
@@ -91,10 +92,14 @@ class AppInfoDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        FilledButton.tonal(
-          autofocus: isTV,
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton.tonal(
+            autofocus: isTV,
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );
@@ -199,21 +204,29 @@ class _AppFilePickerState extends State<AppFilePicker> {
               ),
             ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(tr('cancel')),
+          ),
         ),
-        FilledButton(
-          autofocus: isTV && urlsToSelectFrom.isEmpty,
-          onPressed: fileUrl != null
-              ? () {
-                  AppHaptics.selectionClick();
-                  Navigator.of(context).pop(fileUrl);
-                }
-              : null,
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: fileUrl != null,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            autofocus: isTV && urlsToSelectFrom.isEmpty,
+            onPressed: fileUrl != null
+                ? () {
+                    AppHaptics.selectionClick();
+                    Navigator.of(context).pop(fileUrl);
+                  }
+                : null,
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );
@@ -268,23 +281,31 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(tr('cancel')),
+          ),
         ),
-        FilledButton(
-          autofocus: !isTV,
-          onPressed: () {
-            final sp = context.read<SettingsProvider>();
-            AppHaptics.selectionClick();
-            if (_dontShowAgain) {
-              sp.hideAPKOriginWarning = true;
-            }
-            Navigator.of(context).pop(true);
-          },
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            autofocus: !isTV,
+            onPressed: () {
+              final sp = context.read<SettingsProvider>();
+              AppHaptics.selectionClick();
+              if (_dontShowAgain) {
+                sp.hideAPKOriginWarning = true;
+              }
+              Navigator.of(context).pop(true);
+            },
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );
@@ -347,20 +368,28 @@ class SigningCertMismatchDialog extends StatelessWidget {
       ),
       actions: [
         if (!hardBlock)
-          TextButton(
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () {
+                AppHaptics.selectionClick();
+                Navigator.of(context).pop(false);
+              },
+              child: Text(tr('dontInstall')),
+            ),
+          ),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            autofocus: !isTV,
             onPressed: () {
               AppHaptics.selectionClick();
-              Navigator.of(context).pop(false);
+              Navigator.of(context).pop(!hardBlock);
             },
-            child: Text(tr('dontInstall')),
+            child: Text(hardBlock ? tr('ok') : tr('installAnyway')),
           ),
-        FilledButton(
-          autofocus: !isTV,
-          onPressed: () {
-            AppHaptics.selectionClick();
-            Navigator.of(context).pop(!hardBlock);
-          },
-          child: Text(hardBlock ? tr('ok') : tr('installAnyway')),
         ),
       ],
     );

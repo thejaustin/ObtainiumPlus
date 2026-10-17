@@ -8,6 +8,7 @@ import 'package:obtainium/pages/discover.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
 /// Shows a dialog when user enters an unsupported URL,
@@ -315,25 +316,33 @@ Widget _buildActions(BuildContext context) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(tr('ok')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('ok')),
+          ),
         ),
         const SizedBox(width: 8),
-        FilledButton(
-          onPressed: () {
-            Navigator.pop(context);
-            final nav = globalNavigatorKey.currentState;
-            if (nav != null) {
-              Navigator.push(
-                nav.context,
-                MaterialPageRoute(
-                  builder: (context) => const DiscoverPage(),
-                ),
-              );
-            }
-          },
-          child: Text(tr('browseSupportedSources')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              final nav = globalNavigatorKey.currentState;
+              if (nav != null) {
+                Navigator.push(
+                  nav.context,
+                  MaterialPageRoute(
+                    builder: (context) => const DiscoverPage(),
+                  ),
+                );
+              }
+            },
+            child: Text(tr('browseSupportedSources')),
+          ),
         ),
       ],
     ),

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
 class ImportErrorDialog extends StatefulWidget {
@@ -200,11 +201,15 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(null);
-            },
-            child: Text(tr('ok')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(null);
+              },
+              child: Text(tr('ok')),
+            ),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
@@ -69,16 +70,24 @@ class _AppFilePickerState extends State<AppFilePicker> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.maybeOf(context)?.pop(null),
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () => Navigator.maybeOf(context)?.pop(null),
+            child: Text(tr('cancel')),
+          ),
         ),
-        FilledButton(
-          onPressed: () {
-            AppHaptics.selectionClick();
-            Navigator.maybeOf(context)?.pop(fileUrl);
-          },
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              Navigator.maybeOf(context)?.pop(fileUrl);
+            },
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );
@@ -107,16 +116,24 @@ class APKOriginWarningDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.maybeOf(context)?.pop(null),
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () => Navigator.maybeOf(context)?.pop(null),
+            child: Text(tr('cancel')),
+          ),
         ),
-        FilledButton(
-          onPressed: () {
-            AppHaptics.selectionClick();
-            Navigator.maybeOf(context)?.pop(true);
-          },
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              Navigator.maybeOf(context)?.pop(true);
+            },
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );

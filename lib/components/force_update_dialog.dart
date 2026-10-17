@@ -7,6 +7,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -192,12 +193,20 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(onPressed: _skip, child: Text(tr('skip'))),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: TextButton(onPressed: _skip, child: Text(tr('skip'))),
+                      ),
                       const SizedBox(width: 8),
-                      FilledButton.icon(
-                        onPressed: _openReleasesPage,
-                        icon: const Icon(Icons.download_outlined, size: 18),
-                        label: Text(tr('update')),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: FilledButton.icon(
+                          onPressed: _openReleasesPage,
+                          icon: const Icon(Icons.download_outlined, size: 18),
+                          label: Text(tr('update')),
+                        ),
                       ),
                     ],
                   ),
