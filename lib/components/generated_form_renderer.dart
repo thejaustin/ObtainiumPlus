@@ -11,6 +11,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -520,22 +521,26 @@ class _GeneratedFormState extends State<GeneratedForm> {
                     ),
                     const Spacer(),
                     if (isLastEntry)
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primary,
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.92,
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.primary,
+                          ),
+                          onPressed: () {
+                            values[fieldKey].add(
+                              getDefaultValuesFromFormItems(item.items),
+                            );
+                            _subFormGenerations[fieldKey] = generation + 1;
+                            setState(() {});
+                            notifyFormChange();
+                          },
+                          icon: const Icon(Icons.add),
+                          label: Text(tr(item.label)),
                         ),
-                        onPressed: () {
-                          values[fieldKey].add(
-                            getDefaultValuesFromFormItems(item.items),
-                          );
-                          _subFormGenerations[fieldKey] = generation + 1;
-                          setState(() {});
-                          notifyFormChange();
-                        },
-                        icon: const Icon(Icons.add),
-                        label: Text(tr(item.label)),
                       ),
                   ],
                 ),
@@ -556,18 +561,22 @@ class _GeneratedFormState extends State<GeneratedForm> {
             child: Row(
               children: [
                 const Spacer(),
-                TextButton.icon(
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.primary,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.92,
+                  child: TextButton.icon(
+                    style: TextButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.primary,
+                    ),
+                    onPressed: () {
+                      entries.add(getDefaultValuesFromFormItems(item.items));
+                      _subFormGenerations[fieldKey] = generation + 1;
+                      setState(() {});
+                      notifyFormChange();
+                    },
+                    icon: const Icon(Icons.add),
+                    label: Text(tr(item.label)),
                   ),
-                  onPressed: () {
-                    entries.add(getDefaultValuesFromFormItems(item.items));
-                    _subFormGenerations[fieldKey] = generation + 1;
-                    setState(() {});
-                    notifyFormChange();
-                  },
-                  icon: const Icon(Icons.add),
-                  label: Text(tr(item.label)),
                 ),
               ],
             ),
@@ -968,28 +977,36 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(null),
-            child: Text(
-              widget.singleNullReturnButton ?? tr('cancel'),
-              style: TextStyle(color: colorScheme.onSurfaceVariant),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(null),
+              child: Text(
+                widget.singleNullReturnButton ?? tr('cancel'),
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
             ),
           ),
           if (widget.singleNullReturnButton == null) ...[
             const SizedBox(width: 8),
-            FilledButton.tonal(
-              style: widget.primaryActionColour == null
-                  ? null
-                  : FilledButton.styleFrom(
-                      backgroundColor: widget.primaryActionColour,
-                    ),
-              onPressed: !valid
-                  ? null
-                  : () {
-                      AppHaptics.selectionClick();
-                      Navigator.of(context).pop(values);
-                    },
-              child: Text(tr('continue')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: valid,
+              scaleDownFactor: 0.94,
+              child: FilledButton.tonal(
+                style: widget.primaryActionColour == null
+                    ? null
+                    : FilledButton.styleFrom(
+                        backgroundColor: widget.primaryActionColour,
+                      ),
+                onPressed: !valid
+                    ? null
+                    : () {
+                        AppHaptics.selectionClick();
+                        Navigator.of(context).pop(values);
+                      },
+                child: Text(tr('continue')),
+              ),
             ),
           ],
         ],
