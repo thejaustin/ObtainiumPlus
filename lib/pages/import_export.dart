@@ -26,6 +26,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/utils/locale_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class ImportExportPage extends StatefulWidget {
   const ImportExportPage({super.key});
@@ -537,19 +538,28 @@ class _ImportExportPageState extends State<ImportExportPage> {
                       ),
                       iconColor: colorScheme.tertiary,
                       actions: [
-                        FilledButton.icon(
-                          onPressed: importInProgress
-                              ? null
-                              : () => runObtainiumExport(pickOnly: true),
-                          icon: const Icon(Icons.folder_open_rounded, size: 18),
-                          label: Text(tr('pickExportDir')),
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: !importInProgress,
+                          scaleDownFactor: 0.94,
+                          child: FilledButton.icon(
+                            onPressed: importInProgress
+                                ? null
+                                : () => runObtainiumExport(pickOnly: true),
+                            icon: const Icon(Icons.folder_open_rounded, size: 18),
+                            label: Text(tr('pickExportDir')),
+                          ),
                         ),
-                        OutlinedButton.icon(
-                          onPressed: importInProgress || snapshot.data == null
-                              ? null
-                              : runObtainiumExport,
-                          icon: const Icon(Icons.save_alt_rounded, size: 18),
-                          label: Text(tr('obtainiumExport')),
+                        ScaleTouchWrapper(
+                          hapticOnPressDown:
+                              !importInProgress && snapshot.data != null,
+                          scaleDownFactor: 0.94,
+                          child: OutlinedButton.icon(
+                            onPressed: importInProgress || snapshot.data == null
+                                ? null
+                                : runObtainiumExport,
+                            icon: const Icon(Icons.save_alt_rounded, size: 18),
+                            label: Text(tr('obtainiumExport')),
+                          ),
                         ),
                       ],
                     );
@@ -635,10 +645,14 @@ class _ImportExportPageState extends State<ImportExportPage> {
                   subtitle: tr('importedAppsIdDisclaimer'),
                   iconColor: colorScheme.primary,
                   actions: [
-                    FilledButton.icon(
-                      onPressed: importInProgress ? null : runObtainiumImport,
-                      icon: const Icon(Icons.file_open_rounded, size: 18),
-                      label: Text(tr('obtainiumImport')),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: !importInProgress,
+                      scaleDownFactor: 0.94,
+                      child: FilledButton.icon(
+                        onPressed: importInProgress ? null : runObtainiumImport,
+                        icon: const Icon(Icons.file_open_rounded, size: 18),
+                        label: Text(tr('obtainiumImport')),
+                      ),
                     ),
                   ],
                 ),
@@ -666,53 +680,66 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     subtitle: tr('importFromURLList'),
                     iconColor: colorScheme.secondary,
                     actions: [
-                      OutlinedButton.icon(
-                        onPressed: importInProgress
-                            ? null
-                            : () async {
-                                var searchSourceName =
-                                    await showDialog<List<String>?>(
-                                      context: context,
-                                      builder: (BuildContext ctx) {
-                                        return SelectionModal(
-                                          title: tr(
-                                            'selectX',
-                                            args: [tr('source').toLowerCase()],
-                                          ),
-                                          entries: sourceStrings,
-                                          selectedByDefault: false,
-                                          onlyOneSelectionAllowed: true,
-                                          titlesAreLinks: false,
-                                        );
-                                      },
-                                    ) ??
-                                    [];
-                                var searchSource = sourceProvider.sources
-                                    .where(
-                                      (e) => searchSourceName.contains(e.name),
-                                    )
-                                    .toList();
-                                if (searchSource.isNotEmpty) {
-                                  runSourceSearch(searchSource[0]);
-                                }
-                              },
-                        icon: const Icon(Icons.source_rounded, size: 18),
-                        label: Text(
-                          tr(
-                            'searchX',
-                            args: [lowerCaseIfEnglish(tr('source'))],
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: !importInProgress,
+                        scaleDownFactor: 0.94,
+                        child: OutlinedButton.icon(
+                          onPressed: importInProgress
+                              ? null
+                              : () async {
+                                  var searchSourceName =
+                                      await showDialog<List<String>?>(
+                                        context: context,
+                                        builder: (BuildContext ctx) {
+                                          return SelectionModal(
+                                            title: tr(
+                                              'selectX',
+                                              args: [tr('source').toLowerCase()],
+                                            ),
+                                            entries: sourceStrings,
+                                            selectedByDefault: false,
+                                            onlyOneSelectionAllowed: true,
+                                            titlesAreLinks: false,
+                                          );
+                                        },
+                                      ) ??
+                                      [];
+                                  var searchSource = sourceProvider.sources
+                                      .where(
+                                        (e) =>
+                                            searchSourceName.contains(e.name),
+                                      )
+                                      .toList();
+                                  if (searchSource.isNotEmpty) {
+                                    runSourceSearch(searchSource[0]);
+                                  }
+                                },
+                          icon: const Icon(Icons.source_rounded, size: 18),
+                          label: Text(
+                            tr(
+                              'searchX',
+                              args: [lowerCaseIfEnglish(tr('source'))],
+                            ),
                           ),
                         ),
                       ),
-                      OutlinedButton.icon(
-                        onPressed: importInProgress ? null : urlListImport,
-                        icon: const Icon(Icons.list_alt_rounded, size: 18),
-                        label: Text(tr('importFromURLList')),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: !importInProgress,
+                        scaleDownFactor: 0.94,
+                        child: OutlinedButton.icon(
+                          onPressed: importInProgress ? null : urlListImport,
+                          icon: const Icon(Icons.list_alt_rounded, size: 18),
+                          label: Text(tr('importFromURLList')),
+                        ),
                       ),
-                      OutlinedButton.icon(
-                        onPressed: importInProgress ? null : runUrlImport,
-                        icon: const Icon(Icons.upload_file_rounded, size: 18),
-                        label: Text(tr('importFromURLsInFile')),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: !importInProgress,
+                        scaleDownFactor: 0.94,
+                        child: OutlinedButton.icon(
+                          onPressed: importInProgress ? null : runUrlImport,
+                          icon: const Icon(Icons.upload_file_rounded, size: 18),
+                          label: Text(tr('importFromURLsInFile')),
+                        ),
                       ),
                     ],
                   ),
@@ -727,15 +754,19 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     iconColor: colorScheme.error,
                     actions: [
                       ...sourceProvider.massUrlSources.map(
-                        (source) => OutlinedButton.icon(
-                          onPressed: importInProgress
-                              ? null
-                              : () => runMassSourceImport(source),
-                          icon: const Icon(
-                            Icons.download_for_offline_rounded,
-                            size: 18,
+                        (source) => ScaleTouchWrapper(
+                          hapticOnPressDown: !importInProgress,
+                          scaleDownFactor: 0.94,
+                          child: OutlinedButton.icon(
+                            onPressed: importInProgress
+                                ? null
+                                : () => runMassSourceImport(source),
+                            icon: const Icon(
+                              Icons.download_for_offline_rounded,
+                              size: 18,
+                            ),
+                            label: Text(tr('importX', args: [source.name])),
                           ),
-                          label: Text(tr('importX', args: [source.name])),
                         ),
                       ),
                     ],
