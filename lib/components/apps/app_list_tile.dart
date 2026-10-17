@@ -334,13 +334,20 @@ class _AppListTileState extends State<AppListTile>
       mainAxisSize: MainAxisSize.min,
       children: [
         if (onShowChanges != null && hasUpdate)
-          IconButton(
-            icon: const Icon(Icons.history_rounded),
-            onPressed: onShowChanges,
-            tooltip: tr('viewChanges'),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              icon: const Icon(Icons.history_rounded),
+              onPressed: onShowChanges,
+              tooltip: tr('viewChanges'),
+            ),
           ),
-        PopupMenuButton<String>(
-          tooltip: tr('more'),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.88,
+          child: PopupMenuButton<String>(
+            tooltip: tr('more'),
           icon: Icon(
             Icons.more_vert_rounded,
             size: 20,
@@ -425,6 +432,7 @@ class _AppListTileState extends State<AppListTile>
               ),
             ),
           ],
+          ),
         ),
       ],
     );
