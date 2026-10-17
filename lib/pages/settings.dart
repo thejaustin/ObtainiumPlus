@@ -702,7 +702,11 @@ class _SettingsEmptyState extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 12),
-          FilledButton.tonal(onPressed: onClear, child: Text(tr('clear'))),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: FilledButton.tonal(onPressed: onClear, child: Text(tr('clear'))),
+          ),
         ],
       ),
     );
