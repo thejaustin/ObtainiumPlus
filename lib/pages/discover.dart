@@ -390,6 +390,7 @@ class DiscoverPageState extends State<DiscoverPage> {
     PlusSettingsProvider plusSettings, {
     Map<String, MapEntry<String, List<String>>>? from,
     String? iconUrl,
+    int resultIndex = 0,
   }) {
     final result = (from ?? results)[url];
     if (result == null) return const SizedBox.shrink();
@@ -404,8 +405,21 @@ class DiscoverPageState extends State<DiscoverPage> {
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(radius);
+    final staggerMs = animsEnabled ? (60 + (resultIndex < 12 ? resultIndex * 40 : 0)) : 0;
 
-    return ClipRRect(
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(url),
+      duration: Duration(milliseconds: staggerMs + 250),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 12),
+          child: child,
+        ),
+      ),
+      child: ClipRRect(
       borderRadius: BorderRadius.circular(cardRadius),
       child: ConditionalBlur(
         sigma: 12,
@@ -530,6 +544,7 @@ class DiscoverPageState extends State<DiscoverPage> {
             ],
           ),
         ),
+      ),
       ),
     );
   }
@@ -809,6 +824,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                           plusSettings,
                           from: suggestionResults,
                           iconUrl: suggestionIcons[url],
+                          resultIndex: index,
                         );
                       }, childCount: suggestionResults.length),
                     ),
@@ -907,6 +923,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                         (context, index) => _buildAppGrid(
                           results.keys.elementAt(index),
                           plusSettings,
+                          resultIndex: index,
                         ),
                         childCount: results.length,
                       ),
