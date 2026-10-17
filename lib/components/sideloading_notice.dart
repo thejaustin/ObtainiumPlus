@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 const _dismissedPrefKey = 'dismissedSideloadingNotice2026';
 const _learnMoreUrl =
@@ -85,14 +86,22 @@ class _SideloadingNoticeState extends State<SideloadingNotice> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(
-                  onPressed: () =>
-                      launchUrlString(_learnMoreUrl, mode: LaunchMode.externalApplication),
-                  child: Text(tr('sideloadingNoticeLearnMore')),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.94,
+                  child: TextButton(
+                    onPressed: () =>
+                        launchUrlString(_learnMoreUrl, mode: LaunchMode.externalApplication),
+                    child: Text(tr('sideloadingNoticeLearnMore')),
+                  ),
                 ),
-                TextButton(
-                  onPressed: _dismiss,
-                  child: Text(tr('sideloadingNoticeDismiss')),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.94,
+                  child: TextButton(
+                    onPressed: _dismiss,
+                    child: Text(tr('sideloadingNoticeDismiss')),
+                  ),
                 ),
               ],
             ),

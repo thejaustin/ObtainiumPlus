@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -66,26 +67,38 @@ class _LogsDialogState extends State<LogsDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () async {
-            logsProvider.clear();
-            setState(() => logString = tr('noLogs'));
-          },
-          child: Text(tr('remove')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () async {
+              logsProvider.clear();
+              setState(() => logString = tr('noLogs'));
+            },
+            child: Text(tr('remove')),
+          ),
         ),
-        TextButton(
-          onPressed: () {
-            SharePlus.instance.share(
-              ShareParams(text: logString ?? '', subject: tr('appLogs')),
-            );
-          },
-          child: Text(tr('share')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              SharePlus.instance.share(
+                ShareParams(text: logString ?? '', subject: tr('appLogs')),
+              );
+            },
+            child: Text(tr('share')),
+          ),
         ),
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          child: Text(tr('close')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text(tr('close')),
+          ),
         ),
       ],
     );

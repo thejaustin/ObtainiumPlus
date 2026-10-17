@@ -10,6 +10,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -249,26 +250,38 @@ $logs''';
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text(tr('close')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(tr('close')),
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              context.read<LogsProvider>().clear();
-              Navigator.of(context).pop();
-            },
-            child: Text(tr('clearCache')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () {
+                context.read<LogsProvider>().clear();
+                Navigator.of(context).pop();
+              },
+              child: Text(tr('clearCache')),
+            ),
           ),
-          TextButton.icon(
-            icon: const Icon(Icons.bug_report_outlined),
-            onPressed: () {
-              _reportIssue();
-              Navigator.of(context).pop();
-            },
-            label: Text(tr('reportIssue')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton.icon(
+              icon: const Icon(Icons.bug_report_outlined),
+              onPressed: () {
+                _reportIssue();
+                Navigator.of(context).pop();
+              },
+              label: Text(tr('reportIssue')),
+            ),
           ),
         ],
       ),

@@ -7,6 +7,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -175,14 +176,18 @@ class CriticalIssueDialog extends StatelessWidget {
           // Primary action - Check for Updates
           SizedBox(
             width: double.infinity,
-            child: FilledButton.icon(
-              icon: const Icon(Icons.system_update_outlined),
-              label: Text(tr('checkForUpdates')),
-              style: FilledButton.styleFrom(
-                backgroundColor: accentColor,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+            child: ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.96,
+              child: FilledButton.icon(
+                icon: const Icon(Icons.system_update_outlined),
+                label: Text(tr('checkForUpdates')),
+                style: FilledButton.styleFrom(
+                  backgroundColor: accentColor,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: onCheckForUpdates,
               ),
-              onPressed: onCheckForUpdates,
             ),
           ),
           const SizedBox(height: 8),
@@ -190,29 +195,37 @@ class CriticalIssueDialog extends StatelessWidget {
             children: [
               // Dismiss
               Expanded(
-                child: OutlinedButton(
-                  onPressed: () async {
-                    await KnownIssuesService.dismissIssue(issue.id);
-                    if (context.mounted) Navigator.of(context).pop();
-                  },
-                  child: Text(tr('dismiss')),
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.94,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      await KnownIssuesService.dismissIssue(issue.id);
+                      if (context.mounted) Navigator.of(context).pop();
+                    },
+                    child: Text(tr('dismiss')),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               // Follow Issue
               Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.notifications_active_outlined),
-                  label: Text(tr('followIssue')),
-                  onPressed: () async {
-                    final url = Uri.parse(issue.githubIssueUrl);
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(
-                        url,
-                        mode: LaunchMode.externalApplication,
-                      );
-                    }
-                  },
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.94,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.notifications_active_outlined),
+                    label: Text(tr('followIssue')),
+                    onPressed: () async {
+                      final url = Uri.parse(issue.githubIssueUrl);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(
+                          url,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                  ),
                 ),
               ),
             ],
