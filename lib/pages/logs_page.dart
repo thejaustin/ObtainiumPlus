@@ -13,6 +13,7 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class LogsPage extends StatefulWidget {
   const LogsPage({super.key});
@@ -91,38 +92,52 @@ $logs''';
           SliverAppBar(
             title: Text(tr('appLogs')),
             actions: [
-              IconButton(
-                icon: const Icon(Icons.copy_outlined),
-                tooltip: tr('copyToClipboard'),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  if (logString != null) {
-                    Clipboard.setData(ClipboardData(text: logString!));
-                    showMessage(tr('copiedToClipboard'), context);
-                  }
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  icon: const Icon(Icons.copy_outlined),
+                  tooltip: tr('copyToClipboard'),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    if (logString != null) {
+                      Clipboard.setData(ClipboardData(text: logString!));
+                      showMessage(tr('copiedToClipboard'), context);
+                    }
+                  },
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.delete_outline),
-                tooltip: tr('clearCache'),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  context.read<LogsProvider>().clear();
-                  setState(() {
-                    logString = null;
-                    _logsFuture = context.read<LogsProvider>().get(
-                      after: DateTime.now().subtract(const Duration(days: 7)),
-                    );
-                  });
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  tooltip: tr('clearCache'),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    context.read<LogsProvider>().clear();
+                    setState(() {
+                      logString = null;
+                      _logsFuture = context.read<LogsProvider>().get(
+                        after: DateTime.now().subtract(
+                          const Duration(days: 7),
+                        ),
+                      );
+                    });
+                  },
+                ),
               ),
-              IconButton(
-                icon: const Icon(Icons.bug_report),
-                tooltip: tr('reportIssue'),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  _reportIssue();
-                },
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  icon: const Icon(Icons.bug_report),
+                  tooltip: tr('reportIssue'),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    _reportIssue();
+                  },
+                ),
               ),
             ],
             floating: true,
