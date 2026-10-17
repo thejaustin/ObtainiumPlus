@@ -27,6 +27,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
   final ScrollController? scrollController;
@@ -71,14 +72,18 @@ class DeveloperSettingsPage extends StatelessWidget {
                       tr('noneSelected'),
                 ),
                 trailing: context.watch<AuthProvider>().microGEmail != null
-                    ? IconButton(
-                        icon: const Icon(Icons.link_off),
-                        tooltip: tr('removeLinkedAccount'),
-                        onPressed: () async {
-                          await context.read<AuthProvider>().setMicroGEmail(
-                            null,
-                          );
-                        },
+                    ? ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.88,
+                        child: IconButton(
+                          icon: const Icon(Icons.link_off),
+                          tooltip: tr('removeLinkedAccount'),
+                          onPressed: () async {
+                            await context.read<AuthProvider>().setMicroGEmail(
+                              null,
+                            );
+                          },
+                        ),
                       )
                     : const Icon(Icons.chevron_right),
                 onTap: () => _showMicroGAccountPicker(context),
@@ -238,9 +243,13 @@ class DeveloperSettingsPage extends StatelessWidget {
                         ),
                       ),
                       actions: [
-                        FilledButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(tr('close')),
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.94,
+                          child: FilledButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text(tr('close')),
+                          ),
                         ),
                       ],
                     ),
@@ -713,13 +722,21 @@ class DeveloperSettingsPage extends StatelessWidget {
                   ],
                 ),
                 actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: Text(tr('cancel')),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.94,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(tr('cancel')),
+                    ),
                   ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: Text(tr('install')),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.94,
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(tr('install')),
+                    ),
                   ),
                 ],
               ),
@@ -952,10 +969,14 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
           ListTile(
             title: Text(tr('currentGsfId')),
             subtitle: Text(_gsfId),
-            trailing: IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: tr('refresh'),
-              onPressed: _getGsfId,
+            trailing: ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.88,
+              child: IconButton(
+                icon: const Icon(Icons.refresh),
+                tooltip: tr('refresh'),
+                onPressed: _getGsfId,
+              ),
             ),
           ),
           ListTile(
@@ -1098,10 +1119,14 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
                                 strokeWidth: 2,
                               ),
                             ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline),
-                            tooltip: tr('remove'),
-                            onPressed: () => authProvider.removeDispenser(d),
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: !_isLoading,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              icon: const Icon(Icons.delete_outline),
+                              tooltip: tr('remove'),
+                              onPressed: () => authProvider.removeDispenser(d),
+                            ),
                           ),
                         ],
                       ),
@@ -1185,13 +1210,21 @@ Future<void> checkAndPromptBanWarnings(BuildContext context) async {
           '${tr('plusEnableBanWarningsDescription')}\n\nWould you like to enable Dispenser Ban Warnings now for extra protection?',
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(tr('cancel')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(tr('cancel')),
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(tr('enable')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(tr('enable')),
+            ),
           ),
         ],
       ),
