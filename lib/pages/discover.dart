@@ -320,17 +320,28 @@ class DiscoverPageState extends State<DiscoverPage> {
     String description,
     String sourceName, {
     String? iconUrl,
+    int resultIndex = 0,
   }) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    return ScaleTouchWrapper(
+    final staggerMs = animsEnabled ? (80 + (resultIndex < 8 ? resultIndex * 35 : 0)) : 0;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(url),
+      duration: Duration(milliseconds: staggerMs + 220),
+      tween: Tween(begin: 0.0, end: 1.0),
+      curve: Curves.easeOutCubic,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 10),
+          child: child,
+        ),
+      ),
+      child: ScaleTouchWrapper(
       hapticOnPressDown: true,
-      onTap: () {
-        AppHaptics.selectionClick();
-        _openAddApp(url);
-      },
       child: ListTile(
         leading: DiscoverAppIcon(
           iconUrl: iconUrl,
@@ -369,6 +380,7 @@ class DiscoverPageState extends State<DiscoverPage> {
           AppHaptics.selectionClick();
           _openAddApp(url);
         },
+      ),
       ),
     );
   }
@@ -818,6 +830,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                         description,
                         result.key,
                         iconUrl: suggestionIcons[url],
+                        resultIndex: index,
                       );
                     }, childCount: suggestionResults.length),
                   ),
@@ -916,6 +929,7 @@ class DiscoverPageState extends State<DiscoverPage> {
                         name,
                         description,
                         sourceName,
+                        resultIndex: index,
                       );
                     }, childCount: results.length),
                   )
