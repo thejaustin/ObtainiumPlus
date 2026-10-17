@@ -1,5 +1,6 @@
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
@@ -216,35 +217,39 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                                             ),
                                       ),
                                     ),
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        AppHaptics.mediumImpact();
-                                        setState(() {
-                                          widget.filter.statusFilter.clear();
-                                          widget.filter.categoryFilter.clear();
-                                          widget.filter.tagFilter.clear();
-                                          widget.filter.nameFilter = '';
-                                          widget.filter.authorFilter = '';
-                                          widget.filter.idFilter = '';
-                                          widget.filter.sourceFilter = '';
-                                          widget.filter.includeUptodate = true;
-                                          widget.filter.includeNonInstalled =
-                                              true;
-                                          _nameController.clear();
-                                          _authorController.clear();
-                                          _idController.clear();
-                                        });
-                                        widget.onFilterChanged();
-                                      },
-                                      icon: const Icon(
-                                        Icons.refresh_rounded,
-                                        size: 18,
-                                      ),
-                                      label: Text(tr('reset')),
-                                      style: TextButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
-                                        foregroundColor:
-                                            theme.colorScheme.primary,
+                                    ScaleTouchWrapper(
+                                      hapticOnPressDown: true,
+                                      scaleDownFactor: 0.92,
+                                      child: TextButton.icon(
+                                        onPressed: () {
+                                          AppHaptics.mediumImpact();
+                                          setState(() {
+                                            widget.filter.statusFilter.clear();
+                                            widget.filter.categoryFilter.clear();
+                                            widget.filter.tagFilter.clear();
+                                            widget.filter.nameFilter = '';
+                                            widget.filter.authorFilter = '';
+                                            widget.filter.idFilter = '';
+                                            widget.filter.sourceFilter = '';
+                                            widget.filter.includeUptodate = true;
+                                            widget.filter.includeNonInstalled =
+                                                true;
+                                            _nameController.clear();
+                                            _authorController.clear();
+                                            _idController.clear();
+                                          });
+                                          widget.onFilterChanged();
+                                        },
+                                        icon: const Icon(
+                                          Icons.refresh_rounded,
+                                          size: 18,
+                                        ),
+                                        label: Text(tr('reset')),
+                                        style: TextButton.styleFrom(
+                                          visualDensity: VisualDensity.compact,
+                                          foregroundColor:
+                                              theme.colorScheme.primary,
+                                        ),
                                       ),
                                     ),
                                   ],

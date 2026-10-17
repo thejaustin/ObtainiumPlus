@@ -7,6 +7,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
 /// App behavior and interaction settings section
@@ -353,19 +354,27 @@ class AppBehaviorSection extends StatelessWidget {
                               tr('plusEnableBanWarningsDescription'),
                             ),
                             actions: [
-                              TextButton(
-                                onPressed: () {
-                                  AppHaptics.selectionClick();
-                                  Navigator.pop(context, false);
-                                },
-                                child: Text(tr('cancel')),
+                              ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                scaleDownFactor: 0.94,
+                                child: TextButton(
+                                  onPressed: () {
+                                    AppHaptics.selectionClick();
+                                    Navigator.pop(context, false);
+                                  },
+                                  child: Text(tr('cancel')),
+                                ),
                               ),
-                              FilledButton(
-                                onPressed: () {
-                                  AppHaptics.selectionClick();
-                                  Navigator.pop(context, true);
-                                },
-                                child: Text(tr('enable')),
+                              ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                scaleDownFactor: 0.94,
+                                child: FilledButton(
+                                  onPressed: () {
+                                    AppHaptics.selectionClick();
+                                    Navigator.pop(context, true);
+                                  },
+                                  child: Text(tr('enable')),
+                                ),
                               ),
                             ],
                           ),

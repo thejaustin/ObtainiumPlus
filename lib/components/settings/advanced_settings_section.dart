@@ -8,6 +8,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:provider/provider.dart';
@@ -206,14 +207,21 @@ class AdvancedSettingsSection extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         content: Text(tr('factoryResetConfirmation')),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr('cancel')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(tr('cancel')),
+            ),
           ),
-          TextButton(
-            onPressed: () async {
-              AppHaptics.heavyImpact();
-              await StartupRepairService.factoryReset();
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () async {
+                AppHaptics.heavyImpact();
+                await StartupRepairService.factoryReset();
               if (context.mounted) {
                 // Should ideally restart app, but clearing and showing msg for now
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -222,7 +230,8 @@ class AdvancedSettingsSection extends StatelessWidget {
                 Navigator.pop(ctx);
               }
             },
-            child: Text(tr('reset'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              child: Text(tr('reset'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ),
           ),
         ],
       ),
@@ -534,27 +543,35 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              FilledButton.tonalIcon(
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  launchUrlString(
-                    'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=',
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.public_rounded, size: 18),
-                label: const Text('Public Repos (No Scope / Safest)'),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: FilledButton.tonalIcon(
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    launchUrlString(
+                      'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=',
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  icon: const Icon(Icons.public_rounded, size: 18),
+                  label: const Text('Public Repos (No Scope / Safest)'),
+                ),
               ),
-              OutlinedButton.icon(
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  launchUrlString(
-                    'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=repo',
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
-                icon: const Icon(Icons.lock_outline_rounded, size: 18),
-                label: const Text('Private Repos ("repo" Scope)'),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    launchUrlString(
+                      'https://github.com/settings/tokens/new?description=ObtainiumPlus&scopes=repo',
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                  icon: const Icon(Icons.lock_outline_rounded, size: 18),
+                  label: const Text('Private Repos ("repo" Scope)'),
+                ),
               ),
             ],
           ),
@@ -585,10 +602,14 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                 if (!_isPolling && _userCode == null) ...[
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8.0),
-                    child: OutlinedButton.icon(
-                      onPressed: _startOAuthFlow,
-                      icon: const Icon(Icons.devices_rounded),
-                      label: const Text('Connect via Device Flow'),
+                    child: ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.94,
+                      child: OutlinedButton.icon(
+                        onPressed: _startOAuthFlow,
+                        icon: const Icon(Icons.devices_rounded),
+                        label: const Text('Connect via Device Flow'),
+                      ),
                     ),
                   ),
                 ] else ...[
@@ -624,15 +645,19 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                     ),
                   ),
                   if (_verificationUri != null)
-                    TextButton.icon(
-                      onPressed: () {
-                        launchUrlString(
-                          _verificationUri!,
-                          mode: LaunchMode.externalApplication,
-                        );
-                      },
-                      icon: const Icon(Icons.open_in_browser),
-                      label: const Text('Open Verification Page'),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.94,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          launchUrlString(
+                            _verificationUri!,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        },
+                        icon: const Icon(Icons.open_in_browser),
+                        label: const Text('Open Verification Page'),
+                      ),
                     ),
                   if (_isPolling) ...[
                     const Center(
@@ -645,10 +670,14 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                         ),
                       ),
                     ),
-                    TextButton.icon(
-                      onPressed: _cancelOAuthFlow,
-                      icon: const Icon(Icons.cancel_outlined, size: 16),
-                      label: Text(tr('cancel')),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.94,
+                      child: TextButton.icon(
+                        onPressed: _cancelOAuthFlow,
+                        icon: const Icon(Icons.cancel_outlined, size: 16),
+                        label: Text(tr('cancel')),
+                      ),
                     ),
                   ],
                 ],
@@ -714,10 +743,14 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           const SizedBox(height: 6),
           Row(
             children: [
-              TextButton.icon(
-                onPressed: _isVerifying ? null : _verifyToken,
-                icon: const Icon(Icons.verified_outlined, size: 16),
-                label: const Text('Verify Token'),
+              ScaleTouchWrapper(
+                hapticOnPressDown: !_isVerifying,
+                scaleDownFactor: 0.94,
+                child: TextButton.icon(
+                  onPressed: _isVerifying ? null : _verifyToken,
+                  icon: const Icon(Icons.verified_outlined, size: 16),
+                  label: const Text('Verify Token'),
+                ),
               ),
               if (_isVerifying) ...[
                 const SizedBox(width: 8),
@@ -768,21 +801,29 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('cancel')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('cancel')),
+              ),
             ),
             const SizedBox(width: 8),
-            TextButton(
-              onPressed: () {
-                AppHaptics.selectionClick();
-                widget.settings.setSettingString(
-                  widget.settingId,
-                  _controller.text.trim(),
-                );
-                Navigator.pop(context);
-              },
-              child: Text(tr('save')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: TextButton(
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  widget.settings.setSettingString(
+                    widget.settingId,
+                    _controller.text.trim(),
+                  );
+                  Navigator.pop(context);
+                },
+                child: Text(tr('save')),
+              ),
             ),
           ],
         ),

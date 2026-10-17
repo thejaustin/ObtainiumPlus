@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class _TileClipper extends CustomClipper<Path> {
   final ShapeBorder shape;
@@ -29,9 +30,13 @@ Future<void> showHelpDialog(
         children: content,
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
-          child: Text(tr('ok')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(tr('ok')),
+          ),
         ),
       ],
     ),

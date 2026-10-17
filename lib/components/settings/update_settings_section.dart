@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -239,29 +240,41 @@ class UpdateSettingsSection extends StatelessWidget {
         children: [
           Text(tr('xiaomiTroubleshootingDescription')),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              AppHaptics.selectionClick();
-              AppInstallService.openXiaomiAutostartSettings();
-            },
-            icon: const Icon(Icons.play_arrow_outlined),
-            label: Text(tr('enableAutostart')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                AppHaptics.selectionClick();
+                AppInstallService.openXiaomiAutostartSettings();
+              },
+              icon: const Icon(Icons.play_arrow_outlined),
+              label: Text(tr('enableAutostart')),
+            ),
           ),
           const SizedBox(height: 8),
-          ElevatedButton.icon(
-            onPressed: () {
-              AppHaptics.selectionClick();
-              AppInstallService.openXiaomiBatterySaverSettings();
-            },
-            icon: const Icon(Icons.battery_saver_outlined),
-            label: Text(tr('disableBatterySaver')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                AppHaptics.selectionClick();
+                AppInstallService.openXiaomiBatterySaverSettings();
+              },
+              icon: const Icon(Icons.battery_saver_outlined),
+              label: Text(tr('disableBatterySaver')),
+            ),
           ),
         ],
       ),
       actions: [
-        FilledButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(tr('ok')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(tr('ok')),
+          ),
         ),
       ],
     );
@@ -436,17 +449,25 @@ class UpdateSettingsSection extends StatelessWidget {
                                 title: tr('devChannelWarningTitle'),
                                 content: Text(tr('devChannelWarningMessage')),
                                 actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: Text(tr('cancel')),
+                                  ScaleTouchWrapper(
+                                    hapticOnPressDown: true,
+                                    scaleDownFactor: 0.94,
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: Text(tr('cancel')),
+                                    ),
                                   ),
-                                  FilledButton(
-                                    onPressed: () {
-                                      updateSettings.obtainiumReleaseChannel =
-                                          'dev';
-                                      Navigator.pop(ctx);
-                                    },
-                                    child: Text(tr('enable')),
+                                  ScaleTouchWrapper(
+                                    hapticOnPressDown: true,
+                                    scaleDownFactor: 0.94,
+                                    child: FilledButton(
+                                      onPressed: () {
+                                        updateSettings.obtainiumReleaseChannel =
+                                            'dev';
+                                        Navigator.pop(ctx);
+                                      },
+                                      child: Text(tr('enable')),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -670,9 +691,13 @@ class UpdateSettingsSection extends StatelessWidget {
             },
           ),
           actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('done')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('done')),
+              ),
             ),
           ],
         );
@@ -773,9 +798,13 @@ class UpdateSettingsSection extends StatelessWidget {
             },
           ),
           actions: [
-            FilledButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('done')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('done')),
+              ),
             ),
           ],
         );
@@ -842,18 +871,22 @@ class _RunBgUpdateCheckNowButtonState
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      child: FilledButton.tonal(
-        onPressed: _isRunning ? null : _trigger,
-        style: FilledButton.styleFrom(
-          textStyle: Theme.of(context).textTheme.bodyLarge,
+      child: ScaleTouchWrapper(
+        hapticOnPressDown: !_isRunning,
+        scaleDownFactor: 0.96,
+        child: FilledButton.tonal(
+          onPressed: _isRunning ? null : _trigger,
+          style: FilledButton.styleFrom(
+            textStyle: Theme.of(context).textTheme.bodyLarge,
+          ),
+          child: _isRunning
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text('runBgCheckNow'.tr()),
         ),
-        child: _isRunning
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
-              )
-            : Text('runBgCheckNow'.tr()),
       ),
     );
   }

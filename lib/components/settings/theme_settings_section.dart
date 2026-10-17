@@ -1,4 +1,5 @@
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -1019,9 +1020,13 @@ class ThemeSettingsSection extends StatelessWidget {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('close')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('close')),
+              ),
             ),
           ],
         );
