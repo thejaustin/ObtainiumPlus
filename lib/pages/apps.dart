@@ -733,17 +733,21 @@ class AppsPageState extends State<AppsPage>
                       ),
                     ] else if (filter.nameFilter.isNotEmpty) ...[
                       const SizedBox(height: 16),
-                      FilledButton.icon(
-                        onPressed: () {
-                          AppHaptics.selectionClick();
-                          CommandCenter.show(
-                            context,
-                            initialQuery: filter.nameFilter,
-                          );
-                        },
-                        icon: const Icon(Icons.travel_explore_rounded),
-                        label: Text(
-                          '${tr('search')} "${filter.nameFilter}"',
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.96,
+                        child: FilledButton.icon(
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            CommandCenter.show(
+                              context,
+                              initialQuery: filter.nameFilter,
+                            );
+                          },
+                          icon: const Icon(Icons.travel_explore_rounded),
+                          label: Text(
+                            '${tr('search')} "${filter.nameFilter}"',
+                          ),
                         ),
                       ),
                     ],
@@ -1136,45 +1140,53 @@ class AppsPageState extends State<AppsPage>
       return AnimatedSwitcher(
         duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
         child: isSelected
-            ? TextButton.icon(
+            ? ScaleTouchWrapper(
                 key: const ValueKey('deselect'),
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  clearSelected();
-                },
-                icon: Icon(
-                  Icons.deselect_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                label: AnimatedSwitcher(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
-                  transitionBuilder: (child, animation) =>
-                      ScaleTransition(scale: animation, child: child),
-                  child: Text(
-                    selectedAppIds.length.toString(),
-                    key: ValueKey('sel_${selectedAppIds.length}'),
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.92,
+                child: TextButton.icon(
+                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    clearSelected();
+                  },
+                  icon: Icon(
+                    Icons.deselect_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: AnimatedSwitcher(
+                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: Text(
+                      selectedAppIds.length.toString(),
+                      key: ValueKey('sel_${selectedAppIds.length}'),
+                    ),
                   ),
                 ),
               )
-            : TextButton.icon(
+            : ScaleTouchWrapper(
                 key: const ValueKey('selectAll'),
-                style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  selectThese(listedApps.map((e) => e.app).toList());
-                },
-                icon: Icon(
-                  Icons.select_all_outlined,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                label: AnimatedSwitcher(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
-                  transitionBuilder: (child, animation) =>
-                      ScaleTransition(scale: animation, child: child),
-                  child: Text(
-                    listedApps.length.toString(),
-                    key: ValueKey('all_${listedApps.length}'),
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.92,
+                child: TextButton.icon(
+                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    selectThese(listedApps.map((e) => e.app).toList());
+                  },
+                  icon: Icon(
+                    Icons.select_all_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: AnimatedSwitcher(
+                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                    transitionBuilder: (child, animation) =>
+                        ScaleTransition(scale: animation, child: child),
+                    child: Text(
+                      listedApps.length.toString(),
+                      key: ValueKey('all_${listedApps.length}'),
+                    ),
                   ),
                 ),
               ),
@@ -1402,30 +1414,38 @@ class AppsPageState extends State<AppsPage>
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text(tr('no')),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(tr('no')),
+                ),
               ),
-              TextButton(
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  appsProvider.saveApps(
-                    selectedApps.map((a) {
-                      if (a.installedVersion != null &&
-                          !appsProvider.isVersionDetectionPossible(
-                            appsProvider.apps[a.id],
-                          )) {
-                        a.installedVersion = a.latestVersion;
-                      }
-                      return a;
-                    }).toList(),
-                  );
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: TextButton(
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    appsProvider.saveApps(
+                      selectedApps.map((a) {
+                        if (a.installedVersion != null &&
+                            !appsProvider.isVersionDetectionPossible(
+                              appsProvider.apps[a.id],
+                            )) {
+                          a.installedVersion = a.latestVersion;
+                        }
+                        return a;
+                      }).toList(),
+                    );
 
-                  Navigator.of(context).pop();
-                },
-                child: Text(tr('yes')),
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(tr('yes')),
+                ),
               ),
             ],
           );
@@ -1456,116 +1476,140 @@ class AppsPageState extends State<AppsPage>
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextButton(
-                  onPressed: pinSelectedApps,
-                  child: Text(
-                    selectedApps.where((element) => element.pinned).isEmpty
-                        ? tr('pinToTop')
-                        : tr('unpinFromTop'),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const Divider(),
-                TextButton(
-                  onPressed: () {
-                    String urls = '';
-                    for (var a in selectedApps) {
-                      urls += '${a.url}\n';
-                    }
-                    urls = urls.substring(0, urls.length - 1);
-                    Share.share(
-                      urls,
-                      subject: 'Obtainium - ${tr('appsString')}',
-                    );
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    tr('shareSelectedAppURLs'),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const Divider(),
-                TextButton(
-                  onPressed: selectedAppIds.isEmpty
-                      ? null
-                      : () {
-                          String urls = '';
-                          for (var a in selectedApps) {
-                            urls +=
-                                'https://apps.obtainium.page/redirect?r=obtainium://app/${Uri.encodeComponent(jsonEncode({'id': a.id, 'url': a.url, 'author': a.author, 'name': a.name, 'preferredApkIndex': a.preferredApkIndex, 'additionalSettings': safeJsonEncode(a.additionalSettings), 'overrideSource': a.overrideSource}))}\n\n';
-                          }
-                          Share.share(
-                            urls,
-                            subject: 'Obtainium - ${tr('appsString')}',
-                          );
-                        },
-                  child: Text(
-                    tr('shareAppConfigLinks'),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const Divider(),
-                TextButton(
-                  onPressed: selectedAppIds.isEmpty
-                      ? null
-                      : () {
-                          var encoder = const JsonEncoder.withIndent("    ");
-                          var exportJSON = encoder.convert(
-                            sanitizeJsonValue(appsProvider.generateExportJSON(
-                              appIds: selectedApps.map((e) => e.id).toList(),
-                              overrideExportSettings: 0,
-                            )),
-                          );
-                          String fn =
-                              '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}-count-${selectedApps.length}';
-                          XFile f = XFile.fromData(
-                            Uint8List.fromList(utf8.encode(exportJSON)),
-                            mimeType: 'application/json',
-                            name: fn,
-                          );
-                          Share.shareXFiles(
-                            [f],
-                            fileNameOverrides: ['$fn.json'],
-                          );
-                        },
-                  child: Text(
-                    '${tr('share')} - ${tr('obtainiumExport')}',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const Divider(),
-                TextButton(
-                  onPressed: () {
-                    appsProvider
-                        .downloadAppAssets(
-                          selectedApps.map((e) => e.id).toList(),
-                          globalNavigatorKey.currentContext ?? context,
-                        )
-                        .catchError(
-                          // ignore: invalid_return_type_for_catch_error
-                          (e) => showError(
-                            e,
-                            globalNavigatorKey.currentContext ?? context,
-                          ),
-                        );
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    tr(
-                      'downloadX',
-                      args: [lowerCaseIfEnglish(tr('releaseAsset'))],
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: pinSelectedApps,
+                    child: Text(
+                      selectedApps.where((element) => element.pinned).isEmpty
+                          ? tr('pinToTop')
+                          : tr('unpinFromTop'),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ),
                 const Divider(),
-                TextButton(
-                  onPressed: appsProvider.areDownloadsRunning()
-                      ? null
-                      : showMassMarkDialog,
-                  child: Text(
-                    tr('markSelectedAppsUpdated'),
-                    textAlign: TextAlign.center,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: () {
+                      String urls = '';
+                      for (var a in selectedApps) {
+                        urls += '${a.url}\n';
+                      }
+                      urls = urls.substring(0, urls.length - 1);
+                      Share.share(
+                        urls,
+                        subject: 'Obtainium - ${tr('appsString')}',
+                      );
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      tr('shareSelectedAppURLs'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const Divider(),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: selectedAppIds.isNotEmpty,
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: selectedAppIds.isEmpty
+                        ? null
+                        : () {
+                            String urls = '';
+                            for (var a in selectedApps) {
+                              urls +=
+                                  'https://apps.obtainium.page/redirect?r=obtainium://app/${Uri.encodeComponent(jsonEncode({'id': a.id, 'url': a.url, 'author': a.author, 'name': a.name, 'preferredApkIndex': a.preferredApkIndex, 'additionalSettings': safeJsonEncode(a.additionalSettings), 'overrideSource': a.overrideSource}))}\n\n';
+                            }
+                            Share.share(
+                              urls,
+                              subject: 'Obtainium - ${tr('appsString')}',
+                            );
+                          },
+                    child: Text(
+                      tr('shareAppConfigLinks'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const Divider(),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: selectedAppIds.isNotEmpty,
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: selectedAppIds.isEmpty
+                        ? null
+                        : () {
+                            var encoder = const JsonEncoder.withIndent("    ");
+                            var exportJSON = encoder.convert(
+                              sanitizeJsonValue(appsProvider.generateExportJSON(
+                                appIds: selectedApps.map((e) => e.id).toList(),
+                                overrideExportSettings: 0,
+                              )),
+                            );
+                            String fn =
+                                '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}-count-${selectedApps.length}';
+                            XFile f = XFile.fromData(
+                              Uint8List.fromList(utf8.encode(exportJSON)),
+                              mimeType: 'application/json',
+                              name: fn,
+                            );
+                            Share.shareXFiles(
+                              [f],
+                              fileNameOverrides: ['$fn.json'],
+                            );
+                          },
+                    child: Text(
+                      '${tr('share')} - ${tr('obtainiumExport')}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const Divider(),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: () {
+                      appsProvider
+                          .downloadAppAssets(
+                            selectedApps.map((e) => e.id).toList(),
+                            globalNavigatorKey.currentContext ?? context,
+                          )
+                          .catchError(
+                            // ignore: invalid_return_type_for_catch_error
+                            (e) => showError(
+                              e,
+                              globalNavigatorKey.currentContext ?? context,
+                            ),
+                          );
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(
+                      tr(
+                        'downloadX',
+                        args: [lowerCaseIfEnglish(tr('releaseAsset'))],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const Divider(),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: !appsProvider.areDownloadsRunning(),
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: appsProvider.areDownloadsRunning()
+                        ? null
+                        : showMassMarkDialog,
+                    child: Text(
+                      tr('markSelectedAppsUpdated'),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
               ],
@@ -1945,13 +1989,17 @@ class AppsPageState extends State<AppsPage>
                         actions: [
                           if (plusSettings.plusShowAppBarSearch &&
                               !plusSettings.plusEnableHomeDashboard)
-                            IconButton(
-                              icon: const Icon(Icons.search_rounded),
-                              tooltip: tr('search'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                CommandCenter.show(context);
-                              },
+                            ScaleTouchWrapper(
+                              hapticOnPressDown: true,
+                              scaleDownFactor: 0.88,
+                              child: IconButton(
+                                icon: const Icon(Icons.search_rounded),
+                                tooltip: tr('search'),
+                                onPressed: () {
+                                  AppHaptics.selectionClick();
+                                  CommandCenter.show(context);
+                                },
+                              ),
                             ),
                           if (!plusSettings.plusEnableFAB)
                             // A single InkWell handles tap+long-press on
@@ -1978,56 +2026,68 @@ class AppsPageState extends State<AppsPage>
                                 ),
                               ),
                             ),
-                          IconButton(
-                            icon: Icon(
-                              viewSettings.globalViewMode == ViewMode.grid
-                                  ? Icons.view_list_rounded
-                                  : Icons.grid_view_rounded,
-                            ),
-                            tooltip: viewSettings.globalViewMode == ViewMode.grid
-                                ? tr('listView')
-                                : tr('gridView'),
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              setState(() {
-                                viewSettings.globalViewMode =
-                                    viewSettings.globalViewMode == ViewMode.grid
-                                        ? ViewMode.list
-                                        : ViewMode.grid;
-                              });
-                            },
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              filter.isIdenticalTo(neutralFilter, settingsProvider)
-                                  ? Icons.filter_list_rounded
-                                  : Icons.filter_list_off_rounded,
-                              color: filter.isIdenticalTo(neutralFilter, settingsProvider)
-                                  ? null
-                                  : Theme.of(context).colorScheme.primary,
-                            ),
-                            tooltip: filter.isIdenticalTo(neutralFilter, settingsProvider)
-                                ? tr('filterApps')
-                                : '${tr('filter')} - ${tr('remove')}',
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              if (filter.isIdenticalTo(neutralFilter, settingsProvider)) {
-                                showFilterDialog();
-                              } else {
-                                setState(() {
-                                  filter = AppsFilter();
-                                });
-                              }
-                            },
-                          ),
-                          if (!hasExternalSettingsEntry)
-                            IconButton(
-                              icon: const Icon(Icons.settings_rounded),
-                              tooltip: tr('settings'),
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              icon: Icon(
+                                viewSettings.globalViewMode == ViewMode.grid
+                                    ? Icons.view_list_rounded
+                                    : Icons.grid_view_rounded,
+                              ),
+                              tooltip: viewSettings.globalViewMode == ViewMode.grid
+                                  ? tr('listView')
+                                  : tr('gridView'),
                               onPressed: () {
                                 AppHaptics.selectionClick();
-                                pushRoute(context, const SettingsPage());
+                                setState(() {
+                                  viewSettings.globalViewMode =
+                                      viewSettings.globalViewMode == ViewMode.grid
+                                          ? ViewMode.list
+                                          : ViewMode.grid;
+                                });
                               },
+                            ),
+                          ),
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              icon: Icon(
+                                filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                    ? Icons.filter_list_rounded
+                                    : Icons.filter_list_off_rounded,
+                                color: filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                    ? null
+                                    : Theme.of(context).colorScheme.primary,
+                              ),
+                              tooltip: filter.isIdenticalTo(neutralFilter, settingsProvider)
+                                  ? tr('filterApps')
+                                  : '${tr('filter')} - ${tr('remove')}',
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                if (filter.isIdenticalTo(neutralFilter, settingsProvider)) {
+                                  showFilterDialog();
+                                } else {
+                                  setState(() {
+                                    filter = AppsFilter();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          if (!hasExternalSettingsEntry)
+                            ScaleTouchWrapper(
+                              hapticOnPressDown: true,
+                              scaleDownFactor: 0.88,
+                              child: IconButton(
+                                icon: const Icon(Icons.settings_rounded),
+                                tooltip: tr('settings'),
+                                onPressed: () {
+                                  AppHaptics.selectionClick();
+                                  pushRoute(context, const SettingsPage());
+                                },
+                              ),
                             ),
                         ],
                       ),
