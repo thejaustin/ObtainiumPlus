@@ -6,6 +6,7 @@ import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -195,28 +196,36 @@ class _ErrorAppState extends State<ErrorApp> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ElevatedButton.icon(
-                                onPressed: _reportToGitHub,
-                                icon: const Icon(Icons.launch_outlined),
-                                label: Text(tr('reportOnGitHub')),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: Colors.red.shade900,
+                              ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                scaleDownFactor: 0.94,
+                                child: ElevatedButton.icon(
+                                  onPressed: _reportToGitHub,
+                                  icon: const Icon(Icons.launch_outlined),
+                                  label: Text(tr('reportOnGitHub')),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: Colors.red.shade900,
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 12),
-                              OutlinedButton.icon(
-                                onPressed: _followIssue,
-                                icon: const Icon(
-                                  Icons.notifications_active_outlined,
-                                  color: Colors.white70,
-                                ),
-                                label: Text(
-                                  tr('followIssue'),
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(color: Colors.white54),
+                              ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                scaleDownFactor: 0.94,
+                                child: OutlinedButton.icon(
+                                  onPressed: _followIssue,
+                                  icon: const Icon(
+                                    Icons.notifications_active_outlined,
+                                    color: Colors.white70,
+                                  ),
+                                  label: Text(
+                                    tr('followIssue'),
+                                    style: const TextStyle(color: Colors.white70),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    side: const BorderSide(color: Colors.white54),
+                                  ),
                                 ),
                               ),
                             ],
@@ -295,16 +304,24 @@ class _ErrorAppState extends State<ErrorApp> {
         icon: Icons.build_circle_outlined,
         content: Text('Are you sure you want to proceed with: $action?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              onConfirm();
-            },
-            child: const Text('Confirm'),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: FilledButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                onConfirm();
+              },
+              child: const Text('Confirm'),
+            ),
           ),
         ],
       ),
@@ -322,9 +339,13 @@ class _ErrorAppState extends State<ErrorApp> {
           'The repair action has been applied. Please restart Obtainium+ to see if the issue is resolved.',
         ),
         actions: [
-          FilledButton(
-            onPressed: () => SystemNavigator.pop(),
-            child: const Text('Close App'),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: FilledButton(
+              onPressed: () => SystemNavigator.pop(),
+              child: const Text('Close App'),
+            ),
           ),
         ],
       ),
