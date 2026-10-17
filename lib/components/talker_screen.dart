@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -59,33 +60,41 @@ class _TalkerScreenState extends State<TalkerScreen> {
       appBar: AppBar(
         title: Text(tr('diagnosticsLogViewer')),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.copy_rounded),
-            tooltip: tr('copyAllToClipboard'),
-            onPressed: () {
-              final text = widget.talker.history
-                  .map(
-                    (e) =>
-                        '[${e.timestamp.toIso8601String()}] [${e.title}] ${e.message}',
-                  )
-                  .join('\n');
-              Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(tr('allLogsCopiedToClipboard'))),
-              );
-            },
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              icon: const Icon(Icons.copy_rounded),
+              tooltip: tr('copyAllToClipboard'),
+              onPressed: () {
+                final text = widget.talker.history
+                    .map(
+                      (e) =>
+                          '[${e.timestamp.toIso8601String()}] [${e.title}] ${e.message}',
+                    )
+                    .join('\n');
+                Clipboard.setData(ClipboardData(text: text));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(tr('allLogsCopiedToClipboard'))),
+                );
+              },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_sweep_rounded),
-            tooltip: tr('clearHistory'),
-            onPressed: () {
-              setState(() {
-                widget.talker.clear();
-              });
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(tr('logHistoryCleared'))));
-            },
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              icon: const Icon(Icons.delete_sweep_rounded),
+              tooltip: tr('clearHistory'),
+              onPressed: () {
+                setState(() {
+                  widget.talker.clear();
+                });
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(tr('logHistoryCleared'))));
+              },
+            ),
           ),
         ],
       ),

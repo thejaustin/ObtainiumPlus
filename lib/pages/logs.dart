@@ -7,6 +7,7 @@ import 'package:obtainium/core/logging/app_log_db.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/theme.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -176,62 +177,86 @@ class _LogsPageState extends State<LogsPage> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            IconButton(
-              onPressed: hasLogs ? _scrollToTop : null,
-              icon: const Icon(Icons.keyboard_arrow_up_rounded),
+            ScaleTouchWrapper(
+              hapticOnPressDown: hasLogs,
+              scaleDownFactor: 0.88,
+              child: IconButton(
+                onPressed: hasLogs ? _scrollToTop : null,
+                icon: const Icon(Icons.keyboard_arrow_up_rounded),
+              ),
             ),
-            IconButton(
-              onPressed: hasLogs ? _scrollToBottom : null,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded),
+            ScaleTouchWrapper(
+              hapticOnPressDown: hasLogs,
+              scaleDownFactor: 0.88,
+              child: IconButton(
+                onPressed: hasLogs ? _scrollToBottom : null,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded),
+              ),
             ),
             _toolbarDivider(cs),
-            PopupMenuButton<int>(
-              icon: const Icon(Icons.filter_list_rounded),
-              tooltip: tr('filter'),
-              initialValue: _days,
-              onSelected: _loadLogs,
-              itemBuilder: (context) => _dayOptions
-                  .map(
-                    (e) => CheckedPopupMenuItem<int>(
-                      value: e,
-                      checked: e == _days,
-                      child: Text(plural('day', e)),
-                    ),
-                  )
-                  .toList(),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.88,
+              child: PopupMenuButton<int>(
+                icon: const Icon(Icons.filter_list_rounded),
+                tooltip: tr('filter'),
+                initialValue: _days,
+                onSelected: _loadLogs,
+                itemBuilder: (context) => _dayOptions
+                    .map(
+                      (e) => CheckedPopupMenuItem<int>(
+                        value: e,
+                        checked: e == _days,
+                        child: Text(plural('day', e)),
+                      ),
+                    )
+                    .toList(),
+              ),
             ),
             if (isTV)
-              IconButton(
-                onPressed: hasLogs
-                    ? () {
-                        AppHaptics.selectionClick();
-                        _copyLogs();
-                      }
-                    : null,
-                icon: const Icon(Icons.copy_rounded),
-                tooltip: tr('copyToClipboard'),
+              ScaleTouchWrapper(
+                hapticOnPressDown: hasLogs,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  onPressed: hasLogs
+                      ? () {
+                          AppHaptics.selectionClick();
+                          _copyLogs();
+                        }
+                      : null,
+                  icon: const Icon(Icons.copy_rounded),
+                  tooltip: tr('copyToClipboard'),
+                ),
               )
             else
-              IconButton(
+              ScaleTouchWrapper(
+                hapticOnPressDown: hasLogs,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  onPressed: hasLogs
+                      ? () {
+                          AppHaptics.selectionClick();
+                          _shareLogs();
+                        }
+                      : null,
+                  icon: const Icon(Icons.share_rounded),
+                  tooltip: tr('share'),
+                ),
+              ),
+            ScaleTouchWrapper(
+              hapticOnPressDown: hasLogs,
+              scaleDownFactor: 0.88,
+              child: IconButton(
                 onPressed: hasLogs
                     ? () {
                         AppHaptics.selectionClick();
-                        _shareLogs();
+                        _clearLogs();
                       }
                     : null,
-                icon: const Icon(Icons.share_rounded),
-                tooltip: tr('share'),
+                color: cs.error,
+                icon: const Icon(Icons.delete_outline_rounded),
+                tooltip: tr('remove'),
               ),
-            IconButton(
-              onPressed: hasLogs
-                  ? () {
-                      AppHaptics.selectionClick();
-                      _clearLogs();
-                    }
-                  : null,
-              color: cs.error,
-              icon: const Icon(Icons.delete_outline_rounded),
-              tooltip: tr('remove'),
             ),
           ],
         ),

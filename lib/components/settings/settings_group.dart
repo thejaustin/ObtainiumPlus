@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -59,18 +60,26 @@ class SettingsGroup extends StatelessWidget {
                   ),
                 ),
                 if (helpText != null)
-                  IconButton(
-                    icon: const Icon(Icons.help_outline_rounded, size: 18),
-                    onPressed: () => _showHelp(context),
-                    visualDensity: VisualDensity.compact,
-                    tooltip: tr('help'),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.88,
+                    child: IconButton(
+                      icon: const Icon(Icons.help_outline_rounded, size: 18),
+                      onPressed: () => _showHelp(context),
+                      visualDensity: VisualDensity.compact,
+                      tooltip: tr('help'),
+                    ),
                   ),
                 if (onReset != null)
-                  IconButton(
-                    icon: const Icon(Icons.restart_alt_rounded, size: 18),
-                    onPressed: onReset,
-                    visualDensity: VisualDensity.compact,
-                    tooltip: tr('resetToDefault'),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.88,
+                    child: IconButton(
+                      icon: const Icon(Icons.restart_alt_rounded, size: 18),
+                      onPressed: onReset,
+                      visualDensity: VisualDensity.compact,
+                      tooltip: tr('resetToDefault'),
+                    ),
                   ),
               ],
             ),
@@ -154,9 +163,13 @@ class SettingsGroup extends StatelessWidget {
         icon: Icons.help_outline_rounded,
         content: Text(helpText!),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(tr('ok')),
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.94,
+            child: TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(tr('ok')),
+            ),
           ),
         ],
       ),

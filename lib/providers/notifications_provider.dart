@@ -6,6 +6,7 @@ import 'dart:isolate';
 import 'dart:ui';
 
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -437,14 +438,18 @@ class NotificationsProvider {
           title: Text(title),
           content: Text(content),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(null);
-                if (doublePop) {
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: TextButton(
+                onPressed: () {
                   Navigator.of(context).pop(null);
-                }
-              },
-              child: Text(tr('ok')),
+                  if (doublePop) {
+                    Navigator.of(context).pop(null);
+                  }
+                },
+                child: Text(tr('ok')),
+              ),
             ),
           ],
         ),

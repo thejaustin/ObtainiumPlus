@@ -4,6 +4,7 @@ import 'package:hsluv/hsluv.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -718,33 +719,37 @@ class _GeneratedFormState extends State<GeneratedForm> {
                           1
                       ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: IconButton(
-                            onPressed: () {
-                              setState(() {
-                                var temp =
-                                    values[fieldKey]
-                                        as Map<String, MapEntry<int, bool>>;
-                                // get selected category str where bool is true
-                                final oldEntry = temp.entries.firstWhere(
-                                  (entry) => entry.value.value,
-                                );
-                                // generate new color, ensure it is not the same
-                                int newColor = oldEntry.value.key;
-                                while (oldEntry.value.key == newColor) {
-                                  newColor = generateRandomLightColor().value;
-                                }
-                                // Update entry with new color, remain selected
-                                temp.update(
-                                  oldEntry.key,
-                                  (old) => MapEntry(newColor, old.value),
-                                );
-                                values[fieldKey] = temp;
-                                someValueChanged();
-                              });
-                            },
-                            icon: const Icon(Icons.format_color_fill_rounded),
-                            visualDensity: VisualDensity.compact,
-                            tooltip: tr('colour'),
+                          child: ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  var temp =
+                                      values[fieldKey]
+                                          as Map<String, MapEntry<int, bool>>;
+                                  // get selected category str where bool is true
+                                  final oldEntry = temp.entries.firstWhere(
+                                    (entry) => entry.value.value,
+                                  );
+                                  // generate new color, ensure it is not the same
+                                  int newColor = oldEntry.value.key;
+                                  while (oldEntry.value.key == newColor) {
+                                    newColor = generateRandomLightColor().value;
+                                  }
+                                  // Update entry with new color, remain selected
+                                  temp.update(
+                                    oldEntry.key,
+                                    (old) => MapEntry(newColor, old.value),
+                                  );
+                                  values[fieldKey] = temp;
+                                  someValueChanged();
+                                });
+                              },
+                              icon: const Icon(Icons.format_color_fill_rounded),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: tr('colour'),
+                            ),
                           ),
                         )
                       : const SizedBox.shrink(),
@@ -755,42 +760,46 @@ class _GeneratedFormState extends State<GeneratedForm> {
                           true
                       ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: IconButton(
-                            onPressed: () {
-                              fn() {
-                                setState(() {
-                                  var temp =
-                                      values[fieldKey]
-                                          as Map<String, MapEntry<int, bool>>;
-                                  temp.removeWhere((key, value) => value.value);
-                                  values[fieldKey] = temp;
-                                  someValueChanged();
-                                });
-                              }
+                          child: ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              onPressed: () {
+                                fn() {
+                                  setState(() {
+                                    var temp =
+                                        values[fieldKey]
+                                            as Map<String, MapEntry<int, bool>>;
+                                    temp.removeWhere((key, value) => value.value);
+                                    values[fieldKey] = temp;
+                                    someValueChanged();
+                                  });
+                                }
 
-                              if (item.deleteConfirmationMessage != null) {
-                                var message = item.deleteConfirmationMessage!;
-                                showDialog<Map<String, dynamic>?>(
-                                  context: context,
-                                  builder: (BuildContext ctx) {
-                                    return GeneratedFormModal(
-                                      title: message.key,
-                                      message: message.value,
-                                      items: const [],
-                                    );
-                                  },
-                                ).then((value) {
-                                  if (value != null) {
-                                    fn();
-                                  }
-                                });
-                              } else {
-                                fn();
-                              }
-                            },
-                            icon: const Icon(Icons.remove),
-                            visualDensity: VisualDensity.compact,
-                            tooltip: tr('remove'),
+                                if (item.deleteConfirmationMessage != null) {
+                                  var message = item.deleteConfirmationMessage!;
+                                  showDialog<Map<String, dynamic>?>(
+                                    context: context,
+                                    builder: (BuildContext ctx) {
+                                      return GeneratedFormModal(
+                                        title: message.key,
+                                        message: message.value,
+                                        items: const [],
+                                      );
+                                    },
+                                  ).then((value) {
+                                    if (value != null) {
+                                      fn();
+                                    }
+                                  });
+                                } else {
+                                  fn();
+                                }
+                              },
+                              icon: const Icon(Icons.remove),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: tr('remove'),
+                            ),
                           ),
                         )
                       : const SizedBox.shrink(),
@@ -799,19 +808,27 @@ class _GeneratedFormState extends State<GeneratedForm> {
                           true
                       ? Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: TextButton.icon(
-                            onPressed: onAddPressed,
-                            icon: const Icon(Icons.add),
-                            label: Text(item.label),
+                          child: ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.92,
+                            child: TextButton.icon(
+                              onPressed: onAddPressed,
+                              icon: const Icon(Icons.add),
+                              label: Text(item.label),
+                            ),
                           ),
                         )
                       : Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: IconButton(
-                            onPressed: onAddPressed,
-                            icon: const Icon(Icons.add),
-                            visualDensity: VisualDensity.compact,
-                            tooltip: tr('add'),
+                          child: ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              onPressed: onAddPressed,
+                              icon: const Icon(Icons.add),
+                              visualDensity: VisualDensity.compact,
+                              tooltip: tr('add'),
+                            ),
                           ),
                         ),
                 ],
@@ -866,21 +883,25 @@ class _GeneratedFormState extends State<GeneratedForm> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.error,
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: values[fieldKey].length > 0,
+                        scaleDownFactor: 0.92,
+                        child: TextButton.icon(
+                          style: TextButton.styleFrom(
+                            foregroundColor: Theme.of(context).colorScheme.error,
+                          ),
+                          onPressed: (values[fieldKey].length > 0)
+                              ? () {
+                                  var temp = List.from(values[fieldKey]);
+                                  temp.removeAt(i);
+                                  values[fieldKey] = List.from(temp);
+                                  forceUpdateKeyCount++;
+                                  someValueChanged();
+                                }
+                              : null,
+                          label: Text('${item.label} (${i + 1})'),
+                          icon: const Icon(Icons.delete_outline_rounded),
                         ),
-                        onPressed: (values[fieldKey].length > 0)
-                            ? () {
-                                var temp = List.from(values[fieldKey]);
-                                temp.removeAt(i);
-                                values[fieldKey] = List.from(temp);
-                                forceUpdateKeyCount++;
-                                someValueChanged();
-                              }
-                            : null,
-                        label: Text('${item.label} (${i + 1})'),
-                        icon: const Icon(Icons.delete_outline_rounded),
                       ),
                     ],
                   ),
@@ -894,16 +915,20 @@ class _GeneratedFormState extends State<GeneratedForm> {
               child: Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        values[fieldKey].add(
-                          getDefaultValuesFromFormItems(item.items),
-                        );
-                        forceUpdateKeyCount++;
-                        someValueChanged();
-                      },
-                      icon: const Icon(Icons.add),
-                      label: Text(item.label),
+                    child: ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.96,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          values[fieldKey].add(
+                            getDefaultValuesFromFormItems(item.items),
+                          );
+                          forceUpdateKeyCount++;
+                          someValueChanged();
+                        },
+                        icon: const Icon(Icons.add),
+                        label: Text(item.label),
+                      ),
                     ),
                   ),
                 ],

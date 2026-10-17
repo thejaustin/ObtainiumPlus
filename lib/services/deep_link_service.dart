@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/custom_errors.dart';
 
 import 'package:obtainium/providers/apps_provider.dart';
@@ -27,9 +28,13 @@ class DeepLinkService {
             icon: Icons.link_off_outlined,
             content: const Text('Invalid or unauthorized deep link.'),
             actions: [
-              FilledButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text(tr('ok')),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(tr('ok')),
+                ),
               ),
             ],
           );
@@ -59,9 +64,13 @@ class DeepLinkService {
                   'Invalid or potentially malicious JSON data.',
                 ),
                 actions: [
-                  FilledButton(
-                    onPressed: () => Navigator.of(ctx).pop(),
-                    child: Text(tr('ok')),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.94,
+                    child: FilledButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: Text(tr('ok')),
+                    ),
                   ),
                 ],
               );

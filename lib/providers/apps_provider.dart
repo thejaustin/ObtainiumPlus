@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode, sanitizeJsonValue;
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
@@ -3151,18 +3152,26 @@ class _AppFilePickerState extends State<AppFilePicker> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(tr('cancel')),
+          ),
         ),
-        TextButton(
-          onPressed: () {
-            AppHaptics.selectionClick();
-            Navigator.of(context).pop(fileUrl);
-          },
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              Navigator.of(context).pop(fileUrl);
+            },
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );
@@ -3199,18 +3208,26 @@ class _APKOriginWarningDialogState extends State<APKOriginWarningDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(null);
-          },
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(null);
+            },
+            child: Text(tr('cancel')),
+          ),
         ),
-        TextButton(
-          onPressed: () {
-            AppHaptics.selectionClick();
-            Navigator.of(context).pop(true);
-          },
-          child: Text(tr('continue')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              Navigator.of(context).pop(true);
+            },
+            child: Text(tr('continue')),
+          ),
         ),
       ],
     );

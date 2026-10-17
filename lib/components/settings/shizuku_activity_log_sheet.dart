@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/services/shizuku_telemetry_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
@@ -120,15 +121,23 @@ class _ShizukuActivityLogSheetContentState
                 ),
               ),
               if (entries.isNotEmpty) ...[
-                IconButton(
-                  tooltip: tr('copyToClipboard'),
-                  icon: const Icon(Icons.copy_rounded, size: 20),
-                  onPressed: _copyLogToClipboard,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.88,
+                  child: IconButton(
+                    tooltip: tr('copyToClipboard'),
+                    icon: const Icon(Icons.copy_rounded, size: 20),
+                    onPressed: _copyLogToClipboard,
+                  ),
                 ),
-                IconButton(
-                  tooltip: tr('clear'),
-                  icon: const Icon(Icons.delete_outline_rounded, size: 20),
-                  onPressed: _clearLog,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.88,
+                  child: IconButton(
+                    tooltip: tr('clear'),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                    onPressed: _clearLog,
+                  ),
                 ),
               ],
             ],

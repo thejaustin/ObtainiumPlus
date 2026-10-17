@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class ContextualTip extends StatefulWidget {
   final String title;
@@ -72,13 +73,17 @@ class _ContextualTipState extends State<ContextualTip> {
                 ],
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close, size: 20),
-              tooltip: tr('close'),
-              color: Theme.of(context).colorScheme.onTertiaryContainer,
-              onPressed: () => setState(() => _dismissed = true),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.88,
+              child: IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                tooltip: tr('close'),
+                color: Theme.of(context).colorScheme.onTertiaryContainer,
+                onPressed: () => setState(() => _dismissed = true),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
             ),
           ],
         ),
