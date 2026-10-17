@@ -112,9 +112,13 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             icon: Icons.error_outline,
             content: Text(e.toString().replaceFirst('Exception: ', '')),
             actions: [
-              FilledButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(tr('close')),
+              ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(tr('close')),
+                ),
               ),
             ],
           ),
@@ -229,9 +233,13 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                 (trackedCount > 0 && overallProgress == 0))
               Padding(
                 padding: const EdgeInsets.only(top: 20),
-                child: FilledButton(
-                  onPressed: () => setState(() => _isDownloading = false),
-                  child: Text(tr('done')),
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.96,
+                  child: FilledButton(
+                    onPressed: () => setState(() => _isDownloading = false),
+                    child: Text(tr('done')),
+                  ),
                 ),
               ),
           ],
