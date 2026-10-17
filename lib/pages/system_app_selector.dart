@@ -380,20 +380,28 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(tr('cancel')),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: Text(tr('cancel')),
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: () {
-                          setState(
-                            () => _appLabels[packageName] = selectedLabels
-                                .toList(),
-                          );
-                          Navigator.pop(context);
-                        },
-                        child: Text(tr('save')),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: FilledButton(
+                          onPressed: () {
+                            setState(
+                              () => _appLabels[packageName] = selectedLabels
+                                  .toList(),
+                            );
+                            Navigator.pop(context);
+                          },
+                          child: Text(tr('save')),
+                        ),
                       ),
                     ],
                   ),
@@ -510,32 +518,40 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                         ),
                         if (!widget.returnUrlOnSelect &&
                             filteredApps.isNotEmpty)
-                          IconButton(
-                            icon: Icon(
-                              allFilteredSelected
-                                  ? Icons.deselect_rounded
-                                  : Icons.select_all_rounded,
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              icon: Icon(
+                                allFilteredSelected
+                                    ? Icons.deselect_rounded
+                                    : Icons.select_all_rounded,
+                              ),
+                              tooltip: allFilteredSelected
+                                  ? tr('deselectAll')
+                                  : tr('selectAll'),
+                              onPressed: () => _toggleSelectAll(filteredApps),
                             ),
-                            tooltip: allFilteredSelected
-                                ? tr('deselectAll')
-                                : tr('selectAll'),
-                            onPressed: () => _toggleSelectAll(filteredApps),
                           ),
-                        IconButton(
-                          icon: Icon(
-                            _viewMode == SystemAppViewMode.list
-                                ? Icons.grid_view_outlined
-                                : Icons.view_list_outlined,
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.88,
+                          child: IconButton(
+                            icon: Icon(
+                              _viewMode == SystemAppViewMode.list
+                                  ? Icons.grid_view_outlined
+                                  : Icons.view_list_outlined,
+                            ),
+                            onPressed: () => setState(
+                              () =>
+                                  _viewMode = _viewMode == SystemAppViewMode.list
+                                  ? SystemAppViewMode.grid
+                                  : SystemAppViewMode.list,
+                            ),
+                            tooltip: _viewMode == SystemAppViewMode.list
+                                ? tr('gridView')
+                                : tr('listView'),
                           ),
-                          onPressed: () => setState(
-                            () =>
-                                _viewMode = _viewMode == SystemAppViewMode.list
-                                ? SystemAppViewMode.grid
-                                : SystemAppViewMode.list,
-                          ),
-                          tooltip: _viewMode == SystemAppViewMode.list
-                              ? tr('gridView')
-                              : tr('listView'),
                         ),
                         PopupMenuButton<SystemAppSortMethod>(
                           icon: const Icon(Icons.sort_outlined),
@@ -580,21 +596,29 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             ),
                           ],
                         ),
-                        IconButton(
-                          icon: Icon(
-                            _showSystemApps
-                                ? Icons.system_update_rounded
-                                : Icons.person_outline_rounded,
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.88,
+                          child: IconButton(
+                            icon: Icon(
+                              _showSystemApps
+                                  ? Icons.system_update_rounded
+                                  : Icons.person_outline_rounded,
+                            ),
+                            onPressed: () => setState(
+                              () => _showSystemApps = !_showSystemApps,
+                            ),
+                            tooltip: tr('showSystemApps'),
                           ),
-                          onPressed: () => setState(
-                            () => _showSystemApps = !_showSystemApps,
-                          ),
-                          tooltip: tr('showSystemApps'),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(context),
-                          tooltip: tr('close'),
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.88,
+                          child: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(context),
+                            tooltip: tr('close'),
+                          ),
                         ),
                       ],
                     ),
@@ -832,31 +856,39 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         ),
         actions: [
           if (!widget.returnUrlOnSelect && filteredApps.isNotEmpty)
-            IconButton(
-              icon: Icon(
-                allFilteredSelected
-                    ? Icons.deselect_rounded
-                    : Icons.select_all_rounded,
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.88,
+              child: IconButton(
+                icon: Icon(
+                  allFilteredSelected
+                      ? Icons.deselect_rounded
+                      : Icons.select_all_rounded,
+                ),
+                tooltip: allFilteredSelected
+                    ? tr('deselectAll')
+                    : tr('selectAll'),
+                onPressed: () => _toggleSelectAll(filteredApps),
               ),
-              tooltip: allFilteredSelected
-                  ? tr('deselectAll')
-                  : tr('selectAll'),
-              onPressed: () => _toggleSelectAll(filteredApps),
             ),
-          IconButton(
-            icon: Icon(
-              _viewMode == SystemAppViewMode.list
-                  ? Icons.grid_view_outlined
-                  : Icons.view_list_outlined,
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              icon: Icon(
+                _viewMode == SystemAppViewMode.list
+                    ? Icons.grid_view_outlined
+                    : Icons.view_list_outlined,
+              ),
+              onPressed: () => setState(
+                () => _viewMode = _viewMode == SystemAppViewMode.list
+                    ? SystemAppViewMode.grid
+                    : SystemAppViewMode.list,
+              ),
+              tooltip: _viewMode == SystemAppViewMode.list
+                  ? tr('gridView')
+                  : tr('listView'),
             ),
-            onPressed: () => setState(
-              () => _viewMode = _viewMode == SystemAppViewMode.list
-                  ? SystemAppViewMode.grid
-                  : SystemAppViewMode.list,
-            ),
-            tooltip: _viewMode == SystemAppViewMode.list
-                ? tr('gridView')
-                : tr('listView'),
           ),
           PopupMenuButton<SystemAppSortMethod>(
             icon: const Icon(Icons.sort_outlined),
@@ -901,14 +933,18 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               ),
             ],
           ),
-          IconButton(
-            icon: Icon(
-              _showSystemApps
-                  ? Icons.system_update_rounded
-                  : Icons.person_outline_rounded,
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              icon: Icon(
+                _showSystemApps
+                    ? Icons.system_update_rounded
+                    : Icons.person_outline_rounded,
+              ),
+              onPressed: () => setState(() => _showSystemApps = !_showSystemApps),
+              tooltip: tr('showSystemApps'),
             ),
-            onPressed: () => setState(() => _showSystemApps = !_showSystemApps),
-            tooltip: tr('showSystemApps'),
           ),
         ],
         bottom: PreferredSize(
@@ -1248,12 +1284,16 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                 ),
               ),
               if (!widget.returnUrlOnSelect) ...[
-                IconButton(
-                  icon: const Icon(Icons.label_outline, size: 20),
-                  onPressed: () => _showLabelEditor(pkg.packageName!),
-                  tooltip: tr('editLabels'),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.88,
+                  child: IconButton(
+                    icon: const Icon(Icons.label_outline, size: 20),
+                    onPressed: () => _showLabelEditor(pkg.packageName!),
+                    tooltip: tr('editLabels'),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Checkbox(
@@ -1352,12 +1392,16 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           setState(() => pkg.isSelected = v ?? false),
                       visualDensity: VisualDensity.compact,
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.label_outline, size: 16),
-                      onPressed: () => _showLabelEditor(pkg.packageName!),
-                      tooltip: tr('editLabels'),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.88,
+                      child: IconButton(
+                        icon: const Icon(Icons.label_outline, size: 16),
+                        onPressed: () => _showLabelEditor(pkg.packageName!),
+                        tooltip: tr('editLabels'),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
                     ),
                   ],
                 ),
