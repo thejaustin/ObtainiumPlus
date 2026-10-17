@@ -12,6 +12,7 @@ import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 // ─── Data model ────────────────────────────────────────────────────────────
 
@@ -277,11 +278,15 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close_rounded),
-            onPressed: () => Navigator.pop(context),
-            visualDensity: VisualDensity.compact,
-            color: cs.onSurfaceVariant,
+          ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () => Navigator.pop(context),
+              visualDensity: VisualDensity.compact,
+              color: cs.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -336,21 +341,29 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
         child: Row(
           children: [
             Expanded(
-              child: OutlinedButton.icon(
-                icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                label: const Text('GitHub Releases'),
-                onPressed: () {
-                  launchUrlString(
-                    'https://github.com/thejaustin/ObtainiumPlus/releases',
-                    mode: LaunchMode.externalApplication,
-                  );
-                },
+              child: ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.94,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                  label: const Text('GitHub Releases'),
+                  onPressed: () {
+                    launchUrlString(
+                      'https://github.com/thejaustin/ObtainiumPlus/releases',
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                ),
               ),
             ),
             const SizedBox(width: 12),
-            FilledButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(tr('ok')),
+            ScaleTouchWrapper(
+              hapticOnPressDown: true,
+              scaleDownFactor: 0.94,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(tr('ok')),
+              ),
             ),
           ],
         ),
@@ -497,21 +510,29 @@ class _ErrorState extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: Text(tr('retry')),
-                  onPressed: onRetry,
+                ScaleTouchWrapper(
+                  hapticOnPressDown: onRetry != null,
+                  scaleDownFactor: 0.94,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                    label: Text(tr('retry')),
+                    onPressed: onRetry,
+                  ),
                 ),
                 const SizedBox(width: 8),
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text('GitHub'),
-                  onPressed: () {
-                    launchUrlString(
-                      'https://github.com/thejaustin/ObtainiumPlus/releases',
-                      mode: LaunchMode.externalApplication,
-                    );
-                  },
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.94,
+                  child: FilledButton.tonalIcon(
+                    icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                    label: const Text('GitHub'),
+                    onPressed: () {
+                      launchUrlString(
+                        'https://github.com/thejaustin/ObtainiumPlus/releases',
+                        mode: LaunchMode.externalApplication,
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
