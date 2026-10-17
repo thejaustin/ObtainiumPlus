@@ -977,16 +977,19 @@ class AddAppPageState extends State<AddAppPage> {
                         ...sourceProvider.sources.map(
                           (e) => Padding(
                             padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: InkWell(
-                              onTap: e.hosts.isNotEmpty
-                                  ? () {
-                                      launchUrlString(
-                                        'https://${e.hosts[0]}',
-                                        mode: LaunchMode.externalApplication,
-                                      );
-                                    }
-                                  : null,
-                              child: Text(
+                            child: ScaleTouchWrapper(
+                              hapticOnPressDown: e.hosts.isNotEmpty,
+                              scaleDownFactor: 0.95,
+                              child: InkWell(
+                                onTap: e.hosts.isNotEmpty
+                                    ? () {
+                                        launchUrlString(
+                                          'https://${e.hosts[0]}',
+                                          mode: LaunchMode.externalApplication,
+                                        );
+                                      }
+                                    : null,
+                                child: Text(
                                 '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
                                 style: TextStyle(
                                   decoration: e.hosts.isNotEmpty
@@ -1000,6 +1003,7 @@ class AddAppPageState extends State<AddAppPage> {
                             ),
                           ),
                         ),
+                      ),
                         const SizedBox(height: 16),
                         Text(
                           '${tr('note')}:',
