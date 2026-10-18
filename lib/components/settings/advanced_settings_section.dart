@@ -724,6 +724,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                   icon: const Icon(Icons.content_paste_rounded),
                   onPressed: () async {
                     final data = await Clipboard.getData(Clipboard.kTextPlain);
+                    if (!mounted) return;
                     if (data?.text != null && data!.text!.trim().isNotEmpty) {
                       AppHaptics.selectionClick();
                       setState(() {
