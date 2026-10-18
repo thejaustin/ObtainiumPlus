@@ -32,6 +32,9 @@ All notable changes to Obtainium+ are documented in this file.
 - **Animated Corner Radius Preview**: The shape preview in Appearance settings now updates live as you drag — the icon tile, card, and chip all animate their corners simultaneously with an eased spring, so you can see the radius changes in realistic context.
 - **Swipe Action Chip Grid**: The swipe gesture action selectors (left/right) are now a 3×2 chip grid showing each action's icon and label. The active chip fills with the primary container color and its border highlights. Chips animate with spring-press feedback.
 - **Segmented Selectors**: Grid category display (Sections/Flat) and category icon position (Disabled/Leading/Trailing/Below) now use segmented buttons instead of dropdowns, making all options immediately visible without opening a menu.
+- **Ban Warning Threshold Slider**: The ban/rate-limit warning threshold in Safety & Rate Limits is now a slider (1–50) instead of a plain number field, with the same animated badge and haptic-notch feedback as other slider controls.
+- **Preferred Update Source Chip Grid**: The preferred update source selector in Updates settings is now a 3×2 chip grid (Direct, Play Store, Aurora, GitHub, APKPure) matching the swipe gesture chip grid style — each source shows its icon and label, the selected source fills with the primary container color.
+- **Time Picker Sliders**: The start/end hour pickers in the update schedule dialog and the notification quiet hours dialog are now compact sliders (0–23 h) inside styled labeled boxes, replacing the scroll menus. The current hour is shown as a bold label above each slider track.
 
 ### 🐛 Bug Fixes & Polish
 

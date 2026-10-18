@@ -490,48 +490,7 @@ class UpdateSettingsSection extends StatelessWidget {
               builder: (context, behaviorSettings, _) => Column(
                 children: [
                   if (_matches(tr('preferredUpdateSource')))
-                    ListTile(
-                      leading: const Icon(Icons.store_outlined),
-                      title: Text(
-                        tr('preferredUpdateSource'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      subtitle: Text(
-                        _getSourceDisplayName(
-                          behaviorSettings.preferredUpdateSource,
-                        ),
-                      ),
-                      trailing: DropdownButton<String>(
-                        value: behaviorSettings.preferredUpdateSource,
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            behaviorSettings.preferredUpdateSource = newValue;
-                          }
-                        },
-                        items: [
-                          DropdownMenuItem(
-                            value: 'direct',
-                            child: Text(tr('direct')),
-                          ),
-                          DropdownMenuItem(
-                            value: 'play_store',
-                            child: Text(tr('playStore')),
-                          ),
-                          DropdownMenuItem(
-                            value: 'aurora',
-                            child: Text(tr('auroraStore')),
-                          ),
-                          DropdownMenuItem(
-                            value: 'github',
-                            child: Text(tr('github')),
-                          ),
-                          DropdownMenuItem(
-                            value: 'apkpure',
-                            child: Text(tr('apkpure')),
-                          ),
-                        ],
-                      ),
-                    ),
+                    _buildSourceChipGrid(context, behaviorSettings),
                   if (plusSettings.enableAllPlusFeatures &&
                       _matches(tr('plusEnableAutoUpdateRules')))
                     SwitchListTile.adaptive(
@@ -572,6 +531,175 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
+  static const _sourceOptions = [
+    (key: 'direct', labelKey: 'direct', icon: Icons.download_outlined),
+    (key: 'play_store', labelKey: 'playStore', icon: Icons.play_arrow_rounded),
+    (key: 'aurora', labelKey: 'auroraStore', icon: Icons.auto_awesome_outlined),
+    (key: 'github', labelKey: 'github', icon: Icons.code_rounded),
+    (key: 'apkpure', labelKey: 'apkpure', icon: Icons.apps_rounded),
+  ];
+
+  Widget _buildSourceChipGrid(
+    BuildContext context,
+    BehaviorSettingsProvider behaviorSettings,
+  ) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final isCompact = plusSettings.plusUseCompactSettings;
+    final radius = plusSettings.plusGlobalCornerRadius.clamp(8.0, 20.0);
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, isCompact ? 4 : 8, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.store_outlined, size: 22),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  tr('preferredUpdateSource'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 3-column chip grid (first row: 3, second row: 2 centered)
+          Column(
+            children: [
+              Row(
+                children: _sourceOptions.sublist(0, 3).map((src) {
+                  final isSelected =
+                      behaviorSettings.preferredUpdateSource == src.key;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: src == _sourceOptions[2] ? 0 : 6,
+                        bottom: 6,
+                      ),
+                      child: _buildSourceChip(
+                        context,
+                        src: src,
+                        isSelected: isSelected,
+                        radius: radius,
+                        animsEnabled: animsEnabled,
+                        isCompact: isCompact,
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          behaviorSettings.preferredUpdateSource = src.key;
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              Row(
+                children: [
+                  const Expanded(child: SizedBox()),
+                  ..._sourceOptions.sublist(3).map((src) {
+                    final isSelected =
+                        behaviorSettings.preferredUpdateSource == src.key;
+                    return Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: src == _sourceOptions[3] ? 0 : 6,
+                        ),
+                        child: _buildSourceChip(
+                          context,
+                          src: src,
+                          isSelected: isSelected,
+                          radius: radius,
+                          animsEnabled: animsEnabled,
+                          isCompact: isCompact,
+                          onTap: () {
+                            AppHaptics.selectionClick();
+                            behaviorSettings.preferredUpdateSource = src.key;
+                          },
+                        ),
+                      ),
+                    );
+                  }),
+                  const Expanded(child: SizedBox()),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSourceChip(
+    BuildContext context, {
+    required ({String key, String labelKey, IconData icon}) src,
+    required bool isSelected,
+    required double radius,
+    required bool animsEnabled,
+    required bool isCompact,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return ScaleTouchWrapper(
+      hapticOnPressDown: true,
+      scaleDownFactor: 0.92,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: animsEnabled ? 180 : 0),
+        curve: Curves.easeOutCubic,
+        height: isCompact ? 36 : 40,
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.5)
+                : colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: isSelected ? 1.5 : 1.0,
+          ),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(radius),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(radius),
+            onTap: onTap,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  src.icon,
+                  size: 14,
+                  color: isSelected
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    tr(src.labelKey),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
+                      color: isSelected
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   String _getSourceDisplayName(String source) {
     switch (source) {
       case 'direct':
@@ -601,55 +729,136 @@ class UpdateSettingsSection extends StatelessWidget {
           icon: Icons.schedule_outlined,
           content: StatefulBuilder(
             builder: (context, setDialogState) {
+              final colorScheme = Theme.of(context).colorScheme;
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Row(
                     children: [
                       Expanded(
-                        child: Column(
-                          children: [
-                            Text(tr('start')),
-                            DropdownButton<int>(
-                              value: settings.updateScheduleStartHour,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  settings.updateScheduleStartHour = val;
-                                  setDialogState(() {});
-                                }
-                              },
-                              items: List.generate(
-                                24,
-                                (i) => DropdownMenuItem(
-                                  value: i,
-                                  child: Text('$i:00'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHigh
+                                .withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tr('start'),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              Text(
+                                '${settings.updateScheduleStartHour}:00',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 2,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 8),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 16),
+                                ),
+                                child: Slider(
+                                  value: settings.updateScheduleStartHour
+                                      .toDouble(),
+                                  min: 0,
+                                  max: 23,
+                                  divisions: 23,
+                                  onChanged: (val) {
+                                    settings.updateScheduleStartHour =
+                                        val.round();
+                                    setDialogState(() {});
+                                  },
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          children: [
-                            Text(tr('end')),
-                            DropdownButton<int>(
-                              value: settings.updateScheduleEndHour,
-                              onChanged: (val) {
-                                if (val != null) {
-                                  settings.updateScheduleEndHour = val;
-                                  setDialogState(() {});
-                                }
-                              },
-                              items: List.generate(
-                                24,
-                                (i) => DropdownMenuItem(
-                                  value: i,
-                                  child: Text('$i:00'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHigh
+                                .withValues(alpha: 0.5),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant
+                                  .withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tr('end'),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                              Text(
+                                '${settings.updateScheduleEndHour}:00',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 2,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 8),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 16),
+                                ),
+                                child: Slider(
+                                  value:
+                                      settings.updateScheduleEndHour.toDouble(),
+                                  min: 0,
+                                  max: 23,
+                                  divisions: 23,
+                                  onChanged: (val) {
+                                    settings.updateScheduleEndHour = val.round();
+                                    setDialogState(() {});
+                                  },
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ],

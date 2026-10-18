@@ -243,31 +243,37 @@ class NotificationSettingsSection extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
-                              DropdownButtonHideUnderline(
-                                child: DropdownButton<int>(
-                                  isExpanded: true,
-                                  value:
-                                      settings.plusNotificationQuietHoursStart,
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      AppHaptics.selectionClick();
-                                      settings
-                                          .plusNotificationQuietHoursStart = val;
-                                      setDialogState(() {});
-                                    }
-                                  },
-                                  items: List.generate(
-                                    24,
-                                    (i) => DropdownMenuItem(
-                                      value: i,
-                                      child: Text(
-                                        _formatHour(i),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      ),
+                              Text(
+                                _formatHour(
+                                    settings.plusNotificationQuietHoursStart),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  ),
+                              ),
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 2,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 8),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 16),
+                                ),
+                                child: Slider(
+                                  value: settings.plusNotificationQuietHoursStart
+                                      .toDouble(),
+                                  min: 0,
+                                  max: 23,
+                                  divisions: 23,
+                                  onChanged: (val) {
+                                    AppHaptics.selectionClick();
+                                    settings.plusNotificationQuietHoursStart =
+                                        val.round();
+                                    setDialogState(() {});
+                                  },
                                 ),
                               ),
                             ],
@@ -303,30 +309,37 @@ class NotificationSettingsSection extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
-                              DropdownButtonHideUnderline(
-                                child: DropdownButton<int>(
-                                  isExpanded: true,
-                                  value: settings.plusNotificationQuietHoursEnd,
-                                  onChanged: (val) {
-                                    if (val != null) {
-                                      AppHaptics.selectionClick();
-                                      settings.plusNotificationQuietHoursEnd =
-                                          val;
-                                      setDialogState(() {});
-                                    }
-                                  },
-                                  items: List.generate(
-                                    24,
-                                    (i) => DropdownMenuItem(
-                                      value: i,
-                                      child: Text(
-                                        _formatHour(i),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium,
-                                      ),
+                              Text(
+                                _formatHour(
+                                    settings.plusNotificationQuietHoursEnd),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.w600,
                                     ),
-                                  ),
+                              ),
+                              SliderTheme(
+                                data: SliderTheme.of(context).copyWith(
+                                  trackHeight: 2,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 8),
+                                  overlayShape: const RoundSliderOverlayShape(
+                                      overlayRadius: 16),
+                                ),
+                                child: Slider(
+                                  value: settings.plusNotificationQuietHoursEnd
+                                      .toDouble(),
+                                  min: 0,
+                                  max: 23,
+                                  divisions: 23,
+                                  onChanged: (val) {
+                                    AppHaptics.selectionClick();
+                                    settings.plusNotificationQuietHoursEnd =
+                                        val.round();
+                                    setDialogState(() {});
+                                  },
                                 ),
                               ),
                             ],

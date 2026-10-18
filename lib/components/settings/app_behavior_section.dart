@@ -478,80 +478,17 @@ class AppBehaviorSection extends StatelessWidget {
                     duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
                     curve: Curves.easeInOutCubic,
                     child: settings.plusEnableBanWarnings
-                        ? Padding(
-                            padding: const EdgeInsets.only(
-                              left: 72.0,
-                              right: 24.0,
-                              bottom: 12.0,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  tr(
-                                    'plusBanWarningThresholdDescription',
-                                    args: [
-                                      settings.plusBanWarningThreshold
-                                          .toString(),
-                                    ],
-                                  ),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Slider(
-                                        value: settings
-                                            .plusBanWarningThreshold
-                                            .toDouble(),
-                                        min: 1,
-                                        max: 50,
-                                        divisions: 49,
-                                        label: settings
-                                            .plusBanWarningThreshold
-                                            .toString(),
-                                        onChanged: (val) {
-                                          final rounded = val.round();
-                                          if (rounded !=
-                                              settings
-                                                  .plusBanWarningThreshold) {
-                                            AppHaptics.selectionClick();
-                                            settings
-                                                    .plusBanWarningThreshold =
-                                                rounded;
-                                          }
-                                        },
-                                      ),
-                                    ),
-                                    Container(
-                                      width: 40,
-                                      alignment: Alignment.centerRight,
-                                      child: Text(
-                                        settings.plusBanWarningThreshold
-                                            .toString(),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                        ? SettingsSliderTile(
+                            icon: Icons.warning_amber_outlined,
+                            title: tr('plusBanWarningThreshold'),
+                            value: settings.plusBanWarningThreshold.toDouble(),
+                            min: 1,
+                            max: 50,
+                            divisions: 49,
+                            labelBuilder: (v) => v.toInt().toString(),
+                            onChanged: (val) {
+                              settings.plusBanWarningThreshold = val.round();
+                            },
                           )
                         : const SizedBox.shrink(),
                   ),
