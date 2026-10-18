@@ -348,6 +348,14 @@ class ThemeBuilder {
         }
         return colorScheme.outline;
       }),
+      thumbIcon: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return Icon(Icons.check_rounded,
+              size: 16, color: colorScheme.primary);
+        }
+        return Icon(Icons.close_rounded,
+            size: 16, color: colorScheme.surfaceContainerHighest);
+      }),
     );
   }
 
