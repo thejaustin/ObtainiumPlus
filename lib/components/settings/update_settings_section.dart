@@ -262,7 +262,7 @@ class UpdateSettingsSection extends StatelessWidget {
           ScaleTouchWrapper(
             hapticOnPressDown: true,
             scaleDownFactor: 0.94,
-            child: ElevatedButton.icon(
+            child: FilledButton.tonalIcon(
               onPressed: () {
                 AppHaptics.selectionClick();
                 AppInstallService.openXiaomiAutostartSettings();
@@ -275,7 +275,7 @@ class UpdateSettingsSection extends StatelessWidget {
           ScaleTouchWrapper(
             hapticOnPressDown: true,
             scaleDownFactor: 0.94,
-            child: ElevatedButton.icon(
+            child: FilledButton.tonalIcon(
               onPressed: () {
                 AppHaptics.selectionClick();
                 AppInstallService.openXiaomiBatterySaverSettings();
@@ -884,6 +884,7 @@ class UpdateSettingsSection extends StatelessWidget {
                         label: Text(dayNames[day]),
                         selected: isSelected,
                         onSelected: (selected) {
+                          AppHaptics.selectionClick();
                           final current = List<int>.from(
                             settings.updateScheduleDays,
                           );

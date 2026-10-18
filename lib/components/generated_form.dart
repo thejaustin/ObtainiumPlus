@@ -918,7 +918,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                     child: ScaleTouchWrapper(
                       hapticOnPressDown: true,
                       scaleDownFactor: 0.96,
-                      child: ElevatedButton.icon(
+                      child: FilledButton.tonalIcon(
                         onPressed: () {
                           values[fieldKey].add(
                             getDefaultValuesFromFormItems(item.items),

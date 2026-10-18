@@ -796,13 +796,18 @@ class AddAppPageState extends State<AddAppPage> {
         const SizedBox(width: 16),
         searching
             ? const ExpressiveCircularProgressIndicator()
-            : ElevatedButton(
-                onPressed: searchQuery.isEmpty || doingSomething
-                    ? null
-                    : () {
-                        runSearch();
-                      },
-                child: Text(tr('search')),
+            : ScaleTouchWrapper(
+                hapticOnPressDown: searchQuery.isNotEmpty && !doingSomething,
+                scaleDownFactor: 0.94,
+                child: FilledButton(
+                  onPressed: searchQuery.isEmpty || doingSomething
+                      ? null
+                      : () {
+                          AppHaptics.selectionClick();
+                          runSearch();
+                        },
+                  child: Text(tr('search')),
+                ),
               ),
       ],
     );
