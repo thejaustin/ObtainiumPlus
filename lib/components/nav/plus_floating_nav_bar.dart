@@ -107,6 +107,7 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
   }
 
   void _bounce(int i) {
+    if (!widget.animationsEnabled) return;
     _bounceAnim[i] = TweenSequence<double>([
       TweenSequenceItem(
           tween: Tween(begin: 1.0, end: 1.24), weight: 30),
