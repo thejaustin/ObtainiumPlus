@@ -2615,7 +2615,23 @@ class AppsProvider with ChangeNotifier {
         await saveApps(apps, attemptToCorrectInstallStatus: false);
       }
       if (remove) {
+        final removed = apps.map((a) => a.deepCopy()).toList();
         await removeApps(apps.map((e) => e.id).toList());
+        // Undo restores tracking (not an uninstall); APKs re-download.
+        if (context.mounted) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(tr('appsRemoved')),
+                duration: const Duration(seconds: 6),
+                action: SnackBarAction(
+                  label: tr('undo'),
+                  onPressed: () => saveApps(removed, onlyIfExists: false),
+                ),
+              ),
+            );
+        }
       }
       return uninstall || remove;
     }
