@@ -4,10 +4,13 @@ Flutter/Dart app-updater fork (github.com/thejaustin/ObtainiumPlus).
 Read `AI_DEVLOG.md` at session start; update it before ending a session.
 
 ## Build commands
-No local Flutter SDK — CI is the compile/test gate. Use `scripts/dev/`:
+Local Flutter SDK (3.47.7, glibc build at `~/flutter`, wrapper `~/.local/bin/flutter`) runs **analyze and tests** on-device; APKs are still CI-only (no Android SDK locally). Use `scripts/dev/`:
 
 | Task | Command |
 |------|---------|
+| Analyze live code (errors + warnings) | `bash scripts/dev/analyze-live.sh` |
+| Run tests | `flutter test` (or `flutter test test/<file>.dart`) |
+| List unreachable Dart files | `bash scripts/dev/analyze-live.sh --dead` |
 | Local syntax check (fast) | `bash scripts/dev/check-syntax.sh` |
 | Recent CI runs | `bash scripts/dev/ci-status.sh` (add `--log` for failed-step logs) |
 | Trigger + watch APK build | `bash scripts/dev/ci-build.sh` |
@@ -67,7 +70,9 @@ Pushing to `main` triggers `build-apk.yml` automatically: analyze → flutter te
 
 ## Dead code traps
 
-These files exist but are unreachable — editing them does nothing:
+~50 files under `lib/` are never imported from `lib/main.dart` / `lib/main_fdroid.dart` (incl. `pages/onboarding.dart`, `pages/system_updates.dart`, `pages/updates.dart`, `components/error_app.dart`, `components/logs_dialog.dart`, `components/sort_filter_panel.dart`, `components/update_badge.dart`, `components/settings/boolean_control_grid.dart`, `components/settings_widgets.dart`, `services/app_export_service.dart`, `services/plugin_engine.dart`, `lib/protobuf/*`). Raw `flutter analyze` reports ~2000 errors, all in these files. **Run `scripts/dev/analyze-live.sh --dead` before editing a file** — edits there ship nothing, and CHANGELOG entries must not credit them.
+
+Also unreachable — editing them does nothing:
 - `apps_provider_lifecycle.dart`, `apps_provider_install.dart` — extension methods shadowed by same-named class methods in `apps_provider.dart`
 - `app_crud_service.dart` — imported by zero files
 - `lib/components/app_list_tile.dart` (top-level) — shadowed by `lib/components/apps/app_list_tile.dart`

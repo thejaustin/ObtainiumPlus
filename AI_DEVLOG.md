@@ -7,6 +7,45 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## Stable-release audit — 2026-10-18 (Claude session f85c6d81)
+
+Sources: GitHub/web scan, Claude+Antigravity session mining, security audit, M3E UI audit, local `flutter analyze`/`flutter test`. Stability-audit and CHANGELOG-completeness agents were cut off by rate limits — **re-run those two** next session.
+
+**Done this session:** #336/#337 fixed + red-green verified (material_ui GlobalMaterialLocalizations; culprit = flex_color_picker colour field TextField); local Flutter SDK (analyze+test, 166 tests green); `scripts/dev/analyze-live.sh`; single ThemeBuilder (M3E sliders, squircles, FAB, TV focus; dead `buildObtainiumTheme` deleted); `lib/utils/motion.dart` (M3E springs, `AppMotion.enabled` honours OS reduce-motion); spring ScaleTouchWrapper; morphing loading indicator default; RTL nav pill; BackgroundFetch catchError TypeError.
+
+### P0 — before stable
+- [ ] **#240/#241 NaN in jsonEncode still live** (Sentry 2026-10-14, after PR #332). Find every `jsonEncode`/`toJson` in *live* files not via `safeJsonEncode`/`sanitizeJsonValue` (notification payloads, background isolate, logs, Sentry extras).
+- [ ] **#330 perf** — reporter says "some improvement, still not usable". Ask for retest on 1.7.x; profile update-check with large collections.
+- [ ] **Dead code vs CHANGELOG** — 53 unreachable files (`analyze-live.sh --dead`). Onboarding, System Updates, crash screen (`error_app.dart`), update badge, logs dialog, sort/filter panel never ship. Decide per file: wire up or delete; re-audit `[Unreleased]` entries (partly corrected 2026-10-18).
+- [ ] **On-device check of 2026-10-18 UI batch** (unverified on device): sliders (settings + schedule/quiet-hours dialogs), app-list scroll smoothness with squircle cards, spinners during update check, nav bar in fa/ar.
+
+### Security (from audit; file:line as of 2026-10-18)
+- [ ] HIGH `AndroidManifest.xml` — no `allowBackup="false"`/`dataExtractionRules`; prefs + plugin JS leave device via backup.
+- [ ] HIGH `res/xml/file_paths.xml:2-4` `external-path path="."` exposes all shared storage — narrow to download/export dirs.
+- [ ] HIGH plugins: `plugin_provider.dart:64-85` fetches JS from any URL (no https/host/confirm) — hide for stable or harden. (`plugin_engine.dart` is unreachable.)
+- [ ] HIGH export encryption weak (SHA256(pw+ts), AES-CBC no MAC) in `services/app_export_service.dart` — that file is **unreachable**; verify what the live export path in `apps_provider.dart` (~2854, level-2 export with tokens) actually does.
+- [ ] MED manifest lacks `networkSecurityConfig` attr + `usesCleartextTraffic="true"`; config trusts user CAs for all non-Play traffic.
+- [ ] MED `forgejo-creds` stored in plain prefs (`settings_provider.dart:65` secure-keys list).
+- [ ] MED `obtainium://app/<json>` deep link (`home.dart` ~250-300) can import `allowInsecure`/signer hashes — whitelist keys, human-readable confirm.
+- [ ] MED CI: floating action tags (build-apk.yml, danger.yml), secrets interpolated into `run:`, no top-level `permissions:`.
+- [ ] MED Sentry: no URL scrubbing in `beforeSend`; `source_utils.dart:74` logs full request URLs.
+- [ ] LOW/maint: loose `host.contains` pinning (`source_utils.dart:20-56`), exported home-widget receiver, broad ProGuard keeps, git-pinned forks (android_package_installer, android_package_manager, android_system_font, shizuku_apk_installer), `flutter_js` unmaintained, deprecated `MaterialUiCompatibilityBridge` x2, no tests for export/import, signer check, deep-link validation.
+- [ ] Owner to check commits `b643c1d4`, `19b632d5` (matched a GitHub-token pattern) and rotate plaintext PATs/Sentry token in local Claude/agy settings.
+
+### M3 Expressive roadmap (from UI audit)
+- [ ] Spring tokens into ExpressiveSettingsGroup expand, AnimatedContainer users (≈18 durations / 20 curves in use → AppMotion).
+- [ ] NavigationRail ≥600dp + max content width (~840dp); list/detail on Apps for tablets/foldables.
+- [ ] Text-scale clamp + scale-aware grids; ~30 LTR-hardcoded layouts → `EdgeInsetsDirectional`.
+- [ ] `FadeForwards` everywhere + OpenContainer tile→detail; connected button group / split button on app detail.
+- [ ] Cookie/scallop shapes (material_new_shapes, already a transitive dep) on selection only; 184 literal radii / ~160 hardcoded colours → tokens.
+- [ ] Extended FAB collapse-on-scroll, FAB menu, floating toolbar for multi-select; 7 sub-48dp tap targets.
+
+### Community / visibility
+- Zero Reddit/XDA/Lemmy mentions; ObtainX (another fork) is the visible M3E Obtainium fork. Post release notes for the stable.
+- Upstream ideas: Obtainium #3382 (downloads stuck at fixed %), #3369 (update stuck), #3397 (i18n lag).
+
+---
+
 ## Open Backlog
 
 ### Crashes / Sentry
