@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/dynamic_color_utils.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/components/error_app.dart';
@@ -735,7 +736,7 @@ class _ObtainiumState extends State<Obtainium> {
     _handleFirstRun(settingsProvider, appsProvider, context);
 
     return WithForegroundTask(
-      child: DynamicColorBuilder(
+      child: ObtainiumDynamicColorBuilder(
         builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
           if (context.locale != _lastLocale) {
             _lastLocale = context.locale;

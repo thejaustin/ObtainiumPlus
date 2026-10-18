@@ -3,7 +3,7 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/services.dart';
 import 'package:material_color_utilities/material_color_utilities.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 /// Converts the OS-provided core palette into a [ColorScheme] where every
 /// role is resolved from the OS tonal palettes.
@@ -102,14 +102,29 @@ class ObtainiumDynamicColorBuilder extends StatefulWidget {
 }
 
 class _ObtainiumDynamicColorBuilderState
-    extends State<ObtainiumDynamicColorBuilder> {
+    extends State<ObtainiumDynamicColorBuilder>
+    with WidgetsBindingObserver {
   ColorScheme? _light;
   ColorScheme? _dark;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDynamicColors();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  // The wallpaper (and so the palette) can change while the app is in the
+  // background; pick it up on return.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _loadDynamicColors();
   }
 
   Future<void> _loadDynamicColors() async {
