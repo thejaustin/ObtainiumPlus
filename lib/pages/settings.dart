@@ -396,6 +396,11 @@ class _SettingsPageState extends State<SettingsPage> {
                         key: _resultsKey,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
+                      if (_searchQuery.isEmpty)
+                        _SettingsTabBanner(
+                          key: ValueKey('banner_$_selectedSectionIndex'),
+                          tabIndex: _selectedSectionIndex,
+                        ),
                       if (_searchQuery.isNotEmpty ||
                           _selectedSectionIndex == 0) ...[
                         if (_searchQuery.isEmpty &&
@@ -467,6 +472,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           showAdvancedSettings:
                               plusSettings.plusShowAdvancedSettings,
                         ),
+                        if (_searchQuery.isEmpty)
+                          const _SectionConnector(),
                         InstallationSection(
                           searchQuery: _searchQuery,
                           showAdvancedSettings:
@@ -492,6 +499,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           showAdvancedSettings:
                               plusSettings.plusShowAdvancedSettings,
                         ),
+                        if (_searchQuery.isEmpty)
+                          const _SectionConnector(),
                         TroubleshootingSection(
                           searchQuery: _searchQuery,
                           showAdvancedSettings:
@@ -708,6 +717,123 @@ class _SettingsEmptyState extends StatelessWidget {
             child: FilledButton.tonal(onPressed: onClear, child: Text(tr('clear'))),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SettingsTabBanner extends StatelessWidget {
+  final int tabIndex;
+  const _SettingsTabBanner({super.key, required this.tabIndex});
+
+  static const _tabs = [
+    (
+      icon: Icons.palette_rounded,
+      titleKey: 'settingsTabAppearance',
+      descKey: 'settingsTabAppearanceDesc',
+    ),
+    (
+      icon: Icons.system_update_rounded,
+      titleKey: 'settingsTabUpdatesInstall',
+      descKey: 'settingsTabUpdatesInstallDesc',
+    ),
+    (
+      icon: Icons.notifications_rounded,
+      titleKey: 'settingsTabNotifications',
+      descKey: 'settingsTabNotificationsDesc',
+    ),
+    (
+      icon: Icons.tune_rounded,
+      titleKey: 'settingsTabBehavior',
+      descKey: 'settingsTabBehaviorDesc',
+    ),
+    (
+      icon: Icons.code_rounded,
+      titleKey: 'settingsTabAdvancedDebug',
+      descKey: 'settingsTabAdvancedDebugDesc',
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    if (tabIndex < 0 || tabIndex >= _tabs.length) return const SizedBox.shrink();
+    final tab = _tabs[tabIndex];
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final radius = CardMetrics.card(plusSettings.plusGlobalCornerRadius);
+    final isCompact = plusSettings.plusUseCompactSettings;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: isCompact ? 6.0 : 8.0),
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: isCompact ? 10 : 12,
+        ),
+        decoration: BoxDecoration(
+          color: colorScheme.primaryContainer.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(
+            color: colorScheme.primary.withValues(alpha: 0.12),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: isCompact ? 32 : 36,
+              height: isCompact ? 32 : 36,
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(CardMetrics.inner(radius)),
+              ),
+              child: Icon(
+                tab.icon,
+                size: isCompact ? 16 : 18,
+                color: colorScheme.onPrimaryContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    tr(tab.titleKey),
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Text(
+                    tr(tab.descKey),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionConnector extends StatelessWidget {
+  const _SectionConnector();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Divider(
+        indent: 24,
+        endIndent: 24,
+        color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+        thickness: 1,
       ),
     );
   }

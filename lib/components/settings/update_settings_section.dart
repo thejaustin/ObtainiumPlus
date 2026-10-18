@@ -68,7 +68,7 @@ class UpdateSettingsSection extends StatelessWidget {
               (
                 icon: Icons.wifi_outlined,
                 label: tr('bgUpdateRequiresWifi'),
-                description: null,
+                description: tr('bgUpdateRequiresWifiDescription'),
                 getValue: (s) => s.bgUpdateRequiresWifi,
                 setValue: (s, v) => s.bgUpdateRequiresWifi = v,
               ),
@@ -76,7 +76,7 @@ class UpdateSettingsSection extends StatelessWidget {
               (
                 icon: Icons.battery_charging_full_outlined,
                 label: tr('bgUpdateRequiresCharging'),
-                description: null,
+                description: tr('bgUpdateRequiresChargingDescription'),
                 getValue: (s) => s.bgUpdateRequiresCharging,
                 setValue: (s, v) => s.bgUpdateRequiresCharging = v,
               ),
