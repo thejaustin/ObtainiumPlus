@@ -133,35 +133,37 @@ class _TalkerScreenState extends State<TalkerScreen> {
                         },
                       ),
                     ),
-                    DropdownButton<String>(
-                      value: _filterType,
-                      underline: const SizedBox(),
-                      items: [
-                        DropdownMenuItem(value: 'ALL', child: Text(tr('all'))),
-                        DropdownMenuItem(
-                          value: 'INFO',
-                          child: Text(tr('info')),
+                    DropdownMenu<String>(
+                      key: ValueKey(_filterType),
+                      initialSelection: _filterType,
+                      inputDecorationTheme: const InputDecorationTheme(
+                        isDense: true,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
                         ),
-                        DropdownMenuItem(
-                          value: 'WARNING',
-                          child: Text(tr('warning')),
-                        ),
-                        DropdownMenuItem(
-                          value: 'EXCEPTION',
-                          child: Text(tr('errors')),
-                        ),
-                        DropdownMenuItem(
-                          value: 'DEBUG',
-                          child: Text(tr('debug')),
-                        ),
-                      ],
-                      onChanged: (val) {
+                        border: OutlineInputBorder(),
+                      ),
+                      onSelected: (val) {
                         if (val != null) {
                           setState(() {
                             _filterType = val;
                           });
                         }
                       },
+                      dropdownMenuEntries: [
+                        DropdownMenuEntry(value: 'ALL', label: tr('all')),
+                        DropdownMenuEntry(value: 'INFO', label: tr('info')),
+                        DropdownMenuEntry(
+                          value: 'WARNING',
+                          label: tr('warning'),
+                        ),
+                        DropdownMenuEntry(
+                          value: 'EXCEPTION',
+                          label: tr('errors'),
+                        ),
+                        DropdownMenuEntry(value: 'DEBUG', label: tr('debug')),
+                      ],
                     ),
                   ],
                 ),

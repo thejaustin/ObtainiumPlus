@@ -187,30 +187,39 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
                           style: Theme.of(context).textTheme.labelLarge,
                         ),
                         const Spacer(),
-                        DropdownButton<String>(
-                          value: settings.preferredUpdateSource,
-                          underline: const SizedBox.shrink(),
-                          onChanged: (String? newValue) {
+                        DropdownMenu<String>(
+                          key: ValueKey(settings.preferredUpdateSource),
+                          initialSelection: settings.preferredUpdateSource,
+                          inputDecorationTheme: const InputDecorationTheme(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            border: OutlineInputBorder(),
+                          ),
+                          onSelected: (String? newValue) {
                             if (newValue != null) {
+                              AppHaptics.selectionClick();
                               settings.preferredUpdateSource = newValue;
                             }
                           },
-                          items: [
-                            DropdownMenuItem(
+                          dropdownMenuEntries: [
+                            DropdownMenuEntry(
                               value: 'play_store',
-                              child: Text(tr('playStore')),
+                              label: tr('playStore'),
                             ),
-                            DropdownMenuItem(
+                            const DropdownMenuEntry(
                               value: 'aurora',
-                              child: const Text('Aurora Store'),
+                              label: 'Aurora Store',
                             ),
-                            DropdownMenuItem(
+                            const DropdownMenuEntry(
                               value: 'github',
-                              child: const Text('GitHub'),
+                              label: 'GitHub',
                             ),
-                            DropdownMenuItem(
+                            const DropdownMenuEntry(
                               value: 'apkpure',
-                              child: const Text('APKPure'),
+                              label: 'APKPure',
                             ),
                           ],
                         ),
