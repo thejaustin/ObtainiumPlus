@@ -1,5 +1,6 @@
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
@@ -579,7 +580,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   Widget _buildTagSection(ThemeData theme, double radius) {
     final appsProvider = context.read<AppsProvider>();
     final allTags = appsProvider
-        .getAppValues()
+        .getAppValues(deepCopy: false)
         .expand((a) => a.app.tags)
         .toSet()
         .toList();
@@ -721,7 +722,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               final isFocused = Focus.of(fContext).hasFocus;
               final isShifted = isFocused || hasText;
               return AnimatedContainer(
-                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
+                duration: Duration(milliseconds: AppMotion.enabled(fContext) ? 280 : 0),
                 curve: Easing.emphasizedDecelerate,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
