@@ -71,10 +71,15 @@ class _OnboardingPageState extends State<OnboardingPage>
   }
 
   Future<void> _checkPermissions() async {
-    final install = await Permission.requestInstallPackages.isGranted;
-    final notif = await Permission.notification.isGranted;
-    final battery = await Permission.ignoreBatteryOptimizations.isGranted;
-    final usage = await AppInstallService.isUsageAccessGranted();
+    bool install = false, notif = false, battery = false, usage = false;
+    try {
+      install = await Permission.requestInstallPackages.isGranted;
+      notif = await Permission.notification.isGranted;
+      battery = await Permission.ignoreBatteryOptimizations.isGranted;
+      usage = await AppInstallService.isUsageAccessGranted();
+    } catch (e) {
+      talker.warning('Onboarding permission check failed: $e');
+    }
 
     if (mounted) {
       setState(() {
@@ -87,9 +92,15 @@ class _OnboardingPageState extends State<OnboardingPage>
   }
 
   Future<void> _checkDevice() async {
-    final info = await DeviceInfoPlugin().androidInfo;
-    final manufacturer = info.manufacturer.toLowerCase();
-    final microG = await AuthService.isMicroGAvailable();
+    String manufacturer = '';
+    bool microG = false;
+    try {
+      manufacturer = (await DeviceInfoPlugin().androidInfo).manufacturer
+          .toLowerCase();
+      microG = await AuthService.isMicroGAvailable();
+    } catch (e) {
+      talker.warning('Onboarding device check failed: $e');
+    }
     if (!mounted) return;
     setState(() {
       _isSamsung = manufacturer.contains('samsung');
@@ -164,21 +175,21 @@ class _OnboardingPageState extends State<OnboardingPage>
           if (info?.versionName != null) {
             appsToAdd.add(
               App(
-                id: obtainiumId,
-                url: obtainiumUrl,
-                author: 'thejaustin',
-                name: 'Obtainium+',
-                installedVersion: info!.versionName,
-                latestVersion: info.versionName!,
-                apkUrls: const [],
-                preferredApkIndex: 0,
-                additionalSettings: const {
+                obtainiumId,
+                obtainiumUrl,
+                'thejaustin',
+                'Obtainium+',
+                info!.versionName,
+                info.versionName!,
+                const [],
+                0,
+                const {
                   'versionDetection': true,
                   'apkFilterRegEx': 'fdroid',
                   'invertAPKFilter': true,
                 },
-                lastUpdateCheck: null,
-                pinned: true,
+                null,
+                true,
               ),
             );
           }

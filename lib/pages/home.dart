@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:app_links/app_links.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/pages/onboarding.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/force_update_dialog.dart';
@@ -151,20 +152,17 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         // two consecutive startup modals after an update is terrible UX.
         sp.googleVerificationWarningShown = true;
       } else if (!sp.welcomeShown) {
+        // First run: the guided onboarding (permissions, installer, tracking
+        // Obtainium+ itself) replaces the old one-line welcome dialog.
         if (context.mounted) {
-          await showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext ctx) {
-              return GeneratedFormModal(
-                title: tr('welcome'),
-                items: const [],
-                message:
-                    "Welcome to Obtainium+!\n\nThis app allows you to install and update apps directly from their sources, bypassing traditional app stores.\n\nTo get started, tap the '+' button to add your first app.",
-                singleNullReturnButton: tr('ok'),
-              );
-            },
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (routeContext) => OnboardingPage(
+                onDone: () => Navigator.of(routeContext).pop(),
+              ),
+            ),
           );
+          // Also when backed out of, so it never nags on later launches.
           sp.welcomeShown = true;
         }
       }
