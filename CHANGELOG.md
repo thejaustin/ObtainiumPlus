@@ -48,9 +48,14 @@ All notable changes to Obtainium+ are documented in this file.
 - **Native Google Play Source (opt-in)**: With a Play token set up (Aurora dispenser or personal account), you can switch a Play app to "Google Play (Native)" to fetch it straight from Google Play. Without a token, or if Play fails, it falls back to the regular mirror.
 - **System Updates Page**: Turning on the System update scanner setting now adds a System updates page to navigation, which checks your installed apps for newer versions. Previously the setting did nothing.
 - **True Material You Colours**: In Material You mode every colour, including card and surface tones, now comes straight from Android's own wallpaper palette, and the app picks up a wallpaper change when you return to it.
+- **Expressive App List & Swipe Actions Are Back**: The main apps list uses the expressive app rows again, with the swipe-left/right actions from Behavior settings and drag-to-reorder for pinned apps. A new "Expressive app list" toggle in Apps view settings switches back to the classic compact list.
+- **Notification Quiet Hours Work**: During your quiet hours, notifications now arrive silently (no sound, vibration or pop-up) instead of the setting doing nothing.
 
 ### 🐛 Bug Fixes & Polish
 
+- **Apps No Longer Deleted When Their Source Goes Missing**: An app whose source couldn't be matched (for example one set to Google Play (Native) while that source was unavailable) was permanently removed along with its downloaded APKs on launch. Such apps are now set aside and come back automatically once their source is available again.
+- **Faster Update Checks on Large Lists (#330)**: Checking for updates no longer re-sorts the whole app list several times per app, F-Droid repositories are downloaded once per check instead of once per app, and a single stalled source can no longer hang the check (90-second per-app limit).
+- **More Robust Background Updates & Installs**: Root installs time out instead of hanging when the root prompt is ignored (falling back to the normal installer), one failing app no longer aborts a background check, a stuck background check can't block all future ones, and notification errors can't interrupt an install.
 - **Startup Crash Screen**: If the app fails to start, you now get a crash screen with the error, a report button and repair options (after repeated crashes) instead of a blank screen.
 - **Crash Reports Reach the Developer**: Unhandled background errors were only logged on your device; they are now reported too, so crashes like the export NaN crash can actually be diagnosed.
 - **Export / Share Crash (NaN), Further Hardening**: Every remaining path that writes app, plugin, account or link data as JSON now strips invalid numbers, including values nested inside app objects (#240, #241).
