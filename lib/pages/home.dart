@@ -23,6 +23,7 @@ import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/system_updates.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -99,26 +100,53 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  bool _systemPageShown = false;
+
+  List<NavigationPageItem> _buildPages(bool withSystemUpdates) => [
+    NavigationPageItem(
+      'appsString',
+      Icons.apps_rounded,
+      AppsPage(key: _appsPageKey),
+    ),
+    if (withSystemUpdates)
+      NavigationPageItem(
+        'systemUpdates',
+        Icons.system_update_alt_rounded,
+        const SystemUpdatesPage(),
+      ),
+    NavigationPageItem(
+      'importExport',
+      Icons.import_export_rounded,
+      const ImportExportPage(),
+    ),
+    NavigationPageItem('settings', Icons.settings_rounded, const SettingsPage()),
+  ];
+
+  /// Adds/removes the System updates destination when its setting changes,
+  /// keeping the user on the same page.
+  void _syncSystemUpdatesPage(bool show) {
+    if (show == _systemPageShown) return;
+    _systemPageShown = show;
+    final oldTitles = pages.map((p) => p.title).toList();
+    pages = _buildPages(show);
+    final newTitles = pages.map((p) => p.title).toList();
+    selectedIndexHistory = selectedIndexHistory
+        .map((i) => i < oldTitles.length ? newTitles.indexOf(oldTitles[i]) : -1)
+        .where((i) => i >= 0)
+        .toList();
+    final old = _tabController;
+    _tabController = TabController(
+      length: pages.length,
+      vsync: this,
+      initialIndex: selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last,
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
+  }
+
   @override
   void initState() {
     super.initState();
-    pages = [
-      NavigationPageItem(
-        'appsString',
-        Icons.apps_rounded,
-        AppsPage(key: _appsPageKey),
-      ),
-      NavigationPageItem(
-        'importExport',
-        Icons.import_export_rounded,
-        const ImportExportPage(),
-      ),
-      NavigationPageItem(
-        'settings',
-        Icons.settings_rounded,
-        const SettingsPage(),
-      ),
-    ];
+    pages = _buildPages(false);
 
     _tabController = TabController(length: pages.length, vsync: this);
     initDeepLinks();
@@ -447,6 +475,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       (p) => p.selectedAppIds.isNotEmpty,
     );
 
+    _syncSystemUpdatesPage(
+      plusSettings.enableAllPlusFeatures &&
+          plusSettings.plusEnableSystemUpdateScanner,
+    );
     final isTopNav = plusSettings.plusTopUILayout && !settingsProvider.isTV;
     final showNavBar = plusSettings.plusEnableBottomNavBar && !isTopNav;
     if (showNavBar && !settingsProvider.isTV) {
@@ -684,6 +716,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
 
     final plusNavBar = PlusFloatingNavBar(
+      // Rebuilt when destinations are added/removed: it sizes per-tab
+      // animation controllers once.
+      key: ValueKey(pages.length),
       pages: pages,
       currentIndex: currentIndex,
       onDestinationSelected: switchToPage,

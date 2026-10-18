@@ -1,3 +1,4 @@
+import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
@@ -23,13 +24,11 @@ class GooglePlayNative extends AppSource {
   ) async {
     final appId = Uri.parse(standardUrl).queryParameters['id'] ?? '';
     final ctx = globalNavigatorKey.currentContext;
-    if (ctx == null) {
-      return APKDetails('Unknown', [], AppNames(appId, 'Google Play (Native)'));
-    }
+    if (ctx == null) return _mirrorFallback(standardUrl, additionalSettings);
     final authProvider = Provider.of<AuthProvider>(ctx, listen: false);
 
     if (!authProvider.hasActiveToken) {
-      return APKDetails('Unknown', [], AppNames(appId, 'Google Play (Native)'));
+      return _mirrorFallback(standardUrl, additionalSettings);
     }
 
     final plusSettingsProvider = Provider.of<PlusSettingsProvider>(
@@ -55,9 +54,15 @@ class GooglePlayNative extends AppSource {
         final version = details['versionString'] as String? ?? 'Unknown';
         final versionCode = details['versionCode'] as int? ?? 1;
         final urls = await api.getDeliveryUrls(appId, versionCode);
+        if (urls.isEmpty) {
+          return _mirrorFallback(standardUrl, additionalSettings);
+        }
         return APKDetails(
           version,
-          urls,
+          [
+            for (final (i, url) in urls.indexed)
+              MapEntry(i == 0 ? '$appId.apk' : '$appId-split$i.apk', url),
+          ],
           AppNames(
             appId,
             details['developerName'] as String? ?? 'Google Play (Native)',
@@ -72,8 +77,16 @@ class GooglePlayNative extends AppSource {
       api.dispose();
     }
 
-    return APKDetails('Unknown', [], AppNames(appId, 'Google Play (Native)'));
+    return _mirrorFallback(standardUrl, additionalSettings);
   }
+
+  /// Without a Play token, or when the native API fails, fall back to the
+  /// default Google Play source (APKPure mirror) rather than reporting an
+  /// unknown version with no APKs.
+  Future<APKDetails> _mirrorFallback(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings,
+  ) => GooglePlay().getLatestAPKDetails(standardUrl, additionalSettings);
 
   @override
   String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {

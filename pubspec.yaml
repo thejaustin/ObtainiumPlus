@@ -68,7 +68,7 @@ dependencies:
   flutter_typeahead: ^6.0.0
   battery_plus: ^7.1.1
   flutter_charset_detector: ^6.0.0
-  protobuf: ^3.1.0
+  protobuf: ^5.1.0
   flutter_markdown_plus: ^1.0.12
   background_fetch: ^1.7.0
   flutter_foreground_task: ^11.0.3

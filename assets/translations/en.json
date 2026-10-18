@@ -1370,5 +1370,7 @@
     "backupPasswordsDoNotMatch": "Passwords do not match",
     "backupPasswordHint": "Needed to restore encrypted backups. It cannot be recovered if lost.",
     "enterBackupPassword": "Enter the password for this encrypted backup",
-    "wrongBackupPassword": "Wrong backup password"
+    "wrongBackupPassword": "Wrong backup password",
+    "scanningXApps": "Scanning {} apps…",
+    "systemUpdates": "System updates"
 }

@@ -69,6 +69,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/app_sources/githubstars.dart';
 import 'package:obtainium/app_sources/githubpersonalrepos.dart';
 import 'package:obtainium/app_sources/googleplay.dart';
+import 'package:obtainium/app_sources/googleplay_native.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -253,6 +254,9 @@ class SourceProvider {
     () => NeutronCode(),
     () => DirectAPKLink(),
     () => GooglePlay(),
+    // Opt-in per app via the source override; needs a Play token (Aurora
+    // dispenser / personal account) and falls back to the mirror without one.
+    () => GooglePlayNative(),
     () => Gitea(),
     () => Bitbucket(),
     () => XdaDevelopers(),
