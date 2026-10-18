@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -105,51 +106,70 @@ class UpdateSettingsSection extends StatelessWidget {
       // Concurrency Limit settings
       if (_matches(tr('plusUpdateCheckConcurrency'), isAdvanced: true))
         Consumer<SettingsProvider>(
-          builder: (context, settings, _) => ListTile(
-            leading: const Icon(Icons.speed_outlined),
-            title: Text(tr('plusUpdateCheckConcurrency')),
-            subtitle: Text(tr('plusUpdateCheckConcurrencyDescription')),
-            trailing: DropdownButton<int>(
-              value: settings.updateCheckConcurrencyLimit,
-              onChanged: (val) {
-                if (val != null) {
-                  settings.updateCheckConcurrencyLimit = val;
-                }
-              },
-              items: [1, 2, 3, 5, 10]
-                  .map(
-                    (limit) => DropdownMenuItem(
-                      value: limit,
-                      child: Text(limit.toString()),
+          builder: (context, settings, _) {
+            // Steps: 1, 2, 3, 5, 10 → mapped to index 0–4
+            const steps = [1, 2, 3, 5, 10];
+            final idx = steps.indexOf(settings.updateCheckConcurrencyLimit);
+            final sliderVal = (idx < 0 ? 2 : idx).toDouble();
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Text(
+                    tr('plusUpdateCheckConcurrencyDescription'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                  )
-                  .toList(),
-            ),
-          ),
+                  ),
+                ),
+                SettingsSliderTile(
+                  icon: Icons.speed_outlined,
+                  title: tr('plusUpdateCheckConcurrency'),
+                  value: sliderVal,
+                  min: 0,
+                  max: 4,
+                  divisions: 4,
+                  labelBuilder: (v) => steps[v.round().clamp(0, 4)].toString(),
+                  onChanged: (val) {
+                    settings.updateCheckConcurrencyLimit =
+                        steps[val.round().clamp(0, 4)];
+                  },
+                ),
+              ],
+            );
+          },
         ),
 
       if (_matches(tr('plusDownloadConcurrency'), isAdvanced: true))
         Consumer<SettingsProvider>(
-          builder: (context, settings, _) => ListTile(
-            leading: const Icon(Icons.download_for_offline_outlined),
-            title: Text(tr('plusDownloadConcurrency')),
-            subtitle: Text(tr('plusDownloadConcurrencyDescription')),
-            trailing: DropdownButton<int>(
-              value: settings.updateDownloadConcurrencyLimit,
-              onChanged: (val) {
-                if (val != null) {
-                  settings.updateDownloadConcurrencyLimit = val;
-                }
-              },
-              items: [1, 2, 3, 4, 5]
-                  .map(
-                    (limit) => DropdownMenuItem(
-                      value: limit,
-                      child: Text(limit.toString()),
-                    ),
-                  )
-                  .toList(),
-            ),
+          builder: (context, settings, _) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Text(
+                  tr('plusDownloadConcurrencyDescription'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              SettingsSliderTile(
+                icon: Icons.download_for_offline_outlined,
+                title: tr('plusDownloadConcurrency'),
+                value: (settings.updateDownloadConcurrencyLimit - 1)
+                    .toDouble()
+                    .clamp(0, 4),
+                min: 0,
+                max: 4,
+                divisions: 4,
+                labelBuilder: (v) => (v.round() + 1).toString(),
+                onChanged: (val) {
+                  settings.updateDownloadConcurrencyLimit = val.round() + 1;
+                },
+              ),
+            ],
           ),
         ),
 

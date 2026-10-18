@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -251,32 +252,22 @@ class ThemeSettingsSection extends StatelessWidget {
         ),
       if (_matches(tr('animationSpeed')))
         Consumer<BehaviorSettingsProvider>(
-          builder: (context, settings, child) {
-            return ListTile(
-              leading: const Icon(Icons.speed_outlined),
-              title: Text(
-                tr('animationSpeed'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(
-                '${(settings.animationSpeedMultiplier * 100).round()}%',
-              ),
-              trailing: DropdownButton<double>(
-                value: settings.animationSpeedMultiplier,
-                underline: const SizedBox(),
-                items: [
-                  DropdownMenuItem(value: 0.5, child: Text('50%')),
-                  DropdownMenuItem(value: 0.75, child: Text('75%')),
-                  DropdownMenuItem(value: 1.0, child: Text('100%')),
-                  DropdownMenuItem(value: 1.5, child: Text('150%')),
-                  DropdownMenuItem(value: 2.0, child: Text('200%')),
-                ],
-                onChanged: (value) {
-                  if (value != null) settings.animationSpeedMultiplier = value;
-                },
-              ),
-            );
-          },
+          builder: (context, settings, child) => SettingsSliderTile(
+            icon: Icons.speed_outlined,
+            title: tr('animationSpeed'),
+            value: settings.animationSpeedMultiplier.clamp(0.25, 2.0),
+            min: 0.25,
+            max: 2.0,
+            divisions: 7,
+            labelBuilder: (v) => '${(v * 100).round()}%',
+            onChanged: (val) {
+              const steps = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+              final nearest = steps.reduce(
+                (a, b) => (a - val).abs() < (b - val).abs() ? a : b,
+              );
+              settings.animationSpeedMultiplier = nearest;
+            },
+          ),
         ),
       if (plusSettings.enableAllPlusFeatures &&
           plusSettings.plusDeveloperMode &&
@@ -300,26 +291,17 @@ class ThemeSettingsSection extends StatelessWidget {
 
     List<Widget> shapeWidgets = [
       _buildCornerRadiusPreview(context, plusSettings),
-      if (_matches(tr('plusGlobalCornerRadius'))) ...[
-        ListTile(
-          leading: const Icon(Icons.rounded_corner_rounded),
-          title: Text(
-            tr('plusGlobalCornerRadius'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text("${plusSettings.plusGlobalCornerRadius.toInt()}px"),
+      if (_matches(tr('plusGlobalCornerRadius')))
+        SettingsSliderTile(
+          icon: Icons.rounded_corner_rounded,
+          title: tr('plusGlobalCornerRadius'),
+          value: plusSettings.plusGlobalCornerRadius,
+          min: 0,
+          max: 40,
+          divisions: 40,
+          labelBuilder: (v) => '${v.toInt()}px',
+          onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Slider(
-            value: plusSettings.plusGlobalCornerRadius,
-            min: 0,
-            max: 40,
-            divisions: 40,
-            onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
-          ),
-        ),
-      ],
       if (_matches(tr('plusOverrideIndividualCornerRadius')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
@@ -330,48 +312,28 @@ class ThemeSettingsSection extends StatelessWidget {
           onChanged: (s, v) => s.plusOverrideIndividualCornerRadius = v,
         ),
       if (plusSettings.plusOverrideIndividualCornerRadius) ...[
-        if (_matches(tr('plusHomeCornerRadius'))) ...[
-          ListTile(
-            leading: const Icon(Icons.home_max_rounded),
-            title: Text(
-              tr('plusHomeCornerRadius'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text("${plusSettings.plusHomeCornerRadius.toInt()}px"),
+        if (_matches(tr('plusHomeCornerRadius')))
+          SettingsSliderTile(
+            icon: Icons.home_max_rounded,
+            title: tr('plusHomeCornerRadius'),
+            value: plusSettings.plusHomeCornerRadius,
+            min: 0,
+            max: 40,
+            divisions: 40,
+            labelBuilder: (v) => '${v.toInt()}px',
+            onChanged: (val) => plusSettings.plusHomeCornerRadius = val,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Slider(
-              value: plusSettings.plusHomeCornerRadius,
-              min: 0,
-              max: 40,
-              divisions: 40,
-              onChanged: (val) => plusSettings.plusHomeCornerRadius = val,
-            ),
+        if (_matches(tr('plusSettingsCornerRadius')))
+          SettingsSliderTile(
+            icon: Icons.settings_suggest_rounded,
+            title: tr('plusSettingsCornerRadius'),
+            value: plusSettings.plusSettingsCornerRadius,
+            min: 0,
+            max: 40,
+            divisions: 40,
+            labelBuilder: (v) => '${v.toInt()}px',
+            onChanged: (val) => plusSettings.plusSettingsCornerRadius = val,
           ),
-        ],
-        if (_matches(tr('plusSettingsCornerRadius'))) ...[
-          ListTile(
-            leading: const Icon(Icons.settings_suggest_rounded),
-            title: Text(
-              tr('plusSettingsCornerRadius'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-            subtitle: Text(
-              "${plusSettings.plusSettingsCornerRadius.toInt()}px",
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Slider(
-              value: plusSettings.plusSettingsCornerRadius,
-              min: 0,
-              max: 40,
-              divisions: 40,
-              onChanged: (val) => plusSettings.plusSettingsCornerRadius = val,
-            ),
-          ),
-        ],
       ],
     ];
 
@@ -434,52 +396,136 @@ class ThemeSettingsSection extends StatelessWidget {
     final radius = settings.plusGlobalCornerRadius;
     final colorScheme = Theme.of(context).colorScheme;
 
+    final animsEnabled = settings.plusEnableEnhancedAnimations;
+    final dur = Duration(milliseconds: animsEnabled ? 250 : 0);
+    const curve = Curves.easeOutCubic;
+
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                width: 100,
-                height: 100,
+              // Icon tile — large square morphing shape
+              AnimatedContainer(
+                duration: dur,
+                curve: curve,
+                width: 76,
+                height: 76,
                 decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primaryContainer,
+                      colorScheme.primary.withValues(alpha: 0.15),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(radius),
                   border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.2),
-                    width: 2,
+                    color: colorScheme.primary.withValues(alpha: 0.3),
+                    width: 1.5,
                   ),
                 ),
                 child: Center(
-                  child: Icon(Icons.apps_rounded, color: colorScheme.primary),
+                  child: Icon(
+                    Icons.apps_rounded,
+                    color: colorScheme.primary,
+                    size: 28,
+                  ),
                 ),
               ),
-              const SizedBox(width: 24),
-              Container(
-                width: 140,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(radius),
-                  border: Border.all(
-                    color: colorScheme.outline.withValues(alpha: 0.1),
-                    width: 1,
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Card tile — wide morphing shape
+                  AnimatedContainer(
+                    duration: dur,
+                    curve: curve,
+                    width: 160,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(radius),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: AnimatedContainer(
+                            duration: dur,
+                            curve: curve,
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: colorScheme.secondaryContainer,
+                              borderRadius: BorderRadius.circular(
+                                (radius * 0.6).clamp(4, 20),
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.download_rounded,
+                              size: 16,
+                              color: colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                        ),
+                        Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'App Name',
+                              style: Theme.of(context).textTheme.labelMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              'v1.0.0',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                child: ListTile(
-                  dense: true,
-                  leading: const Icon(Icons.info_outline, size: 18),
-                  title: const Text(
-                    'Preview',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  const SizedBox(height: 8),
+                  // Chip — pill morphing shape
+                  AnimatedContainer(
+                    duration: dur,
+                    curve: curve,
+                    height: 28,
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(
+                        radius.clamp(0, 20),
+                      ),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'Update',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Text(
             tr('cornerRadiusPreview'),
             style: Theme.of(context).textTheme.labelSmall?.copyWith(

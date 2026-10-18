@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -131,52 +132,24 @@ class AppBehaviorSection extends StatelessWidget {
                 initiallyExpanded: true,
                 children: [
                   if (_matches(tr('animationSpeed')))
-                    ListTile(
-                      leading: const Icon(Icons.speed_outlined),
-                      title: Text(
-                        tr('animationSpeed'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      subtitle: Text(
-                        '${(behaviorSettings.animationSpeedMultiplier * 100).round()}%',
-                      ),
-                      trailing: Container(
-                        constraints: const BoxConstraints(maxWidth: 120),
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHigh
-                              .withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .outlineVariant
-                                .withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<double>(
-                            isExpanded: true,
-                            value: behaviorSettings.animationSpeedMultiplier,
-                            borderRadius: BorderRadius.circular(16),
-                            items: const [
-                              DropdownMenuItem(value: 0.5, child: Text('50%')),
-                              DropdownMenuItem(value: 0.75, child: Text('75%')),
-                              DropdownMenuItem(value: 1.0, child: Text('100%')),
-                              DropdownMenuItem(value: 1.5, child: Text('150%')),
-                              DropdownMenuItem(value: 2.0, child: Text('200%')),
-                            ],
-                            onChanged: (val) {
-                              if (val != null) {
-                                AppHaptics.selectionClick();
-                                behaviorSettings.animationSpeedMultiplier = val;
-                              }
-                            },
-                          ),
-                        ),
-                      ),
+                    SettingsSliderTile(
+                      icon: Icons.speed_outlined,
+                      title: tr('animationSpeed'),
+                      value: behaviorSettings.animationSpeedMultiplier
+                          .clamp(0.25, 2.0),
+                      min: 0.25,
+                      max: 2.0,
+                      divisions: 7,
+                      labelBuilder: (v) =>
+                          '${(v * 100).round()}%',
+                      onChanged: (val) {
+                        const steps = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+                        final nearest = steps.reduce(
+                          (a, b) =>
+                              (a - val).abs() < (b - val).abs() ? a : b,
+                        );
+                        behaviorSettings.animationSpeedMultiplier = nearest;
+                      },
                     ),
                   if (_matches(tr('disablePageTransitions'), isAdvanced: true))
                     _buildFeatureToggle(
