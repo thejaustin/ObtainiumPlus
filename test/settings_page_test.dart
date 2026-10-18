@@ -35,7 +35,10 @@ void main() {
       jsonDecode(File('assets/translations/en.json').readAsStringSync())
           as Map<String, dynamic>;
 
-  Future<Widget> buildSettingsApp(int tab) async {
+  Future<Widget> buildSettingsApp(
+    int tab, {
+    Locale locale = const Locale('en'),
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final settings = SettingsProvider();
     await settings.initializeSettings();
@@ -51,9 +54,10 @@ void main() {
     await updateSettings.initializeSettings(prefs);
 
     return EasyLocalization(
-      supportedLocales: const [Locale('en')],
+      supportedLocales: [locale],
+      startLocale: locale,
       path: 'assets/translations',
-      fallbackLocale: const Locale('en'),
+      fallbackLocale: locale,
       assetLoader: _MemoryAssetLoader(translations),
       child: MultiProvider(
         providers: [
@@ -81,12 +85,13 @@ void main() {
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
+              mui.GlobalMaterialLocalizations.delegate,
               mui.DefaultMaterialLocalizations.delegate,
             ],
-            supportedLocales: const [Locale('en')],
-            // Hardcode 'en' so the test never picks up the CI machine's
+            supportedLocales: [locale],
+            // Hardcode the locale so the test never picks up the CI machine's
             // platform locale, which may be 'C' (POSIX) and unsupported.
-            locale: const Locale('en'),
+            locale: locale,
             home: SettingsPage(initialTab: tab),
           ),
         ),
@@ -163,6 +168,23 @@ void main() {
       timeout: const Timeout(Duration(minutes: 1)),
     );
   }
+
+  // #336/#337: material_ui widgets crashed with a null MaterialLocalizations
+  // in every non-English locale because only the en-only Default delegate
+  // was registered.
+  testWidgets(
+    'settings page builds in a non-English locale',
+    (tester) async {
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(0, locale: const Locale('zh'));
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
 
   testWidgets(
     'settings page survives corrupted preference types',

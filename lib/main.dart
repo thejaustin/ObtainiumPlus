@@ -767,6 +767,10 @@ class _ObtainiumState extends State<Obtainium> {
             title: 'Obtainium',
             localizationsDelegates: [
               ...context.localizationDelegates,
+              // material_ui widgets look up their own MaterialLocalizations
+              // type; the Default delegate alone only supports 'en', so any
+              // other locale crashed on the first TextField (#336/#337).
+              mui.GlobalMaterialLocalizations.delegate,
               mui.DefaultMaterialLocalizations.delegate,
             ],
             supportedLocales: context.supportedLocales,
