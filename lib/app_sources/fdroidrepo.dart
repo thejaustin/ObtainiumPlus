@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -224,7 +225,31 @@ class FDroidRepo extends AppSource {
   /// `index-v2.json` (the only index some modern repos publish, and the only
   /// one that lists every architecture — see #3249); falls back to the legacy
   /// `index.xml` format otherwise.
+  // One index fetch per repo per ~10 minutes, shared by concurrent lookups:
+  // checking N apps from the same repo used to download and parse the
+  // (possibly tens of MB) index N times (#330).
+  static final Map<String, (DateTime, Future<_FdroidIndex>)> _indexCache = {};
+  static const _indexCacheTtl = Duration(minutes: 10);
+
   Future<_FdroidIndex> _fetchIndex(
+    String url,
+    Map<String, dynamic> additionalSettings,
+  ) {
+    final now = DateTime.now();
+    _indexCache.removeWhere((_, v) => now.difference(v.$1) > _indexCacheTtl);
+    final cached = _indexCache[url];
+    if (cached != null) return cached.$2;
+    final future = _fetchIndexUncached(url, additionalSettings);
+    _indexCache[url] = (now, future);
+    // Don't cache failures.
+    future.catchError((Object _) {
+      _indexCache.remove(url);
+      return const _FdroidIndex(baseUrl: '', entries: []);
+    });
+    return future;
+  }
+
+  Future<_FdroidIndex> _fetchIndexUncached(
     String url,
     Map<String, dynamic> additionalSettings,
   ) async {
@@ -249,7 +274,8 @@ class FDroidRepo extends AppSource {
       try {
         final res = await sourceRequest(candidate, additionalSettings);
         if (res.statusCode != 200) continue;
-        final index = _parseIndexV2(res);
+        final decoded = await compute(_decodeJson, res.body);
+        final index = _parseIndexV2(res, decoded);
         if (index != null) return index;
       } catch (_) {
         // Not a usable index-v2.json at this path; try the next variant.
@@ -262,9 +288,8 @@ class FDroidRepo extends AppSource {
   /// packages keyed by app ID, each with `metadata` plus a hash-keyed
   /// `versions` map holding `file` and `manifest` objects). Returns null if
   /// the body is not a usable v2 index.
-  _FdroidIndex? _parseIndexV2(Response res) {
+  _FdroidIndex? _parseIndexV2(Response res, dynamic decoded) {
     try {
-      final decoded = jsonDecode(res.body);
       if (decoded is! Map<String, dynamic>) return null;
       final packages = decoded['packages'];
       if (packages is! Map<String, dynamic>) return null;
@@ -552,3 +577,6 @@ class FDroidRepo extends AppSource {
     }
   }
 }
+
+/// Top-level for [compute]: large repo indexes are decoded off the UI isolate.
+dynamic _decodeJson(String body) => jsonDecode(body);

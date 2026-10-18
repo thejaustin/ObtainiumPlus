@@ -674,8 +674,10 @@ class AppInstallService {
     if (firstTimeWithContext != null &&
         behaviorSettings.beforeNewInstallsShareToAppVerifier &&
         (await getInstalledInfo('dev.soupslurpr.appverifier')) != null) {
-      XFile f = XFile.fromData(
-        file.file.readAsBytesSync(),
+      // Share by path: reading a 100+ MB APK into memory on the UI isolate
+      // froze the app and risked OOM.
+      XFile f = XFile(
+        file.file.path,
         mimeType: 'application/vnd.android.package-archive',
       );
       if (firstTimeWithContext!.mounted) {

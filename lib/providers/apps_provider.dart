@@ -2152,9 +2152,17 @@ class AppsProvider with ChangeNotifier {
   Future<void> _restoreQuarantinedApps(Directory appsDir, SourceProvider sp) async {
     try {
       await for (final entity in appsDir.list()) {
-        if (entity is! File || !entity.path.endsWith('.json$_quarantineSuffix')) {
+        if (entity is! File) continue;
+        // Leftovers of interrupted saves (process killed between write and
+        // rename); recent ones may belong to a save still in flight.
+        if (entity.path.endsWith('.tmp')) {
+          try {
+            final age = DateTime.now().difference(await entity.lastModified());
+            if (age > const Duration(minutes: 10)) await entity.delete();
+          } catch (_) {}
           continue;
         }
+        if (!entity.path.endsWith('.json$_quarantineSuffix')) continue;
         try {
           final app = App.fromJson(jsonDecode(await entity.readAsString()));
           sp.getSource(app.url, overrideSource: app.overrideSource);
@@ -2538,8 +2546,15 @@ class AppsProvider with ChangeNotifier {
           // Unique tmp name so concurrent saves of one app can't clobber
           // each other's tmp file.
           final tmpFile = File('$filePath.${_saveTmpCounter++}.tmp');
-          await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
-          await tmpFile.rename(filePath);
+          try {
+            await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
+            await tmpFile.rename(filePath);
+          } catch (_) {
+            try {
+              await tmpFile.delete();
+            } catch (_) {}
+            rethrow;
+          }
         }
         try {
           this.apps.update(
