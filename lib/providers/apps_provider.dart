@@ -2127,10 +2127,53 @@ class AppsProvider with ChangeNotifier {
   /// It preserves any already-loaded [installedInfo] and [icon] so that a
   /// foreground-triggered reload (e.g. returning from background) doesn't
   /// temporarily wipe installed status from the list while phase 2 runs.
+  static const _quarantineSuffix = '.unsupported';
+
+  /// Apps whose source no longer resolves (source removed/renamed, override
+  /// pointing at a source missing from this build) used to be deleted along
+  /// with their APKs. Set them aside instead so they come back by themselves
+  /// once the source exists again ([_restoreQuarantinedApps]).
+  Future<void> _quarantineUnsupportedApps(List<String> appIds) async {
+    final appsDir = await getAppsDir();
+    for (final id in appIds) {
+      try {
+        final file = File('${appsDir.path}/$id.json');
+        if (await file.exists()) {
+          await file.rename('${file.path}$_quarantineSuffix');
+        }
+      } catch (e) {
+        logs.add('Could not set aside unsupported app $id: $e');
+      }
+      apps.remove(id);
+    }
+    notifyListeners();
+  }
+
+  Future<void> _restoreQuarantinedApps(Directory appsDir, SourceProvider sp) async {
+    try {
+      await for (final entity in appsDir.list()) {
+        if (entity is! File || !entity.path.endsWith('.json$_quarantineSuffix')) {
+          continue;
+        }
+        try {
+          final app = App.fromJson(jsonDecode(await entity.readAsString()));
+          sp.getSource(app.url, overrideSource: app.overrideSource);
+          await entity.rename(
+            entity.path.substring(0, entity.path.length - _quarantineSuffix.length),
+          );
+          logs.add('Restored previously unsupported app ${app.id}');
+        } catch (_) {
+          // Source still unavailable; leave it set aside.
+        }
+      }
+    } catch (_) {}
+  }
+
   Future<void> _loadAppsPhase1(String? singleId) async {
     final sp = SourceProvider();
     final appsDir = await getAppsDir();
     final List<List<String>> errors = [];
+    await _restoreQuarantinedApps(appsDir, sp);
     final entities = await appsDir.list().toList();
 
     // Map existing cached icon files to avoid repeated per-app disk lookups
@@ -2226,7 +2269,7 @@ class AppsProvider with ChangeNotifier {
       }),
     );
     if (errors.isNotEmpty) {
-      removeApps(errors.map((e) => e[0]).toList());
+      await _quarantineUnsupportedApps(errors.map((e) => e[0]).toList());
       NotificationsProvider().notify(
         AppsRemovedNotification(errors.map((e) => [e[1], e[2]]).toList()),
       );
@@ -2331,7 +2374,7 @@ class AppsProvider with ChangeNotifier {
     }
 
     if (errors.isNotEmpty) {
-      removeApps(errors.map((e) => e[0]).toList());
+      await _quarantineUnsupportedApps(errors.map((e) => e[0]).toList());
       NotificationsProvider().notify(
         AppsRemovedNotification(errors.map((e) => [e[1], e[2]]).toList()),
       );
@@ -2670,19 +2713,25 @@ class AppsProvider with ChangeNotifier {
     if (currentApp.hasPendingRepoRename) {
       return null;
     }
+    // Spinner state only: _notifyUiOnly avoids invalidating the apps memo,
+    // which made every per-app tick re-filter/sort the whole list (#330).
     checkingUpdateIds.add(appId);
-    notify();
+    _notifyUiOnly();
     try {
       SourceProvider sourceProvider = SourceProvider();
-      App newApp = await sourceProvider.getApp(
-        sourceProvider.getSource(
-          currentApp.url,
-          overrideSource: currentApp.overrideSource,
-        ),
-        currentApp.url,
-        currentApp.additionalSettings,
-        currentApp: currentApp,
-      );
+      App newApp = await sourceProvider
+          .getApp(
+            sourceProvider.getSource(
+              currentApp.url,
+              overrideSource: currentApp.overrideSource,
+            ),
+            currentApp.url,
+            currentApp.additionalSettings,
+            currentApp: currentApp,
+          )
+          // A source that stalls mid-response must not hold a worker slot
+          // (and the whole check) forever.
+          .timeout(const Duration(seconds: 90));
       if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
         newApp.preferredApkIndex = currentApp.preferredApkIndex;
       }
@@ -2693,7 +2742,7 @@ class AppsProvider with ChangeNotifier {
       return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
     } finally {
       checkingUpdateIds.remove(appId);
-      notify();
+      _notifyUiOnly();
     }
   }
 
@@ -2965,9 +3014,7 @@ class AppsProvider with ChangeNotifier {
         ((newFormat ? decodedJSON['apps'] : decodedJSON) as List<dynamic>)
             .map((e) => App.fromJson(e))
             .toList();
-    while (loadingApps) {
-      await Future.delayed(const Duration(microseconds: 1));
-    }
+    await waitForAppsToLoad();
     for (App a in importedApps) {
       var installedInfo = await getInstalledInfo(a.id);
       a.installedVersion =
@@ -3102,6 +3149,9 @@ class AppsProvider with ChangeNotifier {
     Future<void> Function(T) action,
   ) async {
     if (items.isEmpty) return;
+    // 0 would run nothing and a negative count throws; both can come from a
+    // restored/imported settings file.
+    limit = limit.clamp(1, items.length);
     int index = 0;
     Future<void> worker() async {
       while (index < items.length) {

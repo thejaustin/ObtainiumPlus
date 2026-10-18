@@ -10,6 +10,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart'
     show formatBytes, formatDownloadSize, formatEta, formatSpeed;
@@ -465,6 +466,42 @@ class NotificationsProvider {
   }
 
   Future<void> notifyRaw(
+    int id,
+    String title,
+    String message,
+    String channelCode,
+    String channelName,
+    String channelDescription,
+    Importance importance, {
+    bool cancelExisting = false,
+    int? progPercent,
+    bool onlyAlertOnce = false,
+    String? payload,
+    List<AndroidNotificationAction>? androidActions,
+  }) async {
+    // A notification failure (bad icon, channel error) must never abort the
+    // install/update flow that triggered it.
+    try {
+      await _notifyRawUnguarded(
+        id,
+        title,
+        message,
+        channelCode,
+        channelName,
+        channelDescription,
+        importance,
+        cancelExisting: cancelExisting,
+        progPercent: progPercent,
+        onlyAlertOnce: onlyAlertOnce,
+        payload: payload,
+        androidActions: androidActions,
+      );
+    } catch (e, stack) {
+      talker.handle(e, stack, 'Notification failed');
+    }
+  }
+
+  Future<void> _notifyRawUnguarded(
     int id,
     String title,
     String message,

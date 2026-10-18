@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -85,8 +86,21 @@ class RootInstaller extends Installer {
     }
   }
 
-  Future<ProcessResult> _runAsRoot(String cmd) =>
-      Process.run('su', ['-c', cmd]);
+  /// An ignored root prompt or a hung su daemon would otherwise block forever
+  /// while holding the global install lock; on timeout the caller's existing
+  /// fallback (stock installer) takes over.
+  Future<ProcessResult> _runAsRoot(String cmd) async {
+    final process = await Process.start('su', ['-c', cmd]);
+    final stdout = process.stdout.transform(systemEncoding.decoder).join();
+    final stderr = process.stderr.transform(systemEncoding.decoder).join();
+    try {
+      final code = await process.exitCode.timeout(const Duration(seconds: 60));
+      return ProcessResult(process.pid, code, await stdout, await stderr);
+    } on TimeoutException {
+      process.kill();
+      rethrow;
+    }
+  }
 
   /// Maps `Failure [INSTALL_FAILED_*]` output from `pm install` to
   /// PackageManager-style negative error codes, or null if unrecognised.

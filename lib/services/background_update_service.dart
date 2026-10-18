@@ -32,7 +32,14 @@ class BackgroundUpdateService {
     }
     _running = true;
     try {
-      await _bgUpdateCheckImpl(taskId, initialParams);
+      // A hung run would leave _running set and skip every later run for
+      // the life of the process.
+      await _bgUpdateCheckImpl(
+        taskId,
+        initialParams,
+      ).timeout(const Duration(minutes: 9));
+    } on TimeoutException {
+      talker.warning('BG task $taskId timed out');
     } finally {
       try {
         _activeProvider?.dispose();
@@ -319,8 +326,13 @@ class BackgroundUpdateService {
           notificationsProvider.cancel(notif.id);
         }
 
+        // One failing probe must not abort the whole background run.
         final silentFlags = await Future.wait(
-          updates.map((App app) => appsProvider.canInstallSilently(app)),
+          updates.map(
+            (App app) => appsProvider
+                .canInstallSilently(app)
+                .catchError((_) => false),
+          ),
         );
         List<App> toNotify = [];
         List<App> trackOnlyToNotify = [];
@@ -414,8 +426,9 @@ class BackgroundUpdateService {
           );
           final canInstallFlags = await Future.wait(
             temp.map(
-              (id) =>
-                  appsProvider.canInstallSilently(appsProvider.apps[id]!.app),
+              (id) => appsProvider
+                  .canInstallSilently(appsProvider.apps[id]!.app)
+                  .catchError((_) => false),
             ),
           );
           for (var i = 0; i < temp.length; i++) {

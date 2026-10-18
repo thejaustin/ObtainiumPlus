@@ -249,6 +249,12 @@ class AppsPageState extends State<AppsPage>
 
   late final ScrollController scrollController = ScrollController();
 
+  @override
+  void dispose() {
+    scrollController.dispose();
+    super.dispose();
+  }
+
   var sourceProvider = SourceProvider();
 
   // Memoization fields to make builds and scrolling instantaneous for large app lists
@@ -2085,6 +2091,8 @@ class AppsPageState extends State<AppsPage>
                           } else {
                             showMessage(tr('appAdded'), context);
                           }
+                        }).catchError((Object e) {
+                          if (context.mounted) showError(e, context);
                         });
                       },
                       onDiscoverSearch: _runDiscoverSearch,

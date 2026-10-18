@@ -299,9 +299,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         if (action == 'add') {
           // Ensure apps are loaded
           AppsProvider appsProvider = context.read<AppsProvider>();
-          while (appsProvider.loadingApps) {
-            await Future.delayed(const Duration(milliseconds: 10));
-          }
+          await appsProvider.waitForAppsToLoad();
           if (!mounted) return;
 
           // See if we already have this app

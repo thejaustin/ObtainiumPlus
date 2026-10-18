@@ -961,7 +961,7 @@ class SettingsProvider with ChangeNotifier {
   Future<bool> getInstallPermission({bool enforce = false}) async => true;
 
   int get updateCheckConcurrencyLimit =>
-      prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3;
+      (prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3).clamp(1, 16);
   set updateCheckConcurrencyLimit(int val) {
     prefs?.setInt('updateCheckConcurrencyLimit', val);
     notifyListeners();

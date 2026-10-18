@@ -992,7 +992,10 @@ class AppInstallService {
         }
       }
 
-      file.file.delete(recursive: true);
+      // May already be gone (parallel cleanup); never fail a finished install.
+      try {
+        await file.file.delete(recursive: true);
+      } catch (_) {}
     } else if (code == 3 &&
         firstTimeWithContext != null &&
         firstTimeWithContext.mounted) {

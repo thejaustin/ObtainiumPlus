@@ -269,10 +269,12 @@ class HttpService {
     HttpClientResponse response,
   ) async {
     try {
-      final bytes = (await response.fold<BytesBuilder>(
-        BytesBuilder(),
-        (b, d) => b..add(d),
-      )).toBytes();
+      // A server that stalls mid-body would otherwise hold the request (and
+      // an update-check worker) forever.
+      final bytes = (await response
+              .fold<BytesBuilder>(BytesBuilder(), (b, d) => b..add(d))
+              .timeout(const Duration(seconds: 60)))
+          .toBytes();
 
       final headers = <String, String>{};
       response.headers.forEach((name, values) {

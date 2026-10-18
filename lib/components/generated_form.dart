@@ -371,6 +371,9 @@ class _TVTextFieldFocusState extends State<_TVTextFieldFocus> {
 }
 
 class _GeneratedFormState extends State<GeneratedForm> {
+  // Text controllers created while building inputs; disposed when the form
+  // is rebuilt for a new key or the state goes away.
+  final List<TextEditingController> _textControllers = [];
   final _formKey = GlobalKey<FormState>();
   Map<String, dynamic> values = {};
   late List<List<Widget>> formInputs;
@@ -405,6 +408,16 @@ class _GeneratedFormState extends State<GeneratedForm> {
   }
 
   void initForm() {
+    if (_textControllers.isNotEmpty) {
+      // The previous inputs may still be mounted this frame.
+      final old = List<TextEditingController>.from(_textControllers);
+      _textControllers.clear();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final c in old) {
+          c.dispose();
+        }
+      });
+    }
     initKey = widget.key.toString();
     // Initialize form values as all empty
     values.clear();
@@ -421,6 +434,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
         if (formItem is GeneratedFormTextField) {
           final formFieldKey = GlobalKey<FormFieldState>();
           var ctrl = TextEditingController(text: values[formItem.key]);
+          _textControllers.add(ctrl);
           return TypeAheadField<String>(
             controller: ctrl,
             builder: (context, controller, focusNode) {
@@ -534,6 +548,14 @@ class _GeneratedFormState extends State<GeneratedForm> {
   void initState() {
     super.initState();
     initForm();
+  }
+
+  @override
+  void dispose() {
+    for (final c in _textControllers) {
+      c.dispose();
+    }
+    super.dispose();
   }
 
   @override
