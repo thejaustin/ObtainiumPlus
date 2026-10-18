@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/core/logging/app_log_db.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -278,7 +279,7 @@ class _LogsPageState extends State<LogsPage> {
         if (_loading)
           const SliverFillRemaining(
             hasScrollBody: false,
-            child: Center(child: CircularProgressIndicator()),
+            child: Center(child: ExpressiveCircularProgressIndicator()),
           )
         else if (_logs.isEmpty)
           SliverFillRemaining(

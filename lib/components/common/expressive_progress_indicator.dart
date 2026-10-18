@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:provider/provider.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -57,12 +58,18 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
   final Color? backgroundColor;
   final double strokeWidth;
 
+  /// Allow the M3E shape-morph indicator for indeterminate waits. Pass false
+  /// for per-row/per-tile spinners: many concurrent morphs are costly and the
+  /// spec reserves the loading indicator for page/dialog-level waits.
+  final bool morph;
+
   const ExpressiveCircularProgressIndicator({
     super.key,
     this.value,
     this.color,
     this.backgroundColor,
     this.strokeWidth = 4.0,
+    this.morph = true,
   });
 
   @override
@@ -78,22 +85,36 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
       );
     }
 
-    if (value == null && plusSettings.plusDevUseThirdPartyLoadingIndicator) {
-      return FittedBox(
-        fit: BoxFit.contain,
-        child: LoadingIndicatorM3E(
-          color: color ?? Theme.of(context).colorScheme.primary,
-        ),
-      );
-    }
-
-    return WavyCircularProgressIndicator(
+    // Indeterminate waits use the M3 Expressive morphing loading indicator;
+    // the wavy ring is kept for determinate progress, for the developer
+    // comparison toggle, and when motion is reduced (it holds still).
+    final wavy = WavyCircularProgressIndicator(
       value: value,
       color: color ?? Theme.of(context).colorScheme.primary,
       backgroundColor:
           backgroundColor ??
           Theme.of(context).colorScheme.surfaceContainerHighest,
       strokeWidth: strokeWidth,
+    );
+
+    if (value != null ||
+        !morph ||
+        plusSettings.plusDevUseThirdPartyLoadingIndicator ||
+        !AppMotion.enabled(context)) {
+      return wavy;
+    }
+
+    // Below ~32dp the morphing shapes are unreadable; keep the wavy ring.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.biggest.shortestSide < 32) return wavy;
+        return FittedBox(
+          fit: BoxFit.contain,
+          child: LoadingIndicatorM3E(
+            color: color ?? Theme.of(context).colorScheme.primary,
+          ),
+        );
+      },
     );
   }
 }
@@ -129,6 +150,16 @@ class _SquigglyProgressIndicatorState extends State<SquigglyProgressIndicator>
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     )..repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.enabledForDependencies(context)) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else {
+      _controller.stop();
+    }
   }
 
   @override
@@ -337,6 +368,16 @@ class _WavyCircularProgressIndicatorState
       vsync: this,
       duration: const Duration(milliseconds: 2500),
     )..repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (AppMotion.enabledForDependencies(context)) {
+      if (!_controller.isAnimating) _controller.repeat();
+    } else {
+      _controller.stop();
+    }
   }
 
   @override

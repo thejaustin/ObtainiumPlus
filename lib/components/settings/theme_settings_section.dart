@@ -275,11 +275,11 @@ class ThemeSettingsSection extends StatelessWidget {
         SwitchListTile.adaptive(
           secondary: const Icon(Icons.refresh_rounded),
           title: Text(
-            'Use 3rd Party Loading Indicator',
+            'Use Wavy Loading Spinner',
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           subtitle: const Text(
-            'Swaps custom M3E wavy indicator for the loading_indicator_m3e package for comparison.',
+            'Replaces the M3E morphing loading indicator with the wavy ring for comparison.',
           ),
           value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
           onChanged: (val) {

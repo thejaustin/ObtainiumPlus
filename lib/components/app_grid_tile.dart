@@ -1050,7 +1050,7 @@ class AppIconActionBadge extends StatelessWidget {
               SizedBox(
                 width: d - 6,
                 height: d - 6,
-                child: CircularProgressIndicator(
+                child: ExpressiveCircularProgressIndicator(
                   value: ((progress ?? 0.0) / 100).clamp(0.0, 1.0).toDouble(),
                   strokeWidth: 2.5,
                   color: fg,
@@ -1073,6 +1073,7 @@ class AppIconActionBadge extends StatelessWidget {
             child: ExpressiveCircularProgressIndicator(
               strokeWidth: 2.5,
               color: fg,
+              morph: false,
             ),
           );
           tap = null;

@@ -1422,7 +1422,7 @@ class AddAppPageState extends State<AddAppPage> {
       child: SizedBox(
         width: 20,
         height: 20,
-        child: CircularProgressIndicator(strokeWidth: 2),
+        child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
       ),
     );
   }
