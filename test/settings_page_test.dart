@@ -3,11 +3,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-// settings.dart imports material_ui (not flutter/material), so all Material
-// widgets in SettingsPage use material_ui's own MaterialLocalizations type.
-import 'package:material_ui/material_ui.dart' as mui;
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -16,6 +12,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/app_localizations_delegates.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -76,18 +73,9 @@ void main() {
         ],
         child: Builder(
           builder: (context) => MaterialApp(
-            // settings.dart imports material_ui (not flutter/material), so all
-            // Material widgets use material_ui's own MaterialLocalizations type.
-            // We must include both Flutter's and material_ui's delegates, or
-            // widgets like SearchBar/ChoiceChip throw "No MaterialLocalizations".
-            localizationsDelegates: [
-              ...context.localizationDelegates,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              mui.GlobalMaterialLocalizations.delegate,
-              mui.DefaultMaterialLocalizations.delegate,
-            ],
+            localizationsDelegates: appLocalizationsDelegates(
+              context.localizationDelegates,
+            ),
             supportedLocales: [locale],
             // Hardcode the locale so the test never picks up the CI machine's
             // platform locale, which may be 'C' (POSIX) and unsupported.
@@ -169,9 +157,10 @@ void main() {
     );
   }
 
-  // #336/#337: material_ui widgets crashed with a null MaterialLocalizations
-  // in every non-English locale because only the en-only Default delegate
-  // was registered.
+  // #336/#337: flex_color_picker's colour-code field (Appearance tab) is a
+  // material_ui TextField, which needs material_ui's own MaterialLocalizations.
+  // Only the en-only Default delegate was registered, so every other locale
+  // crashed with a null check on opening settings.
   testWidgets(
     'settings page builds in a non-English locale',
     (tester) async {
