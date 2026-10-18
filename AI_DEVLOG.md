@@ -28,7 +28,16 @@ Root cause: commit `7ca61415` (2026-05-11, "Qwen AI Assistant", "feat: itch.io a
 - [x] (44701206) Onboarding: `pages/onboarding.dart` (12 errors: App() is positional now) — was home.dart:104. Fresh installs only; replaces welcome dialog, never both.
 - [x] (54301707, service deleted; inline handler + key stripping) Deep links: `services/deep_link_service.dart` — was home.dart:326; home.dart now parses inline (newer). Diff, port missing handlers, keep ONE path; add key whitelist.
 - [x] (9efc8e88) Sort/filter: `components/sort_filter_panel.dart` — was apps.dart:1178,1291. Compare with live filter dialog/tag_filter_bar; keep one.
-**B. Never wired (product decision / new placement)**
+**B. Never wired — progress 2026-10-18:** done: `dynamic_color_utils` wired (ab306a54); 8 stale copies deleted + "Launch" ported to the live long-press menu (1f02b82a).
+Remaining, each needs a placement/data decision:
+- `components/category_editor.dart` (4 errors): rename/recolour sheet; reads categories from SettingsProvider while the live UI uses ViewSettingsProvider (two stores!). Hook into GeneratedFormTagInput chip long-press?
+- `components/common/contextual_tip.dart`: toggle `enableContextualTips` is live; tip dismissal is not persisted (shows every launch) — add per-tip persistence + choose placements.
+- `components/common/network_indicator.dart`: one network probe on init; place in apps page header?
+- `components/update_badge.dart`: pulsing dot; Apps nav icon when updates exist?
+- `components/apps/app_description_slider.dart`: reads additionalSettings['about'], which no source sets — needs sources (GitHub/GitLab/Codeberg/F-Droid) to store a description first.
+- `services/plugin_engine.dart`: executes plugin JS; plugin system is a mock (fake metadata, dev settings only). Needs a design/security decision before wiring.
+- Generated protobuf companions (.pbenum/.pbjson, AcquireApp) — expected, leave.
+**B (original list, for reference)**
 - [ ] `components/common/contextual_tip.dart` — settings toggle `enableContextualTips` is live but does nothing: wire placements or hide toggle.
 - [ ] `components/common/network_indicator.dart`, `components/update_badge.dart`, `components/apps/app_description_slider.dart`, `components/category_editor.dart` (4 errors), `components/apps/app_list_view.dart` + `app_shortcuts_menu.dart`, `components/settings/settings_group.dart`, `components/settings/boolean_control_grid.dart` (10 errors), `components/logs_dialog.dart` (vs live settings/logs_dialog.dart), `components/info_tooltip.dart`, `components/apps/app_dialogs.dart`, `components/apps/app_list_tile_classic.dart`, `utils/dynamic_color_utils.dart`, `services/plugin_engine.dart`.
 **C. Stale duplicates — DONE (owner OK'd port-then-delete): 9a939a8e deleted 17; export encryption ported (8a0c856f, BackupCrypto PBKDF2+AES-GCM, toggle now works); undo-remove ported (c8ceabe9).**

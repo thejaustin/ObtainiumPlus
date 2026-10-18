@@ -40,9 +40,24 @@ All notable changes to Obtainium+ are documented in this file.
 - **Spring Motion**: Press feedback on buttons, tiles and cards is now driven by real spring physics (Material 3 Expressive spring tokens), so releases pop back with a natural overshoot. The floating nav bar indicator rides the same spring.
 - **Morphing Loading Indicator**: Loading screens and dialogs now show the Material 3 Expressive shape-morphing loading indicator. Small inline spinners and determinate progress keep the wavy ring.
 - **Respects Android "Remove animations"**: Press animations, the nav bar indicator, looping indicators and the loading indicator now honour the system accessibility setting in addition to the in-app animations toggle. Press haptics keep working with animations off.
+- **Guided Onboarding Is Back**: Fresh installs get the step-by-step onboarding again (permissions, installer setup, optionally tracking Obtainium+ itself) instead of a one-line welcome message. It was accidentally disconnected in May.
+- **Sort & Filter Sheet**: The filter button on the apps list opens the full sort and filter sheet again: sort order, list/grid view, status chips, categories, tags and name/author/ID/source filters in one place.
+- **Known-Issue Notices**: If the build you're running has a known serious problem, Obtainium+ tells you on launch and points you to the fix. Checked at most every 6 hours, and never blocks startup.
+- **Undo App Removal**: Removing apps shows an Undo action for a few seconds that restores them to your list.
+- **Launch From the Long-Press Menu**: The app long-press menu can open installed apps directly.
+- **Native Google Play Source (opt-in)**: With a Play token set up (Aurora dispenser or personal account), you can switch a Play app to "Google Play (Native)" to fetch it straight from Google Play. Without a token, or if Play fails, it falls back to the regular mirror.
+- **System Updates Page**: Turning on the System update scanner setting now adds a System updates page to navigation, which checks your installed apps for newer versions. Previously the setting did nothing.
+- **True Material You Colours**: In Material You mode every colour, including card and surface tones, now comes straight from Android's own wallpaper palette, and the app picks up a wallpaper change when you return to it.
 
 ### 🐛 Bug Fixes & Polish
 
+- **Startup Crash Screen**: If the app fails to start, you now get a crash screen with the error, a report button and repair options (after repeated crashes) instead of a blank screen.
+- **Crash Reports Reach the Developer**: Unhandled background errors were only logged on your device; they are now reported too, so crashes like the export NaN crash can actually be diagnosed.
+- **Export / Share Crash (NaN), Further Hardening**: Every remaining path that writes app, plugin, account or link data as JSON now strips invalid numbers, including values nested inside app objects (#240, #241).
+- **Backup Encryption Actually Encrypts**: The Backup encryption setting previously did nothing. Turning it on now asks for a password and encrypts manual and automatic exports with modern authenticated encryption; encrypted backups ask for the password when imported. Older encrypted backups can still be read.
+- **Credentials Stay On Your Device**: API tokens and store credentials are excluded from Android cloud backup, and the Codeberg/Forgejo token is moved into secure storage like the GitHub and GitLab tokens.
+- **Safer App Links**: Importing apps from an obtainium:// link shows each app's name and URL first and ignores any settings in the link that would weaken security (insecure connections, certificate pinning, signer allow-lists).
+- **Safer Plugin Installs**: Plugins can only be installed from https:// links and are size-limited.
 - **Crash Opening Settings in Non-English Languages**: Opening settings crashed with "Null check operator used on a null value" for anyone not using English, because the colour-picker text field could not find its translations (#336, #337).
 - **Floating Nav Bar in Right-to-Left Languages**: The nav bar indicator now highlights the correct tab in Persian and Arabic.
 - **Settings Scroll Crash (recurring)**: Re-pinned explicit `PageStorageKey` strings on the settings page `CustomScrollView` and horizontal tabs `ListView`. Without these, Flutter assigns positional PageStorage slots that collide with `ExpansionTile`'s bool entries, causing a `type 'bool' is not a subtype of 'double?'` crash on scroll restoration (issues #303 #304 #256). The keys were accidentally dropped in a rebase and are now restored.
