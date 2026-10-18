@@ -35,6 +35,7 @@ All notable changes to Obtainium+ are documented in this file.
 - **Ban Warning Threshold Slider**: The ban/rate-limit warning threshold in Safety & Rate Limits now uses the shared animated SettingsSliderTile: the value badge morphs and pops while dragging, and each notch fires a haptic tick. Previously it was a plain Slider row with no visual feedback.
 - **Preferred Update Source Chip Grid**: The preferred update source selector in Updates settings is now a 3+2 chip grid (Direct, Play Store, Aurora, GitHub, APKPure) matching the swipe gesture chip grid style — each source shows its icon and label, the selected source fills with the primary container color.
 - **Time Picker Sliders**: The start/end hour pickers in the update schedule dialog and the notification quiet hours dialog are now compact sliders (0–23 h) inside full-width styled labeled boxes, each showing the current hour as a bold value label above the track. Previously they were scroll-wheel dropdown menus.
+- **M3 Button Polish**: The remaining M2-style `ElevatedButton` instances (add-app search, Xiaomi troubleshoot actions, form sub-list add button) have been upgraded to `FilledButton` / `FilledButton.tonal`, consistent with the M3 style used elsewhere. Day-of-week chips in the update schedule dialog now fire haptics on toggle. The source selector and log-filter dropdowns use the M3 `DropdownMenu` widget instead of the legacy `DropdownButton`.
 
 ### 🐛 Bug Fixes & Polish
 
