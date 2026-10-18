@@ -54,10 +54,8 @@ class UpdateSettingsSection extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: _RunBgUpdateCheckNowButton(),
         ),
-      if (_matches(tr('bgUpdateCheckInterval'))) ...[
-        _buildIntervalLabel(context),
+      if (_matches(tr('bgUpdateCheckInterval')))
         _buildIntervalSlider(context),
-      ],
       if (_matches(tr('bgUpdateRequiresWifi')) ||
           _matches(tr('bgUpdateRequiresCharging')) ||
           _matches(tr('checkOnStart')) ||
@@ -301,37 +299,23 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildIntervalLabel(BuildContext context) {
-    return Consumer<UpdateSettingsProvider>(
-      builder: (context, updateSettings, child) {
-        return ListTile(
-          leading: const Icon(Icons.history_toggle_off_outlined),
-          title: Text(
-            tr('bgUpdateCheckInterval'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(updateSettings.updateIntervalLabel),
-        );
-      },
-    );
-  }
-
   Widget _buildIntervalSlider(BuildContext context) {
     return Consumer<UpdateSettingsProvider>(
       builder: (context, updateSettings, child) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Slider(
-            value: updateSettings.updateIntervalSliderVal,
-            max: updateSettings.updateIntervalNodes.length.toDouble(),
-            divisions: updateSettings.updateIntervalNodes.length * 20,
-            onChanged: (double value) {
-              updateSettings.updateIntervalSliderVal = value;
-              updateSettings.processIntervalSliderValue(value);
-              onIntervalLabelChange(false);
-            },
-            onChangeEnd: (double value) => onIntervalLabelChange(true),
-          ),
+        return SettingsSliderTile(
+          icon: Icons.history_toggle_off_outlined,
+          title: tr('bgUpdateCheckInterval'),
+          value: updateSettings.updateIntervalSliderVal,
+          min: 0,
+          max: updateSettings.updateIntervalNodes.length.toDouble(),
+          divisions: updateSettings.updateIntervalNodes.length * 20,
+          labelBuilder: (_) => updateSettings.updateIntervalLabel,
+          onChanged: (value) {
+            updateSettings.updateIntervalSliderVal = value;
+            updateSettings.processIntervalSliderValue(value);
+            onIntervalLabelChange(false);
+          },
+          onChangeEnd: (_) => onIntervalLabelChange(true),
         );
       },
     );
