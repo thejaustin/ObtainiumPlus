@@ -1,0 +1,293 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:obtainium/components/apps/app_list_tile.dart';
+import 'package:obtainium/components/apps/app_actions_context_menu.dart';
+import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+
+/// The expressive apps list: AppListTile rows, configurable swipe actions
+/// and drag-to-reorder pinned apps. Selection state is owned by AppsPage.
+class AppListView extends StatelessWidget {
+  final List<AppInMemory> apps;
+  final String? activeAppId;
+  final Function(App) onAppTap;
+  final Function(BuildContext, App) getChangeLogFn;
+  final Set<String> selectedAppIds;
+  final void Function(App) onToggleSelected;
+  final Set<String> updateAppIds;
+
+  const AppListView({
+    super.key,
+    required this.apps,
+    this.activeAppId,
+    required this.onAppTap,
+    required this.getChangeLogFn,
+    required this.selectedAppIds,
+    required this.onToggleSelected,
+    required this.updateAppIds,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final plusEnableSwipeActions = plusSettings.plusEnableSwipeActions;
+    final appsProvider = context.read<AppsProvider>();
+    final width = MediaQuery.of(context).size.width;
+    final horizontalPadding = width > 800 ? (width - 800) / 2 : 0.0;
+    const verticalPadding = 8.0;
+    final pinnedApps = <AppInMemory>[];
+    final unpinnedApps = <AppInMemory>[];
+    for (final a in apps) {
+      if (a.app.pinned) {
+        pinnedApps.add(a);
+      } else {
+        unpinnedApps.add(a);
+      }
+    }
+    // Honour the user's drag order for pinned apps; unknown ones keep their
+    // sorted position after the ordered ones.
+    final pinnedOrder = plusSettings.plusPinnedAppsOrder;
+    if (pinnedOrder.isNotEmpty) {
+      final position = {
+        for (final (i, a) in pinnedApps.indexed) a.app.id: i,
+      };
+      int rank(AppInMemory a) {
+        final i = pinnedOrder.indexOf(a.app.id);
+        return i < 0 ? pinnedOrder.length : i;
+      }
+      // List.sort is not stable: tie-break on the incoming (sorted) position.
+      pinnedApps.sort((a, b) {
+        final byRank = rank(a).compareTo(rank(b));
+        return byRank != 0
+            ? byRank
+            : position[a.app.id]!.compareTo(position[b.app.id]!);
+      });
+    }
+
+    Widget _buildAppItem(AppInMemory app, bool isPinned, int index) {
+      final hasUpdate = updateAppIds.contains(app.app.id);
+      // Swipe surfaces use scheme roles instead of raw palette colors so
+      // they harmonize with Material You dynamic color in both brightnesses
+      final colorScheme = Theme.of(context).colorScheme;
+      final isCompact = viewSettings.appListDensity == AppListDensity.compact;
+      final radius = plusSettings.plusOverrideIndividualCornerRadius
+          ? plusSettings.plusHomeCornerRadius
+          : plusSettings.plusGlobalCornerRadius;
+
+      Widget getActionIcon(AppSwipeAction action) {
+        switch (action) {
+          case AppSwipeAction.update:
+            return Icon(Icons.download, color: colorScheme.onPrimary);
+          case AppSwipeAction.togglePin:
+            return Icon(
+              app.app.pinned ? Icons.push_pin_outlined : Icons.push_pin,
+              color: colorScheme.onTertiary,
+            );
+          case AppSwipeAction.share:
+            return Icon(Icons.share, color: colorScheme.onSecondary);
+          case AppSwipeAction.launch:
+            return Icon(Icons.launch, color: colorScheme.onPrimaryContainer);
+          case AppSwipeAction.delete:
+            return Icon(Icons.delete, color: colorScheme.onError);
+          default:
+            return const SizedBox.shrink();
+        }
+      }
+
+      Color getActionColor(AppSwipeAction action) {
+        switch (action) {
+          case AppSwipeAction.update:
+            return colorScheme.primary;
+          case AppSwipeAction.togglePin:
+            return colorScheme.tertiary;
+          case AppSwipeAction.share:
+            return colorScheme.secondary;
+          case AppSwipeAction.launch:
+            return colorScheme.primaryContainer;
+          case AppSwipeAction.delete:
+            return colorScheme.error;
+          default:
+            return colorScheme.surfaceContainerHighest;
+        }
+      }
+
+      Future<bool> handleSwipe(AppSwipeAction action) async {
+        AppHaptics.mediumImpact();
+        switch (action) {
+          case AppSwipeAction.update:
+            appsProvider.downloadAndInstallLatestApps([app.app.id], context);
+            break;
+          case AppSwipeAction.togglePin:
+            app.app.pinned = !app.app.pinned;
+            appsProvider.saveApps([app.app]);
+            break;
+          case AppSwipeAction.share:
+            Share.share(app.app.url);
+            break;
+          case AppSwipeAction.launch:
+            AppInstallService.openApp(app.app.id);
+            break;
+          case AppSwipeAction.delete:
+            appsProvider.removeAppsWithModal(context, [app.app]);
+            break;
+          case AppSwipeAction.none:
+            break;
+        }
+        return false; // Don't dismiss the row
+      }
+
+      final swipeEnabled =
+          plusEnableSwipeActions &&
+          behaviorSettings.enableSwipeGestures &&
+          !(behaviorSettings.swipeRightAction == AppSwipeAction.none &&
+              behaviorSettings.swipeLeftAction == AppSwipeAction.none);
+
+
+      Widget child = Dismissible(
+        key: Key('dismiss_${app.app.id}'),
+        direction: !swipeEnabled
+            ? DismissDirection.none
+            : (behaviorSettings.swipeRightAction == AppSwipeAction.none
+                  ? DismissDirection.endToStart
+                  : (behaviorSettings.swipeLeftAction == AppSwipeAction.none
+                        ? DismissDirection.startToEnd
+                        : DismissDirection.horizontal)),
+        background: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 8,
+            vertical: isCompact ? 2 : 6,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: getActionColor(behaviorSettings.swipeRightAction),
+              borderRadius: BorderRadius.circular(radius),
+            ),
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20.0),
+            child: getActionIcon(behaviorSettings.swipeRightAction),
+          ),
+        ),
+        secondaryBackground: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 8,
+            vertical: isCompact ? 2 : 6,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: getActionColor(behaviorSettings.swipeLeftAction),
+              borderRadius: BorderRadius.circular(radius),
+            ),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20.0),
+            child: getActionIcon(behaviorSettings.swipeLeftAction),
+          ),
+        ),
+        confirmDismiss: (direction) {
+          if (direction == DismissDirection.startToEnd) {
+            return handleSwipe(behaviorSettings.swipeRightAction);
+          } else {
+            return handleSwipe(behaviorSettings.swipeLeftAction);
+          }
+        },
+        child: RepaintBoundary(
+          child: Transform.scale(
+            scale: apps.length <= 2 ? 1.02 : 1.0,
+            child: AppListTile(
+              appInMemory: app,
+              hasUpdate: hasUpdate,
+              selected: selectedAppIds.contains(app.app.id),
+              entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                  ? Duration(milliseconds: index < 12 ? index * 30 : 0)
+                  : Duration.zero,
+              onTap: () {
+                AppHaptics.selectionClick();
+                if (selectedAppIds.isNotEmpty) {
+                  onToggleSelected(app.app);
+                } else {
+                  onAppTap(app.app);
+                }
+              },
+              onLongPress: () {
+                if (selectedAppIds.isNotEmpty) {
+                  AppHaptics.selectionClick();
+                  onToggleSelected(app.app);
+                } else {
+                  AppHaptics.heavyImpact();
+                  AppActionsContextMenu.show(
+                    context,
+                    app,
+                    onEnterMultiSelect: () => onToggleSelected(app.app),
+                  );
+                }
+              },
+              onShowChanges: getChangeLogFn(context, app.app),
+            ),
+          ),
+        ),
+      );
+
+      if (isPinned) {
+        return ReorderableDelayedDragStartListener(
+          key: Key('reorder_${app.app.id}'),
+          index: index,
+          child: child,
+        );
+      }
+      return child;
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          if (pinnedApps.isNotEmpty)
+            SliverReorderableList(
+              itemCount: pinnedApps.length,
+              itemBuilder: (context, index) =>
+                  _buildAppItem(pinnedApps[index], true, index),
+              onReorder: (oldIndex, newIndex) {
+                AppHaptics.selectionClick();
+                if (oldIndex < newIndex) {
+                  newIndex -= 1;
+                }
+                final app = pinnedApps.removeAt(oldIndex);
+                pinnedApps.insert(newIndex, app);
+
+                plusSettings.plusPinnedAppsOrder = pinnedApps
+                    .map((a) => a.app.id)
+                    .toList();
+              },
+            ),
+          if (pinnedApps.isNotEmpty && unpinnedApps.isNotEmpty)
+            const SliverToBoxAdapter(
+              child: Divider(height: 32, indent: 16, endIndent: 16),
+            ),
+          if (unpinnedApps.isNotEmpty)
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (BuildContext context, int index) {
+                  return _buildAppItem(unpinnedApps[index], false, index);
+                },
+                childCount: unpinnedApps.length,
+                addAutomaticKeepAlives: false,
+                addRepaintBoundaries: true,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

@@ -483,10 +483,19 @@ class AppsViewSettingsSection extends StatelessWidget {
           ),
         if (showLayout &&
             plusFeaturesEnabled &&
-            _matches(tr('plusEnableSwipeActions')))
+            (_matches(tr('plusEnableSwipeActions')) ||
+                _matches(tr('plusEnableModernAppListTile'))))
           GenericBooleanControlGrid<PlusSettingsProvider>(
             title: tr('plusEnableSwipeActions'),
             settings: [
+              (
+                icon: Icons.view_agenda_rounded,
+                label: tr('plusEnableModernAppListTile'),
+                description: tr('plusEnableModernAppListTileDescription'),
+                getValue: (s) => s.plusEnableModernAppListTile,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableModernAppListTile = v),
+              ),
               (
                 icon: Icons.swipe_rounded,
                 label: tr('plusEnableSwipeActions'),

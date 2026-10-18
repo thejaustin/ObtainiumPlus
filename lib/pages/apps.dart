@@ -31,6 +31,7 @@ import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/sort_filter_panel.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -1875,6 +1876,29 @@ class AppsPageState extends State<AppsPage>
               childAspectRatio: aspectRatio,
             ),
           ),
+        );
+      }
+
+      // The expressive list (AppListTile, swipe actions, pinned reordering)
+      // was replaced by the upstream ListTile in 7ca61415; restored behind
+      // the existing "modern app list tile" setting.
+      if (plusSettings.plusEnableModernAppListTile && !settingsProvider.isTV) {
+        return AppListView(
+          apps: listedApps,
+          selectedAppIds: selectedAppIds,
+          onToggleSelected: toggleAppSelected,
+          updateAppIds: existingUpdates,
+          getChangeLogFn: getChangeLogFn,
+          onAppTap: (app) {
+            showDraggableModalBottomSheet(
+              context: context,
+              builder: (context, controller) => AppPage(
+                appId: app.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          },
         );
       }
 

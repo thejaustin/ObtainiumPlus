@@ -1372,5 +1372,7 @@
     "enterBackupPassword": "Enter the password for this encrypted backup",
     "wrongBackupPassword": "Wrong backup password",
     "scanningXApps": "Scanning {} apps…",
-    "systemUpdates": "System updates"
+    "systemUpdates": "System updates",
+    "plusEnableModernAppListTile": "Expressive app list",
+    "plusEnableModernAppListTileDescription": "Expressive app rows with swipe actions and drag-to-reorder pinned apps. Off uses the classic compact list."
 }
