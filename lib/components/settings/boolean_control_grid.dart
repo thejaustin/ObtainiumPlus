@@ -5,6 +5,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -122,7 +123,10 @@ class BooleanControlGrid extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(12.0),
-          onTap: () => onChanged(!value),
+          onTap: () {
+                AppHaptics.selectionClick();
+                onChanged(!value);
+              },
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: Row(
@@ -161,7 +165,7 @@ class BooleanControlGrid extends StatelessWidget {
                 const SizedBox(width: 8),
                 Switch(
                   value: value,
-                  onChanged: onChanged,
+                  onChanged: hapticSwitchOnChanged(context, onChanged),
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ],

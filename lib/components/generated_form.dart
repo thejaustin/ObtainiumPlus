@@ -9,6 +9,7 @@ import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:provider/provider.dart';
 
@@ -573,12 +574,12 @@ class _GeneratedFormState extends State<GeneratedForm> {
                 value: values[fieldKey],
                 onChanged: item.disabled
                     ? null
-                    : (value) {
+                    : hapticSwitchOnChanged(context, (value) {
                         setState(() {
                           values[fieldKey] = value;
                           someValueChanged();
                         });
-                      },
+                      }),
               ),
             ],
           );
