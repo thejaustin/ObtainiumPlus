@@ -1681,7 +1681,9 @@ class AppsPageState extends State<AppsPage>
         onFilterChanged: () {
           if (mounted) setState(() {});
         },
-        categories: settingsProvider.categories,
+        // ViewSettingsProvider is the live category store (SettingsProvider
+        // caches the same key and goes stale when categories are added).
+        categories: context.read<ViewSettingsProvider>().categories,
       );
     }
 

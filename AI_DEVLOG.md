@@ -47,6 +47,14 @@ Remaining, each needs a placement/data decision:
 **E. Shadowed extension members (not in --dead; analyzer silent)**
 - [ ] `extension … on AppsProvider` members colliding with class members never run, e.g. `apps_provider_import_export.dart` `export()` (custom-name auto-export lost), plus `apps_provider_lifecycle`/`apps_provider_install`. Merge into class methods.
 
+### Settings with no effect — sweep 2026-10-18
+Heuristic: setting getters never read outside the providers and settings UI (string-stripped, pref-key aware). ~53 flagged; **verify each before fixing** (e.g. `enableHapticFeedback` is a false positive: the provider pushes it into `AppHaptics.enabled`). Confirmed real so far:
+- [ ] **Swipe gestures** (`enableSwipeGestures`, `swipeLeftAction`, `swipeRightAction`, `disableSwipeActions`, `plusEnableSwipeActions`): logic only existed in the unreachable `app_list_view.dart` (deleted 1f02b82a — recover from history when wiring into the live list/grid tiles).
+- [ ] **Notification quiet hours** (`plusEnableNotificationQuietHours`, start/end): nothing reads them; notifications ignore quiet hours.
+- [ ] `enableContextualTips` (see unreachable-files list).
+Unverified candidates: plusEnableGridView, plusEnableQuickFilters, plusEnableIconCaching, plusSettingsUseGridToggles, plusSettingsUseVisualThemePicker, plusSettingsUseSubmenuHub, plusSettingsUseHeroCards, plusSettingsBottomNavBar, plusShowAdvancedSettings, plusEnableExperimentalCustomization, plusDeduplicateRecents, plusEnableResponsiveAppLayout, plusEnableModernAppPage, plusEnableModernAppListTile, plusEnableUpdateSchedule, plusShowLegacyUIComparison, playStoreVerifiedOnly/ExcludeSystemApps/NoAdsFilter/MinDownloads, plusEnableMicroGHub, plusEnableStandaloneInstaller, plusEnableAutoUpdateRules, plusEnableNotificationEnhancements, plusPinnedAppsOrder, plusUpdateExpressiveBadge, plusExpressiveFilterChips, colourSchemeMode, showDebugOpts, tactileFeedbackEnabled, alwaysUsePhoneLayout, collapseGroupsOnStartup, skipBulkUpdateConfirmation, actionBannerMode, enableDeepLogging, allowThirdPartySources, usePlayStoreAppLinks, displayShowAppCount, displayShowFilterChips, displayShowDate, gridCategoryMode, navigationLabelBehavior, offlineQueue.
+For each: wire it, or remove the toggle — a toggle that does nothing is a user-visible lie.
+
 ### Security (from audit; file:line as of 2026-10-18)
 - [ ] HIGH `AndroidManifest.xml` — no `allowBackup="false"`/`dataExtractionRules`; prefs + plugin JS leave device via backup.
 - [ ] HIGH `res/xml/file_paths.xml:2-4` `external-path path="."` exposes all shared storage — narrow to download/export dirs.

@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/onboarding.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -39,6 +40,7 @@ void main() {
     bool isTV = false,
     bool matchSystemMaterialStyle = false,
     Brightness brightness = Brightness.light,
+    Widget? home,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final settings = SettingsProvider();
@@ -96,7 +98,7 @@ void main() {
               isTV: isTV,
               matchSystemMaterialStyle: matchSystemMaterialStyle,
             ),
-            home: SettingsPage(initialTab: tab),
+            home: home ?? SettingsPage(initialTab: tab),
           ),
         ),
       ),
@@ -215,6 +217,45 @@ void main() {
       timeout: const Timeout(Duration(minutes: 1)),
     );
   }
+
+  // First screen of every fresh install; restored after being unreachable
+  // from May to October.
+  testWidgets(
+    'onboarding page builds',
+    (tester) async {
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(0, home: OnboardingPage(onDone: () {}));
+      });
+      final errors = <FlutterErrorDetails>[];
+      final base = FlutterError.onError;
+      FlutterError.onError = (d) {
+        errors.add(d);
+        base?.call(d);
+      };
+      try {
+        await tester.pumpWidget(app);
+        for (var i = 0; i < 40; i++) {
+          await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 50)),
+          );
+          await tester.pump(const Duration(milliseconds: 100));
+          if (tester.any(find.byType(OnboardingPage))) break;
+        }
+        await tester.pump(const Duration(seconds: 1));
+      } finally {
+        FlutterError.onError = base;
+      }
+      for (final d in errors) {
+        // ignore: avoid_print
+        print('──── onboarding error ────\n$d');
+      }
+      expect(tester.takeException(), isNull);
+      expect(find.byType(OnboardingPage), findsOneWidget);
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
 
   testWidgets(
     'settings page survives corrupted preference types',

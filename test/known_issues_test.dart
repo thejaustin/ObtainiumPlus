@@ -15,6 +15,24 @@ void main() {
     expect(issues, isNotEmpty);
   });
 
+  test('no shipped notice targets the current or any future build', () {
+    // An open-ended affectedBuildRange (min without max) would show a
+    // critical dialog to every user on every launch from now on.
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final m = RegExp(r'^version:\s*([^+\s]+)\+(\d+)', multiLine: true)
+        .firstMatch(pubspec)!;
+    final version = m.group(1)!;
+    final build = int.parse(m.group(2)!);
+    final decoded =
+        jsonDecode(File('known_issues.json').readAsStringSync())
+            as Map<String, dynamic>;
+    for (final e in decoded['issues'] as List) {
+      final issue = KnownIssue.fromJson(e as Map<String, dynamic>);
+      expect(issue.affects(version, build), isFalse, reason: issue.id);
+      expect(issue.affects(version, build + 1000), isFalse, reason: issue.id);
+    }
+  });
+
   test('affects matches exact versions, then build ranges', () {
     final byVersion = KnownIssue.fromJson({
       'id': 'a',

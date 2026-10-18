@@ -2618,7 +2618,7 @@ class AppsProvider with ChangeNotifier {
         final removed = apps.map((a) => a.deepCopy()).toList();
         await removeApps(apps.map((e) => e.id).toList());
         // Undo restores tracking (not an uninstall); APKs re-download.
-        if (context.mounted) {
+        if (context.mounted && behaviorSettings.enableUndoForAppRemoval) {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(

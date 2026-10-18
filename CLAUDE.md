@@ -70,7 +70,7 @@ Pushing to `main` triggers `build-apk.yml` automatically: analyze → flutter te
 
 ## Dead code traps
 
-~50 files under `lib/` are never imported from `lib/main.dart` / `lib/main_fdroid.dart` (incl. `pages/onboarding.dart`, `pages/system_updates.dart`, `pages/updates.dart`, `components/error_app.dart`, `components/logs_dialog.dart`, `components/sort_filter_panel.dart`, `components/update_badge.dart`, `components/settings/boolean_control_grid.dart`, `components/settings_widgets.dart`, `services/app_export_service.dart`, `services/plugin_engine.dart`, `lib/protobuf/*`). Raw `flutter analyze` reports ~2000 errors, all in these files. **Run `scripts/dev/analyze-live.sh --dead` before editing a file** — edits there ship nothing, and CHANGELOG entries must not credit them.
+A few files under `lib/` are never imported from `lib/main.dart` / `lib/main_fdroid.dart` (2026-10-18: 11, mostly features awaiting a placement decision — see AI_DEVLOG "Unreachable files" — plus generated protobuf companions). **Run `scripts/dev/analyze-live.sh --dead` before editing a file**: edits there ship nothing, and CHANGELOG entries must not credit them. Many files were unwired by commit `7ca61415` (May 2026) and restored in October; check a file's call sites before assuming it is live or dead.
 
 Also unreachable — editing them does nothing:
 - `apps_provider_lifecycle.dart`, `apps_provider_install.dart` — extension methods shadowed by same-named class methods in `apps_provider.dart`

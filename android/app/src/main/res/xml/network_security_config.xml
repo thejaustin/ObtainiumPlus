@@ -22,15 +22,13 @@
         All other traffic (GitHub, F-Droid, source scrapers, etc.):
         - Cleartext stays permitted: users track self-hosted / LAN sources
           over plain HTTP (per-app "allow insecure" governs this in Dart).
-        - Both system and user CAs trusted so self-hosted sources with a
-          private CA keep working.
-        Note: Dart's HttpClient does not consult this file; it governs
-        native (Kotlin/Java) networking only.
+        - System CAs only (the platform default): Dart's HttpClient, which
+          does all source traffic, ignores this file, so trusting user CAs
+          here would only widen native/WebView trust for no benefit.
     -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>
-            <certificates src="user"/>
         </trust-anchors>
     </base-config>
 
