@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/backup_password_dialog.dart';
+import 'package:obtainium/utils/backup_crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/app_sources/fdroidrepo.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
@@ -36,6 +38,33 @@ class ImportExportPage extends StatefulWidget {
 }
 
 class _ImportExportPageState extends State<ImportExportPage> {
+  /// Decrypts an encrypted backup: the stored password first, then asks
+  /// (re-asking after a wrong one). Cancelling aborts the import.
+  Future<String> _decryptBackup(String data) async {
+    final stored = await BackupCrypto.storedPassword();
+    if (stored != null && stored.isNotEmpty) {
+      try {
+        return await BackupCrypto.decrypt(data, stored);
+      } on BackupPasswordError {
+        // Exported with a different password; ask below.
+      }
+    }
+    String? message;
+    while (mounted) {
+      final password = await showBackupPasswordDialog(
+        context,
+        message: message,
+      );
+      if (password == null) throw ObtainiumError(tr('cancelled'));
+      try {
+        return await BackupCrypto.decrypt(data, password);
+      } on BackupPasswordError {
+        message = tr('wrongBackupPassword');
+      }
+    }
+    throw ObtainiumError(tr('cancelled'));
+  }
+
   bool importInProgress = false;
 
   // Cache the export-dir future so unrelated rebuilds (e.g. from the
@@ -181,6 +210,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
               throw ObtainiumError(tr('noFilePickerAvailable'));
             }
             String data = await File(path).readAsString();
+            if (BackupCrypto.isEncrypted(data)) {
+              data = await _decryptBackup(data);
+            }
             try {
               jsonDecode(data);
             } catch (e) {

@@ -78,6 +78,7 @@ dependencies:
   sentry_flutter: ^8.14.2
   flutter_secure_storage: ^10.2.0
   encrypt: ^5.0.3
+  pointycastle: ^3.9.1
   flutter_js: ^0.8.7
   home_widget: ^0.9.3
   workmanager: ^0.10.10

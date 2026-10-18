@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/backup_password_dialog.dart';
+import 'package:obtainium/utils/backup_crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -128,8 +130,18 @@ class AdvancedSettingsSection extends StatelessWidget {
               ),
               subtitle: Text(tr('backupEncryptionDescription')),
               value: plusSettings.backupEncryptionEnabled,
-              onChanged: (v) {
+              onChanged: (v) async {
                 AppHaptics.selectionClick();
+                if (v) {
+                  final password = await showBackupPasswordDialog(
+                    context,
+                    confirm: true,
+                  );
+                  if (password == null) return;
+                  await BackupCrypto.storePassword(password);
+                } else {
+                  await BackupCrypto.storePassword(null);
+                }
                 plusSettings.backupEncryptionEnabled = v;
               },
             );

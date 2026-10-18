@@ -1364,5 +1364,11 @@
     "swipeGesturesGroupDesc": "Assign quick actions to left and right swipes on app tiles",
     "animationsGroupDesc": "Control motion effects and spring animations throughout the app",
     "safetyAndRateLimitsGroupDesc": "Protect against rate limits and confirm destructive actions",
-    "installationGroupDesc": "Choose the installer method and control install-time behavior"
+    "installationGroupDesc": "Choose the installer method and control install-time behavior",
+    "backupPassword": "Backup password",
+    "confirmBackupPassword": "Confirm password",
+    "backupPasswordsDoNotMatch": "Passwords do not match",
+    "backupPasswordHint": "Needed to restore encrypted backups. It cannot be recovered if lost.",
+    "enterBackupPassword": "Enter the password for this encrypted backup",
+    "wrongBackupPassword": "Wrong backup password"
 }

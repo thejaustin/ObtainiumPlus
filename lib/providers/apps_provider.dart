@@ -24,6 +24,7 @@ import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/backup_crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/io_client.dart';
@@ -2904,7 +2905,11 @@ class AppsProvider with ChangeNotifier {
         displayName:
             '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}${isAuto ? '-auto' : ''}.json',
         mimeType: 'application/json',
-        bytes: Uint8List.fromList(utf8.encode(encoder.convert(sanitizeJsonValue(finalExport)))),
+        bytes: Uint8List.fromList(
+          utf8.encode(await _maybeEncryptExport(
+            encoder.convert(sanitizeJsonValue(finalExport)),
+          )),
+        ),
       );
       if (result == null) {
         throw ObtainiumError(tr('unexpectedError'));
@@ -2920,6 +2925,21 @@ class AppsProvider with ChangeNotifier {
           .replaceFirst('tree/primary:', '/');
     }
     return returnPath;
+  }
+
+  /// Encrypts an export when backup encryption is on (password kept in
+  /// secure storage when the setting was enabled, so auto-exports work too).
+  Future<String> _maybeEncryptExport(String json) async {
+    if (!plusSettings.backupEncryptionEnabled) return json;
+    final password = await BackupCrypto.storedPassword();
+    if (password == null || password.isEmpty) {
+      // Enabled before the toggle asked for a password (it used to do
+      // nothing): switch it off so the UI no longer claims encryption.
+      AppLogger.warn('Backup encryption had no password; turning it off');
+      plusSettings.backupEncryptionEnabled = false;
+      return json;
+    }
+    return BackupCrypto.encrypt(json, password);
   }
 
   Future<MapEntry<List<App>, bool>> import(String appsJSON) async {
