@@ -94,9 +94,13 @@ class KnownIssuesService {
     List<KnownIssue> issues;
     try {
       final decoded = jsonDecode(cachedJson) as Map<String, dynamic>;
-      issues = (decoded['issues'] as List<dynamic>)
-          .map((e) => KnownIssue.fromJson(e as Map<String, dynamic>))
-          .toList();
+      issues = [];
+      for (final e in decoded['issues'] as List<dynamic>) {
+        // One malformed entry must not hide the rest.
+        try {
+          issues.add(KnownIssue.fromJson(e as Map<String, dynamic>));
+        } catch (_) {}
+      }
     } catch (_) {
       return [];
     }

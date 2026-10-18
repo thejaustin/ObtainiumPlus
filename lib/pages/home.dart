@@ -5,6 +5,11 @@ import 'dart:convert';
 import 'package:app_links/app_links.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/components/force_update_dialog.dart';
+import 'package:obtainium/components/critical_issue_dialog.dart';
+import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/utils/motion.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/services.dart';
@@ -189,7 +194,50 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         );
         sp.googleVerificationWarningShown = true;
       }
+      await _showKnownIssues();
     });
+  }
+
+  /// Remote known-issues notices for the running build (known_issues.json in
+  /// the repo). Fetched after first frame with a timeout and cached; any
+  /// failure shows nothing.
+  Future<void> _showKnownIssues() async {
+    try {
+      final info = await AppInstallService.getInstalledInfo(
+        AppConstants.obtainiumPlusId,
+        printErr: false,
+      );
+      if (info == null || !mounted) return;
+      final issues = await KnownIssuesService.getActiveIssues(
+        info.versionName ?? '',
+        info.versionCode ?? 0,
+      );
+      for (final issue in issues) {
+        if (!mounted) return;
+        if (issue.forceUpdate) {
+          await showDialog<void>(
+            context: context,
+            builder: (_) => ForceUpdateDialog(issue: issue),
+          );
+        } else {
+          await showDialog<void>(
+            context: context,
+            builder: (dialogContext) => CriticalIssueDialog(
+              issue: issue,
+              onCheckForUpdates: () {
+                Navigator.of(dialogContext).pop();
+                switchToPage(0);
+                context.read<AppsProvider>().checkUpdates().catchError(
+                  (_) => <App>[],
+                );
+              },
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      AppLogger.error(e, message: 'Known-issues check failed');
+    }
   }
 
   Future<void> initDeepLinks() async {
