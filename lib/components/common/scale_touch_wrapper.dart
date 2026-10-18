@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:obtainium/utils/app_constants.dart';
+import 'package:flutter/physics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:obtainium/utils/motion.dart';
 
 class ScaleTouchWrapper extends StatefulWidget {
   final Widget child;
@@ -33,28 +32,11 @@ class ScaleTouchWrapper extends StatefulWidget {
 
 class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 80),
-      // Expressive spring-back: slightly longer for overshooting feel
-      reverseDuration: const Duration(milliseconds: 360),
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: widget.scaleDownFactor)
-        .animate(
-          CurvedAnimation(
-            parent: _controller,
-            curve: Curves.easeIn,
-            // Spring curve: y-control-points > 1.0 produce real overshoot on release.
-            reverseCurve: AppConstants.expressiveSpring,
-          ),
-        );
-  }
+  // 0 = resting, 1 = fully pressed. Unbounded so the release spring can
+  // overshoot past rest (scale briefly > 1) for the expressive pop-back.
+  late final AnimationController _controller = AnimationController.unbounded(
+    vsync: this,
+  );
 
   @override
   void dispose() {
@@ -63,17 +45,31 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
   }
 
   void _onPointerDown(PointerDownEvent event) {
-    _controller.forward();
     if (widget.hapticOnPressDown) AppHaptics.tapDown();
+    if (!_animate) return;
+    _controller.animateWith(
+      SpringSimulation(
+        M3Springs.effectsFast,
+        _controller.value,
+        1,
+        _controller.velocity,
+      ),
+    );
   }
 
-  void _onPointerUp(PointerUpEvent event) {
-    _controller.reverse();
+  void _release() {
+    if (!_animate) return;
+    _controller.animateWith(
+      SpringSimulation(
+        M3Springs.spatialFast,
+        _controller.value,
+        0,
+        _controller.velocity,
+      ),
+    );
   }
 
-  void _onPointerCancel(PointerCancelEvent event) {
-    _controller.reverse();
-  }
+  bool _animate = true;
 
   Widget _withGestures(Widget inner) {
     if (widget.onTap == null && widget.onLongPress == null) return inner;
@@ -97,24 +93,26 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
 
   @override
   Widget build(BuildContext context) {
-    final plusEnableAnimations = context.select<PlusSettingsProvider, bool>(
-      (p) => p.plusEnableEnhancedAnimations,
-    );
+    _animate = AppMotion.enabled(context);
+    if (!_animate && _controller.value != 0) _controller.value = 0;
 
-    if (!plusEnableAnimations) return _withGestures(widget.child);
-
+    // The Listener stays even with motion off so press-down haptics still
+    // fire; haptics are feedback, not decoration.
     return _withGestures(
       Listener(
         onPointerDown: _onPointerDown,
-        onPointerUp: _onPointerUp,
-        onPointerCancel: _onPointerCancel,
-        child: AnimatedBuilder(
-          animation: _scaleAnimation,
-          child: widget.child,
-          builder: (context, child) {
-            return Transform.scale(scale: _scaleAnimation.value, child: child);
-          },
-        ),
+        onPointerUp: (_) => _release(),
+        onPointerCancel: (_) => _release(),
+        child: !_animate
+            ? widget.child
+            : AnimatedBuilder(
+                animation: _controller,
+                child: widget.child,
+                builder: (context, child) => Transform.scale(
+                  scale: 1 + (widget.scaleDownFactor - 1) * _controller.value,
+                  child: child,
+                ),
+              ),
       ),
     );
   }

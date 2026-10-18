@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// Floating pill nav bar with a stretchy morphing indicator and icon bounce.
 ///
@@ -81,13 +82,19 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
     final newL = newIndex * frac;
     final newR = (newIndex + 1) * frac;
     final goRight = newIndex > _prevIndex;
-    final dur = Duration(milliseconds: widget.animationsEnabled ? 380 : 120);
+    final dur = widget.animationsEnabled
+        ? AppMotion.spatial.duration
+        : const Duration(milliseconds: 120);
 
     _leftCtrl.duration = dur;
     _rightCtrl.duration = dur;
 
-    const lag = Interval(0.22, 1.0, curve: Curves.easeOutCubic);
-    const lead = Curves.easeOutCubic;
+    // Leading edge rides the M3E spatial spring (slight overshoot); the
+    // lagging edge starts later on the same spring, giving the stretch.
+    final Curve lead = widget.animationsEnabled
+        ? AppMotion.spatial
+        : Curves.easeOutCubic;
+    final lag = Interval(0.22, 1.0, curve: lead);
 
     if (goRight) {
       _rightAnim = Tween(begin: curR, end: newR)
@@ -137,7 +144,6 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
 
     return LayoutBuilder(builder: (context, constraints) {
       final totalW = constraints.maxWidth;
-      final itemW = totalW / n;
       const pillH = 36.0;
       const vPad = 8.0;
       const labelH = 18.0;
@@ -157,8 +163,10 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
             child: Stack(
               children: [
                 // Stretchy indicator pill
-                Positioned(
-                  left: pillL,
+                // Directional so the pill tracks the mirrored Row in RTL.
+                Positioned.directional(
+                  textDirection: Directionality.of(context),
+                  start: pillL,
                   top: vPad,
                   child: Container(
                     width: pillW,

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:app_links/app_links.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -619,7 +620,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       pages: pages,
       currentIndex: currentIndex,
       onDestinationSelected: switchToPage,
-      animationsEnabled: plusSettings.plusEnableEnhancedAnimations,
+      animationsEnabled: AppMotion.enabled(context),
       alwaysShowLabels: plusSettings.plusNavBarAlwaysShowLabels,
     );
 

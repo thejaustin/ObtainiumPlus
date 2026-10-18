@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/shizuku_activity_log_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
@@ -49,12 +50,6 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
         curve: Curves.easeInOut,
       ),
     );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
-        _pulseController.repeat(reverse: true);
-      }
-    });
     _loadStatus();
   }
 
@@ -68,9 +63,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final animsEnabled = context
-        .read<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
+    final animsEnabled = AppMotion.enabledForDependencies(context);
     if (animsEnabled && !_pulseController.isAnimating) {
       _pulseController.repeat(reverse: true);
     } else if (!animsEnabled && _pulseController.isAnimating) {
