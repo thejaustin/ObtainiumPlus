@@ -1356,5 +1356,13 @@
   "settingsTabUpdatesInstallDesc": "Schedule background checks and configure how apps are installed",
   "settingsTabNotificationsDesc": "Control which notifications Obtainium sends you",
   "settingsTabBehaviorDesc": "Fine-tune how apps behave and how you interact with them",
-  "settingsTabAdvancedDebugDesc": "Export settings, manage data, and access developer tools"
+  "settingsTabAdvancedDebugDesc": "Export settings, manage data, and access developer tools",
+  "updatesGroupDesc": "Configure when and how often Obtainium checks for app updates",
+  "notificationsGroupDesc": "Choose which events trigger alerts and how they are delivered",
+  "advancedGroupDesc": "Import/export, data management, and low-level options",
+  "troubleshootingGroupDesc": "Diagnose issues and reset settings to defaults",
+  "swipeGesturesGroupDesc": "Assign quick actions to left and right swipes on app tiles",
+  "animationsGroupDesc": "Control motion effects and spring animations throughout the app",
+  "safetyAndRateLimitsGroupDesc": "Protect against rate limits and confirm destructive actions",
+  "installationGroupDesc": "Choose the installer method and control install-time behavior"
 }

@@ -214,6 +214,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('troubleshootingAndSystem'),
+      description: isSearching ? null : tr('troubleshootingGroupDesc'),
       persistKey: 'troubleshootingAndSystem',
       icon: Icons.bug_report_rounded,
       isExpandable: !isSearching,

@@ -386,6 +386,7 @@ class _InstallationSectionState extends State<InstallationSection>
 
         return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('installation'),
+          description: isSearching ? null : tr('installationGroupDesc'),
           persistKey: 'installation',
           icon: Icons.install_mobile_rounded,
           isExpandable: !isSearching,

@@ -74,6 +74,7 @@ class AppBehaviorSection extends StatelessWidget {
         if (hasSwipe)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('swipeGestures'),
+            description: isSearching ? null : tr('swipeGesturesGroupDesc'),
             persistKey: 'swipeGestures',
             icon: Icons.gesture_rounded,
             isExpandable: !isSearching,
@@ -123,6 +124,7 @@ class AppBehaviorSection extends StatelessWidget {
             builder: (context, behaviorSettings, child) {
               return ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('animations'),
+                description: isSearching ? null : tr('animationsGroupDesc'),
                 persistKey: 'behaviorMotionTransitions',
                 icon: Icons.animation_rounded,
                 isExpandable: !isSearching,
@@ -329,6 +331,7 @@ class AppBehaviorSection extends StatelessWidget {
             if (hasBanWarnings)
               ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('safetyAndRateLimits'),
+                description: isSearching ? null : tr('safetyAndRateLimitsGroupDesc'),
                 persistKey: 'safetyAndRateLimits',
                 icon: Icons.shield_outlined,
                 isExpandable: !isSearching,

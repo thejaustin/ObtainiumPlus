@@ -161,6 +161,7 @@ class UpdateSettingsSection extends StatelessWidget {
 
     return ExpressiveSettingsGroup(
       title: isSearching ? null : tr('updates'),
+      description: isSearching ? null : tr('updatesGroupDesc'),
       persistKey: 'updates',
       icon: Icons.update_rounded,
       isExpandable: !isSearching,

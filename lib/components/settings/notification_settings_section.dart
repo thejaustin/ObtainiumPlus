@@ -178,6 +178,7 @@ class NotificationSettingsSection extends StatelessWidget {
 
         return ExpressiveSettingsGroup(
           title: isSearching ? null : tr('notifications'),
+          description: isSearching ? null : tr('notificationsGroupDesc'),
           persistKey: 'notifications',
           icon: Icons.notifications_active_rounded,
           isExpandable: !isSearching,
