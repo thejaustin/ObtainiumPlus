@@ -931,6 +931,9 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
     } on TimeoutException {
       if (!mounted) return;
       setState(() => _gsfId = tr('failedToGetGsfId', args: ['']));
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _gsfId = tr('failedToGetGsfId', args: ['$e']));
     }
   }
 

@@ -10,6 +10,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart'
@@ -521,6 +522,9 @@ class NotificationsProvider {
     if (!isInitialized) {
       await initialize();
     }
+    // Progress notifications are already silent; everything else is posted
+    // without sound/vibration/heads-up during the user's quiet hours.
+    final silent = progPercent == null && await isInQuietHours();
     await notifications.show(
       id: id,
       title: title,
@@ -538,12 +542,42 @@ class NotificationsProvider {
           maxProgress: 100,
           showProgress: progPercent != null,
           onlyAlertOnce: onlyAlertOnce,
+          silent: silent,
           indeterminate: progPercent != null && progPercent < 0,
           actions: androidActions,
         ),
       ),
       payload: payload,
     );
+  }
+
+  /// Whether "now" falls in the configured quiet hours. Reads prefs directly
+  /// because notifications are also posted from the background isolate,
+  /// where the settings providers don't exist.
+  static Future<bool> isInQuietHours([DateTime? now]) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool('enableAllPlusFeatures') == false) return false;
+      if (prefs.getBool('plusEnableNotificationEnhancements') == false) {
+        return false;
+      }
+      if (prefs.getBool('plusEnableNotificationQuietHours') != true) {
+        return false;
+      }
+      final start = prefs.getInt('plusNotificationQuietHoursStart') ?? 22;
+      final end = prefs.getInt('plusNotificationQuietHoursEnd') ?? 7;
+      return hourInWindow((now ?? DateTime.now()).hour, start, end);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// [start] inclusive, [end] exclusive; wraps past midnight (22 -> 7).
+  static bool hourInWindow(int hour, int start, int end) {
+    if (start == end) return false;
+    return start < end
+        ? hour >= start && hour < end
+        : hour >= start || hour < end;
   }
 
   Future<void> notify(

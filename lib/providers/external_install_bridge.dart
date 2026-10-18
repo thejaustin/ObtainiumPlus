@@ -116,7 +116,13 @@ class ExternalInstallerBridge {
   /// Resolves a filesystem path to a content:// URI served by the FileProvider.
   Future<String?> contentUriForFile(String path) async {
     if (!Platform.isAndroid) return null;
-    return _channel.invokeMethod<String>('contentUriForFile', {'path': path});
+    try {
+      return await _channel.invokeMethod<String>('contentUriForFile', {
+        'path': path,
+      });
+    } on MissingPluginException {
+      return null;
+    }
   }
 
   /// Hands [uri] to the chosen external installer and waits for the tracked
@@ -131,14 +137,19 @@ class ExternalInstallerBridge {
     String? activity,
   }) async {
     if (!Platform.isAndroid) return null;
-    final raw = await _channel
-        .invokeMethod<Map<dynamic, dynamic>>('launchInstallIntent', {
-          'uri': uri,
-          'type': type,
-          'package': package,
-          'activity': activity,
-          'expectedPackageName': expectedPackageName,
-        });
-    return externalInstallResultFromNative(raw);
+    try {
+      final raw = await _channel
+          .invokeMethod<Map<dynamic, dynamic>>('launchInstallIntent', {
+            'uri': uri,
+            'type': type,
+            'package': package,
+            'activity': activity,
+            'expectedPackageName': expectedPackageName,
+          });
+      return externalInstallResultFromNative(raw);
+    } on MissingPluginException {
+      // No tracked result: the caller falls back to polling package state.
+      return null;
+    }
   }
 }
