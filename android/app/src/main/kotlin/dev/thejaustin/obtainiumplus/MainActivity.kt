@@ -211,355 +211,377 @@ class MainActivity : FlutterActivity() {
             flutterEngine.dartExecutor.binaryMessenger,
             EXTERNAL_INSTALL_CHANNEL,
         ).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "listInstallTargets" -> result.success(listInstallTargets())
-                "contentUriForFile" -> {
-                    val path = call.argument<String>("path")
-                    if (path.isNullOrEmpty()) {
-                        result.error("BAD_ARGS", "Missing file path", null)
-                    } else {
-                        try {
-                            result.success(contentUriForFile(path))
-                        } catch (e: Exception) {
-                            result.error("URI_FAILED", e.message, null)
+            try {
+                when (call.method) {
+                    "listInstallTargets" -> result.success(listInstallTargets())
+                    "contentUriForFile" -> {
+                        val path = call.argument<String>("path")
+                        if (path.isNullOrEmpty()) {
+                            result.error("BAD_ARGS", "Missing file path", null)
+                        } else {
+                            try {
+                                result.success(contentUriForFile(path))
+                            } catch (e: Exception) {
+                                result.error("URI_FAILED", e.message, null)
+                            }
                         }
                     }
-                }
-                "launchInstallIntent" -> {
-                    val uri = call.argument<String>("uri")
-                    val type = call.argument<String>("type") ?: APK_MIME
-                    val targetPackage = call.argument<String>("package")
-                    val targetActivity = call.argument<String>("activity")
-                    val expectedPackageName = call.argument<String>("expectedPackageName")
-                    if (uri.isNullOrEmpty() || expectedPackageName.isNullOrEmpty()) {
-                        result.error(
-                            "BAD_ARGS",
-                            "Missing uri or expectedPackageName",
-                            null,
-                        )
-                    } else {
-                        launchInstallIntent(
-                            uri,
-                            type,
-                            targetPackage,
-                            targetActivity,
-                            expectedPackageName,
-                            result,
-                        )
+                    "launchInstallIntent" -> {
+                        val uri = call.argument<String>("uri")
+                        val type = call.argument<String>("type") ?: APK_MIME
+                        val targetPackage = call.argument<String>("package")
+                        val targetActivity = call.argument<String>("activity")
+                        val expectedPackageName = call.argument<String>("expectedPackageName")
+                        if (uri.isNullOrEmpty() || expectedPackageName.isNullOrEmpty()) {
+                            result.error(
+                                "BAD_ARGS",
+                                "Missing uri or expectedPackageName",
+                                null,
+                            )
+                        } else {
+                            launchInstallIntent(
+                                uri,
+                                type,
+                                targetPackage,
+                                targetActivity,
+                                expectedPackageName,
+                                result,
+                            )
+                        }
                     }
+                    else -> result.notImplemented()
                 }
-                else -> result.notImplemented()
+            } catch (e: Exception) {
+                // An uncaught exception becomes a null reply, which Dart sees as
+                // MissingPluginException instead of a catchable PlatformException.
+                try { result.error("NATIVE_ERROR", e.message, null) } catch (_: Exception) {}
             }
         }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            when (call.method) {
-                "getGsfId" -> {
-                    val gsfId = getGsfId()
-                    if (gsfId != null) result.success(gsfId)
-                    else result.error("UNAVAILABLE", "GSF ID not available", null)
-                }
-                "pickGoogleAccount" -> {
-                    if (pendingPickerResult != null) {
-                        result.error("IN_PROGRESS", "Account picker already open", null)
-                        return@setMethodCallHandler
+            try {
+                when (call.method) {
+                    "getGsfId" -> {
+                        val gsfId = getGsfId()
+                        if (gsfId != null) result.success(gsfId)
+                        else result.error("UNAVAILABLE", "GSF ID not available", null)
                     }
-                    pendingPickerResult = result
-                    @Suppress("DEPRECATION")
-                    val intent = AccountManager.newChooseAccountIntent(
-                        null, null, arrayOf("com.google"),
-                        false, null, null, null, null
-                    )
-                    @Suppress("DEPRECATION")
-                    startActivityForResult(intent, REQUEST_ACCOUNT_PICKER)
-                }
-                "getMicroGToken" -> {
-                    val email = call.argument<String>("email")
-                    if (email.isNullOrBlank()) {
-                        result.error("INVALID_ARGUMENT", "Email is required", null)
-                    } else {
-                        getMicroGToken(email, result)
-                    }
-                }
-                "isVPNActive" -> {
-                    val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                    val active = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        cm.allNetworks.any { net ->
-                            cm.getNetworkCapabilities(net)
-                                ?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+                    "pickGoogleAccount" -> {
+                        if (pendingPickerResult != null) {
+                            result.error("IN_PROGRESS", "Account picker already open", null)
+                            return@setMethodCallHandler
                         }
-                    } else {
+                        pendingPickerResult = result
                         @Suppress("DEPRECATION")
-                        cm.allNetworkInfo?.any { it.typeName == "VPN" && it.isConnected } == true
+                        val intent = AccountManager.newChooseAccountIntent(
+                            null, null, arrayOf("com.google"),
+                            false, null, null, null, null
+                        )
+                        try {
+                            @Suppress("DEPRECATION")
+                            startActivityForResult(intent, REQUEST_ACCOUNT_PICKER)
+                        } catch (e: Exception) {
+                            pendingPickerResult = null
+                            result.error("PICKER_UNAVAILABLE", e.message, null)
+                        }
                     }
-                    result.success(active)
-                }
-                "invalidateMicroGToken" -> {
-                    val token = call.argument<String>("token")
-                    if (token.isNullOrBlank()) {
-                        result.error("INVALID_ARGUMENT", "Token is required", null)
-                    } else {
-                        // Tell the AccountManager the token is stale — next getAuthToken
-                        // call will fetch a fresh one from microG rather than returning
-                        // the (now invalid) cached copy.
-                        AccountManager.get(this).invalidateAuthToken("com.google", token)
-                        result.success(null)
+                    "getMicroGToken" -> {
+                        val email = call.argument<String>("email")
+                        if (email.isNullOrBlank()) {
+                            result.error("INVALID_ARGUMENT", "Email is required", null)
+                        } else {
+                            getMicroGToken(email, result)
+                        }
                     }
-                }
-                "getPackageName" -> {
-                    result.success(packageName)
-                }
-                "abandonStaleSessions" -> {
-                    // Abandoned/leaked PackageInstaller sessions for the same package make the
-                    // next commit fail with STATUS_FAILURE_CONFLICT; clear ours before installing.
-                    val target = call.argument<String>("packageName")
-                    var abandoned = 0
-                    try {
-                        val installer = packageManager.packageInstaller
-                        for (info in installer.mySessions) {
-                            if (target == null || info.appPackageName == target) {
-                                try {
-                                    installer.abandonSession(info.sessionId)
-                                    abandoned++
-                                } catch (_: Exception) {
+                    "isVPNActive" -> {
+                        val cm = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                        val active = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                            cm.allNetworks.any { net ->
+                                cm.getNetworkCapabilities(net)
+                                    ?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
+                            }
+                        } else {
+                            @Suppress("DEPRECATION")
+                            cm.allNetworkInfo?.any { it.typeName == "VPN" && it.isConnected } == true
+                        }
+                        result.success(active)
+                    }
+                    "invalidateMicroGToken" -> {
+                        val token = call.argument<String>("token")
+                        if (token.isNullOrBlank()) {
+                            result.error("INVALID_ARGUMENT", "Token is required", null)
+                        } else {
+                            // Tell the AccountManager the token is stale — next getAuthToken
+                            // call will fetch a fresh one from microG rather than returning
+                            // the (now invalid) cached copy.
+                            AccountManager.get(this).invalidateAuthToken("com.google", token)
+                            result.success(null)
+                        }
+                    }
+                    "getPackageName" -> {
+                        result.success(packageName)
+                    }
+                    "abandonStaleSessions" -> {
+                        // Abandoned/leaked PackageInstaller sessions for the same package make the
+                        // next commit fail with STATUS_FAILURE_CONFLICT; clear ours before installing.
+                        val target = call.argument<String>("packageName")
+                        var abandoned = 0
+                        try {
+                            val installer = packageManager.packageInstaller
+                            for (info in installer.mySessions) {
+                                if (target == null || info.appPackageName == target) {
+                                    try {
+                                        installer.abandonSession(info.sessionId)
+                                        abandoned++
+                                    } catch (_: Exception) {
+                                    }
                                 }
                             }
+                        } catch (_: Exception) {
                         }
-                    } catch (_: Exception) {
+                        result.success(abandoned)
                     }
-                    result.success(abandoned)
-                }
-                "isUsageAccessGranted" -> {
-                    result.success(isUsageAccessGranted())
-                }
-                "isRooted" -> {
-                    result.success(isRooted())
-                }
-                "isMicroGAvailable" -> {
-                    val available = try {
-                        packageManager.getPackageInfo("com.google.android.gms", 0)
-                        true
-                    } catch (e: Exception) {
-                        false
+                    "isUsageAccessGranted" -> {
+                        result.success(isUsageAccessGranted())
                     }
-                    result.success(available)
-                }
-                "isIgnoringBatteryOptimizations" -> {
-                    val powerManager = getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
-                    val isIgnoring = powerManager?.isIgnoringBatteryOptimizations(packageName) ?: false
-                    result.success(isIgnoring)
-                }
-                "requestIgnoreBatteryOptimizations" -> {
-                    try {
-                        val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                            data = Uri.parse("package:$packageName")
-                            flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    "isRooted" -> {
+                        result.success(isRooted())
+                    }
+                    "isMicroGAvailable" -> {
+                        val available = try {
+                            packageManager.getPackageInfo("com.google.android.gms", 0)
+                            true
+                        } catch (e: Exception) {
+                            false
                         }
-                        startActivity(intent)
-                        result.success(true)
-                    } catch (_: Exception) {
+                        result.success(available)
+                    }
+                    "isIgnoringBatteryOptimizations" -> {
+                        val powerManager = getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+                        val isIgnoring = powerManager?.isIgnoringBatteryOptimizations(packageName) ?: false
+                        result.success(isIgnoring)
+                    }
+                    "requestIgnoreBatteryOptimizations" -> {
                         try {
-                            val fallbackIntent = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                            val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                                data = Uri.parse("package:$packageName")
                                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
                             }
-                            startActivity(fallbackIntent)
+                            startActivity(intent)
                             result.success(true)
-                        } catch (e: Exception) {
-                            result.success(false)
-                        }
-                    }
-                }
-                "setUpdateOwnership" -> {
-                    if (Build.VERSION.SDK_INT >= 34) {
-                        val packageName = call.argument<String>("packageName")
-                        if (packageName != null) {
+                        } catch (_: Exception) {
                             try {
-                                // In Android 14 (API 34), setUpdateOwnerPackageName is on PackageManager
-                                val method = packageManager.javaClass.getMethod(
-                                    "setUpdateOwnerPackageName",
-                                    String::class.java,
-                                    String::class.java
-                                )
-                                method.invoke(packageManager, packageName, this.packageName)
-                                result.success(true)
-                            } catch (_: Exception) {
-                                // Some OEM builds may expose setUpdateOwner on PackageInstaller
-                                try {
-                                    val installer = packageManager.packageInstaller
-                                    val fallbackMethod = installer.javaClass.getMethod(
-                                        "setUpdateOwner",
-                                        String::class.java,
-                                        String::class.java
-                                    )
-                                    fallbackMethod.invoke(installer, packageName, this.packageName)
-                                    result.success(true)
-                                } catch (e2: Exception) {
-                                    result.success(false)
+                                val fallbackIntent = Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
                                 }
-                            }
-                        } else {
-                            result.error("INVALID_ARGUMENT", "Package name is required", null)
-                        }
-                    } else {
-                        result.success(false)
-                    }
-                }
-                "checkInstallConstraints" -> {
-                    if (Build.VERSION.SDK_INT >= 34) {
-                        val packageName = call.argument<String>("packageName")
-                        if (packageName != null) {
-                            try {
-                                val installer = packageManager.packageInstaller
-                                val builderClass = Class.forName("android.content.pm.PackageInstaller\$InstallConstraints\$Builder")
-                                val builder = builderClass.getDeclaredConstructor().newInstance()
-                                
-                                builderClass.getMethod("setAppNotForegroundRequired").invoke(builder)
-                                builderClass.getMethod("setAppNotInteractingRequired").invoke(builder)
-                                builderClass.getMethod("setNotInCallRequired").invoke(builder)
-                                
-                                val constraints = builderClass.getMethod("build").invoke(builder)
-                                
-                                val packages = listOf(packageName)
-                                val checkMethod = installer.javaClass.getMethod(
-                                    "checkInstallConstraints",
-                                    List::class.java,
-                                    Class.forName("android.content.pm.PackageInstaller\$InstallConstraints"),
-                                    java.util.concurrent.Executor::class.java,
-                                    java.util.function.Consumer::class.java
-                                )
-                                
-                                checkMethod.invoke(
-                                    installer,
-                                    packages,
-                                    constraints,
-                                    java.util.concurrent.Executor { command -> command.run() },
-                                    java.util.function.Consumer<Any> { resultStatus ->
-                                        runOnUiThread {
-                                            try {
-                                                val satisfied = resultStatus.javaClass.getMethod("areAllConstraintsSatisfied").invoke(resultStatus) as Boolean
-                                                result.success(satisfied)
-                                            } catch (e: Exception) {
-                                                result.error("ERROR", "Failed to check satisfy status: ${e.message}", null)
-                                            }
-                                        }
-                                    }
-                                )
-                            } catch (_: Exception) {
+                                startActivity(fallbackIntent)
                                 result.success(true)
-                            }
-                        } else {
-                            result.error("INVALID_ARGUMENT", "Package name is required", null)
-                        }
-                    } else {
-                        result.success(true)
-                    }
-                }
-                "requestUserPreapproval" -> {
-                    if (Build.VERSION.SDK_INT >= 34) {
-                        val packageName = call.argument<String>("packageName")
-                        if (packageName != null) {
-                            try {
-                                val installer = packageManager.packageInstaller
-                                val params = PackageInstaller.SessionParams(
-                                    PackageInstaller.SessionParams.MODE_FULL_INSTALL
-                                )
-                                params.setAppPackageName(packageName)
-
-                                val intent = Intent("app.obtainiumplus.PREAPPROVAL_CONFIRMATION")
-                                val pendingIntent = PendingIntent.getBroadcast(
-                                    this, 0, intent,
-                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                                )
-
-                                val sessionId = installer.createSession(params)
-                                val session = installer.openSession(sessionId)
-                                try {
-                                    val builderClass = Class.forName("android.content.pm.PackageInstaller\$PreapprovalDetails\$Builder")
-                                    val detailsBuilder = builderClass.getDeclaredConstructor().newInstance()
-                                    builderClass.getMethod("setPackageName", String::class.java).invoke(detailsBuilder, packageName)
-                                    val label = try {
-                                        packageManager.getApplicationLabel(packageManager.getApplicationInfo(packageName, 0)).toString()
-                                    } catch (_: Exception) {
-                                        packageName
-                                    }
-                                    builderClass.getMethod("setLabel", CharSequence::class.java).invoke(detailsBuilder, label)
-                                    val details = builderClass.getMethod("build").invoke(detailsBuilder)
-
-                                    val preapprovalMethod = session.javaClass.getMethod(
-                                        "requestUserPreapproval",
-                                        Class.forName("android.content.pm.PackageInstaller\$PreapprovalDetails"),
-                                        android.content.IntentSender::class.java
-                                    )
-                                    preapprovalMethod.invoke(session, details, pendingIntent.intentSender)
-                                    session.close()
-                                    result.success(true)
-                                } catch (e: Exception) {
-                                    session.abandon()
-                                    result.success(false)
-                                }
                             } catch (e: Exception) {
                                 result.success(false)
                             }
-                        } else {
-                            result.error("INVALID_ARGUMENT", "Package name is required", null)
                         }
-                    } else {
-                        result.success(false)
                     }
-                }
-                "requestArchive" -> {
-                    if (Build.VERSION.SDK_INT >= 34) {
-                        val packageName = call.argument<String>("packageName")
-                        if (packageName != null) {
-                            try {
-                                val installer = packageManager.packageInstaller
-                                val intent = Intent("app.obtainiumplus.ARCHIVE_CONFIRMATION")
-                                val pendingIntent = PendingIntent.getBroadcast(
-                                    this, 0, intent,
-                                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                                )
-                                // Reflection: requestArchive() is API 34+ and this module
-                                // may still compile against an older SDK.
+                    "setUpdateOwnership" -> {
+                        if (Build.VERSION.SDK_INT >= 34) {
+                            val packageName = call.argument<String>("packageName")
+                            if (packageName != null) {
                                 try {
-                                    val method = installer.javaClass.getMethod(
-                                        "requestArchive",
+                                    // In Android 14 (API 34), setUpdateOwnerPackageName is on PackageManager
+                                    val method = packageManager.javaClass.getMethod(
+                                        "setUpdateOwnerPackageName",
                                         String::class.java,
-                                        android.content.IntentSender::class.java
+                                        String::class.java
                                     )
-                                    method.invoke(installer, packageName, pendingIntent.intentSender)
+                                    method.invoke(packageManager, packageName, this.packageName)
                                     result.success(true)
-                                } catch (e: Exception) {
-                                    result.error("ERROR", "Failed to request archive: ${e.message}", null)
+                                } catch (_: Exception) {
+                                    // Some OEM builds may expose setUpdateOwner on PackageInstaller
+                                    try {
+                                        val installer = packageManager.packageInstaller
+                                        val fallbackMethod = installer.javaClass.getMethod(
+                                            "setUpdateOwner",
+                                            String::class.java,
+                                            String::class.java
+                                        )
+                                        fallbackMethod.invoke(installer, packageName, this.packageName)
+                                        result.success(true)
+                                    } catch (e2: Exception) {
+                                        result.success(false)
+                                    }
                                 }
-                            } catch (e: Exception) {
-                                result.error("ERROR", e.message, null)
+                            } else {
+                                result.error("INVALID_ARGUMENT", "Package name is required", null)
                             }
                         } else {
-                            result.error("INVALID_ARGUMENT", "Package name is required", null)
-                        }
-                    } else {
-                        result.success(false)
-                    }
-                }
-                "isAppArchived" -> {
-                    val packageName = call.argument<String>("packageName")
-                    if (packageName == null) {
-                        result.error("INVALID_ARGUMENT", "Package name is required", null)
-                    } else if (Build.VERSION.SDK_INT >= 34) {
-                        try {
-                            val info = packageManager.getApplicationInfo(packageName, 0)
-                            val method = info.javaClass.getMethod("isArchived")
-                            result.success(method.invoke(info) as? Boolean ?: false)
-                        } catch (e: Exception) {
-                            // Not installed at all reads the same as "not archived" here —
-                            // callers only use this to decide whether to show an unarchive
-                            // vs. archive action.
                             result.success(false)
                         }
-                    } else {
-                        result.success(false)
                     }
+                    "checkInstallConstraints" -> {
+                        if (Build.VERSION.SDK_INT >= 34) {
+                            val packageName = call.argument<String>("packageName")
+                            if (packageName != null) {
+                                try {
+                                    val installer = packageManager.packageInstaller
+                                    val builderClass = Class.forName("android.content.pm.PackageInstaller\$InstallConstraints\$Builder")
+                                    val builder = builderClass.getDeclaredConstructor().newInstance()
+                                
+                                    builderClass.getMethod("setAppNotForegroundRequired").invoke(builder)
+                                    builderClass.getMethod("setAppNotInteractingRequired").invoke(builder)
+                                    builderClass.getMethod("setNotInCallRequired").invoke(builder)
+                                
+                                    val constraints = builderClass.getMethod("build").invoke(builder)
+                                
+                                    val packages = listOf(packageName)
+                                    val checkMethod = installer.javaClass.getMethod(
+                                        "checkInstallConstraints",
+                                        List::class.java,
+                                        Class.forName("android.content.pm.PackageInstaller\$InstallConstraints"),
+                                        java.util.concurrent.Executor::class.java,
+                                        java.util.function.Consumer::class.java
+                                    )
+                                
+                                    checkMethod.invoke(
+                                        installer,
+                                        packages,
+                                        constraints,
+                                        java.util.concurrent.Executor { command -> command.run() },
+                                        java.util.function.Consumer<Any> { resultStatus ->
+                                            runOnUiThread {
+                                                try {
+                                                    val satisfied = resultStatus.javaClass.getMethod("areAllConstraintsSatisfied").invoke(resultStatus) as Boolean
+                                                    result.success(satisfied)
+                                                } catch (e: Exception) {
+                                                    result.error("ERROR", "Failed to check satisfy status: ${e.message}", null)
+                                                }
+                                            }
+                                        }
+                                    )
+                                } catch (_: Exception) {
+                                    result.success(true)
+                                }
+                            } else {
+                                result.error("INVALID_ARGUMENT", "Package name is required", null)
+                            }
+                        } else {
+                            result.success(true)
+                        }
+                    }
+                    "requestUserPreapproval" -> {
+                        if (Build.VERSION.SDK_INT >= 34) {
+                            val packageName = call.argument<String>("packageName")
+                            if (packageName != null) {
+                                try {
+                                    val installer = packageManager.packageInstaller
+                                    val params = PackageInstaller.SessionParams(
+                                        PackageInstaller.SessionParams.MODE_FULL_INSTALL
+                                    )
+                                    params.setAppPackageName(packageName)
+
+                                    val intent = Intent("app.obtainiumplus.PREAPPROVAL_CONFIRMATION")
+                                    val pendingIntent = PendingIntent.getBroadcast(
+                                        this, 0, intent,
+                                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                                    )
+
+                                    val sessionId = installer.createSession(params)
+                                    val session = try {
+                                        installer.openSession(sessionId)
+                                    } catch (e: Exception) {
+                                        try { installer.abandonSession(sessionId) } catch (_: Exception) {}
+                                        throw e
+                                    }
+                                    try {
+                                        val builderClass = Class.forName("android.content.pm.PackageInstaller\$PreapprovalDetails\$Builder")
+                                        val detailsBuilder = builderClass.getDeclaredConstructor().newInstance()
+                                        builderClass.getMethod("setPackageName", String::class.java).invoke(detailsBuilder, packageName)
+                                        val label = try {
+                                            packageManager.getApplicationLabel(packageManager.getApplicationInfo(packageName, 0)).toString()
+                                        } catch (_: Exception) {
+                                            packageName
+                                        }
+                                        builderClass.getMethod("setLabel", CharSequence::class.java).invoke(detailsBuilder, label)
+                                        val details = builderClass.getMethod("build").invoke(detailsBuilder)
+
+                                        val preapprovalMethod = session.javaClass.getMethod(
+                                            "requestUserPreapproval",
+                                            Class.forName("android.content.pm.PackageInstaller\$PreapprovalDetails"),
+                                            android.content.IntentSender::class.java
+                                        )
+                                        preapprovalMethod.invoke(session, details, pendingIntent.intentSender)
+                                        session.close()
+                                        result.success(true)
+                                    } catch (e: Exception) {
+                                        session.abandon()
+                                        result.success(false)
+                                    }
+                                } catch (e: Exception) {
+                                    result.success(false)
+                                }
+                            } else {
+                                result.error("INVALID_ARGUMENT", "Package name is required", null)
+                            }
+                        } else {
+                            result.success(false)
+                        }
+                    }
+                    "requestArchive" -> {
+                        if (Build.VERSION.SDK_INT >= 34) {
+                            val packageName = call.argument<String>("packageName")
+                            if (packageName != null) {
+                                try {
+                                    val installer = packageManager.packageInstaller
+                                    val intent = Intent("app.obtainiumplus.ARCHIVE_CONFIRMATION")
+                                    val pendingIntent = PendingIntent.getBroadcast(
+                                        this, 0, intent,
+                                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                                    )
+                                    // Reflection: requestArchive() is API 34+ and this module
+                                    // may still compile against an older SDK.
+                                    try {
+                                        val method = installer.javaClass.getMethod(
+                                            "requestArchive",
+                                            String::class.java,
+                                            android.content.IntentSender::class.java
+                                        )
+                                        method.invoke(installer, packageName, pendingIntent.intentSender)
+                                        result.success(true)
+                                    } catch (e: Exception) {
+                                        result.error("ERROR", "Failed to request archive: ${e.message}", null)
+                                    }
+                                } catch (e: Exception) {
+                                    result.error("ERROR", e.message, null)
+                                }
+                            } else {
+                                result.error("INVALID_ARGUMENT", "Package name is required", null)
+                            }
+                        } else {
+                            result.success(false)
+                        }
+                    }
+                    "isAppArchived" -> {
+                        val packageName = call.argument<String>("packageName")
+                        if (packageName == null) {
+                            result.error("INVALID_ARGUMENT", "Package name is required", null)
+                        } else if (Build.VERSION.SDK_INT >= 34) {
+                            try {
+                                val info = packageManager.getApplicationInfo(packageName, 0)
+                                val method = info.javaClass.getMethod("isArchived")
+                                result.success(method.invoke(info) as? Boolean ?: false)
+                            } catch (e: Exception) {
+                                // Not installed at all reads the same as "not archived" here —
+                                // callers only use this to decide whether to show an unarchive
+                                // vs. archive action.
+                                result.success(false)
+                            }
+                        } else {
+                            result.success(false)
+                        }
+                    }
+                    else -> result.notImplemented()
                 }
-                else -> result.notImplemented()
+            } catch (e: Exception) {
+                // An uncaught exception becomes a null reply, which Dart sees as
+                // MissingPluginException instead of a catchable PlatformException.
+                try { result.error("NATIVE_ERROR", e.message, null) } catch (_: Exception) {}
             }
         }
     }
@@ -707,6 +729,10 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         installWatcher?.complete(installed = false, errorCode = null)
+        pendingPickerResult?.let {
+            pendingPickerResult = null
+            try { it.error("CANCELLED", "Activity destroyed", null) } catch (_: Exception) {}
+        }
         super.onDestroy()
     }
 
@@ -775,9 +801,9 @@ class MainActivity : FlutterActivity() {
         val URI = Uri.parse("content://com.google.android.gsf.gservices")
         val ID_KEY = "android_id"
         val params = arrayOf(ID_KEY)
-        val c: Cursor? = contentResolver.query(URI, null, null, params, null)
-
+        var c: Cursor? = null
         return try {
+            c = contentResolver.query(URI, null, null, params, null)
             if (c == null || !c.moveToFirst() || c.columnCount < 2) null
             else java.lang.Long.toHexString(java.lang.Long.parseLong(c.getString(1)))
         } catch (e: Exception) {
