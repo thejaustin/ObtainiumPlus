@@ -896,9 +896,13 @@ class _AppGridTileState extends State<AppGridTile>
                               final speed = formatSpeed(
                                 widget.appInMemory.downloadSpeedBytesPerSec,
                               );
+                              final safePercent = (downloadProgress.isNaN ||
+                                      downloadProgress.isInfinite)
+                                  ? 0
+                                  : downloadProgress.toInt();
                               return speed != null
-                                  ? '${downloadProgress.toInt()}% · $speed'
-                                  : '${downloadProgress.toInt()}%';
+                                  ? '$safePercent% · $speed'
+                                  : '$safePercent%';
                             }(),
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               fontSize: 9.5,

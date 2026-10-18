@@ -46,16 +46,24 @@ class AppInstallService {
 
   /// Serializes package installation commits to avoid concurrent Package Manager
   /// Service (PMS) lock contention (mInstallLock) across parallel downloads.
-  static Future<T> _synchronizedCommit<T>(Future<T> Function() action) async {
+  /// Times out after 90 seconds so a stalled prompt cannot block queued installs.
+  static Future<T> _synchronizedCommit<T>(
+    Future<T> Function() action, {
+    Duration lockTimeout = const Duration(seconds: 90),
+  }) async {
     while (_activeInstallCommitLock != null) {
       try {
-        await _activeInstallCommitLock!.future;
-      } catch (_) {}
+        await _activeInstallCommitLock!.future.timeout(lockTimeout);
+      } catch (_) {
+        // If a previous commit timed out or stalled, break out and reset
+        _activeInstallCommitLock = null;
+        break;
+      }
     }
     final completer = Completer<void>();
     _activeInstallCommitLock = completer;
     try {
-      return await action();
+      return await action().timeout(lockTimeout);
     } finally {
       _activeInstallCommitLock = null;
       if (!completer.isCompleted) {
@@ -477,7 +485,7 @@ class AppInstallService {
     String? targetVersionName,
     int? existingVersionCode,
     String? existingVersionName,
-    Duration timeout = const Duration(minutes: 5),
+    Duration timeout = const Duration(seconds: 90),
   }) async {
     final completer = Completer<int?>();
     Timer? timer;

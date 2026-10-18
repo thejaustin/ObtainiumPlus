@@ -9,6 +9,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 
@@ -209,8 +210,13 @@ class AppUpdateService {
     required App app,
     required UpdateSettingsProvider updateSettings,
     required List<ConnectivityResult> netResult,
+    PlusSettingsProvider? plusSettings,
     bool isBackground = false,
   }) {
+    // If auto update rules are disabled via Plus settings, never skip
+    if (plusSettings != null && !plusSettings.plusEnableAutoUpdateRules) {
+      return false;
+    }
     // Collect all relevant rule keys for this app
     final List<String> ruleKeys = [];
     for (var cat in app.categories) {

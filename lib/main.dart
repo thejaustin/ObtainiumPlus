@@ -11,6 +11,7 @@ import 'package:obtainium/utils/dynamic_color_utils.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/components/error_app.dart';
+import 'package:obtainium/utils/app_utils.dart' show sanitizeJsonValue;
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -222,6 +223,11 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
         type.contains('NotImplementedError')) {
       return null;
     }
+  }
+  if (event.extra != null) {
+    event = event.copyWith(
+      extra: sanitizeJsonValue(event.extra) as Map<String, dynamic>?,
+    );
   }
   return event;
 }

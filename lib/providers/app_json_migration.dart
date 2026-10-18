@@ -119,7 +119,7 @@ void _migrateApkUrlsFormat(Map<String, dynamic> json) {
   } catch (e) {
     apkUrls = assumed2DlistToStringMapList(List<dynamic>.from(apkUrlJson));
   }
-  json['apkUrls'] = jsonEncode(stringMapListTo2DList(apkUrls));
+  json['apkUrls'] = safeJsonEncode(stringMapListTo2DList(apkUrls));
 }
 
 /// Applies HTML-source-specific one-time migrations: key renames,

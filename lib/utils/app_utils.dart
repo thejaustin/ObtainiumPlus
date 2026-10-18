@@ -112,7 +112,7 @@ dynamic sanitizeJsonValue(dynamic value) {
   // the result is sanitized too (#240/#241).
   try {
     return sanitizeJsonValue((value as dynamic).toJson());
-  } on NoSuchMethodError {
+  } catch (_) {
     return value;
   }
 }

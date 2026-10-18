@@ -296,26 +296,27 @@ class CategorySections extends StatelessWidget {
           ),
           const SizedBox(width: 6),
         ],
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 2.5),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
-            borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-              width: 0.8,
+        if (context.watch<ViewSettingsProvider>().displayShowAppCount)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 2.5),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+                width: 0.8,
+              ),
+            ),
+            child: Text(
+              '$totalCount',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: colorScheme.onSurfaceVariant,
+                height: 1.1,
+              ),
             ),
           ),
-          child: Text(
-            '$totalCount',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurfaceVariant,
-              height: 1.1,
-            ),
-          ),
-        ),
       ],
     );
   }

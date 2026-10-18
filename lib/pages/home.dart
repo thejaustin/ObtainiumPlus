@@ -871,7 +871,7 @@ int stripLinkUnsafeSettings(List<dynamic> apps) {
     final before = settings.length;
     settings.removeWhere((k, _) => _linkUnsafeSettings.contains(k));
     removed += before - settings.length;
-    app['additionalSettings'] = raw is String ? jsonEncode(settings) : settings;
+    app['additionalSettings'] = raw is String ? safeJsonEncode(settings) : settings;
   }
   return removed;
 }

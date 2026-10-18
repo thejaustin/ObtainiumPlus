@@ -95,13 +95,20 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   }
 
   Future<void> _loadIcons(List<PackageInfo> packages) async {
-    const batchSize = 10;
+    const batchSize = 12;
+    // Build O(1) index map to eliminate repeated O(N) indexWhere lookups
+    final Map<String, int> indexMap = {
+      for (int i = 0; i < _apps.length; i++)
+        if (_apps[i].packageName != null) _apps[i].packageName!: i,
+    };
+
     for (int i = 0; i < packages.length; i += batchSize) {
       if (!mounted) return;
       final batch = packages.sublist(
         i,
         (i + batchSize).clamp(0, packages.length),
       );
+      bool anyUpdated = false;
       await Future.wait(
         batch.map((pkg) async {
           try {
@@ -111,19 +118,18 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             final appName = await pkg.applicationInfo
                 ?.getAppLabel()
                 .timeout(const Duration(seconds: 10));
-            if (!mounted) return;
-            final idx = _apps.indexWhere(
-              (a) => a.packageName == pkg.packageName,
-            );
-            if (idx != -1) {
-              setState(() {
-                if (iconBytes != null) _apps[idx].icon = iconBytes;
-                if (appName != null) _apps[idx].appName = appName;
-              });
+            final idx = indexMap[pkg.packageName];
+            if (idx != null && idx < _apps.length) {
+              if (iconBytes != null) _apps[idx].icon = iconBytes;
+              if (appName != null) _apps[idx].appName = appName;
+              anyUpdated = true;
             }
           } catch (_) {}
         }),
       );
+      if (mounted && anyUpdated) {
+        setState(() {});
+      }
     }
   }
 

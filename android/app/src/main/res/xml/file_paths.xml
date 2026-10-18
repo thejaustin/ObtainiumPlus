@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <external-path path="Android/data/dev.thejaustin.obtainiumplus/" name="files_root" />
-    <external-path path="." name="external_storage_root" />
-    <external-path name="external_files" path="."/>
+    <external-files-path name="external_app_files" path="." />
+    <external-cache-path name="external_app_cache" path="." />
+    <files-path name="internal_files" path="." />
+    <cache-path name="internal_cache" path="." />
+    <external-path name="download_files" path="Download" />
+    <external-path name="documents_files" path="Documents" />
+    <external-path name="app_external_files" path="Android/data/dev.thejaustin.obtainiumplus/files" />
 </paths>

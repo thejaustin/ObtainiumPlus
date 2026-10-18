@@ -341,7 +341,9 @@ class AppDownloadService {
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
         (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
-          int? prog = progress?.ceil();
+          int? prog = (progress == null || progress.isNaN || progress.isInfinite)
+              ? null
+              : progress.ceil();
           if (apps[app.id] != null) {
             if (received != null) apps[app.id]!.downloadReceivedBytes = received;
             if (total != null) apps[app.id]!.downloadTotalBytes = total;

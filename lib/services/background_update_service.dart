@@ -142,6 +142,7 @@ class BackgroundUpdateService {
         if (AppUpdateService.shouldSkipAppUpdate(
           app: app,
           updateSettings: appsProvider.updateSettings,
+          plusSettings: appsProvider.plusSettings,
           netResult: netResult,
         )) {
           logs.add('BG update task: Skipping ${app.id} based on rules');
@@ -173,6 +174,7 @@ class BackgroundUpdateService {
           (await Battery().batteryState) != BatteryState.charging;
 
       var scheduleRestricted =
+          appsProvider.plusSettings.plusEnableUpdateSchedule &&
           appsProvider.updateSettings.useUpdateSchedule &&
           !appsProvider.updateSettings.isWithinUpdateSchedule();
 
@@ -236,7 +238,11 @@ class BackgroundUpdateService {
         int lastNotifiedProgPercent = 0;
         void onRefreshProgress() {
           final progress = appsProvider.refreshProgress.value;
-          if (progress == null || progress <= 0 || total == 0) return;
+          if (progress == null ||
+              progress.isNaN ||
+              progress.isInfinite ||
+              progress <= 0 ||
+              total == 0) return;
           final checked = (progress * total).round().clamp(0, total);
           final progPercent = ((checked / total) * 100).round().clamp(1, 100);
           if ((progPercent - lastNotifiedProgPercent).abs() < 5 &&

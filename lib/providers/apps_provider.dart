@@ -207,7 +207,7 @@ Future<File> downloadFileWithRetry(
 }
 
 String _hashListOfLists(List<List<int>> data) {
-  final bytes = utf8.encode(jsonEncode(data));
+  final bytes = utf8.encode(safeJsonEncode(data));
   return sha256.convert(bytes).toString().substring(0, 8);
 }
 
@@ -720,7 +720,12 @@ String? formatDownloadSize(int? receivedBytes, int? totalBytes) {
 
 /// Formats download transfer rate as a human-readable string (e.g. "4.2 MB/s").
 String? formatSpeed(double? bytesPerSec) {
-  if (bytesPerSec == null || bytesPerSec <= 0) return null;
+  if (bytesPerSec == null ||
+      bytesPerSec.isNaN ||
+      bytesPerSec.isInfinite ||
+      bytesPerSec <= 0) {
+    return null;
+  }
   return '${formatBytes(bytesPerSec.round())}/s';
 }
 
@@ -729,6 +734,8 @@ String? formatEta(int? remainingBytes, double? bytesPerSec) {
   if (remainingBytes == null ||
       remainingBytes <= 0 ||
       bytesPerSec == null ||
+      bytesPerSec.isNaN ||
+      bytesPerSec.isInfinite ||
       bytesPerSec <= 1024) {
     return null;
   }
@@ -1234,7 +1241,9 @@ class AppsProvider with ChangeNotifier {
         source.urlsAlwaysHaveExtension,
         headers: headers,
         (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
-          int? prog = progress?.ceil();
+          int? prog = (progress == null || progress.isNaN || progress.isInfinite)
+              ? null
+              : progress.ceil();
           if (apps[app.id] != null) {
             if (received != null) apps[app.id]!.downloadReceivedBytes = received;
             if (total != null) apps[app.id]!.downloadTotalBytes = total;

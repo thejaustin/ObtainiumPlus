@@ -866,9 +866,13 @@ class _AppListTileState extends State<AppListTile>
                                                           appInMemory
                                                               .downloadSpeedBytesPerSec,
                                                         );
+                                                        final safePercent = (downloadProgress.isNaN ||
+                                                                downloadProgress.isInfinite)
+                                                            ? 0
+                                                            : downloadProgress.toInt();
                                                         final label = speed != null
-                                                            ? '${downloadProgress.toInt()}% • $speed'
-                                                            : '${downloadProgress.toInt()}%';
+                                                            ? '$safePercent% • $speed'
+                                                            : '$safePercent%';
                                                         return Text(
                                                           label,
                                                           style: Theme.of(context)

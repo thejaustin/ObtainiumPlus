@@ -10,7 +10,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -438,7 +438,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   void setCategories(Map<String, int> cats) {
-    prefs?.setString('categories', jsonEncode(cats));
+    prefs?.setString('categories', safeJsonEncode(cats));
     notifyListeners();
   }
 
