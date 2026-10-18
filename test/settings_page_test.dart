@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/utils/theme_builder.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -35,6 +36,9 @@ void main() {
   Future<Widget> buildSettingsApp(
     int tab, {
     Locale locale = const Locale('en'),
+    bool isTV = false,
+    bool matchSystemMaterialStyle = false,
+    Brightness brightness = Brightness.light,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final settings = SettingsProvider();
@@ -80,6 +84,18 @@ void main() {
             // Hardcode the locale so the test never picks up the CI machine's
             // platform locale, which may be 'C' (POSIX) and unsupported.
             locale: locale,
+            // The production theme, so theme-level changes (M3E slider,
+            // squircle shapes, TV focus) are exercised by these builds.
+            theme: ThemeBuilder.buildTheme(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.deepPurple,
+                brightness: brightness,
+              ),
+              useSystemFont: false,
+              cornerRadius: plusSettings.plusGlobalCornerRadius,
+              isTV: isTV,
+              matchSystemMaterialStyle: matchSystemMaterialStyle,
+            ),
             home: SettingsPage(initialTab: tab),
           ),
         ),
@@ -174,6 +190,31 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 1)),
   );
+
+  for (final variant in const [
+    ('TV focus theme', true, false, Brightness.light),
+    ('match-system theme', false, true, Brightness.light),
+    ('dark theme', false, false, Brightness.dark),
+  ]) {
+    testWidgets(
+      'settings page builds with the ${variant.$1}',
+      (tester) async {
+        late Widget app;
+        await tester.runAsync(() async {
+          await EasyLocalization.ensureInitialized();
+          app = await buildSettingsApp(
+            1,
+            isTV: variant.$2,
+            matchSystemMaterialStyle: variant.$3,
+            brightness: variant.$4,
+          );
+        });
+        await pumpCapturingErrors(tester, app);
+        expect(find.byType(SettingsPage), findsOneWidget);
+      },
+      timeout: const Timeout(Duration(minutes: 1)),
+    );
+  }
 
   testWidgets(
     'settings page survives corrupted preference types',

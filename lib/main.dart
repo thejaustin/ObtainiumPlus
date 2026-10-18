@@ -780,6 +780,7 @@ class _ObtainiumState extends State<Obtainium> {
                   plusSettings.plusEnableMaterialExpressive,
               cornerRadius: plusSettings.plusGlobalCornerRadius,
               matchSystemMaterialStyle: matchSystemStyle,
+              isTV: settingsProvider.isTV,
             ),
             darkTheme: ThemeBuilder.buildTheme(
               colorScheme: themeSettings.theme == ThemeSettings.light
@@ -790,6 +791,7 @@ class _ObtainiumState extends State<Obtainium> {
                   plusSettings.plusEnableMaterialExpressive,
               cornerRadius: plusSettings.plusGlobalCornerRadius,
               matchSystemMaterialStyle: matchSystemStyle,
+              isTV: settingsProvider.isTV,
             ),
             home: Shortcuts(
               shortcuts: <LogicalKeySet, Intent>{

@@ -253,27 +253,18 @@ class NotificationSettingsSection extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 2,
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 8),
-                                  overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 16),
-                                ),
-                                child: Slider(
-                                  value: settings.plusNotificationQuietHoursStart
-                                      .toDouble(),
-                                  min: 0,
-                                  max: 23,
-                                  divisions: 23,
-                                  onChanged: (val) {
-                                    AppHaptics.selectionClick();
-                                    settings.plusNotificationQuietHoursStart =
-                                        val.round();
-                                    setDialogState(() {});
-                                  },
-                                ),
+                              Slider(
+                                value: settings.plusNotificationQuietHoursStart
+                                    .toDouble(),
+                                min: 0,
+                                max: 23,
+                                divisions: 23,
+                                onChanged: (val) {
+                                  AppHaptics.selectionClick();
+                                  settings.plusNotificationQuietHoursStart =
+                                      val.round();
+                                  setDialogState(() {});
+                                },
                               ),
                             ],
                           ),
@@ -317,27 +308,18 @@ class NotificationSettingsSection extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 2,
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 8),
-                                  overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 16),
-                                ),
-                                child: Slider(
-                                  value: settings.plusNotificationQuietHoursEnd
-                                      .toDouble(),
-                                  min: 0,
-                                  max: 23,
-                                  divisions: 23,
-                                  onChanged: (val) {
-                                    AppHaptics.selectionClick();
-                                    settings.plusNotificationQuietHoursEnd =
-                                        val.round();
-                                    setDialogState(() {});
-                                  },
-                                ),
+                              Slider(
+                                value: settings.plusNotificationQuietHoursEnd
+                                    .toDouble(),
+                                min: 0,
+                                max: 23,
+                                divisions: 23,
+                                onChanged: (val) {
+                                  AppHaptics.selectionClick();
+                                  settings.plusNotificationQuietHoursEnd =
+                                      val.round();
+                                  setDialogState(() {});
+                                },
                               ),
                             ],
                           ),

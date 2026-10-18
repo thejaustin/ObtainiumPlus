@@ -13,6 +13,7 @@ class ThemeBuilder {
     bool plusEnableMaterialExpressive = true,
     double? cornerRadius,
     bool matchSystemMaterialStyle = false,
+    bool isTV = false,
   }) {
     // "Match system Material style": follow the device look as closely as
     // possible — the (untouched) dynamic colour scheme, the system font, and
@@ -25,6 +26,11 @@ class ThemeBuilder {
         useMaterial3: true,
         colorScheme: colorScheme,
         fontFamily: 'SystemFont',
+        sliderTheme: const SliderThemeData(year2023: false),
+        progressIndicatorTheme: const ProgressIndicatorThemeData(
+          year2023: false,
+        ),
+        focusColor: isTV ? colorScheme.primary.withValues(alpha: 0.4) : null,
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
@@ -33,10 +39,12 @@ class ThemeBuilder {
         ),
       );
     }
+    final tvFocus = _TvFocus(isTV, colorScheme);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: colorScheme.surface,
+      focusColor: isTV ? colorScheme.primary.withValues(alpha: 0.4) : null,
       canvasColor: colorScheme.surfaceContainerHigh,
       popupMenuTheme: PopupMenuThemeData(
         color: colorScheme.surfaceContainerHigh,
@@ -69,8 +77,27 @@ class ThemeBuilder {
         plusEnableMaterialExpressive,
         cornerRadius,
       ),
-      switchTheme: _buildSwitchTheme(colorScheme),
+      switchTheme: _buildSwitchTheme(colorScheme, tvFocus),
       sliderTheme: _buildSliderTheme(colorScheme),
+      floatingActionButtonTheme: _buildFabTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+      ),
+      iconButtonTheme: tvFocus.enabled
+          ? IconButtonThemeData(style: tvFocus.buttonStyle(0.5))
+          : null,
+      checkboxTheme: tvFocus.enabled
+          ? CheckboxThemeData(overlayColor: tvFocus.overlay(0.5))
+          : null,
+      radioTheme: tvFocus.enabled
+          ? RadioThemeData(overlayColor: tvFocus.overlay(0.5))
+          : null,
+      segmentedButtonTheme: tvFocus.enabled
+          ? SegmentedButtonThemeData(style: tvFocus.buttonStyle(0.45))
+          : null,
+      menuButtonTheme: tvFocus.enabled
+          ? MenuButtonThemeData(style: tvFocus.buttonStyle(0.35))
+          : null,
       dialogTheme: _buildDialogTheme(
         colorScheme,
         plusEnableMaterialExpressive,
@@ -84,13 +111,16 @@ class ThemeBuilder {
       navigationBarTheme: _buildNavigationBarTheme(colorScheme),
       appBarTheme: _buildAppBarTheme(colorScheme),
       searchBarTheme: _buildSearchBarTheme(colorScheme),
-      elevatedButtonTheme: _buildElevatedButtonTheme(cornerRadius),
-      filledButtonTheme: _buildFilledButtonTheme(cornerRadius),
-      textButtonTheme: _buildTextButtonTheme(cornerRadius),
-      outlinedButtonTheme: _buildOutlinedButtonTheme(cornerRadius),
+      elevatedButtonTheme: _buildElevatedButtonTheme(cornerRadius, tvFocus),
+      filledButtonTheme: _buildFilledButtonTheme(cornerRadius, tvFocus),
+      textButtonTheme: _buildTextButtonTheme(cornerRadius, tvFocus),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(cornerRadius, tvFocus),
       chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
       dividerTheme: _buildDividerTheme(colorScheme),
-      snackBarTheme: _buildSnackBarTheme(colorScheme),
+      snackBarTheme: _buildSnackBarTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+      ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: colorScheme.primary,
         linearTrackColor: colorScheme.surfaceContainerHighest,
@@ -298,11 +328,7 @@ class ThemeBuilder {
       // colour, not shadows (heavy shadows also read muddy on the pure-black
       // AMOLED theme)
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          cornerRadius ?? (expressive ? 24 : 12),
-        ),
-      ),
+      shape: _shape(expressive, cornerRadius ?? (expressive ? 24 : 12)),
       clipBehavior: Clip.antiAlias,
     );
   }
@@ -317,19 +343,22 @@ class ThemeBuilder {
       iconColor: colorScheme.onSurfaceVariant,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       visualDensity: VisualDensity.standard,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          cornerRadius != null
-              ? (cornerRadius * 0.66).clamp(8.0, 16.0)
-              : (expressive ? 16 : 12),
-        ),
+      shape: _shape(
+        expressive,
+        cornerRadius != null
+            ? (cornerRadius * 0.66).clamp(8.0, 16.0)
+            : (expressive ? 16 : 12),
       ),
     );
   }
 
   /// Builds SwitchThemeData using M3 color tokens
-  static SwitchThemeData _buildSwitchTheme(ColorScheme colorScheme) {
+  static SwitchThemeData _buildSwitchTheme(
+    ColorScheme colorScheme,
+    _TvFocus tvFocus,
+  ) {
     return SwitchThemeData(
+      overlayColor: tvFocus.overlay(0.5),
       thumbColor: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return colorScheme.onPrimary;
@@ -362,6 +391,12 @@ class ThemeBuilder {
   /// Builds SliderThemeData with M3 tonal track and thumb
   static SliderThemeData _buildSliderTheme(ColorScheme colorScheme) {
     return SliderThemeData(
+      // Opts into the M3 Expressive slider: 16dp track, bar handle with a gap
+      // either side, and stop indicators. Deprecated flag with no replacement
+      // until this look becomes the framework default (flutter#162186).
+      // ignore: deprecated_member_use
+      year2023: false,
+      showValueIndicator: ShowValueIndicator.onDrag,
       activeTrackColor: colorScheme.primary,
       inactiveTrackColor: colorScheme.surfaceContainerHighest,
       thumbColor: colorScheme.primary,
@@ -381,11 +416,7 @@ class ThemeBuilder {
       backgroundColor: colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
       elevation: 6,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(
-          cornerRadius ?? (expressive ? 32 : 28),
-        ),
-      ),
+      shape: _shape(expressive, cornerRadius ?? (expressive ? 32 : 28)),
       titleTextStyle: TextStyle(
         color: colorScheme.onSurface,
         fontSize: 24,
@@ -410,9 +441,15 @@ class ThemeBuilder {
       modalBackgroundColor: colorScheme.surfaceContainerLow,
       surfaceTintColor: Colors.transparent,
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
-      ),
+      shape: expressive
+          ? RoundedSuperellipseBorder(
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(radius),
+              ),
+            )
+          : RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
+            ),
       dragHandleColor: colorScheme.onSurfaceVariant.withValues(
         alpha: AppOpacity.moderate,
       ),
@@ -530,12 +567,15 @@ class ThemeBuilder {
   }
 
   /// Builds SnackBarThemeData with inverse surface colors and M3 floating shape
-  static SnackBarThemeData _buildSnackBarTheme(ColorScheme colorScheme) {
+  static SnackBarThemeData _buildSnackBarTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
     return SnackBarThemeData(
       backgroundColor: colorScheme.inverseSurface,
       contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
       actionTextColor: colorScheme.inversePrimary,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: _shape(expressive, 16),
       behavior: SnackBarBehavior.floating,
       elevation: 4,
     );
@@ -543,9 +583,11 @@ class ThemeBuilder {
 
   static ElevatedButtonThemeData _buildElevatedButtonTheme(
     double? cornerRadius,
+    _TvFocus tvFocus,
   ) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
+        overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
                 borderRadius:
@@ -556,9 +598,13 @@ class ThemeBuilder {
     );
   }
 
-  static FilledButtonThemeData _buildFilledButtonTheme(double? cornerRadius) {
+  static FilledButtonThemeData _buildFilledButtonTheme(
+    double? cornerRadius,
+    _TvFocus tvFocus,
+  ) {
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
+        overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
                 borderRadius:
@@ -569,9 +615,13 @@ class ThemeBuilder {
     );
   }
 
-  static TextButtonThemeData _buildTextButtonTheme(double? cornerRadius) {
+  static TextButtonThemeData _buildTextButtonTheme(
+    double? cornerRadius,
+    _TvFocus tvFocus,
+  ) {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
+        overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
                 borderRadius:
@@ -584,9 +634,11 @@ class ThemeBuilder {
 
   static OutlinedButtonThemeData _buildOutlinedButtonTheme(
     double? cornerRadius,
+    _TvFocus tvFocus,
   ) {
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
+        overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
                 borderRadius:
@@ -596,4 +648,53 @@ class ThemeBuilder {
       ),
     );
   }
+
+  static FloatingActionButtonThemeData _buildFabTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
+    return FloatingActionButtonThemeData(
+      backgroundColor: colorScheme.primaryContainer,
+      foregroundColor: colorScheme.onPrimaryContainer,
+      shape: _shape(expressive, expressive ? 20 : 16),
+      elevation: 4,
+      focusElevation: 6,
+      hoverElevation: 8,
+      highlightElevation: 6,
+    );
+  }
+
+  /// Squircle corners in expressive mode, plain rounded corners otherwise.
+  static OutlinedBorder _shape(bool expressive, double radius) {
+    final borderRadius = BorderRadius.circular(radius);
+    return expressive
+        ? RoundedSuperellipseBorder(borderRadius: borderRadius)
+        : RoundedRectangleBorder(borderRadius: borderRadius);
+  }
+}
+
+/// Strong focus overlays for TV, where the D-pad focus highlight is the only
+/// cursor; the stock 12% overlay is invisible from across a room.
+class _TvFocus {
+  const _TvFocus(this.enabled, this.colorScheme);
+
+  final bool enabled;
+  final ColorScheme colorScheme;
+
+  Color color(double alpha) => colorScheme.primary.withValues(alpha: alpha);
+
+  WidgetStateProperty<Color?>? overlay(double alpha) {
+    if (!enabled) return null;
+    final focused = color(alpha);
+    return WidgetStateProperty.resolveWith<Color?>((states) {
+      if (states.contains(WidgetState.focused)) return focused;
+      if (states.contains(WidgetState.hovered)) {
+        return focused.withValues(alpha: alpha * 0.4);
+      }
+      return null;
+    });
+  }
+
+  ButtonStyle buttonStyle(double alpha) =>
+      ButtonStyle(overlayColor: overlay(alpha));
 }

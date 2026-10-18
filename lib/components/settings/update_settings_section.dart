@@ -773,27 +773,18 @@ class UpdateSettingsSection extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 2,
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 8),
-                                  overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 16),
-                                ),
-                                child: Slider(
-                                  value: settings.updateScheduleStartHour
-                                      .toDouble(),
-                                  min: 0,
-                                  max: 23,
-                                  divisions: 23,
-                                  onChanged: (val) {
-                                    AppHaptics.selectionClick();
-                                    settings.updateScheduleStartHour =
-                                        val.round();
-                                    setDialogState(() {});
-                                  },
-                                ),
+                              Slider(
+                                value: settings.updateScheduleStartHour
+                                    .toDouble(),
+                                min: 0,
+                                max: 23,
+                                divisions: 23,
+                                onChanged: (val) {
+                                  AppHaptics.selectionClick();
+                                  settings.updateScheduleStartHour =
+                                      val.round();
+                                  setDialogState(() {});
+                                },
                               ),
                             ],
                           ),
@@ -836,26 +827,17 @@ class UpdateSettingsSection extends StatelessWidget {
                                       fontWeight: FontWeight.w600,
                                     ),
                               ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  trackHeight: 2,
-                                  thumbShape: const RoundSliderThumbShape(
-                                      enabledThumbRadius: 8),
-                                  overlayShape: const RoundSliderOverlayShape(
-                                      overlayRadius: 16),
-                                ),
-                                child: Slider(
-                                  value:
-                                      settings.updateScheduleEndHour.toDouble(),
-                                  min: 0,
-                                  max: 23,
-                                  divisions: 23,
-                                  onChanged: (val) {
-                                    AppHaptics.selectionClick();
-                                    settings.updateScheduleEndHour = val.round();
-                                    setDialogState(() {});
-                                  },
-                                ),
+                              Slider(
+                                value:
+                                    settings.updateScheduleEndHour.toDouble(),
+                                min: 0,
+                                max: 23,
+                                divisions: 23,
+                                onChanged: (val) {
+                                  AppHaptics.selectionClick();
+                                  settings.updateScheduleEndHour = val.round();
+                                  setDialogState(() {});
+                                },
                               ),
                             ],
                           ),

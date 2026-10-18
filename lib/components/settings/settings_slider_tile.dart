@@ -97,34 +97,41 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
               ),
             ],
           ),
-          Slider(
-            value: widget.value,
-            min: widget.min,
-            max: widget.max,
-            divisions: widget.divisions,
-            label: widget.labelBuilder(widget.value),
-            onChangeStart: (_) {
-              setState(() {
-                _isDragging = true;
-                _lastSnappedIndex = null;
-              });
-            },
-            onChanged: (v) {
-              if (widget.divisions != null) {
-                final step = (widget.max - widget.min) / widget.divisions!;
-                final idx = ((v - widget.min) / step).round().toDouble();
-                if (idx != _lastSnappedIndex) {
-                  _lastSnappedIndex = idx;
-                  AppHaptics.selectionClick();
+          // The morphing badge above already shows the value; keep `label`
+          // for semantics but suppress the theme's drag bubble.
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              showValueIndicator: ShowValueIndicator.never,
+            ),
+            child: Slider(
+              value: widget.value,
+              min: widget.min,
+              max: widget.max,
+              divisions: widget.divisions,
+              label: widget.labelBuilder(widget.value),
+              onChangeStart: (_) {
+                setState(() {
+                  _isDragging = true;
+                  _lastSnappedIndex = null;
+                });
+              },
+              onChanged: (v) {
+                if (widget.divisions != null) {
+                  final step = (widget.max - widget.min) / widget.divisions!;
+                  final idx = ((v - widget.min) / step).round().toDouble();
+                  if (idx != _lastSnappedIndex) {
+                    _lastSnappedIndex = idx;
+                    AppHaptics.selectionClick();
+                  }
                 }
-              }
-              widget.onChanged(v);
-            },
-            onChangeEnd: (v) {
-              setState(() => _isDragging = false);
-              AppHaptics.lightImpact();
-              widget.onChangeEnd?.call(v);
-            },
+                widget.onChanged(v);
+              },
+              onChangeEnd: (v) {
+                setState(() => _isDragging = false);
+                AppHaptics.lightImpact();
+                widget.onChangeEnd?.call(v);
+              },
+            ),
           ),
         ],
       ),
