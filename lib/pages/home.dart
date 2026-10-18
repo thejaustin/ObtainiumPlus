@@ -299,7 +299,17 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             await goToAddApp(data);
           }
         } else if (action == 'app' || action == 'apps') {
-          var dataStr = Uri.decodeComponent(data);
+          dynamic parsedData;
+          try {
+            parsedData = jsonDecode(data);
+          } catch (e) {
+            AppLogger.error(e, message: 'Failed to decode deep-link JSON');
+            throw ObtainiumError(tr('invalidInput'));
+          }
+          final apps = action == 'app' ? [parsedData] : parsedData;
+          if (apps is! List) throw ObtainiumError(tr('invalidInput'));
+          // A link must not be able to weaken security on the apps it adds.
+          final stripped = stripLinkUnsafeSettings(apps);
           if (await showDialog(
                 context: context,
                 builder: (BuildContext ctx) {
@@ -313,6 +323,26 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                     items: const [],
                     additionalWidgets: [
+                      for (final app in apps.whereType<Map>())
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text('${app['name'] ?? app['id'] ?? '?'}'),
+                          subtitle: Text(
+                            '${app['url'] ?? ''}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      if (stripped > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            'Security overrides in this link (insecure connections, '
+                            'certificate pinning, signer allow-lists) were ignored.',
+                            style: Theme.of(ctx).textTheme.bodySmall,
+                          ),
+                        ),
                       ExpansionTile(
                         title: Text(tr('rawJson')),
                         children: [
@@ -328,18 +358,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ) !=
               null) {
             if (!mounted) return;
-            dynamic parsedData;
-            try {
-              parsedData = jsonDecode(data);
-            } catch (e) {
-              AppLogger.error(e, message: 'Failed to decode deep-link JSON');
-              throw ObtainiumError(tr('invalidInput'));
-            }
             var appsProvider = context.read<AppsProvider>();
             var result = await appsProvider.import(
-              safeJsonEncode({
-                'apps': action == 'app' ? [parsedData] : parsedData,
-              }),
+              safeJsonEncode({'apps': apps}),
             );
             if (!mounted) return;
             showMessage(
@@ -788,4 +809,36 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _linkSubscription?.cancel();
     super.dispose();
   }
+}
+
+/// Per-app settings a shared link must never set: they only weaken security.
+const _linkUnsafeSettings = {
+  'allowInsecure',
+  'allowInsecureRedirects',
+  'allowedSigningCertHashes',
+  'enableCertificatePinning',
+};
+
+/// Removes [_linkUnsafeSettings] from each app's additionalSettings (stored
+/// either as a map or as a JSON string). Returns how many were removed.
+int stripLinkUnsafeSettings(List<dynamic> apps) {
+  var removed = 0;
+  for (final app in apps) {
+    if (app is! Map) continue;
+    final raw = app['additionalSettings'];
+    Map<String, dynamic>? settings;
+    if (raw is Map) {
+      settings = Map<String, dynamic>.from(raw);
+    } else if (raw is String) {
+      try {
+        settings = Map<String, dynamic>.from(jsonDecode(raw) as Map);
+      } catch (_) {}
+    }
+    if (settings == null) continue;
+    final before = settings.length;
+    settings.removeWhere((k, _) => _linkUnsafeSettings.contains(k));
+    removed += before - settings.length;
+    app['additionalSettings'] = raw is String ? jsonEncode(settings) : settings;
+  }
+  return removed;
 }
