@@ -213,10 +213,9 @@ class NotificationSettingsSection extends StatelessWidget {
                         ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
+                  Column(
                     children: [
-                      Expanded(
-                        child: Container(
+                      Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
@@ -279,10 +278,8 @@ class NotificationSettingsSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Container(
+                      const SizedBox(height: 12),
+                      Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
@@ -345,7 +342,6 @@ class NotificationSettingsSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                      ),
                     ],
                   ),
                 ],
