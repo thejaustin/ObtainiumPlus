@@ -407,10 +407,10 @@ class UpdateSettingsSection extends StatelessWidget {
                 subtitle: Text(updateSettings.getScheduleDescription()),
                 trailing: Switch(
                   value: updateSettings.useUpdateSchedule,
-                  onChanged: hapticSwitchOnChanged(
-                    context,
-                    (value) => updateSettings.useUpdateSchedule = value,
-                  ),
+                  onChanged: (value) {
+                    AppHaptics.selectionClick();
+                    updateSettings.useUpdateSchedule = value;
+                  },
                 ),
                 onTap: () => _showScheduleDialog(context, updateSettings),
               ),

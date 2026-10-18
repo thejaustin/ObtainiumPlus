@@ -165,7 +165,10 @@ class BooleanControlGrid extends StatelessWidget {
                 const SizedBox(width: 8),
                 Switch(
                   value: value,
-                  onChanged: hapticSwitchOnChanged(context, onChanged),
+                  onChanged: (v) {
+                    AppHaptics.selectionClick();
+                    onChanged(v);
+                  },
                   materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ],

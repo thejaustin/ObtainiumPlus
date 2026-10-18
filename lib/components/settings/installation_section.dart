@@ -680,7 +680,7 @@ class _InstallationSectionState extends State<InstallationSection>
                             color: Theme.of(context)
                                 .colorScheme
                                 .primary
-                                .withValues(alpha: AppConstants.moderate),
+                                .withValues(alpha: AppOpacity.moderate),
                             width: 3,
                           ),
                         ),

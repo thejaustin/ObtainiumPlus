@@ -574,12 +574,13 @@ class _GeneratedFormState extends State<GeneratedForm> {
                 value: values[fieldKey],
                 onChanged: item.disabled
                     ? null
-                    : hapticSwitchOnChanged(context, (value) {
+                    : (value) {
+                        AppHaptics.selectionClick();
                         setState(() {
                           values[fieldKey] = value;
                           someValueChanged();
                         });
-                      }),
+                      },
               ),
             ],
           );
