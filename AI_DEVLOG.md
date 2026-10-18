@@ -19,6 +19,25 @@ Sources: GitHub/web scan, Claude+Antigravity session mining, security audit, M3E
 - [ ] **Dead code vs CHANGELOG** — 53 unreachable files (`analyze-live.sh --dead`). Onboarding, System Updates, crash screen (`error_app.dart`), update badge, logs dialog, sort/filter panel never ship. Decide per file: wire up or delete; re-audit `[Unreleased]` entries (partly corrected 2026-10-18).
 - [ ] **On-device check of 2026-10-18 UI batch** (unverified on device): sliders (settings + schedule/quiet-hours dialogs), app-list scroll smoothness with squircle cards, spinners during update check, nav bar in fa/ar.
 
+### Unreachable files — triage (53 files, `scripts/dev/analyze-live.sh --dead`)
+Root cause: commit `7ca61415` (2026-05-11, "Qwen AI Assistant", "feat: itch.io and installer choice features") reset main.dart/home.dart/apps.dart/MainActivity.kt/manifest/all translations toward upstream and silently dropped call sites. **Restore from the pre-`7ca61415` call sites, adapted to current code; one commit per feature.** Check each restored file's `tr()` keys exist in en.json and its method-channel names exist in MainActivity.kt.
+
+**A. Restore (call site existed before 7ca61415)**
+- [ ] Crash screen: `components/error_app.dart` (ErrorApp, BuildErrorWidget) + `utils/crash_file_handler.dart` — was main.dart:296-390. ErrorApp must not use ScaleTouchWrapper/providers/tr(); needs appLocalizationsDelegates.
+- [ ] Known issues: `services/known_issues_service.dart` + `components/critical_issue_dialog.dart` + `components/force_update_dialog.dart` — was home.dart:199-215. Post-first-frame, timeout, silent on failure.
+- [ ] Onboarding: `pages/onboarding.dart` (12 errors: App() is positional now) — was home.dart:104. Fresh installs only; replaces welcome dialog, never both.
+- [ ] Deep links: `services/deep_link_service.dart` — was home.dart:326; home.dart now parses inline (newer). Diff, port missing handlers, keep ONE path; add key whitelist.
+- [ ] Sort/filter: `components/sort_filter_panel.dart` — was apps.dart:1178,1291. Compare with live filter dialog/tag_filter_bar; keep one.
+**B. Never wired (product decision / new placement)**
+- [ ] `components/common/contextual_tip.dart` — settings toggle `enableContextualTips` is live but does nothing: wire placements or hide toggle.
+- [ ] `components/common/network_indicator.dart`, `components/update_badge.dart`, `components/apps/app_description_slider.dart`, `components/category_editor.dart` (4 errors), `components/apps/app_list_view.dart` + `app_shortcuts_menu.dart`, `components/settings/settings_group.dart`, `components/settings/boolean_control_grid.dart` (10 errors), `components/logs_dialog.dart` (vs live settings/logs_dialog.dart), `components/info_tooltip.dart`, `components/apps/app_dialogs.dart`, `components/apps/app_list_tile_classic.dart`, `utils/dynamic_color_utils.dart`, `services/plugin_engine.dart`.
+**C. Stale duplicates of live code (port anything newer, then delete — needs owner OK)**
+- `app_sources/app_source.dart` (≈ models/app_source.dart), `app_sources/samsunggalaxystore.dart` (≈ samsung_galaxy_store.dart), `app_sources/git_source.dart`, `services/app_crud_service.dart`, `app_export_service.dart`, `app_filter_service.dart`, `app_icon_service.dart`, `app_removal_service.dart`, `background_service.dart` (≈ main.dart), `token_dispenser_service.dart` (≈ models/auth_bundle.dart), `providers/installer_provider.dart`, `utils/comparable_utils.dart`, `format_utils.dart`, `language_utils.dart`, `native_features.dart`, `url_utils.dart`, `dialog_utils.dart`, `router.dart`, `components/settings_widgets.dart` (≈ ui_widgets.dart).
+**D. Google Play native (needs protoc regen; ~2000 errors)**
+- `protobuf/*`, `services/play_store_api.dart`, `app_sources/googleplay_native.dart`, `services/play_store_mirror_service.dart`, `pages/system_updates.dart`, `pages/updates.dart` (System Updates never had a call site).
+**E. Shadowed extension members (not in --dead; analyzer silent)**
+- [ ] `extension … on AppsProvider` members colliding with class members never run, e.g. `apps_provider_import_export.dart` `export()` (custom-name auto-export lost), plus `apps_provider_lifecycle`/`apps_provider_install`. Merge into class methods.
+
 ### Security (from audit; file:line as of 2026-10-18)
 - [ ] HIGH `AndroidManifest.xml` — no `allowBackup="false"`/`dataExtractionRules`; prefs + plugin JS leave device via backup.
 - [ ] HIGH `res/xml/file_paths.xml:2-4` `external-path path="."` exposes all shared storage — narrow to download/export dirs.
