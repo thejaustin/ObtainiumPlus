@@ -98,6 +98,7 @@ class CategorySections extends StatelessWidget {
             context,
             index,
             viewSettings,
+            plusSettings,
             appsByCategory[catName] ?? const [],
             categoryUpdateCounts[catName] ?? 0,
             pendingUpdates,
@@ -126,6 +127,7 @@ class CategorySections extends StatelessWidget {
             context,
             index,
             viewSettings,
+            plusSettings,
             appsByCategory[catName] ?? const [],
             categoryUpdateCounts[catName] ?? 0,
             pendingUpdates,
@@ -213,28 +215,31 @@ class CategorySections extends StatelessWidget {
           delegate: SliverChildBuilderDelegate(
             (context, appIndex) {
               final app = appsInCategory[appIndex];
-              return AppGridTile(
-                appInMemory: app,
-                isSelected:
-                    selectedAppIds.contains(app.app.id) ||
-                    activeAppId == app.app.id,
-                hasUpdate: pendingUpdates.contains(app.app.id),
-                isAmbiguous:
-                    app.app.additionalSettings['isAmbiguousUpdate'] == true,
-                categoryColor: categoryColor,
-                entranceDelay: plusSettings.plusEnableEnhancedAnimations
-                    ? Duration(
-                        milliseconds: appIndex < 10 ? appIndex * 35 : 0,
-                      )
-                    : Duration.zero,
-                onTap: () {
-                  if (selectedAppIds.isNotEmpty) {
-                    toggleAppSelected(app.app);
-                  } else {
-                    onAppTap(app.app);
-                  }
-                },
-                onLongPress: () => toggleAppSelected(app.app),
+              return RepaintBoundary(
+                key: ValueKey(app.app.id),
+                child: AppGridTile(
+                  appInMemory: app,
+                  isSelected:
+                      selectedAppIds.contains(app.app.id) ||
+                      activeAppId == app.app.id,
+                  hasUpdate: pendingUpdates.contains(app.app.id),
+                  isAmbiguous:
+                      app.app.additionalSettings['isAmbiguousUpdate'] == true,
+                  categoryColor: categoryColor,
+                  entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                      ? Duration(
+                          milliseconds: appIndex < 10 ? appIndex * 35 : 0,
+                        )
+                      : Duration.zero,
+                  onTap: () {
+                    if (selectedAppIds.isNotEmpty) {
+                      toggleAppSelected(app.app);
+                    } else {
+                      onAppTap(app.app);
+                    }
+                  },
+                  onLongPress: () => toggleAppSelected(app.app),
+                ),
               );
             },
             childCount: appsInCategory.length,
@@ -319,6 +324,7 @@ class CategorySections extends StatelessWidget {
     BuildContext context,
     int index,
     ViewSettingsProvider settingsProvider,
+    PlusSettingsProvider plusSettings,
     List<AppInMemory> appsInCategory,
     int updateCount,
     Set<String> pendingUpdates, {
@@ -421,26 +427,29 @@ class CategorySections extends StatelessWidget {
             .asMap()
             .entries
             .map(
-              (entry) => AppListTile(
-                appInMemory: entry.value,
-                hasUpdate: entry.value.app.installedVersion == null
-                    ? entry.value.app.additionalSettings['trackOnly'] != true
-                    : pendingUpdates.contains(entry.value.app.id),
-                selected: selectedAppIds.contains(entry.value.app.id),
-                entranceDelay: plusSettings.plusEnableEnhancedAnimations
-                    ? Duration(
-                        milliseconds: entry.key < 8 ? entry.key * 25 : 0,
-                      )
-                    : Duration.zero,
-                onTap: () {
-                  if (selectedAppIds.isNotEmpty) {
-                    toggleAppSelected(entry.value.app);
-                  } else {
-                    onAppTap(entry.value.app);
-                  }
-                },
-                onLongPress: () => toggleAppSelected(entry.value.app),
-                onShowChanges: getChangeLogFn(context, entry.value.app),
+              (entry) => RepaintBoundary(
+                key: ValueKey(entry.value.app.id),
+                child: AppListTile(
+                  appInMemory: entry.value,
+                  hasUpdate: entry.value.app.installedVersion == null
+                      ? entry.value.app.additionalSettings['trackOnly'] != true
+                      : pendingUpdates.contains(entry.value.app.id),
+                  selected: selectedAppIds.contains(entry.value.app.id),
+                  entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                      ? Duration(
+                          milliseconds: entry.key < 8 ? entry.key * 25 : 0,
+                        )
+                      : Duration.zero,
+                  onTap: () {
+                    if (selectedAppIds.isNotEmpty) {
+                      toggleAppSelected(entry.value.app);
+                    } else {
+                      onAppTap(entry.value.app);
+                    }
+                  },
+                  onLongPress: () => toggleAppSelected(entry.value.app),
+                  onShowChanges: getChangeLogFn(context, entry.value.app),
+                ),
               ),
             )
             .toList(),

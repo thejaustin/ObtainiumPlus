@@ -610,7 +610,9 @@ class _CommandCenterState extends State<CommandCenter> {
                             child: Image.memory(
                               app.icon!,
                               fit: BoxFit.cover,
-                              filterQuality: FilterQuality.high,
+                              filterQuality: FilterQuality.medium,
+                              cacheWidth: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
+                              cacheHeight: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
                             ),
                           )
                         : const Icon(Icons.apps_rounded),
@@ -661,6 +663,7 @@ class _CommandCenterState extends State<CommandCenter> {
   Widget _buildSearchResultsList() {
     final theme = Theme.of(context);
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
     if (_isSearching && _discoverResults.isEmpty) {
       return const Padding(
         padding: EdgeInsets.all(32.0),

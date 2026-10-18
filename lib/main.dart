@@ -41,7 +41,7 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 // ignore: implementation_imports
 import 'package:easy_localization/src/localization.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:material_ui/material_ui.dart' as mui;
+import 'package:obtainium/utils/app_localizations_delegates.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
@@ -520,7 +520,6 @@ class _ObtainiumState extends State<Obtainium> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final settingsProvider = context.read<SettingsProvider>();
-      await settingsProvider.initializeSettings();
       if (!mounted) return;
       _settingsProvider = settingsProvider;
       if (settingsProvider.isTV) {
@@ -765,14 +764,9 @@ class _ObtainiumState extends State<Obtainium> {
 
           return MaterialApp(
             title: 'Obtainium',
-            localizationsDelegates: [
-              ...context.localizationDelegates,
-              // material_ui widgets look up their own MaterialLocalizations
-              // type; the Default delegate alone only supports 'en', so any
-              // other locale crashed on the first TextField (#336/#337).
-              mui.GlobalMaterialLocalizations.delegate,
-              mui.DefaultMaterialLocalizations.delegate,
-            ],
+            localizationsDelegates: appLocalizationsDelegates(
+              context.localizationDelegates,
+            ),
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             navigatorKey: appNavigatorKey,

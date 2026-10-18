@@ -615,7 +615,9 @@ class _AppGridTileState extends State<AppGridTile>
                         widget.appInMemory.icon!,
                         fit: BoxFit.contain,
                         gaplessPlayback: true,
-                        filterQuality: FilterQuality.high,
+                        filterQuality: FilterQuality.medium,
+                        cacheWidth: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
+                        cacheHeight: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
                       ),
                     )
                   : AppIconShimmer(

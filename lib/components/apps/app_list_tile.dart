@@ -229,7 +229,9 @@ class _AppListTileState extends State<AppListTile>
                     child: Image.memory(
                       appInMemory.icon!,
                       fit: BoxFit.cover,
-                      filterQuality: FilterQuality.high,
+                      filterQuality: FilterQuality.medium,
+                      cacheWidth: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
+                      cacheHeight: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
                     ),
                   )
                 : Icon(

@@ -348,7 +348,9 @@ class _AppDashboardState extends State<AppDashboard>
                     ? Image.memory(
                         app.icon!,
                         fit: BoxFit.contain,
-                        filterQuality: FilterQuality.high,
+                        filterQuality: FilterQuality.medium,
+                        cacheWidth: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
+                        cacheHeight: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
                       )
                     : const Icon(Icons.apps_rounded, size: 24);
               },
@@ -406,11 +408,13 @@ class _AppDashboardState extends State<AppDashboard>
                       borderRadius: BorderRadius.circular(itemRadius - 2),
                       child: Image.memory(
                         app.icon!,
-                      fit: BoxFit.cover,
-                      width: 60,
-                      height: 60,
-                      filterQuality: FilterQuality.high,
-                    ),
+                        fit: BoxFit.cover,
+                        width: 60,
+                        height: 60,
+                        filterQuality: FilterQuality.medium,
+                        cacheWidth: (60 * MediaQuery.devicePixelRatioOf(context)).round(),
+                        cacheHeight: (60 * MediaQuery.devicePixelRatioOf(context)).round(),
+                      ),
                   )
                 else
                   Center(

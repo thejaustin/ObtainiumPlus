@@ -1038,12 +1038,13 @@ class AppsProvider with ChangeNotifier {
     foregroundSubscription = foregroundStream?.listen((event) async {
       isForeground = event == FGBGType.foreground;
       if (isForeground) {
-        // Only reload when there's a reason to: first launch, a background
+        // If an initial load has not finished or is already in flight, don't trigger a duplicate
+        if (_lastLoadCompleted == null || appsLoadingCompleter != null) return;
+        // Only reload when there's a reason to: a background
         // task wrote new data, or it's been >30 s since the last load.
         // Suppresses redundant disk+IPC work on rapid app switches.
-        final stale = _lastLoadCompleted == null ||
-            DateTime.now().difference(_lastLoadCompleted!).inSeconds > 30;
-        if (apps.isEmpty || _needsBgReload || stale) {
+        final stale = DateTime.now().difference(_lastLoadCompleted!).inSeconds > 30;
+        if (_needsBgReload || stale) {
           await loadApps();
         }
       }
@@ -2094,7 +2095,10 @@ class AppsProvider with ChangeNotifier {
     final completer = appsLoadingCompleter;
     if (completer != null) {
       await completer.future;
-      // Re-enter: the previous load may have satisfied our needs already.
+      // If a full load was requested, or the single app is now loaded, return
+      if (singleId == null || apps.containsKey(singleId)) {
+        return;
+      }
       return loadApps(singleId: singleId);
     }
     appsLoadingCompleter = Completer<void>();

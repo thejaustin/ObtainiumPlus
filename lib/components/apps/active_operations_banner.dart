@@ -355,6 +355,9 @@ class _ActiveDownloadTile extends StatelessWidget {
                           child: Image.memory(
                             appInMemory.icon!,
                             fit: BoxFit.cover,
+                            filterQuality: FilterQuality.medium,
+                            cacheWidth: (34 * MediaQuery.devicePixelRatioOf(context)).round(),
+                            cacheHeight: (34 * MediaQuery.devicePixelRatioOf(context)).round(),
                           ),
                         )
                       : Icon(

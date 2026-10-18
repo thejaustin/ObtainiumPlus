@@ -1256,7 +1256,7 @@ class _AppPageState extends State<AppPage> {
                                 offset: const Offset(0, 10),
                               ),
                               BoxShadow(
-                                color: colorScheme.primary.withValues(alpha: 0.10),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
                                 blurRadius: 32,
                                 spreadRadius: -2,
                                 offset: const Offset(0, 4),
@@ -1281,6 +1281,8 @@ class _AppPageState extends State<AppPage> {
                                 fit: BoxFit.contain,
                                 gaplessPlayback: true,
                                 filterQuality: FilterQuality.medium,
+                                cacheWidth: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
+                                cacheHeight: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
                               ),
                             ),
                           ),
