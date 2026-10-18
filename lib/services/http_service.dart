@@ -5,6 +5,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/custom_errors.dart';
@@ -210,7 +211,7 @@ class HttpService {
             request.write(postBody);
           } else {
             request.headers.contentType = ContentType.json;
-            request.write(jsonEncode(postBody));
+            request.write(safeJsonEncode(postBody));
           }
         }
         final response = await request.close().timeout(

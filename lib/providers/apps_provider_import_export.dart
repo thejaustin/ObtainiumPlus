@@ -152,7 +152,9 @@ extension AppsProviderImportExport on AppsProvider {
         exportDir,
         displayName: displayName,
         mimeType: 'application/json',
-        bytes: Uint8List.fromList(utf8.encode(encoder.convert(finalExport))),
+        bytes: Uint8List.fromList(
+          utf8.encode(encoder.convert(sanitizeJsonValue(finalExport))),
+        ),
       );
       if (result == null) {
         throw ObtainiumError(tr('unexpectedError'));

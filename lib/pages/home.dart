@@ -291,7 +291,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             }
             var appsProvider = context.read<AppsProvider>();
             var result = await appsProvider.import(
-              jsonEncode({
+              safeJsonEncode({
                 'apps': action == 'app' ? [parsedData] : parsedData,
               }),
             );

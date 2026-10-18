@@ -1,5 +1,6 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'dart:convert';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/models/auth_bundle.dart';
@@ -205,7 +206,7 @@ class AuthProvider with ChangeNotifier {
     );
     await _storage.write(
       key: _kPersonalBundle,
-      value: jsonEncode(_personalBundle!.toJson()),
+      value: safeJsonEncode(_personalBundle!.toJson()),
     );
     notifyListeners();
   }
@@ -249,7 +250,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> refreshBundle(String dispenserUrl) async {
     final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
     _anonymousBundle = bundle;
-    await _storage.write(key: _kAnonBundle, value: jsonEncode(bundle.toJson()));
+    await _storage.write(key: _kAnonBundle, value: safeJsonEncode(bundle.toJson()));
     await rotateDeviceId();
     notifyListeners();
   }
@@ -313,7 +314,7 @@ class AuthProvider with ChangeNotifier {
     _selectedProfile = profile;
     await _prefs?.setString(
       'selected_device_profile',
-      jsonEncode(profile.toJson()),
+      safeJsonEncode(profile.toJson()),
     );
     notifyListeners();
   }

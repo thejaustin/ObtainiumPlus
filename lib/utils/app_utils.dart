@@ -103,10 +103,18 @@ dynamic sanitizeJsonValue(dynamic value) {
     return value;
   } else if (value is Map) {
     return value.map((key, val) => MapEntry(key, sanitizeJsonValue(val)));
-  } else if (value is List) {
+  } else if (value is Iterable) {
     return value.map((val) => sanitizeJsonValue(val)).toList();
+  } else if (value == null || value is num || value is String || value is bool) {
+    return value;
   }
-  return value;
+  // jsonEncode would call toJson() itself; do it here so NaN nested inside
+  // the result is sanitized too (#240/#241).
+  try {
+    return sanitizeJsonValue((value as dynamic).toJson());
+  } on NoSuchMethodError {
+    return value;
+  }
 }
 
 /// Safely encodes a value to JSON, ensuring no NaN or infinity values cause crashes.

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:obtainium/utils/safe_prefs.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -86,7 +87,7 @@ class PluginProvider with ChangeNotifier {
   Future<void> _save() async {
     await _prefs?.setStringList(
       'installed_plugins',
-      _plugins.map((e) => jsonEncode(e.toJson())).toList(),
+      _plugins.map((e) => safeJsonEncode(e.toJson())).toList(),
     );
   }
 
