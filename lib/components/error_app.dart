@@ -1,12 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/components/glass_dialog.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:obtainium/utils/app_localizations_delegates.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -31,14 +31,18 @@ class _ErrorAppState extends State<ErrorApp> {
   }
 
   Future<void> _checkCrashLoop() async {
-    final loop = await CrashAnalytics.isInCrashLoop();
-    if (mounted) setState(() => _showRepair = loop);
+    try {
+      final loop = await CrashAnalytics.isInCrashLoop();
+      if (mounted) setState(() => _showRepair = loop);
+    } catch (_) {
+      // Storage may be what failed; just skip the repair panel.
+    }
   }
 
   Future<void> _reportToGitHub() async {
     await Sentry.captureMessage('User Feedback Triggered');
     final Uri url = Uri.parse(
-      'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent("${widget.error}\n\n${widget.stackTrace}")}',
+      'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent(_truncate("${widget.error}\n\n${widget.stackTrace}"))}',
     );
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -57,6 +61,11 @@ class _ErrorAppState extends State<ErrorApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      // Shown when startup failed, so nothing (EasyLocalization, providers)
+      // can be assumed initialised.
+      localizationsDelegates: appLocalizationsDelegates(
+        GlobalMaterialLocalizations.delegates,
+      ),
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
@@ -100,7 +109,7 @@ class _ErrorAppState extends State<ErrorApp> {
                                   color: Colors.white,
                                 ),
                                 onPressed: _reportToGitHub,
-                                tooltip: tr('reportOnGitHub'),
+                                tooltip: _t('reportOnGitHub', 'Report on GitHub'),
                               ),
                             ],
                           ),
@@ -196,38 +205,30 @@ class _ErrorAppState extends State<ErrorApp> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              ScaleTouchWrapper(
-                                hapticOnPressDown: true,
-                                scaleDownFactor: 0.94,
-                                child: ElevatedButton.icon(
+                              ElevatedButton.icon(
                                   onPressed: _reportToGitHub,
                                   icon: const Icon(Icons.launch_outlined),
-                                  label: Text(tr('reportOnGitHub')),
+                                  label: Text(_t('reportOnGitHub', 'Report on GitHub')),
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.white,
                                     foregroundColor: Colors.red.shade900,
                                   ),
                                 ),
-                              ),
                               const SizedBox(width: 12),
-                              ScaleTouchWrapper(
-                                hapticOnPressDown: true,
-                                scaleDownFactor: 0.94,
-                                child: OutlinedButton.icon(
+                              OutlinedButton.icon(
                                   onPressed: _followIssue,
                                   icon: const Icon(
                                     Icons.notifications_active_outlined,
                                     color: Colors.white70,
                                   ),
                                   label: Text(
-                                    tr('followIssue'),
+                                    _t('followIssue', 'Follow issue'),
                                     style: const TextStyle(color: Colors.white70),
                                   ),
                                   style: OutlinedButton.styleFrom(
                                     side: const BorderSide(color: Colors.white54),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -299,30 +300,22 @@ class _ErrorAppState extends State<ErrorApp> {
   ) {
     showDialog(
       context: context,
-      builder: (ctx) => GlassDialog(
-        title: action,
-        icon: Icons.build_circle_outlined,
+      builder: (ctx) => AlertDialog(
+        title: Text(action),
+        icon: Icon(Icons.build_circle_outlined),
         content: Text('Are you sure you want to proceed with: $action?'),
         actions: [
-          ScaleTouchWrapper(
-            hapticOnPressDown: true,
-            scaleDownFactor: 0.94,
-            child: TextButton(
+          TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: const Text('Cancel'),
             ),
-          ),
-          ScaleTouchWrapper(
-            hapticOnPressDown: true,
-            scaleDownFactor: 0.94,
-            child: FilledButton(
+          FilledButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 onConfirm();
               },
               child: const Text('Confirm'),
             ),
-          ),
         ],
       ),
     );
@@ -332,140 +325,32 @@ class _ErrorAppState extends State<ErrorApp> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (ctx) => GlassDialog(
-        title: 'Repair Successful',
-        icon: Icons.check_circle_outline_rounded,
+      builder: (ctx) => AlertDialog(
+        title: Text('Repair Successful'),
+        icon: Icon(Icons.check_circle_outline_rounded),
         content: const Text(
           'The repair action has been applied. Please restart Obtainium+ to see if the issue is resolved.',
         ),
         actions: [
-          ScaleTouchWrapper(
-            hapticOnPressDown: true,
-            scaleDownFactor: 0.94,
-            child: FilledButton(
+          FilledButton(
               onPressed: () => SystemNavigator.pop(),
               child: const Text('Close App'),
             ),
-          ),
         ],
       ),
     );
   }
 }
 
-class BuildErrorWidget extends StatelessWidget {
-  final String error;
-  final String stackTrace;
-
-  const BuildErrorWidget({
-    super.key,
-    required this.error,
-    required this.stackTrace,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.red.shade900,
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Obtainium+ Build Error',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.notifications_active_outlined,
-                          color: Colors.white70,
-                        ),
-                        tooltip: tr('followIssueOnGitHub'),
-                        onPressed: () async {
-                          final String urlStr =
-                              await CrashTracker.getSpecificIssueUrl();
-                          final Uri url = Uri.parse(urlStr);
-                          if (await canLaunchUrl(url)) {
-                            await launchUrl(
-                              url,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        },
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.bug_report, color: Colors.white),
-                        tooltip: tr('reportOnGitHub'),
-                        onPressed: () async {
-                          await Sentry.captureMessage(
-                            'User Feedback Triggered (Build Error)',
-                          );
-                          final Uri url = Uri.parse(
-                            'https://github.com/thejaustin/ObtainiumPlus/issues/new?template=crash_report.md&logs=${Uri.encodeComponent("$error\n\n$stackTrace")}',
-                          );
-                          if (await canLaunchUrl(url)) {
-                            await launchUrl(
-                              url,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: SelectableText(
-                  error,
-                  style: const TextStyle(
-                    color: Colors.yellowAccent,
-                    fontSize: 11,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      stackTrace,
-                      style: const TextStyle(
-                        color: Colors.white60,
-                        fontSize: 9,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+/// tr() with an English fallback: startup may fail before translations load.
+String _t(String key, String fallback) {
+  try {
+    final value = tr(key);
+    return value == key ? fallback : value;
+  } catch (_) {
+    return fallback;
   }
 }
+
+String _truncate(String text) =>
+    text.length <= 4000 ? text : '${text.substring(0, 4000)}\n…(truncated)';

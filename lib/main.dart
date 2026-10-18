@@ -7,6 +7,9 @@ import 'dart:ui' as ui;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/crash_analytics.dart';
+import 'package:obtainium/utils/crash_file_handler.dart';
+import 'package:obtainium/components/error_app.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -293,10 +296,51 @@ Future<void> _runObtainium() async {
       ),
     );
   };
+  // Chain to the handler SentryFlutter.init installed rather than replacing
+  // it, or uncaught async errors never reach Sentry.
+  final previousOnError = ui.PlatformDispatcher.instance.onError;
   ui.PlatformDispatcher.instance.onError = (error, stack) {
     AppLogger.error(error, stackTrace: stack, message: 'Uncaught platform error');
-    return true;
+    CrashFileHandler.writeCrashLog(
+      errorType: error.runtimeType.toString(),
+      message: error.toString(),
+      stackTrace: stack.toString(),
+    );
+    return previousOnError?.call(error, stack) ?? true;
   };
+  try {
+    await _startObtainium();
+  } catch (e, stackTrace) {
+    // A startup failure would otherwise leave a blank screen; show a crash
+    // screen with repair options instead (removed in 7ca61415, restored).
+    // Each step is isolated: the failure may be broken storage, and the
+    // crash screen must still appear.
+    String? eventId;
+    try {
+      AppLogger.error(e, stackTrace: stackTrace, message: 'Startup failed');
+    } catch (_) {}
+    try {
+      eventId = (await Sentry.captureException(e, stackTrace: stackTrace))
+          .toString();
+    } catch (_) {}
+    try {
+      await CrashAnalytics.recordCrash(
+        errorType: e.runtimeType.toString(),
+        errorMessage: e.toString(),
+        eventId: eventId,
+      );
+    } catch (_) {}
+    await CrashFileHandler.writeCrashLog(
+      errorType: e.runtimeType.toString(),
+      message: e.toString(),
+      stackTrace: stackTrace.toString(),
+      sentryEventId: eventId,
+    );
+    runApp(ErrorApp(error: e.toString(), stackTrace: stackTrace.toString()));
+  }
+}
+
+Future<void> _startObtainium() async {
   try {
     ByteData data = await PlatformAssetBundle().load(
       'assets/ca/lets-encrypt-r3.pem',
