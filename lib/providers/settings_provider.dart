@@ -62,7 +62,12 @@ class SettingsProvider with ChangeNotifier {
   SettingsProvider([this.prefs]);
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
   final Map<String, String> _secureCache = {};
-  static const List<String> _secureKeys = ['github-creds', 'gitlab-creds'];
+  /// Credential settings kept in secure storage instead of plain prefs.
+  static const List<String> secureKeys = [
+    'github-creds',
+    'gitlab-creds',
+    'forgejo-creds',
+  ];
 
   String? defaultAppDir;
   bool justStarted = true;
@@ -91,7 +96,7 @@ class SettingsProvider with ChangeNotifier {
 
     // Migrate existing plaintext keys to secure storage and cache them
     try {
-      for (final key in _secureKeys) {
+      for (final key in secureKeys) {
         if (prefs!.containsKey(key)) {
           final plaintextVal = prefs!.getString(key);
           if (plaintextVal != null && plaintextVal.isNotEmpty) {
@@ -386,7 +391,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   String? getSettingString(String settingId) {
-    if (_secureKeys.contains(settingId)) {
+    if (secureKeys.contains(settingId)) {
       String? str = _secureCache[settingId];
       return str?.isNotEmpty == true ? str : null;
     }
@@ -395,7 +400,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   void setSettingString(String settingId, String value) {
-    if (_secureKeys.contains(settingId)) {
+    if (secureKeys.contains(settingId)) {
       _secureCache[settingId] = value;
       secureStorage.write(key: settingId, value: value).catchError((e) {
         talker.warning('Could not write secure setting $settingId: $e');

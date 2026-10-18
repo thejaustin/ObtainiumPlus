@@ -62,10 +62,20 @@ class PluginProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  static const int _maxPluginBytes = 512 * 1024;
+
   Future<void> installFromUrl(String url) async {
     try {
       talker.info('Installing plugin from: $url');
-      final response = await http.get(Uri.parse(url));
+      final uri = Uri.tryParse(url.trim());
+      // Plugins carry executable JS: only accept them over HTTPS.
+      if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
+        throw ArgumentError('Plugins must be installed from an https:// URL');
+      }
+      final response = await http.get(uri).timeout(const Duration(seconds: 30));
+      if (response.bodyBytes.length > _maxPluginBytes) {
+        throw StateError('Plugin is larger than ${_maxPluginBytes ~/ 1024} KB');
+      }
       if (response.statusCode == 200) {
         // Mock parsing for now - in reality, we'd extract metadata from the JS file
         final plugin = ObtainiumPlugin(

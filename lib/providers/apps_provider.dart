@@ -2855,7 +2855,7 @@ class AppsProvider with ChangeNotifier {
       // Credentials live in secure storage, not prefs; include them only for
       // the "export including credentials" level.
       if (shouldExportSettings >= 2) {
-        for (final k in const ['github-creds', 'gitlab-creds']) {
+        for (final k in SettingsProvider.secureKeys) {
           final v = settingsProvider.getSettingString(k);
           if (v != null) settingsExport[k] = v;
         }
@@ -2946,7 +2946,7 @@ class AppsProvider with ChangeNotifier {
       final pending = <Future<dynamic>>[];
       settingsMap.forEach((key, value) {
         if (value == null) return;
-        if (key == 'github-creds' || key == 'gitlab-creds') {
+        if (SettingsProvider.secureKeys.contains(key)) {
           // Secure-storage keys must not be written to plain prefs.
           if (value is String) settingsProvider.setSettingString(key, value);
           return;
