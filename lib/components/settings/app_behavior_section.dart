@@ -190,6 +190,15 @@ class AppBehaviorSection extends StatelessWidget {
     );
   }
 
+  static const _swipeActionIcons = <AppSwipeAction, IconData>{
+    AppSwipeAction.none: Icons.block_outlined,
+    AppSwipeAction.update: Icons.system_update_outlined,
+    AppSwipeAction.togglePin: Icons.push_pin_outlined,
+    AppSwipeAction.share: Icons.share_outlined,
+    AppSwipeAction.launch: Icons.launch_outlined,
+    AppSwipeAction.delete: Icons.delete_outline_rounded,
+  };
+
   Widget _buildSwipeActionDropdown(
     BuildContext context, {
     required bool isRight,
@@ -198,66 +207,168 @@ class AppBehaviorSection extends StatelessWidget {
       builder: (context, settings, child) {
         final currentAction =
             isRight ? settings.swipeRightAction : settings.swipeLeftAction;
-        return ListTile(
-          leading: Icon(
-            isRight
-                ? Icons.swipe_right_outlined
-                : Icons.swipe_left_outlined,
-          ),
-          title: Text(
-            isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(
-            isRight
-                ? tr('swipeRightActionDescription')
-                : tr('swipeLeftActionDescription'),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          trailing: Container(
-            constraints: const BoxConstraints(maxWidth: 140),
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            decoration: BoxDecoration(
-              color: Theme.of(context)
-                  .colorScheme
-                  .surfaceContainerHigh
-                  .withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context)
-                    .colorScheme
-                    .outlineVariant
-                    .withValues(alpha: 0.4),
+        final colorScheme = Theme.of(context).colorScheme;
+        final plusSettings = context.watch<PlusSettingsProvider>();
+        final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+        final isCompact = plusSettings.plusUseCompactSettings;
+
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, isCompact ? 4 : 8, 16, 0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined,
+                    size: 22,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<AppSwipeAction>(
-                isExpanded: true,
-                value: currentAction,
-                borderRadius: BorderRadius.circular(16),
-                items: AppSwipeAction.values
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(
-                          tr('action_${e.name}'),
-                          overflow: TextOverflow.ellipsis,
+              if (!isCompact)
+                Padding(
+                  padding: const EdgeInsets.only(left: 38, top: 2),
+                  child: Text(
+                    isRight
+                        ? tr('swipeRightActionDescription')
+                        : tr('swipeLeftActionDescription'),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 8),
+              // 3-column chip grid
+              Row(
+                children: [
+                  for (int col = 0; col < 3; col++)
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: col < 2 ? 6 : 0),
+                        child: Column(
+                          children: [
+                            for (int row = 0; row < 2; row++)
+                              Builder(
+                                builder: (context) {
+                                  final idx = row * 3 + col;
+                                  if (idx >= AppSwipeAction.values.length)
+                                    return const SizedBox.shrink();
+                                  final action = AppSwipeAction.values[idx];
+                                  final isSelected = action == currentAction;
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: row == 0 ? 6 : 0,
+                                    ),
+                                    child: ScaleTouchWrapper(
+                                      hapticOnPressDown: true,
+                                      scaleDownFactor: 0.92,
+                                      child: AnimatedContainer(
+                                        duration: Duration(
+                                          milliseconds: animsEnabled ? 180 : 0,
+                                        ),
+                                        curve: Curves.easeOutCubic,
+                                        height: isCompact ? 36 : 40,
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? colorScheme.primaryContainer
+                                              : colorScheme.surfaceContainerHigh
+                                                  .withValues(alpha: 0.5),
+                                          borderRadius: BorderRadius.circular(
+                                            plusSettings.plusGlobalCornerRadius
+                                                .clamp(8, 20),
+                                          ),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? colorScheme.primary
+                                                    .withValues(alpha: 0.5)
+                                                : colorScheme.outlineVariant
+                                                    .withValues(alpha: 0.3),
+                                            width: isSelected ? 1.5 : 1.0,
+                                          ),
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          borderRadius:
+                                              BorderRadius.circular(
+                                                plusSettings
+                                                    .plusGlobalCornerRadius
+                                                    .clamp(8, 20),
+                                              ),
+                                          child: InkWell(
+                                            borderRadius:
+                                                BorderRadius.circular(
+                                                  plusSettings
+                                                      .plusGlobalCornerRadius
+                                                      .clamp(8, 20),
+                                                ),
+                                            onTap: () {
+                                              AppHaptics.selectionClick();
+                                              if (isRight) {
+                                                settings.swipeRightAction =
+                                                    action;
+                                              } else {
+                                                settings.swipeLeftAction =
+                                                    action;
+                                              }
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Icon(
+                                                  _swipeActionIcons[action]!,
+                                                  size: 14,
+                                                  color: isSelected
+                                                      ? colorScheme
+                                                          .onPrimaryContainer
+                                                      : colorScheme
+                                                          .onSurfaceVariant,
+                                                ),
+                                                const SizedBox(width: 5),
+                                                Flexible(
+                                                  child: Text(
+                                                    tr('action_${action.name}'),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          fontWeight: isSelected
+                                                              ? FontWeight.bold
+                                                              : FontWeight.w500,
+                                                          color: isSelected
+                                                              ? colorScheme
+                                                                  .onPrimaryContainer
+                                                              : colorScheme
+                                                                  .onSurfaceVariant,
+                                                        ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                          ],
                         ),
                       ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    AppHaptics.selectionClick();
-                    if (isRight) {
-                      settings.swipeRightAction = value;
-                    } else {
-                      settings.swipeLeftAction = value;
-                    }
-                  }
-                },
+                    ),
+                ],
               ),
-            ),
+            ],
           ),
         );
       },

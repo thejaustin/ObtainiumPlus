@@ -5,6 +5,8 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
+import 'package:obtainium/components/settings/settings_slider_tile.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -547,56 +549,60 @@ class AppsViewSettingsSection extends StatelessWidget {
         return Column(
           children: [
             if (showDisplay)
-              ListTile(
-                leading: const Icon(Icons.grid_view_outlined),
-                title: Text(
-                  tr('gridCategoryDisplay'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                subtitle: Text(tr('gridCategoryDisplayDescription')),
-                trailing: DropdownButton<GridCategoryMode>(
-                  underline: const SizedBox(),
-                  value: settings.gridCategoryMode,
-                  items: [
-                    DropdownMenuItem(
-                      value: GridCategoryMode.sections,
-                      child: Text(tr('categorySections')),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.grid_view_outlined, size: 22),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            tr('gridCategoryDisplay'),
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
+                        ),
+                      ],
                     ),
-                    DropdownMenuItem(
-                      value: GridCategoryMode.disabled,
-                      child: Text(tr('flatGridOnly')),
+                    const SizedBox(height: 8),
+                    SegmentedButton<GridCategoryMode>(
+                      segments: [
+                        ButtonSegment(
+                          value: GridCategoryMode.sections,
+                          label: Text(tr('categorySections')),
+                          icon: const Icon(Icons.category_outlined, size: 16),
+                        ),
+                        ButtonSegment(
+                          value: GridCategoryMode.disabled,
+                          label: Text(tr('flatGridOnly')),
+                          icon: const Icon(Icons.grid_3x3_rounded, size: 16),
+                        ),
+                      ],
+                      selected: {settings.gridCategoryMode},
+                      onSelectionChanged: (value) {
+                        AppHaptics.selectionClick();
+                        onSetState(() => settings.gridCategoryMode = value.first);
+                      },
+                      showSelectedIcon: false,
                     ),
                   ],
-                  onChanged: (value) {
-                    if (value != null)
-                      onSetState(() => settings.gridCategoryMode = value);
-                  },
                 ),
               ),
-            if (showCols) ...[
-              ListTile(
-                leading: const Icon(Icons.view_column_outlined),
-                title: Text(
-                  tr('gridColumns'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                subtitle: Text(
-                  "${tr('gridColumnsDescription')} (${settings.gridColumnCount == 0 ? tr('auto') : settings.gridColumnCount.toString()})",
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Slider(
-                  value: settings.gridColumnCount.toDouble(),
-                  min: 0,
-                  max: 6,
-                  divisions: 6,
-                  onChanged: (value) => onSetState(
-                    () => settings.gridColumnCount = value.toInt(),
-                  ),
+            if (showCols)
+              SettingsSliderTile(
+                icon: Icons.view_column_outlined,
+                title: tr('gridColumns'),
+                value: settings.gridColumnCount.toDouble(),
+                min: 0,
+                max: 6,
+                divisions: 6,
+                labelBuilder: (v) => v.toInt() == 0 ? tr('auto') : v.toInt().toString(),
+                onChanged: (value) => onSetState(
+                  () => settings.gridColumnCount = value.toInt(),
                 ),
               ),
-            ],
           ],
         );
       },
@@ -606,39 +612,51 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildCategoryIconPositionDropdown(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        return ListTile(
-          leading: const Icon(Icons.branding_watermark_outlined),
-          title: Text(
-            tr('iconPosition'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('iconPositionDescription')),
-          trailing: DropdownButton<CategoryIconPosition>(
-            underline: const SizedBox(),
-            value: settings.categoryIconPosition,
-            items: [
-              DropdownMenuItem(
-                value: CategoryIconPosition.disabled,
-                child: Text(tr('disabled')),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.branding_watermark_outlined, size: 22),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      tr('iconPosition'),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
               ),
-              DropdownMenuItem(
-                value: CategoryIconPosition.leading,
-                child: Text(tr('leading')),
-              ),
-              DropdownMenuItem(
-                value: CategoryIconPosition.trailing,
-                child: Text(tr('trailing')),
-              ),
-              DropdownMenuItem(
-                value: CategoryIconPosition.below,
-                child: Text(tr('belowName')),
+              const SizedBox(height: 8),
+              SegmentedButton<CategoryIconPosition>(
+                segments: [
+                  ButtonSegment(
+                    value: CategoryIconPosition.disabled,
+                    label: Text(tr('disabled')),
+                  ),
+                  ButtonSegment(
+                    value: CategoryIconPosition.leading,
+                    label: Text(tr('leading')),
+                  ),
+                  ButtonSegment(
+                    value: CategoryIconPosition.trailing,
+                    label: Text(tr('trailing')),
+                  ),
+                  ButtonSegment(
+                    value: CategoryIconPosition.below,
+                    label: Text(tr('belowName')),
+                  ),
+                ],
+                selected: {settings.categoryIconPosition},
+                onSelectionChanged: (value) {
+                  AppHaptics.selectionClick();
+                  onSetState(() => settings.categoryIconPosition = value.first);
+                },
+                showSelectedIcon: false,
               ),
             ],
-            onChanged: (value) {
-              if (value != null) {
-                onSetState(() => settings.categoryIconPosition = value);
-              }
-            },
           ),
         );
       },
@@ -648,35 +666,24 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildCategoryIconCountSlider(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        return Column(
-          children: [
-            ListTile(
-              leading: const Icon(Icons.numbers_outlined),
-              title: Text(
-                tr('iconCount'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(
-                "${tr('iconCountDescription')} (${settings.categoryIconCount})",
-              ),
+        final disabled =
+            settings.categoryIconPosition == CategoryIconPosition.disabled;
+        return Opacity(
+          opacity: disabled ? 0.4 : 1.0,
+          child: IgnorePointer(
+            ignoring: disabled,
+            child: SettingsSliderTile(
+              icon: Icons.numbers_outlined,
+              title: tr('iconCount'),
+              value: settings.categoryIconCount.toDouble(),
+              min: 0,
+              max: 20,
+              divisions: 20,
+              labelBuilder: (v) => v.toInt().toString(),
+              onChanged: (value) =>
+                  onSetState(() => settings.categoryIconCount = value.toInt()),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Slider(
-                value: settings.categoryIconCount.toDouble(),
-                min: 0,
-                max: 20,
-                divisions: 20,
-                onChanged:
-                    settings.categoryIconPosition ==
-                        CategoryIconPosition.disabled
-                    ? null
-                    : (value) => onSetState(
-                        () => settings.categoryIconCount = value.toInt(),
-                      ),
-              ),
-            ),
-          ],
+          ),
         );
       },
     );
