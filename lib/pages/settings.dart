@@ -74,6 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
     _selectedSectionIndex = _mapInitialTab(widget.initialTab ?? 0);
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
+      if (!mounted) return;
       setState(() {
         _searchQuery = _searchController.text.trim();
       });
@@ -160,6 +161,7 @@ class _SettingsPageState extends State<SettingsPage> {
             )
           : null,
       body: CustomScrollView(
+        key: const PageStorageKey<String>('settings_page_scroll'),
         controller: _scrollController,
         physics: plusSettings.scrollPhysics,
         slivers: [
@@ -254,6 +256,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: SizedBox(
                 height: 52,
                 child: ListView(
+                  key: const PageStorageKey<String>('settings_tabs_scroll'),
                   controller: _tabsScrollController,
                   scrollDirection: Axis.horizontal,
                   physics: plusSettings.scrollPhysics,

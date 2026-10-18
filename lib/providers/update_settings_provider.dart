@@ -62,7 +62,9 @@ class UpdateSettingsProvider with ChangeNotifier {
     if (val < 1) {
       valInterpolated = 15;
     } else {
-      valInterpolated = updateIntervalInterpolator.compute(val).round();
+      final computed = updateIntervalInterpolator.compute(val);
+      valInterpolated =
+          (computed.isNaN || computed.isInfinite) ? 360 : computed.round();
     }
     if (valInterpolated < 60) {
       prefs?.setInt('updateInterval', valInterpolated);

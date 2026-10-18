@@ -282,7 +282,8 @@ class SettingsProvider with ChangeNotifier {
 
   double get updateIntervalSliderVal {
     final stored = _getDouble('updateIntervalSliderVal') ?? 6.0;
-    return stored < 0 ? 0.0 : stored;
+    if (stored.isNaN || stored.isInfinite || stored < 0) return 6.0;
+    return stored;
   }
 
   set updateIntervalSliderVal(double val) {
