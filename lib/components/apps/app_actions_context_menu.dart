@@ -93,6 +93,21 @@ class AppActionsContextMenu {
                 const Divider(height: 1),
 
                 // Actions
+                if (appInMemory.app.installedVersion != null &&
+                    appInMemory.app.additionalSettings['trackOnly'] != true)
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.97,
+                    child: ListTile(
+                      leading: const Icon(Icons.launch_rounded),
+                      title: Text(tr('launch')),
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        Navigator.pop(context);
+                        AppInstallService.openApp(appInMemory.app.id);
+                      },
+                    ),
+                  ),
                 ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   scaleDownFactor: 0.97,
