@@ -1,32 +1,101 @@
-<!-- UPCOMING RELEASE NOTES (top section, above the first --- divider)
-     CI picks up this section verbatim as the GitHub release body for every
-     patch build, so users see readable notes in the in-app "What's New" sheet.
-     Keep it user-facing: no commit hashes, no technical jargon.
-     After a patch cycle completes, archive entries below the divider using the
-     versioned format: ## [X.Y.Z-pN] — YYYY-MM-DD
-     Major releases use: ## [X.Y.Z-rN — Major Release] — YYYY-MM-DD -->
+## [Upcoming]
 
-### 🐛 Bug Fixes
-
-#### 🎨 UI
-- **White background in light mode** — Cards, settings sections, the About panel, the app context menu, and the Discover results all now stand out from the page background in light mode instead of blending into a flat white sheet.
-
-#### 📋 App List
-- **Odd glow on update cards** — Cards with pending updates no longer show a colored halo; the shadow is now neutral and subtle.
-- **Crash when browsing by category** — Fixed a rare crash where the category expand/collapse state could corrupt the scroll position storage, causing a startup crash on the app list screen.
-- **Crash when sharing selected apps** — Fixed a crash when using "Share" on a selection of apps whose metadata contained invalid numeric values.
-
-#### 🪟 Startup
-- **Two popups on launch after update** — The app no longer shows the What's New sheet *and* a second dialog on the same startup. One notification per update.
-
-#### 🔔 What's New sheet
-- **Awkward loading spinner** — The loading circle while release notes fetch now appears at a fixed, sensible size instead of filling the whole sheet.
-
-### ⚡ Performance
-- **Less UI jank during update checks** — The background update checker now yields to the UI thread between each app, so the app list stays responsive even while checking 50+ sources simultaneously.
-
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
+
+## [1.7.1-p2] — 2026-10-18
+
+### 🛡️ Stability, Security & Robustness Pass
+- **Zero App Deletion on Broken Source** — Apps whose sources cannot be matched or temporarily fail (e.g. Google Play Native without a token) are preserved along with their APKs rather than being accidentally deleted.
+- **Export & Settings NaN Crash Guard** — Added complete validation guards against NaN and Infinity across all JSON serialization, export, and settings storage paths to eliminate startup and export crashes.
+- **Hardened File Sharing & PMS Install Locks** — FileProvider authorities and installation commit locks now enforce timeouts and session abandonment to eliminate installation lockups and conflicts.
+- **Authenticated Backup Encryption** — Credentials are fully excluded from standard backups, Forgejo tokens are secured, and backup encryption utilizes authenticated keystore hashing.
+- **Faster Background Update Checks** — Shared F-Droid repository indexes across checks rather than re-downloading per app; eliminated synchronous APK disk reads; enforced a 90-second timeout per source so stalled sources never hang the background worker.
+- **Method Channel & Sentry Reporting** — Android method-channel handlers guarantee a reply to avoid silent IPC hangs, and async background exceptions are properly captured and reported.
+
+### 📱 Restored Expressive Features
+- **Expressive App List with Swipe Gestures** — Restored the expressive app row layout with customizable swipe-left/right actions and drag-to-reorder for pinned apps.
+- **Native Google Play Source (Opt-in)** — Download apps directly from Google Play when configured with an Aurora dispenser or personal token, with automatic mirror fallback.
+- **System Updates Page** — Restored the dedicated System Updates scanner page to audit device packages against available source releases.
+- **Material You Dynamic Palette Synchronization** — Surface and tonal color mappings now derive straight from Android's active system wallpaper palette.
+- **App Long-Press Launch** — Quickly launch installed apps directly from the Obtainium+ context menu.
+- **Undo App Removal** — Tapping remove displays a timed undo action in an M3 snackbar to instantly restore the app.
+- **M3E Sort & Filter Sheet** — Restored full modal filter sheet with categories, tags, author, and multi-criteria sorting.
+- **Guided Onboarding & Crash Recovery** — Re-enabled first-run guided onboarding and graceful startup crash recovery dialog with triage reporting options.
+- **Notification Quiet Hours** — Configured quiet hours now properly silence notification sounds and vibrations.
+
+---
+
+## [1.7.1-p1] — 2026-10-18
+
+### 🎨 Material 3 Expressive & Vivid Primary Theming
+- **Vivid Primary Color System** — Navigation indicators, version badges, update pills, active tags, filter chips, and dialog accents now use vibrant primary and primaryContainer tones instead of muted secondary tones.
+- **Material 3 Expressive Theme Engine** — Modernized sliders with thick tracks and squircle drag bubbles, squircle corner geometry across cards, bottom sheets, and dialogs.
+- **Expanded Palette Presets** — Added Coral, Cosmic, Sakura, Aurora, and Solar curated vibrant color presets across Light, Dark, and AMOLED modes.
+- **Shape-Morphing Loading Spinner** — Implemented the Material 3 Expressive morphing progress indicator across all loading states.
+
+### 🌊 Spring Motion & Instant Contact Haptics
+- **Physical Spring Motion** — All buttons, chips, and interactive cards bounce on press-release with authentic spring physics and overshoot (Cubic(0.34, 1.56, 0.64, 1.0)).
+- **Instant Contact Haptics** — Every interactive tile and button fires a light haptic sensation on initial pointer-down contact rather than waiting for tap completion.
+- **Asymmetric Grid Compression** — Grid tiles compress fast (80ms) and spring back smoothly (320ms), giving physical tactile feedback.
+- **Double-Tap Bug Fix Sweep** — Eliminated double-action ghost triggers across all toolbar buttons, selection actions, chips, and list tiles.
+- **System Accessibility Support** — Fully honors Android's "Remove animations" system setting while preserving tactile haptics.
+
+### 🎛️ Settings Redesign & Usability
+- **Settings Density Modes** — Added Comfortable (spacious cards with explanatory subtitles) and Compact (dense 3-column layout) settings density options.
+- **Unified Installer Picker** — Replaced fragmented installer toggles with a single radio selector for System, Shizuku, and Root with live status and inline diagnostics.
+- **Guided Tab Navigation** — Every settings tab opens with an informative banner and contextual section connectors linking related settings.
+- **Permanent Setting Descriptions** — Replaced cryptic long-press tooltips with clear, permanent one-line explanations under all per-app and global settings.
+- **Interactive Slider Controls & Morph Badges** — Animated sliders with live shape-morphing badges and notch ticks for intervals, corner radii, and concurrency settings.
+- **Floating Island Navigation Dock** — Redesigned floating pill navigation dock with layered frosted glass, ambient depth shadows, and elastic tab switching.
+
+---
+
+## [1.6.17-p11] — 2026-10-08
+
+### ⚡ Bulk Updates, Download Cache & Installer Safety
+- **Bulk Update Summary with Cancel All** — Added an active operations summary for batch updates with a one-tap "Cancel All" option.
+- **Versioned Download Cache** — APK downloads now use version-aware cache naming to prevent stale file conflicts and ensure split APK integrity.
+- **Clearer Root & Installer Diagnostics** — Detailed error reporting for root installer failures with automatic fallback to standard installation prompts.
+- **Installer Conflict Prevention** — Improved detection and reporting of package signature and architecture conflicts during installs.
+- **State Preservation on Refresh** — Refreshing app lists preserves installed tags, pinned states, and scroll positions.
+
+---
+
+## [1.6.17-p10] — 2026-10-07
+
+### 🐛 Animation Lifecycle Fix
+- **Animation Controller Synchronization** — Fixed an issue where repeating AnimationController instances failed to resync correctly in didChangeDependencies, preventing visual glitches during theme switches.
+
+---
+
+## [1.6.17-p9] — 2026-10-06
+
+### 🔧 State Management, Persistence & Light Mode Contrast
+- **Provider Rebuild Reliability** — Fixed missed rebuilds across settings components, Discover, Statistics, and App detail views.
+- **Provider Initialization** — Ensured AuthProvider, SourceConfigProvider, and PluginProvider are properly initialized with SharedPreferences before app launch so plugin configs persist across restarts.
+- **Mounted Guards** — Added safety guards on async context operations and dialog result handlers to prevent framework crashes.
+- **Light Mode Surface Contrast** — Standardized inline cards and settings containers on surfaceContainerLow in light mode so content clearly stands out from the page background.
+- **Scroll State Preservation** — Added PageStorageKey to all unkeyed ExpansionTile widgets to eliminate scroll position loss and NaN measurement bugs.
+
+---
+
+## [1.6.17-p8] — 2026-10-06
+
+### 🐛 Bug Fixes & Visual Polish
+- **Settings Card Contrast** — Improved contrast of settings groups and cards in light mode so they stand out clearly against the page surface.
+- **Neutral Update Shadows** — Replaced colored glow halos on pending-update app tiles with subtle, neutral depth shadows.
+- **Startup Notification De-duplication** — Fixed startup race condition causing both the What's New sheet and a secondary dialog to appear simultaneously.
+- **Changelog Loading Spinner** — Constrained the changelog loading indicator to a balanced size rather than expanding across the modal.
+- **Background Check Responsiveness** — Update checks yield briefly between app queries so the UI remains fluid even with large app catalogs.
+
+---
+
+## [1.6.17-p7] — 2026-10-05
+
+### 📄 Metadata & Badge Polish
+- **Repository Documentation** — Added live release status, download counters, and star badges to repository documentation.
 
 ## [1.6.17-p6] — 2026-10-05
 

@@ -279,95 +279,76 @@ jobs:
         run: |
           TAG_NAME="${{ (steps.detect_build.outputs.is_dev == 'true' && format('dev-{0}', github.run_number)) || format('v{0}', steps.bump_version.outputs.version) }}"
           PREV_TAG=$(git tag --list 'v*' --sort=-creatordate | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(-[pr][0-9]+)?$' | head -1)
-          # Extract the top section of CHANGELOG_USER.md (everything before the
-          # first '---' divider) as user-friendly notes. If that section has
-          # content, use it for every release — not just full ones — so the
-          # in-app "What's New" sheet always shows readable notes instead of
-          # raw commit messages. Fall back to the auto-generated commit log
-          # only when no user-facing notes have been written yet.
+
+          # Extract upcoming notes from CHANGELOG_USER.md if explicitly written
           USER_NOTES=""
+          HAS_UPCOMING="false"
           if [ -f "CHANGELOG_USER.md" ]; then
-            USER_NOTES=$(awk '/^---/{exit} {print}' CHANGELOG_USER.md | sed '/^[[:space:]]*$/{ /./!d }' | sed -e 's/[[:space:]]*$//' | awk 'NF{found=1} found' | sed -e 's/[[:space:]]*$//')
+            USER_NOTES=$(python3 -c "
+import sys, re
+try:
+    with open('CHANGELOG_USER.md', 'r') as f:
+        content = f.read()
+    top = content.split('---')[0]
+    clean = re.sub(r'^## \[(Upcoming|Unreleased)\]', '', top, flags=re.I)
+    clean = re.sub(r'<!--.*?-->', '', clean, flags=re.DOTALL).strip()
+    sys.stdout.write(clean)
+except Exception:
+    pass
+")
+            if [ -n "$USER_NOTES" ]; then
+              HAS_UPCOMING="true"
+            fi
+          fi
+          echo "has_upcoming=$HAS_UPCOMING" >> $GITHUB_OUTPUT
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+            RANGE_LABEL="Changes since ${PREV_TAG}"
+          else
+            RANGE="HEAD"
+            RANGE_LABEL="Recent Changes"
           fi
 
-          if [ -n "$USER_NOTES" ]; then
-            if [ -n "$PREV_TAG" ]; then
-              RANGE="${PREV_TAG}..HEAD"
-              RANGE_LABEL="Changes since ${PREV_TAG}"
-            else
-              RANGE="HEAD"
-              RANGE_LABEL="Recent Changes"
-            fi
-            FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
-            FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
-            OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
-            {
+          FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
+          FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
+          OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
+
+          {
+            if [ -n "$USER_NOTES" ]; then
               echo "$USER_NOTES"
               echo
-              if [ -n "$FEATS" ] || [ -n "$FIXES" ] || [ -n "$OTHERS" ]; then
+            fi
+
+            if [ -n "$FEATS" ] || [ -n "$FIXES" ] || [ -n "$OTHERS" ]; then
+              if [ -n "$USER_NOTES" ]; then
                 echo "---"
-                printf '<details>\n<summary>🔧 Technical changes</summary>\n\n'
+                printf '<details>\n<summary>🔧 Technical changes (%s)</summary>\n\n' "$RANGE_LABEL"
+              else
+                printf '**Obtainium+ %s**\n\n' "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || steps.bump_version.outputs.version }}"
                 echo "## $RANGE_LABEL"
                 echo
-                if [ -n "$FEATS" ]; then printf '### ✨ New Features\n%s\n\n' "$FEATS"; fi
-                if [ -n "$FIXES" ]; then printf '### 🐛 Bug Fixes\n%s\n\n' "$FIXES"; fi
-                if [ -n "$OTHERS" ]; then printf '### 🔧 Improvements & Maintenance\n%s\n\n' "$OTHERS"; fi
+              fi
+
+              if [ -n "$FEATS" ]; then printf '### ✨ New Features\n%s\n\n' "$FEATS"; fi
+              if [ -n "$FIXES" ]; then printf '### 🐛 Bug Fixes\n%s\n\n' "$FIXES"; fi
+              if [ -n "$OTHERS" ]; then printf '### 🔧 Improvements & Maintenance\n%s\n\n' "$OTHERS"; fi
+
+              if [ -n "$USER_NOTES" ]; then
                 echo "</details>"
                 echo
               fi
-              if [ -n "$PREV_TAG" ]; then
-                echo "---"
-                echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
-                echo
-              fi
+            fi
+
+            if [ -n "$PREV_TAG" ]; then
               echo "---"
-              echo "[![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google)"
-            } > release_body.md
-          else
-            {
-              printf '**Obtainium+ %s** — build #%s, commit `%s`, %s\n\n' \
-                "${{ (steps.detect_build.outputs.is_dev == 'true' && 'Dev Build') || steps.bump_version.outputs.version }}" \
-                "${{ github.run_number }}" \
-                "${GITHUB_SHA:0:8}" \
-                "$(date -u '+%Y-%m-%d %H:%M UTC')"
-
-              if [ -n "$PREV_TAG" ]; then
-                RANGE="${PREV_TAG}..HEAD"
-                echo "## Changes since ${PREV_TAG}"
-              else
-                RANGE="HEAD"
-                echo "## Recent Changes"
-              fi
+              echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
               echo
+            fi
 
-              FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
-              if [ -n "$FEATS" ]; then
-                echo "### ✨ New Features"
-                echo "$FEATS"
-                echo
-              fi
-
-              FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
-              if [ -n "$FIXES" ]; then
-                echo "### 🐛 Bug Fixes"
-                echo "$FIXES"
-                echo
-              fi
-
-              OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
-              if [ -n "$OTHERS" ]; then
-                echo "### 🔧 Improvements & Maintenance"
-                echo "$OTHERS"
-                echo
-              fi
-
-              if [ -n "$PREV_TAG" ]; then
-                echo
-                echo "---"
-                echo "[Full Changelog](https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME})"
-              fi
-            } > release_body.md
-          fi
+            echo "---"
+            echo "[![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google)"
+          } > release_body.md
 
       - name: Commit version bump
         if: steps.bump_version.outputs.version_changed == 'true'
@@ -375,6 +356,28 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml lib/utils/version_constant.dart
+          if [ "${{ steps.build_changelog.outputs.has_upcoming }}" = "true" ]; then
+            python3 -c "
+import sys, re, datetime
+try:
+    with open('CHANGELOG_USER.md', 'r') as f:
+        content = f.read()
+    today = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d')
+    version = '${{ steps.bump_version.outputs.version }}'
+    parts = content.split('---', 1)
+    if len(parts) > 1:
+        top_notes = re.sub(r'^## \[(Upcoming|Unreleased)\]', '', parts[0], flags=re.I)
+        top_notes = re.sub(r'<!--.*?-->', '', top_notes, flags=re.DOTALL).strip()
+        rest = parts[1].strip()
+        new_header = '## [Upcoming]\n\n<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->\n\n---\n\n'
+        archived_section = f'## [{version}] — {today}\n\n{top_notes}\n\n---\n\n'
+        with open('CHANGELOG_USER.md', 'w') as f:
+            f.write(new_header + archived_section + rest + '\n')
+except Exception as e:
+    print('Failed to archive CHANGELOG_USER.md:', e, file=sys.stderr)
+"
+            git add CHANGELOG_USER.md
+          fi
           git commit -m "chore: Auto-bump version to ${{ steps.bump_version.outputs.version }}"
           # Rebase in case a commit landed on main while this run was building;
           # autostash because the build leaves unstaged changes (pubspec.lock)

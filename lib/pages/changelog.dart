@@ -638,28 +638,41 @@ Future<List<_ReleaseItem>> _fetchRecentList({
 
 String _cleanBody(String body) {
   var cleaned = body;
+
+  // 1. Strip HTML comments (e.g. template instructions)
+  cleaned = cleaned.replaceAll(RegExp(r'<!--.*?-->', dotAll: true), '');
+
+  // 2. Strip release metadata footer badges and full-changelog link
   cleaned = cleaned.replaceAll(
-    RegExp(r'\n---\n<details>.*?</details>', dotAll: true),
+    RegExp(r'---\s*\[\!\[.*?\]\(.*?\)\].*$', multiLine: false, dotAll: true),
     '',
   );
   cleaned = cleaned.replaceAll(
     RegExp(r'---\s*\[Full Changelog\].*$', multiLine: false, dotAll: true),
     '',
   );
+
+  // 3. Unwrap <details> collapsible blocks instead of deleting their contents,
+  // so technical/commit changelogs remain visible in the app.
+  cleaned = cleaned.replaceAll(RegExp(r'</?details>', caseSensitive: false), '');
+  cleaned = cleaned.replaceAll(RegExp(r'<summary>.*?</summary>', caseSensitive: false), '');
+
+  // 4. Clean up any leftover duplicate dividers or trailing spacing
+  cleaned = cleaned.replaceAll(RegExp(r'(\n---\s*){2,}'), '\n---\n');
+
   return cleaned.trim();
 }
 
 String _bundledFallback(String version) => '''
 **Obtainium+ $version**
 
-### ✨ Highlights & New Features
-- **Samsung OneUI Reachability Header**: Collapsible header with smooth title shift on pull-down and contextual app & update counts.
-- **Material 3 Expressive Theming**: Wallpaper dynamic scheme variants, curated palette presets, and spatial scale transitions.
-- **Floating Navigation Dock**: Modern frosted island dock with rounded corners and ambient shadow (with classic flat bar option).
-- **Floating Action Capsule**: Frosted install/update capsule on the App Detail screen.
-- **Customizable App Tile Styling**: Highlighted pinned app borders, category accent ribbons, expressive version update pills (↓ 2.4.0), and icon rim borders across List and Grid views.
-- **Stadium Pill Filter Chips**: Fully rounded tag and category filter chips.
-- **Performance & Stability**: Fixed PageStorage key collisions in Settings, isolated dialog barriers, optimized PMS install locks, and resolved tab switch edge cases.
+### ✨ Highlights & Features
+- **Material 3 Expressive Theming**: Full primary and dynamic color system, custom squircle shapes, and expressive sliders.
+- **Physical Spring Motion & Haptics**: Real spring physics overshoot on button and card presses with instant pointer-down haptics.
+- **Floating Island Navigation**: Layered frosted glass pill navigation dock with ambient depth shadow and elastic tab animations.
+- **Expressive App List**: Smooth list rows with swipe gesture shortcuts and drag-to-reorder for pinned apps.
+- **Settings Density & Diagnostics**: Comfortable vs Compact settings density, unified System/Shizuku/Root installer selector, and permanent inline descriptions.
+- **Reliability & Security**: Authenticated backup encryption, zero app deletion on broken sources, background check rate-limit hardening, and crash reporting.
 
 ---
 [View All Releases on GitHub](https://github.com/thejaustin/ObtainiumPlus/releases)
