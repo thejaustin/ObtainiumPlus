@@ -43,7 +43,8 @@ class AppInMemory {
   set downloadTotalBytes(int? value) => download.totalBytes = value;
 
   double? get downloadSpeedBytesPerSec => download.bytesPerSecond;
-  set downloadSpeedBytesPerSec(double? value) => download.bytesPerSecond = value;
+  set downloadSpeedBytesPerSec(double? value) =>
+      download.bytesPerSecond = value;
 
   AppInMemory(
     this.app,

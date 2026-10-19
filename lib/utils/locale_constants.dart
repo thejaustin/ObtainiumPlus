@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
+  MapEntry(Locale('bn'), 'বাংলা'),
   MapEntry(Locale('zh'), '简体中文'),
   MapEntry(Locale('zh', 'Hant_TW'), '臺灣話'),
   MapEntry(Locale('it'), 'Italiano'),

@@ -57,8 +57,8 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
                 reverseCurve: Curves.easeOutCubic,
               )
             : (reverse
-                ? ReverseAnimation(secondaryAnimation)
-                : secondaryAnimation);
+                  ? ReverseAnimation(secondaryAnimation)
+                  : secondaryAnimation);
 
         return SharedAxisTransition(
           animation: curvedAnimation,
@@ -105,7 +105,10 @@ dynamic sanitizeJsonValue(dynamic value) {
     return value.map((key, val) => MapEntry(key, sanitizeJsonValue(val)));
   } else if (value is Iterable) {
     return value.map((val) => sanitizeJsonValue(val)).toList();
-  } else if (value == null || value is num || value is String || value is bool) {
+  } else if (value == null ||
+      value is num ||
+      value is String ||
+      value is bool) {
     return value;
   }
   // jsonEncode would call toJson() itself; do it here so NaN nested inside

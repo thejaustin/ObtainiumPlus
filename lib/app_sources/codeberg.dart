@@ -21,6 +21,7 @@ class Codeberg extends AppSource {
     hosts = [_defaultHost];
     canSearch = true;
     includeAdditionalOptsInMainSearch = true;
+    showReleaseDateAsVersionToggle = true;
   }
 
   /// The ForgeJo access token, stored like GitHub's PAT: globally in
@@ -151,6 +152,10 @@ class Codeberg extends AppSource {
       pathPattern: r'/[^/]+/[^/]+',
     );
   }
+
+  @override
+  String standardizeUrl(String url) =>
+      sourceSpecificStandardizeURL(preStandardizeUrl(url));
 
   @override
   String? changeLogPageFromStandardUrl(String standardUrl) =>

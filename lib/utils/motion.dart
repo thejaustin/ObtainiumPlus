@@ -77,7 +77,9 @@ abstract final class AppMotion {
 
   /// Non-listening variant for callbacks and `initState`-time decisions.
   static bool enabledNow(BuildContext context) {
-    final inApp = context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+    final inApp = context
+        .read<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
     final media = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     return inApp && !media;
   }

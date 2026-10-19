@@ -84,8 +84,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final animsEnabled =
-          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      final animsEnabled = context
+          .read<PlusSettingsProvider>()
+          .plusEnableEnhancedAnimations;
       if (animsEnabled) {
         _animController.forward();
       } else {
@@ -140,8 +141,8 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             color: plusSettings.plusEnableGlassmorphism
                 ? theme.colorScheme.surface.withValues(alpha: 0.75)
                 : (isDark
-                    ? theme.colorScheme.surfaceContainerHigh
-                    : theme.colorScheme.surfaceContainerLow),
+                      ? theme.colorScheme.surfaceContainerHigh
+                      : theme.colorScheme.surfaceContainerLow),
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),
@@ -226,13 +227,15 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                                           AppHaptics.mediumImpact();
                                           setState(() {
                                             widget.filter.statusFilter.clear();
-                                            widget.filter.categoryFilter.clear();
+                                            widget.filter.categoryFilter
+                                                .clear();
                                             widget.filter.tagFilter.clear();
                                             widget.filter.nameFilter = '';
                                             widget.filter.authorFilter = '';
                                             widget.filter.idFilter = '';
                                             widget.filter.sourceFilter = '';
-                                            widget.filter.includeUptodate = true;
+                                            widget.filter.includeUptodate =
+                                                true;
                                             widget.filter.includeNonInstalled =
                                                 true;
                                             _nameController.clear();
@@ -722,14 +725,18 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               final isFocused = Focus.of(fContext).hasFocus;
               final isShifted = isFocused || hasText;
               return AnimatedContainer(
-                duration: Duration(milliseconds: AppMotion.enabled(fContext) ? 280 : 0),
+                duration: Duration(
+                  milliseconds: AppMotion.enabled(fContext) ? 280 : 0,
+                ),
                 curve: Easing.emphasizedDecelerate,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
                   boxShadow: isShifted
                       ? [
                           BoxShadow(
-                            color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.14,
+                            ),
                             blurRadius: 12,
                             spreadRadius: 1,
                             offset: const Offset(0, 2),
@@ -754,28 +761,35 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                           )
                         : null,
                     filled: true,
-                    fillColor: theme.colorScheme.surfaceContainerHigh.withValues(
-                      alpha: 0.6,
-                    ),
+                    fillColor: theme.colorScheme.surfaceContainerHigh
+                        .withValues(alpha: 0.6),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
+                      borderRadius: BorderRadius.circular(
+                        isShifted ? 16.0 : 28.0,
+                      ),
                       borderSide: BorderSide(
                         color: isShifted
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                            : theme.colorScheme.outlineVariant.withValues(
+                                alpha: 0.3,
+                              ),
                         width: isShifted ? 1.5 : 1.0,
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
+                      borderRadius: BorderRadius.circular(
+                        isShifted ? 16.0 : 28.0,
+                      ),
                       borderSide: BorderSide(
                         color: isShifted
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                            : theme.colorScheme.outlineVariant.withValues(
+                                alpha: 0.3,
+                              ),
                         width: isShifted ? 1.5 : 1.0,
                       ),
                     ),

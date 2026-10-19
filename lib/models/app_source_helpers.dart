@@ -20,6 +20,10 @@ class APKDetails {
   late String? releaseUrl;
   late List<MapEntry<String, String>> allAssetUrls;
   final Map<String, String>? assetSha256s;
+  final String? appId;
+  final int? apkSizeBytes;
+  final bool? isArchived;
+  final int? newerReleasesFilteredOut;
 
   APKDetails(
     this.version,
@@ -30,6 +34,10 @@ class APKDetails {
     this.releaseUrl,
     this.allAssetUrls = const [],
     this.assetSha256s,
+    this.appId,
+    this.apkSizeBytes,
+    this.isArchived,
+    this.newerReleasesFilteredOut,
   });
 
   APKDetails copyWith({
@@ -41,6 +49,10 @@ class APKDetails {
     Object? releaseUrl = _sentinel,
     List<MapEntry<String, String>>? allAssetUrls,
     Map<String, String>? assetSha256s,
+    Object? appId = _sentinel,
+    Object? apkSizeBytes = _sentinel,
+    Object? isArchived = _sentinel,
+    Object? newerReleasesFilteredOut = _sentinel,
   }) {
     return APKDetails(
       version ?? this.version,
@@ -55,6 +67,16 @@ class APKDetails {
           : releaseUrl as String?,
       allAssetUrls: allAssetUrls ?? this.allAssetUrls,
       assetSha256s: assetSha256s ?? this.assetSha256s,
+      appId: appId == _sentinel ? this.appId : appId as String?,
+      apkSizeBytes: apkSizeBytes == _sentinel
+          ? this.apkSizeBytes
+          : apkSizeBytes as int?,
+      isArchived: isArchived == _sentinel
+          ? this.isArchived
+          : isArchived as bool?,
+      newerReleasesFilteredOut: newerReleasesFilteredOut == _sentinel
+          ? this.newerReleasesFilteredOut
+          : newerReleasesFilteredOut as int?,
     );
   }
 }

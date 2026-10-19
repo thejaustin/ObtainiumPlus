@@ -109,7 +109,10 @@ class _ErrorAppState extends State<ErrorApp> {
                                   color: Colors.white,
                                 ),
                                 onPressed: _reportToGitHub,
-                                tooltip: _t('reportOnGitHub', 'Report on GitHub'),
+                                tooltip: _t(
+                                  'reportOnGitHub',
+                                  'Report on GitHub',
+                                ),
                               ),
                             ],
                           ),
@@ -206,29 +209,31 @@ class _ErrorAppState extends State<ErrorApp> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               ElevatedButton.icon(
-                                  onPressed: _reportToGitHub,
-                                  icon: const Icon(Icons.launch_outlined),
-                                  label: Text(_t('reportOnGitHub', 'Report on GitHub')),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: Colors.red.shade900,
-                                  ),
+                                onPressed: _reportToGitHub,
+                                icon: const Icon(Icons.launch_outlined),
+                                label: Text(
+                                  _t('reportOnGitHub', 'Report on GitHub'),
                                 ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.red.shade900,
+                                ),
+                              ),
                               const SizedBox(width: 12),
                               OutlinedButton.icon(
-                                  onPressed: _followIssue,
-                                  icon: const Icon(
-                                    Icons.notifications_active_outlined,
-                                    color: Colors.white70,
-                                  ),
-                                  label: Text(
-                                    _t('followIssue', 'Follow issue'),
-                                    style: const TextStyle(color: Colors.white70),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: Colors.white54),
-                                  ),
+                                onPressed: _followIssue,
+                                icon: const Icon(
+                                  Icons.notifications_active_outlined,
+                                  color: Colors.white70,
                                 ),
+                                label: Text(
+                                  _t('followIssue', 'Follow issue'),
+                                  style: const TextStyle(color: Colors.white70),
+                                ),
+                                style: OutlinedButton.styleFrom(
+                                  side: const BorderSide(color: Colors.white54),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 16),
@@ -306,16 +311,16 @@ class _ErrorAppState extends State<ErrorApp> {
         content: Text('Are you sure you want to proceed with: $action?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel'),
-            ),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                onConfirm();
-              },
-              child: const Text('Confirm'),
-            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              onConfirm();
+            },
+            child: const Text('Confirm'),
+          ),
         ],
       ),
     );
@@ -333,9 +338,9 @@ class _ErrorAppState extends State<ErrorApp> {
         ),
         actions: [
           FilledButton(
-              onPressed: () => SystemNavigator.pop(),
-              child: const Text('Close App'),
-            ),
+            onPressed: () => SystemNavigator.pop(),
+            child: const Text('Close App'),
+          ),
         ],
       ),
     );

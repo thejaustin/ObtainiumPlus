@@ -228,8 +228,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           title: tr('plusFloatingActionBar'),
           subtitle: tr('plusFloatingActionBarDescription'),
           value: (s) => s.plusFloatingActionBar,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusFloatingActionBar = v),
+          onChanged: (s, v) => onSetState(() => s.plusFloatingActionBar = v),
         ),
       if (_matches(tr('plusExpressiveFilterChips')))
         buildFeatureToggle<PlusSettingsProvider>(
@@ -352,185 +351,182 @@ class AppsViewSettingsSection extends StatelessWidget {
           children: viewWidgets,
         ),
       if (showLayout && showFabMenuGrid)
-          GenericBooleanControlGrid<PlusSettingsProvider>(
-            title: tr('fabMenuItems'),
-            settings: [
-              if (_matches(tr('fabShowAddByUrl')))
-                (
-                  icon: Icons.link_outlined,
-                  label: tr('fabShowAddByUrl'),
-                  description: tr('fabShowAddByUrlDescription'),
-                  getValue: (s) => s.plusFabShowAddByUrl,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusFabShowAddByUrl = v),
-                ),
-              if (_matches(tr('fabShowGithubStarred')))
-                (
-                  icon: Icons.star_border_rounded,
-                  label: tr('fabShowGithubStarred'),
-                  description: tr('fabShowGithubStarredDescription'),
-                  getValue: (s) => s.plusFabShowGithubStarred,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusFabShowGithubStarred = v),
-                ),
-              if (_matches(tr('fabShowGithubPersonalRepos')))
-                (
-                  icon: Icons.person_outline_rounded,
-                  label: tr('fabShowGithubPersonalRepos'),
-                  description: tr('fabShowGithubPersonalReposDescription'),
-                  getValue: (s) => s.plusFabShowGithubPersonalRepos,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusFabShowGithubPersonalRepos = v),
-                ),
-              if (_matches(tr('fabShowImportInstalled')))
-                (
-                  icon: Icons.install_mobile_outlined,
-                  label: tr('fabShowImportInstalled'),
-                  description: tr('fabShowImportInstalledDescription'),
-                  getValue: (s) => s.plusFabShowImportInstalled,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusFabShowImportInstalled = v),
-                ),
-            ],
-          ),
-        if (showLayout && plusFeaturesEnabled && sortingWidgets.isNotEmpty)
-          ExpressiveSettingsGroup(
-            title: isSearching || subCategory != null
-                ? null
-                : tr('plusSectionOrganizationSorting'),
-            persistKey: 'plusSectionOrganizationSorting',
-            isExpandable: subCategory == null,
-            initiallyExpanded: true,
-            children: sortingWidgets,
-          ),
-        if (showTiles && showDisplayGrid)
-          GenericBooleanControlGrid<ViewSettingsProvider>(
-            title: tr('appTileDisplay'),
-            settings: [
-              if (_matches(tr('showAuthor')))
-                (
-                  icon: Icons.person_outline,
-                  label: tr('showAuthor'),
-                  description: tr('showAuthorDescription'),
-                  getValue: (s) => s.displayShowAuthor,
-                  setValue: (s, v) => onSetState(() => s.displayShowAuthor = v),
-                ),
-              if (_matches(tr('showVersion')))
-                (
-                  icon: Icons.code,
-                  label: tr('showVersion'),
-                  description: tr('showVersionDescription'),
-                  getValue: (s) => s.displayShowVersion,
-                  setValue: (s, v) =>
-                      onSetState(() => s.displayShowVersion = v),
-                ),
-              if (_matches(tr('showDate')))
-                (
-                  icon: Icons.calendar_today_outlined,
-                  label: tr('showDate'),
-                  description: tr('showDateDescription'),
-                  getValue: (s) => s.displayShowDate,
-                  setValue: (s, v) => onSetState(() => s.displayShowDate = v),
-                ),
-            ],
-          ),
-        if (showTiles &&
-            plusFeaturesEnabled &&
-            (_matches(tr('plusPinnedBorderAccent')) ||
-                _matches(tr('plusCategoryAccentRibbon')) ||
-                _matches(tr('plusUpdateExpressiveBadge')) ||
-                _matches(tr('plusIconRimBorder'))))
-          GenericBooleanControlGrid<PlusSettingsProvider>(
-            title: tr('plusAppTileStyling'),
-            settings: [
-              if (_matches(tr('plusPinnedBorderAccent')))
-                (
-                  icon: Icons.push_pin_outlined,
-                  label: tr('plusPinnedBorderAccent'),
-                  description: tr('plusPinnedBorderAccentDescription'),
-                  getValue: (s) => s.plusPinnedBorderAccent,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusPinnedBorderAccent = v),
-                ),
-              if (_matches(tr('plusCategoryAccentRibbon')))
-                (
-                  icon: Icons.color_lens_outlined,
-                  label: tr('plusCategoryAccentRibbon'),
-                  description: tr('plusCategoryAccentRibbonDescription'),
-                  getValue: (s) => s.plusCategoryAccentRibbon,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusCategoryAccentRibbon = v),
-                ),
-              if (_matches(tr('plusUpdateExpressiveBadge')))
-                (
-                  icon: Icons.downloading_rounded,
-                  label: tr('plusUpdateExpressiveBadge'),
-                  description: tr('plusUpdateExpressiveBadgeDescription'),
-                  getValue: (s) => s.plusUpdateExpressiveBadge,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusUpdateExpressiveBadge = v),
-                ),
-              if (_matches(tr('plusIconRimBorder')))
-                (
-                  icon: Icons.crop_square_rounded,
-                  label: tr('plusIconRimBorder'),
-                  description: tr('plusIconRimBorderDescription'),
-                  getValue: (s) => s.plusIconRimBorder,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusIconRimBorder = v),
-                ),
-            ],
-          ),
-        if (showLayout &&
-            plusFeaturesEnabled &&
-            (_matches(tr('plusEnableSwipeActions')) ||
-                _matches(tr('plusEnableModernAppListTile'))))
-          GenericBooleanControlGrid<PlusSettingsProvider>(
-            title: tr('plusEnableSwipeActions'),
-            settings: [
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('fabMenuItems'),
+          settings: [
+            if (_matches(tr('fabShowAddByUrl')))
               (
-                icon: Icons.view_agenda_rounded,
-                label: tr('plusEnableModernAppListTile'),
-                description: tr('plusEnableModernAppListTileDescription'),
-                getValue: (s) => s.plusEnableModernAppListTile,
-                setValue: (s, v) =>
-                    onSetState(() => s.plusEnableModernAppListTile = v),
+                icon: Icons.link_outlined,
+                label: tr('fabShowAddByUrl'),
+                description: tr('fabShowAddByUrlDescription'),
+                getValue: (s) => s.plusFabShowAddByUrl,
+                setValue: (s, v) => onSetState(() => s.plusFabShowAddByUrl = v),
               ),
+            if (_matches(tr('fabShowGithubStarred')))
               (
-                icon: Icons.swipe_rounded,
-                label: tr('plusEnableSwipeActions'),
-                description: tr('plusEnableSwipeActionsDescription'),
-                getValue: (s) => s.plusEnableSwipeActions,
+                icon: Icons.star_border_rounded,
+                label: tr('fabShowGithubStarred'),
+                description: tr('fabShowGithubStarredDescription'),
+                getValue: (s) => s.plusFabShowGithubStarred,
                 setValue: (s, v) =>
-                    onSetState(() => s.plusEnableSwipeActions = v),
+                    onSetState(() => s.plusFabShowGithubStarred = v),
               ),
-            ],
-          ),
-        if (showLayout && plusFeaturesEnabled && showSearchGrid)
-          GenericBooleanControlGrid<PlusSettingsProvider>(
-            title: tr('searchSettings'),
-            settings: [
-              if (_matches(tr('showAppBarSearch')))
-                (
-                  icon: Icons.vertical_align_top_rounded,
-                  label: tr('showAppBarSearch'),
-                  description: tr('showAppBarSearchDescription'),
-                  getValue: (s) => s.plusShowAppBarSearch,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusShowAppBarSearch = v),
-                ),
-              if (_matches(tr('showDashboardSearch')))
-                (
-                  icon: Icons.dashboard_outlined,
-                  label: tr('showDashboardSearch'),
-                  description: tr('showDashboardSearchDescription'),
-                  getValue: (s) => s.plusShowDashboardSearch,
-                  setValue: (s, v) =>
-                      onSetState(() => s.plusShowDashboardSearch = v),
-                ),
-            ],
-          ),
-      ];
+            if (_matches(tr('fabShowGithubPersonalRepos')))
+              (
+                icon: Icons.person_outline_rounded,
+                label: tr('fabShowGithubPersonalRepos'),
+                description: tr('fabShowGithubPersonalReposDescription'),
+                getValue: (s) => s.plusFabShowGithubPersonalRepos,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusFabShowGithubPersonalRepos = v),
+              ),
+            if (_matches(tr('fabShowImportInstalled')))
+              (
+                icon: Icons.install_mobile_outlined,
+                label: tr('fabShowImportInstalled'),
+                description: tr('fabShowImportInstalledDescription'),
+                getValue: (s) => s.plusFabShowImportInstalled,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusFabShowImportInstalled = v),
+              ),
+          ],
+        ),
+      if (showLayout && plusFeaturesEnabled && sortingWidgets.isNotEmpty)
+        ExpressiveSettingsGroup(
+          title: isSearching || subCategory != null
+              ? null
+              : tr('plusSectionOrganizationSorting'),
+          persistKey: 'plusSectionOrganizationSorting',
+          isExpandable: subCategory == null,
+          initiallyExpanded: true,
+          children: sortingWidgets,
+        ),
+      if (showTiles && showDisplayGrid)
+        GenericBooleanControlGrid<ViewSettingsProvider>(
+          title: tr('appTileDisplay'),
+          settings: [
+            if (_matches(tr('showAuthor')))
+              (
+                icon: Icons.person_outline,
+                label: tr('showAuthor'),
+                description: tr('showAuthorDescription'),
+                getValue: (s) => s.displayShowAuthor,
+                setValue: (s, v) => onSetState(() => s.displayShowAuthor = v),
+              ),
+            if (_matches(tr('showVersion')))
+              (
+                icon: Icons.code,
+                label: tr('showVersion'),
+                description: tr('showVersionDescription'),
+                getValue: (s) => s.displayShowVersion,
+                setValue: (s, v) => onSetState(() => s.displayShowVersion = v),
+              ),
+            if (_matches(tr('showDate')))
+              (
+                icon: Icons.calendar_today_outlined,
+                label: tr('showDate'),
+                description: tr('showDateDescription'),
+                getValue: (s) => s.displayShowDate,
+                setValue: (s, v) => onSetState(() => s.displayShowDate = v),
+              ),
+          ],
+        ),
+      if (showTiles &&
+          plusFeaturesEnabled &&
+          (_matches(tr('plusPinnedBorderAccent')) ||
+              _matches(tr('plusCategoryAccentRibbon')) ||
+              _matches(tr('plusUpdateExpressiveBadge')) ||
+              _matches(tr('plusIconRimBorder'))))
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('plusAppTileStyling'),
+          settings: [
+            if (_matches(tr('plusPinnedBorderAccent')))
+              (
+                icon: Icons.push_pin_outlined,
+                label: tr('plusPinnedBorderAccent'),
+                description: tr('plusPinnedBorderAccentDescription'),
+                getValue: (s) => s.plusPinnedBorderAccent,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusPinnedBorderAccent = v),
+              ),
+            if (_matches(tr('plusCategoryAccentRibbon')))
+              (
+                icon: Icons.color_lens_outlined,
+                label: tr('plusCategoryAccentRibbon'),
+                description: tr('plusCategoryAccentRibbonDescription'),
+                getValue: (s) => s.plusCategoryAccentRibbon,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusCategoryAccentRibbon = v),
+              ),
+            if (_matches(tr('plusUpdateExpressiveBadge')))
+              (
+                icon: Icons.downloading_rounded,
+                label: tr('plusUpdateExpressiveBadge'),
+                description: tr('plusUpdateExpressiveBadgeDescription'),
+                getValue: (s) => s.plusUpdateExpressiveBadge,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusUpdateExpressiveBadge = v),
+              ),
+            if (_matches(tr('plusIconRimBorder')))
+              (
+                icon: Icons.crop_square_rounded,
+                label: tr('plusIconRimBorder'),
+                description: tr('plusIconRimBorderDescription'),
+                getValue: (s) => s.plusIconRimBorder,
+                setValue: (s, v) => onSetState(() => s.plusIconRimBorder = v),
+              ),
+          ],
+        ),
+      if (showLayout &&
+          plusFeaturesEnabled &&
+          (_matches(tr('plusEnableSwipeActions')) ||
+              _matches(tr('plusEnableModernAppListTile'))))
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('plusEnableSwipeActions'),
+          settings: [
+            (
+              icon: Icons.view_agenda_rounded,
+              label: tr('plusEnableModernAppListTile'),
+              description: tr('plusEnableModernAppListTileDescription'),
+              getValue: (s) => s.plusEnableModernAppListTile,
+              setValue: (s, v) =>
+                  onSetState(() => s.plusEnableModernAppListTile = v),
+            ),
+            (
+              icon: Icons.swipe_rounded,
+              label: tr('plusEnableSwipeActions'),
+              description: tr('plusEnableSwipeActionsDescription'),
+              getValue: (s) => s.plusEnableSwipeActions,
+              setValue: (s, v) =>
+                  onSetState(() => s.plusEnableSwipeActions = v),
+            ),
+          ],
+        ),
+      if (showLayout && plusFeaturesEnabled && showSearchGrid)
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('searchSettings'),
+          settings: [
+            if (_matches(tr('showAppBarSearch')))
+              (
+                icon: Icons.vertical_align_top_rounded,
+                label: tr('showAppBarSearch'),
+                description: tr('showAppBarSearchDescription'),
+                getValue: (s) => s.plusShowAppBarSearch,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusShowAppBarSearch = v),
+              ),
+            if (_matches(tr('showDashboardSearch')))
+              (
+                icon: Icons.dashboard_outlined,
+                label: tr('showDashboardSearch'),
+                description: tr('showDashboardSearchDescription'),
+                getValue: (s) => s.plusShowDashboardSearch,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusShowDashboardSearch = v),
+              ),
+          ],
+        ),
+    ];
 
     if (subCategory != null) {
       return Column(children: innerList);
@@ -592,7 +588,9 @@ class AppsViewSettingsSection extends StatelessWidget {
                       selected: {settings.gridCategoryMode},
                       onSelectionChanged: (value) {
                         AppHaptics.selectionClick();
-                        onSetState(() => settings.gridCategoryMode = value.first);
+                        onSetState(
+                          () => settings.gridCategoryMode = value.first,
+                        );
                       },
                       showSelectedIcon: false,
                     ),
@@ -607,10 +605,10 @@ class AppsViewSettingsSection extends StatelessWidget {
                 min: 0,
                 max: 6,
                 divisions: 6,
-                labelBuilder: (v) => v.toInt() == 0 ? tr('auto') : v.toInt().toString(),
-                onChanged: (value) => onSetState(
-                  () => settings.gridColumnCount = value.toInt(),
-                ),
+                labelBuilder: (v) =>
+                    v.toInt() == 0 ? tr('auto') : v.toInt().toString(),
+                onChanged: (value) =>
+                    onSetState(() => settings.gridColumnCount = value.toInt()),
               ),
           ],
         );

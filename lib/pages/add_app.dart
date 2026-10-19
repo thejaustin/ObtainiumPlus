@@ -217,7 +217,12 @@ class AddAppPageState extends State<AddAppPage> {
             (prevHost != null && prevHost != source?.hosts.firstOrNull)) {
           final isEditingApp = widget.appId != null;
           final existingSettings = isEditingApp
-              ? (context.read<AppsProvider>().apps[widget.appId]?.app.additionalSettings ?? {})
+              ? (context
+                        .read<AppsProvider>()
+                        .apps[widget.appId]
+                        ?.app
+                        .additionalSettings ??
+                    {})
               : <String, dynamic>{};
           pickedSource = source;
           final inputSettings =
@@ -232,7 +237,8 @@ class AddAppPageState extends State<AddAppPage> {
             ...inputSettings,
             if (isEditingApp) ...existingSettings,
           };
-          additionalSettingsValid = source == null ||
+          additionalSettingsValid =
+              source == null ||
               _requiredFormFieldsFilled(source, additionalSettings);
           inferAppIdIfOptional = !isEditingApp;
         }
@@ -368,19 +374,57 @@ class AddAppPageState extends State<AddAppPage> {
             return;
           }
           var trackOnly = source.enforceTrackOnly || userPickedTrackOnly;
-          app = await sourceProvider.getApp(
-            source,
-            userInput.trim(),
-            additionalSettings,
-            currentApp: widget.appId != null
-                ? appsProvider.apps[widget.appId]?.app
-                : null,
-            trackOnlyOverride: trackOnly,
-            sourceIsOverriden: pickedSourceOverride != null,
-            inferAppIdIfOptional: inferAppIdIfOptional,
-          );
+          var addedWithoutCheck = false;
+          try {
+            app = await sourceProvider.getApp(
+              source,
+              userInput.trim(),
+              additionalSettings,
+              currentApp: widget.appId != null
+                  ? appsProvider.apps[widget.appId]?.app
+                  : null,
+              trackOnlyOverride: trackOnly,
+              sourceIsOverriden: pickedSourceOverride != null,
+              inferAppIdIfOptional: inferAppIdIfOptional,
+            );
+          } catch (e) {
+            // Only offer the fallback for unexpected failures (network issues,
+            // source bugs); typed errors mean the source was reachable and the
+            // user should see the real problem.
+            final unexpected = e is! ObtainiumError || e.unexpected;
+            if (!unexpected || !settingsProvider.allowAddingAppsWithoutCheck) {
+              rethrow;
+            }
+            if (!context.mounted) return;
+            final proceed = await showConfirmDialog(
+              context,
+              title: tr('addWithoutCheckQuestion'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(tr('addWithoutCheckExplanation')),
+                  const SizedBox(height: 8),
+                  Text('$e'),
+                ],
+              ),
+              confirmText: tr('addAnyway'),
+              autofocusConfirm: settingsProvider.isTV,
+            );
+            if (!proceed) return;
+            if (!context.mounted) return;
+            app = sourceProvider.buildPlaceholderApp(
+              source,
+              userInput.trim(),
+              additionalSettings,
+              sourceIsOverriden: pickedSourceOverride != null,
+            );
+            addedWithoutCheck = true;
+          }
           // Only download the APK here if you need to for the package ID
-          if (isTempId(app) && app.additionalSettings['trackOnly'] != true) {
+          if (!addedWithoutCheck &&
+              isTempId(app) &&
+              app.additionalSettings['trackOnly'] != true) {
             var apkUrl = await appsProvider.confirmAppFileUrl(
               app,
               mounted ? context : null,
@@ -417,8 +461,9 @@ class AddAppPageState extends State<AddAppPage> {
           if (widget.appId != null && widget.appId != app.id) {
             await appsProvider.removeApps([widget.appId!]);
           }
-          if (app.additionalSettings['trackOnly'] == true ||
-              app.additionalSettings['versionDetection'] != true) {
+          if (!addedWithoutCheck &&
+              (app.additionalSettings['trackOnly'] == true ||
+                  app.additionalSettings['versionDetection'] != true)) {
             app.installedVersion = app.latestVersion;
           } else if (widget.appId != null) {
             final oldApp = appsProvider.apps[widget.appId]?.app;
@@ -517,10 +562,8 @@ class AddAppPageState extends State<AddAppPage> {
                     Text(
                       tr('pleaseWait'),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ],
@@ -539,9 +582,7 @@ class AddAppPageState extends State<AddAppPage> {
                         addApp();
                       },
                 icon: Icon(
-                  widget.appId != null
-                      ? Icons.save_rounded
-                      : Icons.add_rounded,
+                  widget.appId != null ? Icons.save_rounded : Icons.add_rounded,
                   size: 18,
                 ),
                 label: Text(widget.appId != null ? tr('save') : tr('add')),
@@ -563,10 +604,7 @@ class AddAppPageState extends State<AddAppPage> {
               context: context,
               builder: (BuildContext ctx) {
                 return SelectionModal(
-                  title: tr(
-                    'selectX',
-                    args: [tr('sources').toLowerCase()],
-                  ),
+                  title: tr('selectX', args: [tr('sources').toLowerCase()]),
                   entries: sourceStrings,
                   selectedByDefault: true,
                   onlyOneSelectionAllowed: false,
@@ -883,6 +921,9 @@ class AddAppPageState extends State<AddAppPage> {
                               additionalSettings = values;
                               additionalSettingsValid = valid;
                             });
+                          } else {
+                            additionalSettings = values;
+                            additionalSettingsValid = valid;
                           }
                         },
                       );
@@ -995,27 +1036,29 @@ class AddAppPageState extends State<AddAppPage> {
                                       }
                                     : null,
                                 child: Text(
-                                '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
-                                style: TextStyle(
-                                  decoration: e.hosts.isNotEmpty
-                                      ? TextDecoration.underline
-                                      : TextDecoration.none,
-                                  color: e.hosts.isNotEmpty
-                                      ? colorScheme.primary
-                                      : null,
+                                  '${e.name}${e.enforceTrackOnly ? ' ${tr('trackOnlyInBrackets')}' : ''}${e.canSearch ? ' ${tr('searchableInBrackets')}' : ''}',
+                                  style: TextStyle(
+                                    decoration: e.hosts.isNotEmpty
+                                        ? TextDecoration.underline
+                                        : TextDecoration.none,
+                                    color: e.hosts.isNotEmpty
+                                        ? colorScheme.primary
+                                        : null,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
                         const SizedBox(height: 16),
                         Text(
                           '${tr('note')}:',
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
-                        Text(tr('selfHostedNote', args: [tr('overrideSource')])),
+                        Text(
+                          tr('selfHostedNote', args: [tr('overrideSource')]),
+                        ),
                       ],
                     );
                   },
@@ -1199,62 +1242,68 @@ class AddAppPageState extends State<AddAppPage> {
                 child: ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   child: Material(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
-                  ),
-                  borderRadius: BorderRadius.circular(resultRadius),
-                  child: InkWell(
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     borderRadius: BorderRadius.circular(resultRadius),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      linkFn(url);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 16,
-                            backgroundColor: colorScheme.primaryContainer,
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.bold,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(resultRadius),
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        linkFn(url);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: colorScheme.primaryContainer,
+                              child: Text(
+                                name.isNotEmpty ? name[0].toUpperCase() : '?',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  name,
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  sourceName,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: colorScheme.secondary),
-                                ),
-                              ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    sourceName,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: colorScheme.secondary,
+                                        ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                          Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ],
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
                 ),
               );
             }),
@@ -1383,16 +1432,16 @@ class AddAppPageState extends State<AddAppPage> {
 
       final sheetRadius = radius.clamp(20.0, 48.0);
       return ClipRRect(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(sheetRadius),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
         child: ConditionalBlur(
           enabled: plusSettings.plusEnableGlassmorphism,
           sigma: AppConstants.glassBlurSigma,
           child: Container(
             decoration: BoxDecoration(
               color: plusSettings.plusEnableGlassmorphism
-                  ? Theme.of(context).colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                  ? Theme.of(context).colorScheme.surface.withValues(
+                      alpha: AppConstants.glassSurfaceAlpha,
+                    )
                   : Theme.of(context).colorScheme.surfaceContainerLow,
               border: Border(
                 top: BorderSide(
@@ -1400,9 +1449,9 @@ class AddAppPageState extends State<AddAppPage> {
                       ? Theme.of(context).colorScheme.onSurface.withValues(
                           alpha: AppConstants.glassBorderAlpha,
                         )
-                      : Theme.of(context).colorScheme.outlineVariant.withValues(
-                          alpha: 0.3,
-                        ),
+                      : Theme.of(
+                          context,
+                        ).colorScheme.outlineVariant.withValues(alpha: 0.3),
                 ),
               ),
             ),
@@ -1414,7 +1463,6 @@ class AddAppPageState extends State<AddAppPage> {
 
     return scaffold;
   }
-
 
   Widget _smallSpinner() {
     return const Padding(

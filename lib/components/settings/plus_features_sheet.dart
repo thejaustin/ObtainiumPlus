@@ -30,10 +30,7 @@ Future<void> showPlusFeaturesSheet({required BuildContext context}) {
 class PlusFeaturesSheetContent extends StatefulWidget {
   final ScrollController scrollController;
 
-  const PlusFeaturesSheetContent({
-    super.key,
-    required this.scrollController,
-  });
+  const PlusFeaturesSheetContent({super.key, required this.scrollController});
 
   @override
   State<PlusFeaturesSheetContent> createState() =>
@@ -58,9 +55,9 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
       final label = await ShizukuInstaller.getShizukuProviderLabel();
       final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
       final status = await ShizukuApkInstaller().checkPermission().timeout(
-            const Duration(seconds: 2),
-            onTimeout: () => 'timeout',
-          );
+        const Duration(seconds: 2),
+        onTimeout: () => 'timeout',
+      );
       if (mounted) {
         setState(() {
           _shizukuProvider = label;
@@ -198,7 +195,9 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                 ListTile(
                   leading: Icon(
                     Icons.security_rounded,
-                    color: _isShizukuGranted ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                    color: _isShizukuGranted
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
                   ),
                   title: Text(
                     '$_shizukuProvider Integration',
@@ -208,8 +207,8 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                     !_isShizukuInstalled
                         ? 'Not installed'
                         : _isShizukuGranted
-                            ? 'Active & authorized for silent installs'
-                            : 'Permission needed or service stopped',
+                        ? 'Active & authorized for silent installs'
+                        : 'Permission needed or service stopped',
                   ),
                   trailing: _isShizukuInstalled
                       ? TextButton(
@@ -237,14 +236,16 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                     _isBenchmarking
                         ? tr('benchmarkRunning')
                         : _binderLatencyMs != null
-                            ? '$_binderLatencyMs ms round-trip latency'
-                            : 'Benchmark Android binder transport speed',
+                        ? '$_binderLatencyMs ms round-trip latency'
+                        : 'Benchmark Android binder transport speed',
                   ),
                   trailing: _isBenchmarking
                       ? const SizedBox(
                           width: 24,
                           height: 24,
-                          child: ExpressiveCircularProgressIndicator(strokeWidth: 2.5),
+                          child: ExpressiveCircularProgressIndicator(
+                            strokeWidth: 2.5,
+                          ),
                         )
                       : ScaleTouchWrapper(
                           hapticOnPressDown: true,
@@ -252,8 +253,9 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                             onPressed: _runBenchmark,
                             style: FilledButton.styleFrom(
                               visualDensity: VisualDensity.compact,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                             ),
                             child: Text(
                               _binderLatencyMs != null ? 'Retest' : 'Benchmark',
@@ -475,9 +477,9 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.primary,
-              ),
+            fontWeight: FontWeight.bold,
+            color: colorScheme.primary,
+          ),
         ),
       ],
     );

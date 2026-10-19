@@ -60,15 +60,15 @@ class ActiveOperationsBanner extends StatelessWidget {
                   borderRadius: BorderRadius.circular(radius),
                   side: BorderSide(
                     color: glassEnabled
-                        ? colorScheme.primary
-                            .withValues(alpha: 0.22)
+                        ? colorScheme.primary.withValues(alpha: 0.22)
                         : colorScheme.primary.withValues(alpha: 0.30),
                     width: 1,
                   ),
                 ),
                 color: glassEnabled
-                    ? colorScheme.surface
-                        .withValues(alpha: AppConstants.glassSurfaceAlpha)
+                    ? colorScheme.surface.withValues(
+                        alpha: AppConstants.glassSurfaceAlpha,
+                      )
                     : colorScheme.primaryContainer.withValues(alpha: 0.10),
                 child: Stack(
                   children: [
@@ -182,18 +182,16 @@ class ActiveOperationsBanner extends StatelessWidget {
                                 valueListenable: appsProvider.refreshProgress,
                                 builder: (context, progress, _) {
                                   return ExpressiveProgressIndicator(
-                                    value:
-                                        (progress != null && progress > 0)
-                                            ? progress
-                                            : null,
+                                    value: (progress != null && progress > 0)
+                                        ? progress
+                                        : null,
                                     height: 4,
                                   );
                                 },
                               ),
                               if (activeDownloads.isNotEmpty)
                                 const Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(vertical: 10.0),
+                                  padding: EdgeInsets.symmetric(vertical: 10.0),
                                   child: Divider(height: 1),
                                 ),
                             ],
@@ -224,44 +222,46 @@ class ActiveOperationsBanner extends StatelessWidget {
                                 child: Divider(height: 1),
                               ),
                             ],
-                            for (int i = 0;
-                                i < activeDownloads.length && i < 2;
-                                i++) ...[
+                            for (
+                              int i = 0;
+                              i < activeDownloads.length && i < 2;
+                              i++
+                            ) ...[
                               if (i > 0)
                                 const Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(vertical: 8.0),
+                                  padding: EdgeInsets.symmetric(vertical: 8.0),
                                   child: Divider(height: 1),
                                 ),
                               ScaleTouchWrapper(
                                 hapticOnPressDown: true,
                                 scaleDownFactor: 0.98,
                                 child: InkWell(
-                                borderRadius:
-                                    BorderRadius.circular(innerRadius),
-                                onTap: () {
-                                  AppHaptics.selectionClick();
-                                  final appId = activeDownloads[i].app.id;
-                                  showDraggableModalBottomSheet(
-                                    context: context,
-                                    builder: (context, controller) => AppPage(
-                                      appId: appId,
-                                      isModal: true,
-                                      scrollController: controller,
-                                    ),
-                                  );
-                                },
-                                child: _ActiveDownloadTile(
-                                  appInMemory: activeDownloads[i],
-                                  innerRadius: innerRadius,
-                                  onCancel: () {
+                                  borderRadius: BorderRadius.circular(
+                                    innerRadius,
+                                  ),
+                                  onTap: () {
                                     AppHaptics.selectionClick();
-                                    appsProvider.cancelDownload(
-                                      activeDownloads[i].app.id,
+                                    final appId = activeDownloads[i].app.id;
+                                    showDraggableModalBottomSheet(
+                                      context: context,
+                                      builder: (context, controller) => AppPage(
+                                        appId: appId,
+                                        isModal: true,
+                                        scrollController: controller,
+                                      ),
                                     );
                                   },
+                                  child: _ActiveDownloadTile(
+                                    appInMemory: activeDownloads[i],
+                                    innerRadius: innerRadius,
+                                    onCancel: () {
+                                      AppHaptics.selectionClick();
+                                      appsProvider.cancelDownload(
+                                        activeDownloads[i].app.id,
+                                      );
+                                    },
+                                  ),
                                 ),
-                              ),
                               ),
                             ],
                             if (activeDownloads.length > 2)
@@ -274,9 +274,7 @@ class ActiveOperationsBanner extends StatelessWidget {
                                       (activeDownloads.length - 2).toString(),
                                     ],
                                   ),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelMedium
+                                  style: Theme.of(context).textTheme.labelMedium
                                       ?.copyWith(
                                         color: colorScheme.onSurfaceVariant,
                                       ),
@@ -316,8 +314,8 @@ class _ActiveDownloadTile extends StatelessWidget {
             downloadProgress != null && downloadProgress < 0;
         final double? progressFraction =
             (downloadProgress != null && downloadProgress >= 0)
-                ? (downloadProgress / 100.0).clamp(0.0, 1.0)
-                : null;
+            ? (downloadProgress / 100.0).clamp(0.0, 1.0)
+            : null;
 
         final speedStr = formatSpeed(appInMemory.downloadSpeedBytesPerSec);
         final sizeStr = formatDownloadSize(
@@ -326,10 +324,10 @@ class _ActiveDownloadTile extends StatelessWidget {
         );
         final remainingBytes =
             (appInMemory.downloadTotalBytes != null &&
-                    appInMemory.downloadReceivedBytes != null)
-                ? appInMemory.downloadTotalBytes! -
-                    appInMemory.downloadReceivedBytes!
-                : null;
+                appInMemory.downloadReceivedBytes != null)
+            ? appInMemory.downloadTotalBytes! -
+                  appInMemory.downloadReceivedBytes!
+            : null;
         final etaStr = formatEta(
           remainingBytes,
           appInMemory.downloadSpeedBytesPerSec,
@@ -346,8 +344,9 @@ class _ActiveDownloadTile extends StatelessWidget {
                   height: 34,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(innerRadius),
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: 0.5),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.5,
+                    ),
                   ),
                   child: appInMemory.icon != null
                       ? ClipRRect(
@@ -356,8 +355,12 @@ class _ActiveDownloadTile extends StatelessWidget {
                             appInMemory.icon!,
                             fit: BoxFit.cover,
                             filterQuality: FilterQuality.medium,
-                            cacheWidth: (34 * MediaQuery.devicePixelRatioOf(context)).round(),
-                            cacheHeight: (34 * MediaQuery.devicePixelRatioOf(context)).round(),
+                            cacheWidth:
+                                (34 * MediaQuery.devicePixelRatioOf(context))
+                                    .round(),
+                            cacheHeight:
+                                (34 * MediaQuery.devicePixelRatioOf(context))
+                                    .round(),
                           ),
                         )
                       : Icon(
@@ -381,8 +384,8 @@ class _ActiveDownloadTile extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       Row(
                         children: [
@@ -406,9 +409,7 @@ class _ActiveDownloadTile extends StatelessWidget {
                                 }(),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.secondary,
                                       fontWeight: FontWeight.w600,
@@ -433,9 +434,7 @@ class _ActiveDownloadTile extends StatelessWidget {
                                 ].join(' • '),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.primary,
                                       fontWeight: FontWeight.w600,
@@ -445,9 +444,7 @@ class _ActiveDownloadTile extends StatelessWidget {
                           ] else ...[
                             Text(
                               tr('pleaseWait'),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -468,10 +465,7 @@ class _ActiveDownloadTile extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ExpressiveProgressIndicator(
-              value: progressFraction,
-              height: 4,
-            ),
+            ExpressiveProgressIndicator(value: progressFraction, height: 4),
           ],
         );
       },
@@ -504,7 +498,11 @@ class _BulkSummaryRow extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(Icons.downloading_rounded, size: 20, color: colorScheme.primary),
+            Icon(
+              Icons.downloading_rounded,
+              size: 20,
+              color: colorScheme.primary,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -515,17 +513,17 @@ class _BulkSummaryRow extends StatelessWidget {
                       )
                     : plural('apps', total),
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
               ),
             ),
             Text(
               '${(fraction * 100).toInt()}%',
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
-                  ),
+                fontWeight: FontWeight.bold,
+                color: colorScheme.primary,
+              ),
             ),
           ],
         ),

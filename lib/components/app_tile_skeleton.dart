@@ -25,9 +25,10 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _animation = Tween<double>(begin: 0.4, end: 0.9).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 0.9,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -66,8 +67,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
         if (widget.isGrid) {
           return Container(
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow
-                  .withValues(alpha: alpha * 0.6 + 0.3),
+              color: colorScheme.surfaceContainerLow.withValues(
+                alpha: alpha * 0.6 + 0.3,
+              ),
               borderRadius: BorderRadius.circular(cardRadius),
             ),
             padding: const EdgeInsets.all(12),
@@ -78,8 +80,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: alpha),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: alpha,
+                    ),
                     borderRadius: BorderRadius.circular(innerRadius),
                   ),
                 ),
@@ -88,8 +91,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                   width: 80,
                   height: 11,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: alpha),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: alpha,
+                    ),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -98,8 +102,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                   width: 56,
                   height: 9,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: alpha * 0.7),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: alpha * 0.7,
+                    ),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -112,8 +117,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Container(
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow
-                  .withValues(alpha: alpha * 0.6 + 0.3),
+              color: colorScheme.surfaceContainerLow.withValues(
+                alpha: alpha * 0.6 + 0.3,
+              ),
               borderRadius: BorderRadius.circular(cardRadius),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -123,8 +129,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: alpha),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: alpha,
+                    ),
                     borderRadius: BorderRadius.circular(innerRadius),
                   ),
                 ),
@@ -136,8 +143,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                       Container(
                         height: 13,
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withValues(alpha: alpha),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: alpha,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -146,8 +154,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                         width: 100,
                         height: 10,
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withValues(alpha: alpha * 0.7),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: alpha * 0.7,
+                          ),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -159,8 +168,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
                   width: 54,
                   height: 26,
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest
-                        .withValues(alpha: alpha * 0.5),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: alpha * 0.5,
+                    ),
                     borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
                   ),
                 ),

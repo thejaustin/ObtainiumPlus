@@ -20,7 +20,9 @@ import 'package:obtainium/components/import_error_dialog.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/providers/logs_provider.dart';
+import 'package:obtainium/providers/document_tree_bridge.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/nav_helper.dart';
 import 'package:provider/provider.dart';
@@ -74,6 +76,22 @@ class _ImportExportPageState extends State<ImportExportPage> {
   Future<Uri?>? _exportDirFuture;
   String? _lastExportDirKey;
 
+  Future<Uri?> _availableExportDir(
+    BehaviorSettingsProvider behaviorSettings, {
+    required bool hasStoredDir,
+  }) async {
+    var dir = await behaviorSettings.getExportDir();
+    for (
+      var attempt = 0;
+      dir == null && hasStoredDir && attempt < 3;
+      attempt++
+    ) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      dir = await behaviorSettings.getExportDir();
+    }
+    return dir;
+  }
+
   @override
   Widget build(BuildContext context) {
     SourceProvider sourceProvider = SourceProvider();
@@ -87,7 +105,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
     final exportDirKey = behaviorSettings.prefs?.safeString('exportDir');
     if (_exportDirFuture == null || exportDirKey != _lastExportDirKey) {
       _lastExportDirKey = exportDirKey;
-      _exportDirFuture = behaviorSettings.getExportDir();
+      _exportDirFuture = _availableExportDir(
+        behaviorSettings,
+        hasStoredDir: exportDirKey != null,
+      );
     }
 
     urlListImport({String? initValue, bool overrideInitValid = false}) {
@@ -173,12 +194,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
 
     runObtainiumExport({bool pickOnly = false}) async {
       AppHaptics.selectionClick();
+      final bool hadDir = (await behaviorSettings.getExportDir()) != null;
       appsProvider
-          .export(
-            pickOnly:
-                pickOnly || (await behaviorSettings.getExportDir()) == null,
-            bsp: behaviorSettings,
-          )
+          .export(pickOnly: pickOnly || !hadDir, bsp: behaviorSettings)
           .then((String? result) {
             if (result != null && context.mounted) {
               showMessage(tr('exportedTo', args: [result]), context);
@@ -186,7 +204,45 @@ class _ImportExportPageState extends State<ImportExportPage> {
           })
           .catchError((e) {
             if (context.mounted) showError(e, context);
+          })
+          .whenComplete(() {
+            if (mounted && (pickOnly || !hadDir)) {
+              setState(() {
+                _lastExportDirKey = null;
+              });
+            }
           });
+    }
+
+    Future<void> importData(String data) async {
+      try {
+        jsonDecode(data);
+      } catch (e) {
+        throw ObtainiumError(tr('invalidInput'));
+      }
+      final conflictCount = appsProvider
+          .appIdsInImportJSON(data)
+          .where((id) => appsProvider.apps.containsKey(id))
+          .length;
+      if (conflictCount > 0) {
+        if (!context.mounted) return;
+        final proceed = await showConfirmDialog(
+          context,
+          title: tr('importX', args: [tr('appsString').toLowerCase()]),
+          content: Text(
+            tr('importOverwriteWarning', args: [conflictCount.toString()]),
+          ),
+          confirmText: tr('continue'),
+        );
+        if (!proceed) return;
+      }
+      final value = await appsProvider.import(data);
+      if (!context.mounted) return;
+      appsProvider.addMissingCategories(context.read());
+      showMessage(
+        '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
+        context,
+      );
     }
 
     runObtainiumImport() {
@@ -213,19 +269,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
             if (BackupCrypto.isEncrypted(data)) {
               data = await _decryptBackup(data);
             }
-            try {
-              jsonDecode(data);
-            } catch (e) {
-              throw ObtainiumError(tr('invalidInput'));
-            }
-            return appsProvider.import(data).then((value) {
-              if (!context.mounted) return;
-              appsProvider.addMissingCategories(context.read());
-              showMessage(
-                '${tr('importedX', args: [plural('apps', value.key.length).toLowerCase()])}${value.value ? ' + ${tr('settings').toLowerCase()}' : ''}',
-                context,
-              );
-            });
+            await importData(data);
           })
           .catchError((e) {
             if (context.mounted) {
@@ -242,6 +286,84 @@ class _ImportExportPageState extends State<ImportExportPage> {
               importInProgress = false;
             });
           });
+    }
+
+    runDownloadsImport() async {
+      AppHaptics.selectionClick();
+      final List<DownloadsExport> exports;
+      try {
+        exports = await DocumentTreeBridge.instance.downloadsExports();
+      } catch (e) {
+        if (context.mounted) showError(e, context);
+        return;
+      }
+      if (!context.mounted) return;
+      if (exports.isEmpty) {
+        showMessage(tr('noDownloadsExports'), context);
+        return;
+      }
+      final chosen = await showDialog<DownloadsExport>(
+        context: context,
+        builder: (BuildContext ctx) => AlertDialog(
+          title: Text(tr('importFromDownloads')),
+          content: SizedBox(
+            width: 480,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 420),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < exports.length; i++)
+                      ListTile(
+                        autofocus: i == 0,
+                        title: Text(exports[i].name),
+                        subtitle: Text(
+                          exports[i].date.toLocal().toString().split('.').first,
+                        ),
+                        onTap: () => Navigator.of(ctx).pop(exports[i]),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(tr('cancel')),
+            ),
+          ],
+        ),
+      );
+      if (chosen == null) return;
+      if (mounted) {
+        setState(() {
+          importInProgress = true;
+        });
+      }
+      try {
+        final bytes = await DocumentTreeBridge.instance.readDownloadsExport(
+          chosen.uri,
+        );
+        if (bytes == null || bytes.isEmpty) {
+          throw ObtainiumError(tr('invalidInput'));
+        }
+        String data = utf8.decode(bytes);
+        if (BackupCrypto.isEncrypted(data)) {
+          data = await _decryptBackup(data);
+        }
+        await importData(data);
+      } catch (e) {
+        if (context.mounted) showError(e, context);
+      } finally {
+        if (mounted) {
+          setState(() {
+            importInProgress = false;
+          });
+        }
+      }
     }
 
     runUrlImport() {
@@ -528,7 +650,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                             Text(
                               subtitle,
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ],
                         ],
@@ -577,7 +701,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
                             onPressed: importInProgress
                                 ? null
                                 : () => runObtainiumExport(pickOnly: true),
-                            icon: const Icon(Icons.folder_open_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.folder_open_rounded,
+                              size: 18,
+                            ),
                             label: Text(tr('pickExportDir')),
                           ),
                         ),
@@ -593,6 +720,31 @@ class _ImportExportPageState extends State<ImportExportPage> {
                             label: Text(tr('obtainiumExport')),
                           ),
                         ),
+                        if (context.read<SettingsProvider>().isTV)
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: !importInProgress,
+                            scaleDownFactor: 0.94,
+                            child: OutlinedButton.icon(
+                              onPressed:
+                                  importInProgress ||
+                                      exportDirKey == kDownloadsExportDir
+                                  ? null
+                                  : () {
+                                      AppHaptics.selectionClick();
+                                      behaviorSettings.useDownloadsExportDir();
+                                      setState(() {
+                                        _lastExportDirKey = null;
+                                      });
+                                    },
+                              icon: Icon(
+                                exportDirKey == kDownloadsExportDir
+                                    ? Icons.check_circle_rounded
+                                    : Icons.download_outlined,
+                                size: 18,
+                              ),
+                              label: Text(tr('useDownloadsFolder')),
+                            ),
+                          ),
                       ],
                     );
                   },
@@ -618,7 +770,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                               ? colorScheme.onSurface.withValues(
                                   alpha: AppConstants.glassBorderAlpha,
                                 )
-                              : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                              : colorScheme.outlineVariant.withValues(
+                                  alpha: 0.4,
+                                ),
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,
@@ -686,6 +840,21 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         label: Text(tr('obtainiumImport')),
                       ),
                     ),
+                    if (context.read<SettingsProvider>().isTV)
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: !importInProgress,
+                        scaleDownFactor: 0.94,
+                        child: OutlinedButton.icon(
+                          onPressed: importInProgress
+                              ? null
+                              : runDownloadsImport,
+                          icon: const Icon(
+                            Icons.folder_open_outlined,
+                            size: 18,
+                          ),
+                          label: Text(tr('importFromDownloads')),
+                        ),
+                      ),
                   ],
                 ),
 
@@ -726,7 +895,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                           return SelectionModal(
                                             title: tr(
                                               'selectX',
-                                              args: [tr('source').toLowerCase()],
+                                              args: [
+                                                tr('source').toLowerCase(),
+                                              ],
                                             ),
                                             entries: sourceStrings,
                                             selectedByDefault: false,

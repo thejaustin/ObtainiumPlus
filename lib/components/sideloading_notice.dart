@@ -90,8 +90,10 @@ class _SideloadingNoticeState extends State<SideloadingNotice> {
                   hapticOnPressDown: true,
                   scaleDownFactor: 0.94,
                   child: TextButton(
-                    onPressed: () =>
-                        launchUrlString(_learnMoreUrl, mode: LaunchMode.externalApplication),
+                    onPressed: () => launchUrlString(
+                      _learnMoreUrl,
+                      mode: LaunchMode.externalApplication,
+                    ),
                     child: Text(tr('sideloadingNoticeLearnMore')),
                   ),
                 ),

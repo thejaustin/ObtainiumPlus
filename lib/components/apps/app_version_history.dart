@@ -46,12 +46,13 @@ class AppVersionHistoryWidget extends StatelessWidget {
             ),
           ),
           child: Theme(
-            data: Theme.of(context).copyWith(
-              dividerColor: Colors.transparent,
-            ),
+            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               key: PageStorageKey<String>('version_history:${app.id}'),
-              tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              tilePadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 4,
+              ),
               childrenPadding: EdgeInsets.zero,
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -67,9 +68,9 @@ class AppVersionHistoryWidget extends StatelessWidget {
               ),
               title: Text(
                 'Version History',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               subtitle: Text(
                 '${app.versionHistory.length} release${app.versionHistory.length == 1 ? '' : 's'}',
@@ -173,57 +174,65 @@ class AppVersionHistoryWidget extends StatelessWidget {
                         Expanded(
                           child: Text(
                             entry.version,
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
-                            ),
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.onSurface,
+                                ),
                           ),
                         ),
                         if (entry.releaseDate != null)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
-                              borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+                              color: colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(
+                                CardMetrics.pillRadius,
+                              ),
                             ),
                             child: Text(
                               _formatDate(entry.releaseDate!),
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                                fontSize: 10,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                    fontSize: 10,
+                                  ),
                             ),
                           ),
                       ],
                     ),
-                    if (entry.changeLog != null && entry.changeLog!.isNotEmpty) ...[
+                    if (entry.changeLog != null &&
+                        entry.changeLog!.isNotEmpty) ...[
                       const SizedBox(height: 6),
                       appSource.changeLogIfAnyIsMarkDown
                           ? MarkdownBody(
                               data: entry.changeLog!,
                               styleSheet: MarkdownStyleSheet(
-                                p: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                  height: 1.4,
-                                ),
+                                p: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      height: 1.4,
+                                    ),
                                 listBullet: TextStyle(
                                   color: colorScheme.primary,
                                   fontSize: 12,
                                 ),
-                                h1: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                h2: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                h3: Theme.of(context).textTheme.labelMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                h1: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                h2: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                                h3: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               onTapLink: (text, href, title) {
                                 if (href != null) {
                                   launchUrlString(
-                                    href.startsWith('http://') || href.startsWith('https://')
+                                    href.startsWith('http://') ||
+                                            href.startsWith('https://')
                                         ? href
                                         : '${Uri.parse(app.url).origin}/$href',
                                     mode: LaunchMode.externalApplication,
@@ -234,16 +243,20 @@ class AppVersionHistoryWidget extends StatelessWidget {
                                 md.ExtensionSet.gitHubFlavored.blockSyntaxes,
                                 [
                                   md.EmojiSyntax(),
-                                  ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+                                  ...md
+                                      .ExtensionSet
+                                      .gitHubFlavored
+                                      .inlineSyntaxes,
                                 ],
                               ),
                             )
                           : Text(
                               entry.changeLog!,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                                height: 1.4,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                    height: 1.4,
+                                  ),
                             ),
                     ],
                   ],
@@ -265,8 +278,20 @@ class AppVersionHistoryWidget extends StatelessWidget {
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     if (diff.inDays < 30) return '${(diff.inDays / 7).round()}w ago';
     if (diff.inDays < 365) return '${(diff.inDays / 30).round()}mo ago';
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    final months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${months[local.month - 1]} ${local.year}';
   }
 }

@@ -18,6 +18,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/nav_helper.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 
 /// Update settings section widget
@@ -54,8 +55,24 @@ class UpdateSettingsSection extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: _RunBgUpdateCheckNowButton(),
         ),
-      if (_matches(tr('bgUpdateCheckInterval')))
-        _buildIntervalSlider(context),
+      if (_matches(tr('updateHealth')))
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+          child: ListTile(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            tileColor: Theme.of(
+              context,
+            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+            title: Text(tr('updateHealth')),
+            subtitle: Text(tr('updateHealthSubtitle')),
+            leading: const Icon(Icons.healing_outlined),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => NavHelper.pushUpdateHealthPage(context),
+          ),
+        ),
+      if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
       if (_matches(tr('bgUpdateRequiresWifi')) ||
           _matches(tr('bgUpdateRequiresCharging')) ||
           _matches(tr('checkOnStart')) ||
@@ -340,6 +357,21 @@ class UpdateSettingsSection extends StatelessWidget {
                 value: updateSettings.checkUpdateOnDetailPage,
                 onChanged: (value) =>
                     updateSettings.checkUpdateOnDetailPage = value,
+              ),
+            if (_matches(tr('allowAddingAppsWithoutCheck')))
+              SwitchListTile.adaptive(
+                secondary: const Icon(Icons.add_circle_outline),
+                title: Text(
+                  tr('allowAddingAppsWithoutCheck'),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                subtitle: Text(
+                  tr('allowAddingAppsWithoutCheckHelp'),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                value: updateSettings.allowAddingAppsWithoutCheck,
+                onChanged: (value) =>
+                    updateSettings.allowAddingAppsWithoutCheck = value,
               ),
             if (plusSettings.enableAllPlusFeatures &&
                 _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
@@ -684,8 +716,9 @@ class UpdateSettingsSection extends StatelessWidget {
                   child: Text(
                     tr(src.labelKey),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
                       color: isSelected
                           ? colorScheme.onPrimaryContainer
                           : colorScheme.onSurfaceVariant,
@@ -737,111 +770,105 @@ class UpdateSettingsSection extends StatelessWidget {
                   Column(
                     children: [
                       Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.5,
                           ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHigh
-                                .withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: colorScheme.outlineVariant
-                                  .withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.4,
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tr('start'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              Text(
-                                '${settings.updateScheduleStartHour}:00',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color: colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              Slider(
-                                value: settings.updateScheduleStartHour
-                                    .toDouble(),
-                                min: 0,
-                                max: 23,
-                                divisions: 23,
-                                onChanged: (val) {
-                                  AppHaptics.selectionClick();
-                                  settings.updateScheduleStartHour =
-                                      val.round();
-                                  setDialogState(() {});
-                                },
-                              ),
-                            ],
-                          ),
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('start'),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            Text(
+                              '${settings.updateScheduleStartHour}:00',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            Slider(
+                              value: settings.updateScheduleStartHour
+                                  .toDouble(),
+                              min: 0,
+                              max: 23,
+                              divisions: 23,
+                              onChanged: (val) {
+                                AppHaptics.selectionClick();
+                                settings.updateScheduleStartHour = val.round();
+                                setDialogState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.5,
                           ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHigh
-                                .withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: colorScheme.outlineVariant
-                                  .withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.4,
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tr('end'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              Text(
-                                '${settings.updateScheduleEndHour}:00',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color: colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              Slider(
-                                value:
-                                    settings.updateScheduleEndHour.toDouble(),
-                                min: 0,
-                                max: 23,
-                                divisions: 23,
-                                onChanged: (val) {
-                                  AppHaptics.selectionClick();
-                                  settings.updateScheduleEndHour = val.round();
-                                  setDialogState(() {});
-                                },
-                              ),
-                            ],
-                          ),
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('end'),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            Text(
+                              '${settings.updateScheduleEndHour}:00',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            Slider(
+                              value: settings.updateScheduleEndHour.toDouble(),
+                              min: 0,
+                              max: 23,
+                              divisions: 23,
+                              onChanged: (val) {
+                                AppHaptics.selectionClick();
+                                settings.updateScheduleEndHour = val.round();
+                                setDialogState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),

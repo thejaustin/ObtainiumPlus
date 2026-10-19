@@ -49,8 +49,9 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final animsEnabled =
-          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      final animsEnabled = context
+          .read<PlusSettingsProvider>()
+          .plusEnableEnhancedAnimations;
       if (animsEnabled) {
         _controller.forward();
       } else {

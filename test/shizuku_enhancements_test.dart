@@ -55,7 +55,10 @@ void main() {
           status: 'success',
         );
       }
-      expect(telemetry.entries.length, equals(ShizukuTelemetryService.maxEntries));
+      expect(
+        telemetry.entries.length,
+        equals(ShizukuTelemetryService.maxEntries),
+      );
     });
 
     test('identifies blocked and error statuses correctly', () {
@@ -122,7 +125,9 @@ void main() {
       final msgStorage = ShizukuInstaller.getDiagnosticMessageForErrorCode(-3);
       expect(msgStorage, contains('Insufficient device storage'));
 
-      final msgIncompatible = ShizukuInstaller.getDiagnosticMessageForErrorCode(-7);
+      final msgIncompatible = ShizukuInstaller.getDiagnosticMessageForErrorCode(
+        -7,
+      );
       expect(msgIncompatible, contains('Incompatible device architecture'));
 
       final msgInvalid = ShizukuInstaller.getDiagnosticMessageForErrorCode(-2);

@@ -12,8 +12,28 @@ import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/utils/string_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
+
+DateTime? newestAssetDateFromRelease(dynamic release) {
+  if (release is! Map) return null;
+  final allAssets = release['assets'] as List<dynamic>?;
+  final filteredAssets = release['filteredAssets'] as List<dynamic>?;
+  final assets = filteredAssets?.isNotEmpty == true
+      ? filteredAssets
+      : allAssets;
+  final dates = assets
+      ?.map((asset) {
+        final updated = asset?['updated_at'] ?? asset?['created_at'];
+        return updated is String ? DateTime.tryParse(updated) : null;
+      })
+      .whereType<DateTime>()
+      .toList();
+  if (dates == null || dates.isEmpty) return null;
+  dates.sort((a, b) => b.compareTo(a));
+  return dates.first;
+}
 
 class GitHub extends AppSource {
   static const int _fallbackCacheSeconds = 3600;
@@ -92,6 +112,13 @@ class GitHub extends AppSource {
       ),
     ],
     [
+      GeneratedFormSwitch(
+        'invertReleaseTitlesFilter',
+        label: '${tr('invertRegEx')} (${tr('filterReleaseTitlesByRegEx')})',
+        value: false,
+      ),
+    ],
+    [
       GeneratedFormTextField(
         'filterReleaseNotesByRegEx',
         label: tr('filterReleaseNotesByRegEx'),
@@ -101,6 +128,13 @@ class GitHub extends AppSource {
             return regExValidator(value);
           },
         ],
+      ),
+    ],
+    [
+      GeneratedFormSwitch(
+        'invertReleaseNotesFilter',
+        label: '${tr('invertRegEx')} (${tr('filterReleaseNotesByRegEx')})',
+        value: false,
       ),
     ],
     [GeneratedFormSwitch('verifyLatestTag', label: tr('verifyLatestTag'))],
@@ -321,8 +355,8 @@ class GitHub extends AppSource {
   static bool _isAuthRejection(Response res) {
     if (res.statusCode != 401 && res.statusCode != 403) return false;
     try {
-      final message =
-          (jsonDecode(res.body)['message'] as String? ?? '').toLowerCase();
+      final message = (jsonDecode(res.body)['message'] as String? ?? '')
+          .toLowerCase();
       return message.contains('access token') ||
           message.contains('bad credentials');
     } catch (_) {
@@ -447,22 +481,8 @@ class GitHub extends AppSource {
     return null;
   }
 
-  DateTime? _getNewestAssetDateFromRelease(dynamic rel) {
-    final allAssets = rel['assets'] as List<dynamic>?;
-    final filteredAssets = rel['filteredAssets'] as List<dynamic>?;
-    final t = (filteredAssets ?? allAssets)
-        ?.map((e) {
-          final updated = e?['updated_at'];
-          return updated is String ? DateTime.tryParse(updated) : null;
-        })
-        .where((e) => e != null)
-        .toList();
-    t?.sort((a, b) => b!.compareTo(a!));
-    if (t?.isNotEmpty == true) {
-      return t!.first;
-    }
-    return null;
-  }
+  DateTime? _getNewestAssetDateFromRelease(dynamic rel) =>
+      newestAssetDateFromRelease(rel);
 
   DateTime? _getReleaseDateFromRelease(dynamic rel, bool useAssetDate) =>
       !useAssetDate
@@ -583,6 +603,10 @@ class GitHub extends AppSource {
     final notesRegex = regexNotesFilter != null
         ? RegExp(regexNotesFilter)
         : null;
+    final bool invertTitleFilter =
+        additionalSettings['invertReleaseTitlesFilter'] == true;
+    final bool invertNotesFilter =
+        additionalSettings['invertReleaseNotesFilter'] == true;
     for (int i = 0; i < releases.length; i++) {
       if (!fallbackToOlderReleases && i > releaseSkipped) break;
       if (!includePrereleases && releases[i]['prerelease'] == true) {
@@ -597,12 +621,19 @@ class GitHub extends AppSource {
       if (nameToFilter == null || nameToFilter.trim().isEmpty) {
         nameToFilter = releases[i]['tag_name']?.toString() ?? '';
       }
-      if (titleRegex != null && !titleRegex.hasMatch(nameToFilter.trim())) {
+      if (titleRegex != null &&
+          !passesRegExFilter(
+            titleRegex,
+            nameToFilter.trim(),
+            invert: invertTitleFilter,
+          )) {
         continue;
       }
       if (notesRegex != null &&
-          !notesRegex.hasMatch(
+          !passesRegExFilter(
+            notesRegex,
             ((releases[i]['body'] as String?) ?? '').trim(),
+            invert: invertNotesFilter,
           )) {
         continue;
       }
@@ -894,16 +925,16 @@ class GitHub extends AppSource {
 
     final String? regexFilter =
         (additionalSettings['filterReleaseTitlesByRegEx'] as String?)
-                    ?.isNotEmpty ==
-                true
-            ? additionalSettings['filterReleaseTitlesByRegEx']
-            : null;
+                ?.isNotEmpty ==
+            true
+        ? additionalSettings['filterReleaseTitlesByRegEx']
+        : null;
     final String? regexNotesFilter =
         (additionalSettings['filterReleaseNotesByRegEx'] as String?)
-                    ?.isNotEmpty ==
-                true
-            ? additionalSettings['filterReleaseNotesByRegEx']
-            : null;
+                ?.isNotEmpty ==
+            true
+        ? additionalSettings['filterReleaseNotesByRegEx']
+        : null;
     final bool includeZips = additionalSettings['includeZips'] == true;
     final bool includeTarballs = additionalSettings['includeTarballs'] == true;
 
@@ -986,8 +1017,9 @@ class GitHub extends AppSource {
 
         var path = linkMatch.group(1) ?? '';
         if (path.isEmpty) continue;
-        final downloadUrl =
-            path.startsWith('http') ? path : 'https://github.com$path';
+        final downloadUrl = path.startsWith('http')
+            ? path
+            : 'https://github.com$path';
         final fileName = Uri.decodeComponent(path.split('/').last);
         final entry = MapEntry(fileName, downloadUrl);
 
@@ -995,9 +1027,10 @@ class GitHub extends AppSource {
           allAssetUrls.add(entry);
         }
 
-        final shaMatch =
-            RegExp(r'sha256:([a-fA-F0-9]{64})', caseSensitive: false)
-                .firstMatch(block);
+        final shaMatch = RegExp(
+          r'sha256:([a-fA-F0-9]{64})',
+          caseSensitive: false,
+        ).firstMatch(block);
         if (shaMatch != null) {
           final hash = shaMatch.group(1)!.toLowerCase();
           assetSha256s[downloadUrl] = hash;
@@ -1236,8 +1269,8 @@ class GitHub extends AppSource {
     bool isRateLimited = res.headers['x-ratelimit-remaining'] == '0';
     if (!isRateLimited && res.statusCode == 403) {
       try {
-        final message =
-            (jsonDecode(res.body)['message'] as String? ?? '').toLowerCase();
+        final message = (jsonDecode(res.body)['message'] as String? ?? '')
+            .toLowerCase();
         if (message.contains('rate limit')) {
           isRateLimited = true;
         }

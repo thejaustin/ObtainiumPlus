@@ -65,7 +65,9 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final animsEnabled = context.watch<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
     final stateKey = _isScanning
         ? 'scanning'
         : (_updates.isEmpty ? 'empty' : 'results');

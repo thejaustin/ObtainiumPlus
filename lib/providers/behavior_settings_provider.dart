@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 
 class BehaviorSettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
@@ -40,6 +41,19 @@ class BehaviorSettingsProvider with ChangeNotifier {
         ? mode
         : InstallerMode.system.name;
     prefs?.setString('installMethod', resolved);
+    notifyListeners();
+  }
+
+  String get shizukuInstallerMode {
+    final stored = prefs?.safeString('shizukuInstallerMode');
+    return stored == 'shizuku' || stored == 'dhizuku' ? stored! : 'auto';
+  }
+
+  set shizukuInstallerMode(String mode) {
+    prefs?.setString(
+      'shizukuInstallerMode',
+      mode == 'shizuku' || mode == 'dhizuku' ? mode : 'auto',
+    );
     notifyListeners();
   }
 
@@ -117,6 +131,9 @@ class BehaviorSettingsProvider with ChangeNotifier {
     if (uriString == null) {
       return null;
     }
+    if (uriString == kDownloadsExportDir) {
+      return Uri.parse(uriString);
+    }
     final uri = Uri.parse(uriString);
     // The directory may be temporarily unavailable (e.g. a mount not ready
     // right after a reboot). Keep the stored URI so it can be retried later;
@@ -130,6 +147,13 @@ class BehaviorSettingsProvider with ChangeNotifier {
       return null;
     }
     return uri;
+  }
+
+  /// Switches exports to the MediaStore-backed `Downloads/Obtainium/` folder
+  /// for devices without a document-tree picker.
+  Future<void> useDownloadsExportDir() async {
+    await prefs?.setString('exportDir', kDownloadsExportDir);
+    notifyListeners();
   }
 
   Future<void> pickExportDir({bool remove = false}) async {

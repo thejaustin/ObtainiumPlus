@@ -40,7 +40,9 @@ class PlusFeaturesSection extends StatelessWidget {
         final bool isEnabled = settings.enableAllPlusFeatures;
 
         return AnimatedContainer(
-          duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 300 : 0),
+          duration: Duration(
+            milliseconds: settings.plusEnableEnhancedAnimations ? 300 : 0,
+          ),
           curve: Curves.easeOutCubic,
           margin: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
@@ -65,7 +67,11 @@ class PlusFeaturesSection extends StatelessWidget {
                 hapticOnPressDown: true,
                 onTap: () => showPlusFeaturesSheet(context: context),
                 child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
+                  duration: Duration(
+                    milliseconds: settings.plusEnableEnhancedAnimations
+                        ? 250
+                        : 0,
+                  ),
                   transitionBuilder: (child, anim) =>
                       ScaleTransition(scale: anim, child: child),
                   child: Icon(
@@ -127,4 +133,3 @@ class PlusFeaturesSection extends StatelessWidget {
     );
   }
 }
-

@@ -25,10 +25,11 @@ void main() {
       'not-a-map',
     ];
     expect(stripLinkUnsafeSettings(apps), 4);
-    expect((apps[0] as Map)['additionalSettings'], {'includePrereleases': true});
-    expect(
-      jsonDecode((apps[1] as Map)['additionalSettings'] as String),
-      {'fallbackToOlderReleases': true},
-    );
+    expect((apps[0] as Map)['additionalSettings'], {
+      'includePrereleases': true,
+    });
+    expect(jsonDecode((apps[1] as Map)['additionalSettings'] as String), {
+      'fallbackToOlderReleases': true,
+    });
   });
 }

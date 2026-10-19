@@ -268,31 +268,34 @@ class _OmnibarState extends State<Omnibar> {
                 : colorScheme.outlineVariant.withValues(
                     alpha: plusSettings.plusEnableGlassmorphism ? 0.3 : 0.25,
                   ),
-            width: isFocusedOrHasText || _isValidUrl || _urlError != null ? 1.8 : 1.0,
+            width: isFocusedOrHasText || _isValidUrl || _urlError != null
+                ? 1.8
+                : 1.0,
           ),
           boxShadow: isFocusedOrHasText
               ? [
                   BoxShadow(
-                    color: (_isValidUrl
-                            ? colorScheme.primary
-                            : _urlError != null
-                            ? colorScheme.error
-                            : colorScheme.primary)
-                        .withValues(alpha: 0.16),
+                    color:
+                        (_isValidUrl
+                                ? colorScheme.primary
+                                : _urlError != null
+                                ? colorScheme.error
+                                : colorScheme.primary)
+                            .withValues(alpha: 0.16),
                     blurRadius: 14,
                     spreadRadius: 1,
                     offset: const Offset(0, 2),
                   ),
                 ]
               : (plusSettings.plusEnableGlassmorphism
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        spreadRadius: -2,
-                      ),
-                    ]
-                  : null),
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          spreadRadius: -2,
+                        ),
+                      ]
+                    : null),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(currentRadius),
@@ -332,7 +335,8 @@ class _OmnibarState extends State<Omnibar> {
                     onTap: () {
                       if (!_isUrl) {
                         final query = _controller.text.trim();
-                        if (widget.onDiscoverSearch != null && query.isNotEmpty) {
+                        if (widget.onDiscoverSearch != null &&
+                            query.isNotEmpty) {
                           widget.onDiscoverSearch!(query);
                         } else {
                           CommandCenter.show(context, initialQuery: query);
@@ -345,7 +349,9 @@ class _OmnibarState extends State<Omnibar> {
                         vertical: 8,
                       ),
                       child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: animsEnabled ? 200 : 0),
+                        duration: Duration(
+                          milliseconds: animsEnabled ? 200 : 0,
+                        ),
                         transitionBuilder: (child, anim) => FadeTransition(
                           opacity: anim,
                           child: ScaleTransition(scale: anim, child: child),
@@ -418,18 +424,18 @@ class _OmnibarState extends State<Omnibar> {
                             hapticOnPressDown: true,
                             scaleDownFactor: 0.88,
                             child: Semantics(
-                            label: tr('clear'),
-                            button: true,
-                            child: IconButton(
-                              icon: const Icon(Icons.clear, size: 20),
-                              tooltip: tr('clear'),
-                              onPressed: () {
-                                _controller.clear();
-                                _handleInput('');
-                              },
-                              padding: const EdgeInsets.only(right: 8),
+                              label: tr('clear'),
+                              button: true,
+                              child: IconButton(
+                                icon: const Icon(Icons.clear, size: 20),
+                                tooltip: tr('clear'),
+                                onPressed: () {
+                                  _controller.clear();
+                                  _handleInput('');
+                                },
+                                padding: const EdgeInsets.only(right: 8),
+                              ),
                             ),
-                          ),
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -449,89 +455,91 @@ class _OmnibarState extends State<Omnibar> {
                               hapticOnPressDown: true,
                               scaleDownFactor: 0.93,
                               child: Semantics(
-                              label: tr('add'),
-                              button: true,
-                              child: FilledButton.tonal(
-                                onPressed: _isValidUrl
-                                    ? () {
-                                        final text = _controller.text.trim();
-                                        final urlToAdd =
-                                            text.startsWith('http://') ||
-                                                    text.startsWith('https://') ||
-                                                    text.startsWith('market://')
-                                                ? text
-                                                : 'https://$text';
-                                        widget.onUrlInput?.call(urlToAdd);
-                                      }
-                                    : () {
-                                        // Show unsupported source dialog
-                                        final supportedSources = _sourceProvider
-                                            .sources
-                                            .where((s) => s.hosts.isNotEmpty)
-                                            .map((s) => s.name)
-                                            .toList();
+                                label: tr('add'),
+                                button: true,
+                                child: FilledButton.tonal(
+                                  onPressed: _isValidUrl
+                                      ? () {
+                                          final text = _controller.text.trim();
+                                          final urlToAdd =
+                                              text.startsWith('http://') ||
+                                                  text.startsWith('https://') ||
+                                                  text.startsWith('market://')
+                                              ? text
+                                              : 'https://$text';
+                                          widget.onUrlInput?.call(urlToAdd);
+                                        }
+                                      : () {
+                                          // Show unsupported source dialog
+                                          final supportedSources =
+                                              _sourceProvider.sources
+                                                  .where(
+                                                    (s) => s.hosts.isNotEmpty,
+                                                  )
+                                                  .map((s) => s.name)
+                                                  .toList();
 
-                                        showUnsupportedSourceDialog(
-                                          context: context,
-                                          suggestedSources: supportedSources
-                                              .take(8)
-                                              .toList(),
-                                          failedUrl: _controller.text,
-                                        );
-                                      },
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: _isValidUrl
-                                      ? colorScheme.primary
-                                      : null,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
+                                          showUnsupportedSourceDialog(
+                                            context: context,
+                                            suggestedSources: supportedSources
+                                                .take(8)
+                                                .toList(),
+                                            failedUrl: _controller.text,
+                                          );
+                                        },
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _isValidUrl
+                                        ? colorScheme.primary
+                                        : null,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
+                                    shape: const StadiumBorder(),
                                   ),
-                                  shape: const StadiumBorder(),
-                                ),
-                                child: Text(
-                                  _isValidUrl ? tr('add') : tr('sources'),
+                                  child: Text(
+                                    _isValidUrl ? tr('add') : tr('sources'),
+                                  ),
                                 ),
                               ),
                             ),
-                            ),
                           )
                         : (_controller.text.trim().isNotEmpty
-                            ? Container(
-                                margin: const EdgeInsets.only(
-                                  right: 6,
-                                  top: 6,
-                                  bottom: 6,
-                                ),
-                                child: Semantics(
-                                  label: tr('search'),
-                                  button: true,
-                                  child: FilledButton.tonalIcon(
-                                    onPressed: () {
-                                      final query = _controller.text.trim();
-                                      if (widget.onDiscoverSearch != null) {
-                                        widget.onDiscoverSearch!(query);
-                                      } else {
-                                        CommandCenter.show(
-                                          context,
-                                          initialQuery: query,
-                                        );
-                                      }
-                                    },
-                                    icon: const Icon(
-                                      Icons.travel_explore_rounded,
-                                      size: 16,
-                                    ),
-                                    label: Text(tr('search')),
-                                    style: FilledButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
+                              ? Container(
+                                  margin: const EdgeInsets.only(
+                                    right: 6,
+                                    top: 6,
+                                    bottom: 6,
+                                  ),
+                                  child: Semantics(
+                                    label: tr('search'),
+                                    button: true,
+                                    child: FilledButton.tonalIcon(
+                                      onPressed: () {
+                                        final query = _controller.text.trim();
+                                        if (widget.onDiscoverSearch != null) {
+                                          widget.onDiscoverSearch!(query);
+                                        } else {
+                                          CommandCenter.show(
+                                            context,
+                                            initialQuery: query,
+                                          );
+                                        }
+                                      },
+                                      icon: const Icon(
+                                        Icons.travel_explore_rounded,
+                                        size: 16,
                                       ),
-                                      shape: const StadiumBorder(),
+                                      label: Text(tr('search')),
+                                      style: FilledButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                        ),
+                                        shape: const StadiumBorder(),
+                                      ),
                                     ),
                                   ),
-                                ),
-                              )
-                            : const SizedBox.shrink()),
+                                )
+                              : const SizedBox.shrink()),
                   ),
                 ],
               ),
@@ -570,7 +578,9 @@ class AppActionsFAB extends StatelessWidget {
         final sheet = Container(
           decoration: BoxDecoration(
             color: enableGlass
-                ? colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                ? colorScheme.surface.withValues(
+                    alpha: AppConstants.glassSurfaceAlpha,
+                  )
                 : colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
@@ -656,8 +666,9 @@ class AppActionsFAB extends StatelessWidget {
                               subtitle: tr(
                                 'importGithubStarredReposDescription',
                               ),
-                              containerColor:
-                                  Colors.amber.withValues(alpha: 0.16),
+                              containerColor: Colors.amber.withValues(
+                                alpha: 0.16,
+                              ),
                               iconColor: Colors.amber.shade700,
                               onTap: () {
                                 Navigator.pop(context);
@@ -677,8 +688,9 @@ class AppActionsFAB extends StatelessWidget {
                               icon: Icons.person_rounded,
                               title: tr('githubPersonalRepos'),
                               subtitle: tr('githubPersonalReposDescription'),
-                              containerColor:
-                                  Colors.indigo.withValues(alpha: 0.16),
+                              containerColor: Colors.indigo.withValues(
+                                alpha: 0.16,
+                              ),
                               iconColor: Colors.indigo.shade400,
                               onTap: () {
                                 Navigator.pop(context);
@@ -698,8 +710,9 @@ class AppActionsFAB extends StatelessWidget {
                               icon: Icons.install_mobile_rounded,
                               title: tr('importInstalledApps'),
                               subtitle: tr('importInstalledAppsDescription'),
-                              containerColor:
-                                  Colors.teal.withValues(alpha: 0.16),
+                              containerColor: Colors.teal.withValues(
+                                alpha: 0.16,
+                              ),
                               iconColor: Colors.teal.shade400,
                               onTap: () {
                                 Navigator.pop(context);
@@ -713,8 +726,9 @@ class AppActionsFAB extends StatelessWidget {
                               icon: Icons.qr_code_scanner_rounded,
                               title: tr('scanQRCode'),
                               subtitle: tr('scanQRCodeDescription'),
-                              containerColor:
-                                  Colors.deepOrange.withValues(alpha: 0.16),
+                              containerColor: Colors.deepOrange.withValues(
+                                alpha: 0.16,
+                              ),
                               iconColor: Colors.deepOrange.shade400,
                               onTap: () {
                                 Navigator.pop(context);
@@ -843,10 +857,7 @@ class AppActionsFAB extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                colorScheme.primary,
-                colorScheme.tertiary,
-              ],
+              colors: [colorScheme.primary, colorScheme.tertiary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

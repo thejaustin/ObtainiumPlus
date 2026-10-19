@@ -144,7 +144,8 @@ class SourceUtils {
   }) async {
     int retryCount = 0;
     Duration retryDelay = const Duration(seconds: 2);
-    final sp = settingsProvider ?? (_cachedSettingsProvider ??= SettingsProvider());
+    final sp =
+        settingsProvider ?? (_cachedSettingsProvider ??= SettingsProvider());
     if (sp.prefs == null) {
       await sp.initializeSettings();
     }
@@ -234,7 +235,8 @@ class SourceUtils {
             if (resetHeader != null) {
               final parsed = int.tryParse(resetHeader);
               if (parsed != null) {
-                final nowSeconds = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+                final nowSeconds =
+                    DateTime.now().millisecondsSinceEpoch ~/ 1000;
                 final waitSecs = parsed - nowSeconds;
                 if (waitSecs > 60) {
                   return finalResponse;

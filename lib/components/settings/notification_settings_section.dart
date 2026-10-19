@@ -93,7 +93,9 @@ class NotificationSettingsSection extends StatelessWidget {
                 },
               ),
             AnimatedSize(
-              duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
+              duration: Duration(
+                milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0,
+              ),
               curve: Curves.easeInOutCubic,
               child: !settings.plusEnableNotificationEnhancements
                   ? Padding(
@@ -118,8 +120,9 @@ class NotificationSettingsSection extends StatelessWidget {
                                 (
                                   icon: Icons.mark_email_unread_outlined,
                                   label: tr('enableNotificationDigest'),
-                                  description:
-                                      tr('notificationDigestDescription'),
+                                  description: tr(
+                                    'notificationDigestDescription',
+                                  ),
                                   getValue: (s) =>
                                       s.plusEnableNotificationDigest,
                                   setValue: (s, v) =>
@@ -138,24 +141,31 @@ class NotificationSettingsSection extends StatelessWidget {
                             ],
                           ),
                         AnimatedSize(
-                          duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 200 : 0),
+                          duration: Duration(
+                            milliseconds: settings.plusEnableEnhancedAnimations
+                                ? 200
+                                : 0,
+                          ),
                           curve: Curves.easeInOutCubic,
-                          child: settings.plusEnableNotificationQuietHours &&
+                          child:
+                              settings.plusEnableNotificationQuietHours &&
                                   _matches(tr('quietHoursSchedule'))
                               ? ScaleTouchWrapper(
                                   hapticOnPressDown: true,
-                                  onTap: () => _showQuietHoursDialog(context, settings),
+                                  onTap: () =>
+                                      _showQuietHoursDialog(context, settings),
                                   child: ListTile(
                                     leading: Icon(
                                       Icons.schedule_outlined,
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                     ),
                                     title: Text(
                                       tr('quietHoursSchedule'),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyLarge,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge,
                                     ),
                                     subtitle: Text(
                                       '${_formatHour(settings.plusNotificationQuietHoursStart)} — ${_formatHour(settings.plusNotificationQuietHoursEnd)}',
@@ -209,121 +219,119 @@ class NotificationSettingsSection extends StatelessWidget {
                   Text(
                     tr('quietHoursDescription'),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Column(
                     children: [
                       Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.5,
                           ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHigh
-                                .withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color:
-                                  colorScheme.outlineVariant.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.4,
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tr('start'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              Text(
-                                _formatHour(
-                                    settings.plusNotificationQuietHoursStart),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color: colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              Slider(
-                                value: settings.plusNotificationQuietHoursStart
-                                    .toDouble(),
-                                min: 0,
-                                max: 23,
-                                divisions: 23,
-                                onChanged: (val) {
-                                  AppHaptics.selectionClick();
-                                  settings.plusNotificationQuietHoursStart =
-                                      val.round();
-                                  setDialogState(() {});
-                                },
-                              ),
-                            ],
-                          ),
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('start'),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            Text(
+                              _formatHour(
+                                settings.plusNotificationQuietHoursStart,
+                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            Slider(
+                              value: settings.plusNotificationQuietHoursStart
+                                  .toDouble(),
+                              min: 0,
+                              max: 23,
+                              divisions: 23,
+                              onChanged: (val) {
+                                AppHaptics.selectionClick();
+                                settings.plusNotificationQuietHoursStart = val
+                                    .round();
+                                setDialogState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(height: 12),
                       Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.5,
                           ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHigh
-                                .withValues(alpha: 0.5),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color:
-                                  colorScheme.outlineVariant.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.4,
                             ),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tr('end'),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
-                                    ?.copyWith(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              Text(
-                                _formatHour(
-                                    settings.plusNotificationQuietHoursEnd),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      color: colorScheme.onSurface,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                              ),
-                              Slider(
-                                value: settings.plusNotificationQuietHoursEnd
-                                    .toDouble(),
-                                min: 0,
-                                max: 23,
-                                divisions: 23,
-                                onChanged: (val) {
-                                  AppHaptics.selectionClick();
-                                  settings.plusNotificationQuietHoursEnd =
-                                      val.round();
-                                  setDialogState(() {});
-                                },
-                              ),
-                            ],
-                          ),
                         ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr('end'),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                            Text(
+                              _formatHour(
+                                settings.plusNotificationQuietHoursEnd,
+                              ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
+                                    color: colorScheme.onSurface,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                            Slider(
+                              value: settings.plusNotificationQuietHoursEnd
+                                  .toDouble(),
+                              min: 0,
+                              max: 23,
+                              divisions: 23,
+                              onChanged: (val) {
+                                AppHaptics.selectionClick();
+                                settings.plusNotificationQuietHoursEnd = val
+                                    .round();
+                                setDialogState(() {});
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ],

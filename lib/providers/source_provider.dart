@@ -30,6 +30,8 @@ export 'package:obtainium/models/typed_settings.dart';
 export 'package:obtainium/models/app_source.dart';
 export 'package:obtainium/models/app_source_helpers.dart';
 export 'package:obtainium/utils/source_utils.dart';
+export 'package:obtainium/utils/string_utils.dart'
+    show getSourceRegex, passesRegExFilter;
 
 import 'package:obtainium/app_sources/apk4free.dart';
 import 'package:obtainium/app_sources/apkcombo.dart';
@@ -134,7 +136,6 @@ Future<List<MapEntry<String, String>>> filterApksByArch(
 String getSourceRegex(List<String> hosts) {
   return '(${hosts.join('|').replaceAll('.', '\\.')})';
 }
-
 
 /// Throws an [ObtainiumError] unless [res] has a 200 status code.
 void ensureHttpSuccess(http.Response res) {
@@ -353,17 +354,49 @@ class SourceProvider {
       .toString()
       .substring(0, 12);
 
+  /// Builds a placeholder [App] for [url] when its source could not be
+  /// checked (e.g. no connection). The entry is filled in by the next
+  /// successful check, and its real package ID is adopted on first install.
+  App buildPlaceholderApp(
+    AppSource source,
+    String url,
+    Map<String, dynamic> additionalSettings, {
+    bool sourceIsOverriden = false,
+  }) {
+    final standardUrl = source.standardizeUrl(url);
+    final settings = Map<String, dynamic>.from(additionalSettings);
+    final app = App(
+      generateTempID(standardUrl, settings),
+      standardUrl,
+      source.name,
+      standardUrl,
+      null,
+      tr('unknown'),
+      const [MapEntry('placeholder', 'placeholder')],
+      0,
+      settings,
+      null,
+      false,
+      overrideSource: sourceIsOverriden ? source.sourceIdentifier : null,
+    );
+    return source.postProcessApp(app);
+  }
+
   Future<String> _resolveAppId(
     AppSource source,
     App? currentApp,
     Map<String, dynamic> additionalSettings,
     bool trackOnly,
     String standardUrl,
-    bool inferAppIdIfOptional,
-  ) async {
+    bool inferAppIdIfOptional, {
+    String? inferredAppId,
+  }) async {
     if (currentApp?.id != null) return currentApp!.id;
     final explicitId = additionalSettings['appId'] as String?;
     if (explicitId != null && explicitId.trim().isNotEmpty) return explicitId;
+    if (inferredAppId != null && inferredAppId.trim().isNotEmpty) {
+      return inferredAppId;
+    }
     String? rawId;
     if ((!trackOnly || source.inferAppIdEvenWhenTrackOnly) &&
         (!source.appIdInferIsOptional ||
@@ -378,7 +411,10 @@ class SourceProvider {
     // adopt the installed package ID directly so that status detection succeeds immediately.
     if (!trackOnly) {
       try {
-        final info = await AppInstallService.getInstalledInfo(rawId, printErr: false);
+        final info = await AppInstallService.getInstalledInfo(
+          rawId,
+          printErr: false,
+        );
         if (info?.packageName != null && info!.packageName != rawId) {
           rawId = info.packageName!;
         }
@@ -409,7 +445,11 @@ class SourceProvider {
     }
     APKDetails apk;
     try {
-      apk = await source.getLatestAPKDetails(standardUrl, additionalSettings);
+      apk = await source.getLatestAPKDetailsWithContext(
+        standardUrl,
+        additionalSettings,
+        currentApp: currentApp,
+      );
     } on ObtainiumError catch (e) {
       throw e..withUrlContext(standardUrl);
     }
@@ -480,6 +520,7 @@ class SourceProvider {
         trackOnly,
         standardUrl,
         inferAppIdIfOptional,
+        inferredAppId: apk.appId,
       ),
       standardUrl,
       apk.names.author,
@@ -506,6 +547,13 @@ class SourceProvider {
           .where((a) => apk.apkUrls.indexWhere((p) => a.key == p.key) < 0)
           .toList(),
       versionHistory: _buildVersionHistory(currentApp, apk),
+      apkSizeBytes: apk.apkSizeBytes,
+      latestVersionChangedAt: currentApp?.latestVersionChangedAt,
+      consecutiveFailedChecks: currentApp?.consecutiveFailedChecks ?? 0,
+      isArchived: apk.isArchived,
+      newerReleasesFilteredOut: apk.newerReleasesFilteredOut,
+      updateHealthEnabled: currentApp?.updateHealthEnabled ?? true,
+      updateHealthDismissedVersion: currentApp?.updateHealthDismissedVersion,
     );
     return source.postProcessApp(finalApp);
   }
@@ -595,8 +643,6 @@ class SourceProvider {
     return [apps, errors];
   }
 }
-
-
 
 class VersionService {
   static const defaultMatchGroup = '0';

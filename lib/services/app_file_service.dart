@@ -17,8 +17,29 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
+Directory? selectPrimaryExternalCache(
+  List<Directory>? cacheDirs,
+  Directory? primaryExternal,
+) => AppFileService.selectPrimaryExternalCache(cacheDirs, primaryExternal);
+
 class AppFileService {
   AppFileService._();
+
+  static Directory? selectPrimaryExternalCache(
+    List<Directory>? cacheDirs,
+    Directory? primaryExternal,
+  ) {
+    if (cacheDirs == null || cacheDirs.isEmpty || primaryExternal == null) {
+      return null;
+    }
+    final primaryDataDir = primaryExternal.absolute.parent.parent.path;
+    for (final dir in cacheDirs) {
+      if (dir.absolute.parent.parent.path == primaryDataDir) {
+        return dir;
+      }
+    }
+    return null;
+  }
 
   static final Set<String> _activeDownloadPaths = <String>{};
 
@@ -86,16 +107,23 @@ class AppFileService {
     late Directory APKDir;
     late Directory iconsCacheDir;
 
-    var cacheDirs = await getExternalCacheDirectories();
-    if (cacheDirs?.isNotEmpty ?? false) {
+    Directory? cacheRoot;
+    try {
+      cacheRoot = selectPrimaryExternalCache(
+        await getExternalCacheDirectories(),
+        await getExternalStorageDirectory(),
+      );
+    } catch (_) {}
+
+    if (cacheRoot != null) {
       Sentry.addBreadcrumb(
         Breadcrumb(
           message:
-              'initAppDirectories: using external cache path ${cacheDirs!.first.path}',
+              'initAppDirectories: using primary external cache path ${cacheRoot.path}',
         ),
       );
-      APKDir = cacheDirs.first;
-      iconsCacheDir = Directory('${cacheDirs.first.path}/icons');
+      APKDir = cacheRoot;
+      iconsCacheDir = Directory('${cacheRoot.path}/icons');
       try {
         if (!APKDir.existsSync()) {
           APKDir.createSync(recursive: true);
@@ -105,19 +133,32 @@ class AppFileService {
         }
       } catch (e) {
         // External cache unavailable at runtime; fall through to internal storage
-        cacheDirs = null;
+        cacheRoot = null;
       }
     }
-    if (cacheDirs == null || cacheDirs.isEmpty) {
+
+    if (cacheRoot == null) {
       Sentry.addBreadcrumb(
         Breadcrumb(
           message:
-              'initAppDirectories: external cache unavailable, falling back to app storage',
+              'initAppDirectories: external cache unavailable, falling back to internal cache/app storage',
         ),
       );
-      var baseDir = await getAppStorageDir();
-      APKDir = Directory('${baseDir.path}/apks');
-      iconsCacheDir = Directory('${baseDir.path}/icons');
+      try {
+        final internalCache = await getApplicationCacheDirectory();
+        APKDir = Directory('${internalCache.path}/apks');
+        iconsCacheDir = Directory('${internalCache.path}/icons');
+        if (!APKDir.existsSync()) {
+          APKDir.createSync(recursive: true);
+        }
+        if (!iconsCacheDir.existsSync()) {
+          iconsCacheDir.createSync(recursive: true);
+        }
+      } catch (_) {
+        var baseDir = await getAppStorageDir();
+        APKDir = Directory('${baseDir.path}/apks');
+        iconsCacheDir = Directory('${baseDir.path}/icons');
+      }
 
       try {
         if (!APKDir.existsSync()) {
@@ -421,7 +462,9 @@ class AppFileService {
           // Only reuse when the remote length is known and matches; an unknown
           // length can't rule out a stale file from a mutable URL.
           if (remoteLength > 0 && remoteLength == existingSize) {
-            logs?.add('Reusing existing valid file: ${downloadedFile.uri.pathSegments.last}');
+            logs?.add(
+              'Reusing existing valid file: ${downloadedFile.uri.pathSegments.last}',
+            );
             return downloadedFile;
           }
         } catch (_) {
@@ -474,7 +517,8 @@ class AppFileService {
       HttpClientResponse response = responseWithClient.value.value;
 
       // Handle 416 Range Not Satisfiable (e.g. remote file changed)
-      if (response.statusCode == HttpStatus.requestedRangeNotSatisfiable && rangeStart > 0) {
+      if (response.statusCode == HttpStatus.requestedRangeNotSatisfiable &&
+          rangeStart > 0) {
         responseClient?.close();
         deleteFile(tempDownloadedFile);
         rangeStart = 0;
@@ -511,10 +555,7 @@ class AppFileService {
         if (cdMatch != null) {
           final cdName = cdMatch.group(1)!.trim().split('/').last;
           if (cdName.contains('.') &&
-              AppSource.isApkOrContainerFile(
-                cdName,
-                includeArchives: true,
-              )) {
+              AppSource.isApkOrContainerFile(cdName, includeArchives: true)) {
             parsedExt = cdName.split('.').last;
           }
         }
@@ -523,7 +564,8 @@ class AppFileService {
           if (newTarget.path != downloadedFile.path) {
             downloadedFile = newTarget;
             final newPart = File('${downloadedFile.path}.part');
-            if (tempDownloadedFile.path != newPart.path && tempDownloadedFile.existsSync()) {
+            if (tempDownloadedFile.path != newPart.path &&
+                tempDownloadedFile.existsSync()) {
               tempDownloadedFile.renameSync(newPart.path);
             }
             tempDownloadedFile = newPart;
@@ -534,7 +576,9 @@ class AppFileService {
       final isPartial = response.statusCode == HttpStatus.partialContent;
       int? fullContentLength;
       if (response.contentLength > 0) {
-        fullContentLength = isPartial ? rangeStart + response.contentLength : response.contentLength;
+        fullContentLength = isPartial
+            ? rangeStart + response.contentLength
+            : response.contentLength;
       }
 
       if (!isPartial) {
@@ -550,7 +594,8 @@ class AppFileService {
       int lastReceived = received;
       double? smoothedSpeed;
       const downloadUIUpdateInterval = Duration(milliseconds: 400);
-      const downloadBufferSize = 256 * 1024; // 256KB buffer for max I/O throughput
+      const downloadBufferSize =
+          256 * 1024; // 256KB buffer for max I/O throughput
       final downloadBuffer = BytesBuilder();
 
       await response
@@ -573,7 +618,9 @@ class AppFileService {
                     now.difference(lastProgressUpdate!) >=
                         downloadUIUpdateInterval)) {
               if (lastProgressUpdate != null) {
-                final deltaMs = now.difference(lastProgressUpdate!).inMilliseconds;
+                final deltaMs = now
+                    .difference(lastProgressUpdate!)
+                    .inMilliseconds;
                 final deltaBytes = received - lastReceived;
                 if (deltaMs > 0) {
                   final instantSpeed = (deltaBytes * 1000.0) / deltaMs;
@@ -589,7 +636,12 @@ class AppFileService {
                   ? clampDouble((received / fullContentLength) * 100, 0, 100)
                   : null;
               try {
-                onProgress(progress, received, fullContentLength, smoothedSpeed);
+                onProgress(
+                  progress,
+                  received,
+                  fullContentLength,
+                  smoothedSpeed,
+                );
               } catch (_) {
                 try {
                   onProgress(progress, received, fullContentLength);
@@ -693,8 +745,10 @@ class AppFileService {
   /// Verifies that [file] matches the [expectedSha256] digest.
   /// Throws [ObtainiumError] if the hash does not match.
   static Future<void> verifyFileSha256(File file, String expectedSha256) async {
-    final cleanExpected =
-        expectedSha256.toLowerCase().replaceAll('sha256:', '').trim();
+    final cleanExpected = expectedSha256
+        .toLowerCase()
+        .replaceAll('sha256:', '')
+        .trim();
     if (cleanExpected.isEmpty) return;
     final actual = await computeFileSha256(file);
     if (actual != cleanExpected) {

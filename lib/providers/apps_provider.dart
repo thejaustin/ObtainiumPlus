@@ -1,7 +1,8 @@
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/utils/app_utils.dart' show safeJsonEncode, sanitizeJsonValue;
+import 'package:obtainium/utils/app_utils.dart'
+    show safeJsonEncode, sanitizeJsonValue;
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -141,7 +142,6 @@ class CancellationToken {
   }
 }
 
-
 Future<File> downloadFileWithRetry(
   String fileName,
   bool fileNameHasExt,
@@ -153,6 +153,7 @@ Future<File> downloadFileWithRetry(
   int retries = _defaultRetries,
   CancellationToken? cancellationToken,
   bool Function()? isCancelled,
+  Future<bool> Function()? holdRetry,
 }) async {
   try {
     return await downloadFile(
@@ -188,6 +189,11 @@ Future<File> downloadFileWithRetry(
             e is TimeoutException ||
             retryableHttpException ||
             retryableHTTPError)) {
+      // The hook may hold the retry back (see AppsProviderInstall) and returns
+      // false when retrying is pointless, so the original error is reported.
+      if (holdRetry != null && !await holdRetry()) {
+        rethrow;
+      }
       await Future.delayed(const Duration(seconds: _retryDelaySeconds));
       return await downloadFileWithRetry(
         fileName,
@@ -199,6 +205,8 @@ Future<File> downloadFileWithRetry(
         headers: headers,
         retries: (retries - 1),
         cancellationToken: cancellationToken,
+        isCancelled: isCancelled,
+        holdRetry: holdRetry,
       );
     } else {
       rethrow;
@@ -381,8 +389,10 @@ Future<File> downloadFile(
       headersResponse.statusCode,
       headersResponse.reasonPhrase.isNotEmpty
           ? headersResponse.reasonPhrase
-          : tr('errorWithHttpStatusCode',
-              args: [headersResponse.statusCode.toString()]),
+          : tr(
+              'errorWithHttpStatusCode',
+              args: [headersResponse.statusCode.toString()],
+            ),
     )..url = url;
   }
   final resHeaders = headersResponse.headers;
@@ -759,7 +769,10 @@ Future<PackageInfo?> getInstalledInfo(String? packageName) async {
   if (packageName != null) {
     try {
       final info = await packageManager
-          .getPackageInfo(packageName: packageName, flags: PackageInfoFlags(const {}))
+          .getPackageInfo(
+            packageName: packageName,
+            flags: PackageInfoFlags(const {}),
+          )
           .timeout(const Duration(seconds: 15));
       if (info != null) return info;
     } catch (_) {}
@@ -768,7 +781,10 @@ Future<PackageInfo?> getInstalledInfo(String? packageName) async {
     for (final alias in aliases) {
       try {
         final info = await packageManager
-            .getPackageInfo(packageName: alias, flags: PackageInfoFlags(const {}))
+            .getPackageInfo(
+              packageName: alias,
+              flags: PackageInfoFlags(const {}),
+            )
             .timeout(const Duration(seconds: 5));
         if (info != null) return info;
       } catch (_) {}
@@ -799,6 +815,11 @@ Future<Directory> getAppStorageDir() async {
   } catch (_) {}
   return await getApplicationDocumentsDirectory();
 }
+
+Directory? selectPrimaryExternalCache(
+  List<Directory>? cacheDirs,
+  Directory? primaryExternal,
+) => AppFileService.selectPrimaryExternalCache(cacheDirs, primaryExternal);
 
 class AppsProvider with ChangeNotifier {
   // Static, app-lifetime cross-instance save-notification bus; intentionally
@@ -867,7 +888,6 @@ class AppsProvider with ChangeNotifier {
     isSelectionMode = false;
     _notifyUiOnly();
   }
-
 
   // Serializes concurrent loadApps() calls without busy-waiting.
   Completer<void>? appsLoadingCompleter;
@@ -1051,7 +1071,8 @@ class AppsProvider with ChangeNotifier {
         // Only reload when there's a reason to: a background
         // task wrote new data, or it's been >30 s since the last load.
         // Suppresses redundant disk+IPC work on rapid app switches.
-        final stale = DateTime.now().difference(_lastLoadCompleted!).inSeconds > 30;
+        final stale =
+            DateTime.now().difference(_lastLoadCompleted!).inSeconds > 30;
         if (_needsBgReload || stale) {
           await loadApps();
         }
@@ -1144,9 +1165,13 @@ class AppsProvider with ChangeNotifier {
     // The former case should be handled (give the App its real ID), the latter is a security issue
     var isTempIdBool = isTempId(app);
     if (app.id != newInfo.packageName) {
-      final areAliases = newInfo.packageName != null &&
+      final areAliases =
+          newInfo.packageName != null &&
           AppConstants.arePackageAliases(app.id, newInfo.packageName!);
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
+      if (apps[app.id] != null &&
+          !isTempIdBool &&
+          !app.allowIdChange &&
+          !areAliases) {
         throw IDChangedError(newInfo.packageName!, appId: app.id);
       }
       var idChangeWasAllowed = app.allowIdChange || areAliases;
@@ -1240,12 +1265,19 @@ class AppsProvider with ChangeNotifier {
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
         headers: headers,
-        (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
-          int? prog = (progress == null || progress.isNaN || progress.isInfinite)
+        (
+          double? progress, [
+          int? received,
+          int? total,
+          double? speedBytesPerSec,
+        ]) {
+          int? prog =
+              (progress == null || progress.isNaN || progress.isInfinite)
               ? null
               : progress.ceil();
           if (apps[app.id] != null) {
-            if (received != null) apps[app.id]!.downloadReceivedBytes = received;
+            if (received != null)
+              apps[app.id]!.downloadReceivedBytes = received;
             if (total != null) apps[app.id]!.downloadTotalBytes = total;
             apps[app.id]!.downloadSpeedBytesPerSec = speedBytesPerSec;
             apps[app.id]!.downloadProgress = progress;
@@ -1260,13 +1292,17 @@ class AppsProvider with ChangeNotifier {
             speedBytesPerSec: speedBytesPerSec,
           );
           final now = DateTime.now();
-          final shouldNotify = prog != null &&
+          final shouldNotify =
+              prog != null &&
               prevProg != prog &&
               (prevProg == null ||
                   prog == 100 ||
                   ((prog - prevProg!).abs() >= 2 &&
                       (lastNotificationTime == null ||
-                          now.difference(lastNotificationTime!).inMilliseconds >= 300)));
+                          now
+                                  .difference(lastNotificationTime!)
+                                  .inMilliseconds >=
+                              300)));
           if (shouldNotify) {
             notificationsProvider?.notify(notif);
             prevProg = prog;
@@ -1282,9 +1318,9 @@ class AppsProvider with ChangeNotifier {
 
       // Verify SHA-256 digest if available
       final dynamic rawShaMap = app.additionalSettings['assetSha256s'];
-      final Map<dynamic, dynamic>? shaMap =
-          rawShaMap is Map ? rawShaMap : null;
-      final expectedSha = shaMap?[downloadUrl]?.toString() ??
+      final Map<dynamic, dynamic>? shaMap = rawShaMap is Map ? rawShaMap : null;
+      final expectedSha =
+          shaMap?[downloadUrl]?.toString() ??
           shaMap?[app.apkUrls[app.preferredApkIndex].key]?.toString() ??
           app.additionalSettings['expectedSha256']?.toString();
       if (expectedSha != null && expectedSha.trim().isNotEmpty) {
@@ -1532,19 +1568,18 @@ class AppsProvider with ChangeNotifier {
     BuildContext? firstTimeWithContext, {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
-  }) =>
-      AppInstallService.installApkDir(
-        dir,
-        firstTimeWithContext,
-        behaviorSettings,
-        plusSettings,
-        updateSettings,
-        logs,
-        apps,
-        needsBGWorkaround: needsBGWorkaround,
-        shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-        saveApps: saveApps,
-      );
+  }) => AppInstallService.installApkDir(
+    dir,
+    firstTimeWithContext,
+    behaviorSettings,
+    plusSettings,
+    updateSettings,
+    logs,
+    apps,
+    needsBGWorkaround: needsBGWorkaround,
+    shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+    saveApps: saveApps,
+  );
 
   Future<bool> installApk(
     DownloadedApk file,
@@ -1552,20 +1587,19 @@ class AppsProvider with ChangeNotifier {
     bool needsBGWorkaround = false,
     bool shizukuPretendToBeGooglePlay = false,
     List<DownloadedApk> additionalAPKs = const [],
-  }) =>
-      AppInstallService.installApk(
-        file,
-        firstTimeWithContext,
-        behaviorSettings,
-        plusSettings,
-        updateSettings,
-        logs,
-        apps,
-        needsBGWorkaround: needsBGWorkaround,
-        shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
-        additionalAPKs: additionalAPKs,
-        saveApps: saveApps,
-      );
+  }) => AppInstallService.installApk(
+    file,
+    firstTimeWithContext,
+    behaviorSettings,
+    plusSettings,
+    updateSettings,
+    logs,
+    apps,
+    needsBGWorkaround: needsBGWorkaround,
+    shizukuPretendToBeGooglePlay: shizukuPretendToBeGooglePlay,
+    additionalAPKs: additionalAPKs,
+    saveApps: saveApps,
+  );
 
   Future<String> getStorageRootPath() async {
     return '/${(await getAppStorageDir()).uri.pathSegments.sublist(0, 3).join('/')}';
@@ -1742,10 +1776,9 @@ class AppsProvider with ChangeNotifier {
             notificationsProvider: notificationsProvider,
             forceParallelDownloads: forceParallelDownloads,
             useExisting: useExisting,
-            isCancelled:
-                (appId) =>
-                    (isBulk && _bulkCancelRequested) ||
-                    (_downloadCancellations[appId]?.isCancelled ?? false),
+            isCancelled: (appId) =>
+                (isBulk && _bulkCancelRequested) ||
+                (_downloadCancellations[appId]?.isCancelled ?? false),
           );
       if (context != null && installedIds.isNotEmpty) {
         AppHaptics.installSuccess();
@@ -1964,8 +1997,8 @@ class AppsProvider with ChangeNotifier {
         app.additionalSettings['useVersionCodeAsOSVersion'] == true
         ? installedInfo?.versionCode.toString()
         : (installedInfo?.versionName?.trim().isNotEmpty == true
-            ? installedInfo!.versionName
-            : installedInfo?.versionCode.toString());
+              ? installedInfo!.versionName
+              : installedInfo?.versionCode.toString());
     // FIRST, COMPARE THE APP'S REPORTED AND REAL INSTALLED VERSIONS, WHERE ONE IS NULL
     if (installedInfo == null && app.installedVersion != null && !trackOnly) {
       // App says it's installed but isn't really (and isn't track only) - set to not installed
@@ -2158,7 +2191,10 @@ class AppsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> _restoreQuarantinedApps(Directory appsDir, SourceProvider sp) async {
+  Future<void> _restoreQuarantinedApps(
+    Directory appsDir,
+    SourceProvider sp,
+  ) async {
     try {
       await for (final entity in appsDir.list()) {
         if (entity is! File) continue;
@@ -2176,7 +2212,10 @@ class AppsProvider with ChangeNotifier {
           final app = App.fromJson(jsonDecode(await entity.readAsString()));
           sp.getSource(app.url, overrideSource: app.overrideSource);
           await entity.rename(
-            entity.path.substring(0, entity.path.length - _quarantineSuffix.length),
+            entity.path.substring(
+              0,
+              entity.path.length - _quarantineSuffix.length,
+            ),
           );
           logs.add('Restored previously unsupported app ${app.id}');
         } catch (_) {
@@ -2194,7 +2233,9 @@ class AppsProvider with ChangeNotifier {
     final entities = await appsDir.list().toList();
 
     // Map existing cached icon files to avoid repeated per-app disk lookups
-    final iconsDir = _iconsCacheDir ?? (await AppFileService.initAppDirectories())['iconsCacheDir']!;
+    final iconsDir =
+        _iconsCacheDir ??
+        (await AppFileService.initAppDirectories())['iconsCacheDir']!;
     final Map<String, File> cachedIconFiles = {};
     try {
       if (await iconsDir.exists()) {
@@ -2223,18 +2264,14 @@ class AppsProvider with ChangeNotifier {
           app = App.fromJson(jsonDecode(content));
         } catch (err) {
           if (err is FormatException) {
-            logs.add(
-              'Corrupt JSON when loading App (will be ignored): $err',
-            );
+            logs.add('Corrupt JSON when loading App (will be ignored): $err');
             try {
               await item.rename('${item.path}.corrupt');
             } catch (_) {}
           } else if (err is FileSystemException) {
             // The file can vanish between list and this read (concurrent
             // removal/storage clear) — skip it instead of aborting the whole load.
-            logs.add(
-              'Skipped missing/unreadable app file ${item.path}: $err',
-            );
+            logs.add('Skipped missing/unreadable app file ${item.path}: $err');
           } else {
             // A file that parses but has a wrong type/missing field must not
             // abort the whole load and hide every other app; skip it (the
@@ -2249,7 +2286,10 @@ class AppsProvider with ChangeNotifier {
           String? sourceType;
           try {
             // Validate that a known source handles this URL before adding it.
-            final src = sp.getSource(app.url, overrideSource: app.overrideSource);
+            final src = sp.getSource(
+              app.url,
+              overrideSource: app.overrideSource,
+            );
             sourceType = src.sourceIdentifier;
           } catch (e) {
             errors.add([app.id, app.finalName, e.toString()]);
@@ -2371,10 +2411,7 @@ class AppsProvider with ChangeNotifier {
         );
       }
     } catch (e) {
-      logs.add(
-        'Phase-2 reconciliation error: $e',
-        level: LogLevel.error,
-      );
+      logs.add('Phase-2 reconciliation error: $e', level: LogLevel.error);
     }
 
     // Persist any corrections so they aren't recomputed on the next load.
@@ -2386,7 +2423,10 @@ class AppsProvider with ChangeNotifier {
           reuseInstalledInfo: true,
         );
       } catch (e) {
-        logs.add('Failed to persist phase-2 corrections: $e', level: LogLevel.warning);
+        logs.add(
+          'Failed to persist phase-2 corrections: $e',
+          level: LogLevel.warning,
+        );
       }
     }
 
@@ -2409,11 +2449,9 @@ class AppsProvider with ChangeNotifier {
         if (apps[id]?.icon == null && apps[id]?.installedInfo != null) id,
     ];
     if (missingIconIds.isNotEmpty) {
-      unawaited(_runWithConcurrencyLimit(
-        missingIconIds,
-        4,
-        (id) => updateAppIcon(id),
-      ));
+      unawaited(
+        _runWithConcurrencyLimit(missingIconIds, 4, (id) => updateAppIcon(id)),
+      );
     }
     notifyListeners();
   }
@@ -2495,7 +2533,6 @@ class AppsProvider with ChangeNotifier {
     });
   }
 
-
   PackageInfo? _findInBulkInstalledMap(
     Map<String, PackageInfo> map,
     String appId,
@@ -2538,9 +2575,9 @@ class AppsProvider with ChangeNotifier {
         PackageInfo? info = canReuse
             ? this.apps[app.id]!.installedInfo
             : bulkInstalledMap != null
-                ? (bulkInstalledMap[app.id] ??
-                    _findInBulkInstalledMap(bulkInstalledMap, app.id))
-                : await getInstalledInfo(app.id);
+            ? (bulkInstalledMap[app.id] ??
+                  _findInBulkInstalledMap(bulkInstalledMap, app.id))
+            : await getInstalledInfo(app.id);
         var icon = canReuse
             ? this.apps[app.id]!.icon
             : await info?.applicationInfo?.getAppIcon();
@@ -2995,9 +3032,11 @@ class AppsProvider with ChangeNotifier {
             '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}${isAuto ? '-auto' : ''}.json',
         mimeType: 'application/json',
         bytes: Uint8List.fromList(
-          utf8.encode(await _maybeEncryptExport(
-            encoder.convert(sanitizeJsonValue(finalExport)),
-          )),
+          utf8.encode(
+            await _maybeEncryptExport(
+              encoder.convert(sanitizeJsonValue(finalExport)),
+            ),
+          ),
         ),
       );
       if (result == null) {

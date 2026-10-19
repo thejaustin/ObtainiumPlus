@@ -72,7 +72,8 @@ class Tencent extends AppSource {
         if (version == null || version.isEmpty) {
           throw NoVersionError();
         }
-        final String appName = json['appName']?.toString().trim().isNotEmpty == true
+        final String appName =
+            json['appName']?.toString().trim().isNotEmpty == true
             ? json['appName'].toString()
             : appId;
         final String author = json['author']?.toString() ?? name;

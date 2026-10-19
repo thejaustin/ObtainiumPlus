@@ -33,12 +33,15 @@ class AppBehaviorSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
     final plusSettings = context.watch<PlusSettingsProvider>();
 
-    final hasHaptics = _matches(tr('enableHapticFeedback')) ||
+    final hasHaptics =
+        _matches(tr('enableHapticFeedback')) ||
         _matches(tr('enableUndoForAppRemoval'));
-    final hasSwipe = _matches(tr('enableSwipeGestures')) ||
+    final hasSwipe =
+        _matches(tr('enableSwipeGestures')) ||
         _matches(tr('swipeRightAction')) ||
         _matches(tr('swipeLeftAction'));
-    final hasMotion = _matches(tr('animations')) ||
+    final hasMotion =
+        _matches(tr('animations')) ||
         _matches(tr('animationSpeed')) ||
         _matches(tr('disablePageTransitions'), isAdvanced: true) ||
         _matches(tr('reversePageTransitions')) ||
@@ -95,7 +98,11 @@ class AppBehaviorSection extends StatelessWidget {
                 Consumer<BehaviorSettingsProvider>(
                   builder: (context, settings, child) {
                     return AnimatedSize(
-                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 250
+                            : 0,
+                      ),
                       curve: Curves.easeInOutCubic,
                       child: settings.enableSwipeGestures
                           ? Column(
@@ -135,18 +142,27 @@ class AppBehaviorSection extends StatelessWidget {
                     SettingsSliderTile(
                       icon: Icons.speed_outlined,
                       title: tr('animationSpeed'),
-                      value: behaviorSettings.animationSpeedMultiplier
-                          .clamp(0.25, 2.0),
+                      value: behaviorSettings.animationSpeedMultiplier.clamp(
+                        0.25,
+                        2.0,
+                      ),
                       min: 0.25,
                       max: 2.0,
                       divisions: 7,
-                      labelBuilder: (v) =>
-                          '${(v * 100).round()}%',
+                      labelBuilder: (v) => '${(v * 100).round()}%',
                       onChanged: (val) {
-                        const steps = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+                        const steps = [
+                          0.25,
+                          0.5,
+                          0.75,
+                          1.0,
+                          1.25,
+                          1.5,
+                          1.75,
+                          2.0,
+                        ];
                         final nearest = steps.reduce(
-                          (a, b) =>
-                              (a - val).abs() < (b - val).abs() ? a : b,
+                          (a, b) => (a - val).abs() < (b - val).abs() ? a : b,
                         );
                         behaviorSettings.animationSpeedMultiplier = nearest;
                       },
@@ -205,8 +221,9 @@ class AppBehaviorSection extends StatelessWidget {
   }) {
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, settings, child) {
-        final currentAction =
-            isRight ? settings.swipeRightAction : settings.swipeLeftAction;
+        final currentAction = isRight
+            ? settings.swipeRightAction
+            : settings.swipeLeftAction;
         final colorScheme = Theme.of(context).colorScheme;
         final plusSettings = context.watch<PlusSettingsProvider>();
         final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
@@ -220,7 +237,9 @@ class AppBehaviorSection extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    isRight ? Icons.swipe_right_outlined : Icons.swipe_left_outlined,
+                    isRight
+                        ? Icons.swipe_right_outlined
+                        : Icons.swipe_left_outlined,
                     size: 22,
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -280,7 +299,7 @@ class AppBehaviorSection extends StatelessWidget {
                                           color: isSelected
                                               ? colorScheme.primaryContainer
                                               : colorScheme.surfaceContainerHigh
-                                                  .withValues(alpha: 0.5),
+                                                    .withValues(alpha: 0.5),
                                           borderRadius: BorderRadius.circular(
                                             plusSettings.plusGlobalCornerRadius
                                                 .clamp(8, 20),
@@ -288,27 +307,24 @@ class AppBehaviorSection extends StatelessWidget {
                                           border: Border.all(
                                             color: isSelected
                                                 ? colorScheme.primary
-                                                    .withValues(alpha: 0.5)
+                                                      .withValues(alpha: 0.5)
                                                 : colorScheme.outlineVariant
-                                                    .withValues(alpha: 0.3),
+                                                      .withValues(alpha: 0.3),
                                             width: isSelected ? 1.5 : 1.0,
                                           ),
                                         ),
                                         child: Material(
                                           color: Colors.transparent,
-                                          borderRadius:
-                                              BorderRadius.circular(
-                                                plusSettings
-                                                    .plusGlobalCornerRadius
-                                                    .clamp(8, 20),
-                                              ),
+                                          borderRadius: BorderRadius.circular(
+                                            plusSettings.plusGlobalCornerRadius
+                                                .clamp(8, 20),
+                                          ),
                                           child: InkWell(
-                                            borderRadius:
-                                                BorderRadius.circular(
-                                                  plusSettings
-                                                      .plusGlobalCornerRadius
-                                                      .clamp(8, 20),
-                                                ),
+                                            borderRadius: BorderRadius.circular(
+                                              plusSettings
+                                                  .plusGlobalCornerRadius
+                                                  .clamp(8, 20),
+                                            ),
                                             onTap: () {
                                               AppHaptics.selectionClick();
                                               if (isRight) {
@@ -328,9 +344,9 @@ class AppBehaviorSection extends StatelessWidget {
                                                   size: 14,
                                                   color: isSelected
                                                       ? colorScheme
-                                                          .onPrimaryContainer
+                                                            .onPrimaryContainer
                                                       : colorScheme
-                                                          .onSurfaceVariant,
+                                                            .onSurfaceVariant,
                                                 ),
                                                 const SizedBox(width: 5),
                                                 Flexible(
@@ -345,9 +361,9 @@ class AppBehaviorSection extends StatelessWidget {
                                                               : FontWeight.w500,
                                                           color: isSelected
                                                               ? colorScheme
-                                                                  .onPrimaryContainer
+                                                                    .onPrimaryContainer
                                                               : colorScheme
-                                                                  .onSurfaceVariant,
+                                                                    .onSurfaceVariant,
                                                         ),
                                                     overflow:
                                                         TextOverflow.ellipsis,
@@ -380,10 +396,13 @@ class AppBehaviorSection extends StatelessWidget {
       builder: (context, settings, child) {
         if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
 
-        final hasDiscover = _matches(tr('plusDiscover')) ||
+        final hasDiscover =
+            _matches(tr('plusDiscover')) ||
             _matches(tr('plusDiscoverSuggestions'));
-        final hasBanWarnings =
-            _matches(tr('plusEnableBanWarnings'), isAdvanced: true);
+        final hasBanWarnings = _matches(
+          tr('plusEnableBanWarnings'),
+          isAdvanced: true,
+        );
 
         if (!hasDiscover && !hasBanWarnings) return const SizedBox.shrink();
 
@@ -415,7 +434,9 @@ class AppBehaviorSection extends StatelessWidget {
             if (hasBanWarnings)
               ExpressiveSettingsGroup(
                 title: isSearching ? null : tr('safetyAndRateLimits'),
-                description: isSearching ? null : tr('safetyAndRateLimitsGroupDesc'),
+                description: isSearching
+                    ? null
+                    : tr('safetyAndRateLimitsGroupDesc'),
                 persistKey: 'safetyAndRateLimits',
                 icon: Icons.shield_outlined,
                 isExpandable: !isSearching,
@@ -475,7 +496,11 @@ class AppBehaviorSection extends StatelessWidget {
                     },
                   ),
                   AnimatedSize(
-                    duration: Duration(milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0),
+                    duration: Duration(
+                      milliseconds: settings.plusEnableEnhancedAnimations
+                          ? 250
+                          : 0,
+                    ),
                     curve: Curves.easeInOutCubic,
                     child: settings.plusEnableBanWarnings
                         ? SettingsSliderTile(
@@ -523,5 +548,4 @@ class AppBehaviorSection extends StatelessWidget {
       },
     );
   }
-
 }

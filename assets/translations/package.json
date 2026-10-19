@@ -1,5 +1,5 @@
 {
-  "dependencies": {
-    "translate": "^3.0.1"
-  }
+    "dependencies": {
+        "translate": "^3.0.1"
+    }
 }

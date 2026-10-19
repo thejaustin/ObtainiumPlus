@@ -108,6 +108,7 @@ class ObtainiumNotification {
   String? payload;
   String? appId;
   List<AndroidNotificationAction>? androidActions;
+  StyleInformation? style;
 
   ObtainiumNotification(
     this.id,
@@ -122,6 +123,7 @@ class ObtainiumNotification {
     this.payload,
     this.appId,
     this.androidActions,
+    this.style,
   });
 }
 
@@ -214,6 +216,7 @@ class ErrorCheckingUpdatesNotification extends ObtainiumNotification {
         tr('errorCheckingUpdatesNotifDescription'),
         Importance.high,
         payload: "${tr('errorCheckingUpdates')}\n$error",
+        style: BigTextStyleInformation(error),
       );
 }
 
@@ -479,6 +482,7 @@ class NotificationsProvider {
     bool onlyAlertOnce = false,
     String? payload,
     List<AndroidNotificationAction>? androidActions,
+    StyleInformation? style,
   }) async {
     // A notification failure (bad icon, channel error) must never abort the
     // install/update flow that triggered it.
@@ -496,6 +500,7 @@ class NotificationsProvider {
         onlyAlertOnce: onlyAlertOnce,
         payload: payload,
         androidActions: androidActions,
+        style: style,
       );
     } catch (e, stack) {
       talker.handle(e, stack, 'Notification failed');
@@ -515,6 +520,7 @@ class NotificationsProvider {
     bool onlyAlertOnce = false,
     String? payload,
     List<AndroidNotificationAction>? androidActions,
+    StyleInformation? style,
   }) async {
     if (cancelExisting) {
       await cancel(id);
@@ -545,6 +551,7 @@ class NotificationsProvider {
           silent: silent,
           indeterminate: progPercent != null && progPercent < 0,
           actions: androidActions,
+          styleInformation: style,
         ),
       ),
       payload: payload,
@@ -598,6 +605,7 @@ class NotificationsProvider {
         ? '$appIdTapPayloadPrefix${notif.appId}'
         : notif.payload,
     androidActions: notif.androidActions,
+    style: notif.style,
   );
 }
 

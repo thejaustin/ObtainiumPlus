@@ -196,7 +196,10 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
                       ScaleTouchWrapper(
                         hapticOnPressDown: true,
                         scaleDownFactor: 0.94,
-                        child: TextButton(onPressed: _skip, child: Text(tr('skip'))),
+                        child: TextButton(
+                          onPressed: _skip,
+                          child: Text(tr('skip')),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       ScaleTouchWrapper(

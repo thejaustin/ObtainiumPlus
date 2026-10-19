@@ -50,6 +50,7 @@ import 'package:obtainium/utils/app_localizations_delegates.dart';
 
 List<MapEntry<Locale, String>> supportedLocales = const [
   MapEntry(Locale('en'), 'English'),
+  MapEntry(Locale('bn'), 'বাংলা'),
   MapEntry(Locale('zh', 'Hant_TW'), '臺灣話'),
   MapEntry(Locale('zh'), '简体中文'),
   MapEntry(Locale('it'), 'Italiano'),
@@ -307,7 +308,11 @@ Future<void> _runObtainium() async {
   // it, or uncaught async errors never reach Sentry.
   final previousOnError = ui.PlatformDispatcher.instance.onError;
   ui.PlatformDispatcher.instance.onError = (error, stack) {
-    AppLogger.error(error, stackTrace: stack, message: 'Uncaught platform error');
+    AppLogger.error(
+      error,
+      stackTrace: stack,
+      message: 'Uncaught platform error',
+    );
     CrashFileHandler.writeCrashLog(
       errorType: error.runtimeType.toString(),
       message: error.toString(),
@@ -327,8 +332,10 @@ Future<void> _runObtainium() async {
       AppLogger.error(e, stackTrace: stackTrace, message: 'Startup failed');
     } catch (_) {}
     try {
-      eventId = (await Sentry.captureException(e, stackTrace: stackTrace))
-          .toString();
+      eventId = (await Sentry.captureException(
+        e,
+        stackTrace: stackTrace,
+      )).toString();
     } catch (_) {}
     try {
       await CrashAnalytics.recordCrash(

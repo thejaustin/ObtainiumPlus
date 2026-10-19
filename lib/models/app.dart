@@ -29,6 +29,7 @@ class App {
   late Map<String, dynamic> additionalSettings;
   late DateTime? lastUpdateCheck;
   bool pinned = false;
+  bool disabled = false;
   List<String> categories;
   List<String> tags;
   late DateTime? releaseDate;
@@ -44,6 +45,14 @@ class App {
   bool get hasPendingRepoRename =>
       pendingRepoRenameUrl != null && pendingRepoRenameUrl!.isNotEmpty;
 
+  int? apkSizeBytes;
+  DateTime? latestVersionChangedAt;
+  int consecutiveFailedChecks = 0;
+  bool? isArchived;
+  int? newerReleasesFilteredOut;
+  bool updateHealthEnabled = true;
+  String? updateHealthDismissedVersion;
+
   App(
     this.id,
     this.url,
@@ -56,6 +65,7 @@ class App {
     this.additionalSettings,
     this.lastUpdateCheck,
     this.pinned, {
+    this.disabled = false,
     this.categories = const [],
     this.tags = const [],
     this.releaseDate,
@@ -65,6 +75,13 @@ class App {
     this.allowIdChange = false,
     this.otherAssetUrls = const [],
     this.versionHistory = const [],
+    this.apkSizeBytes,
+    this.latestVersionChangedAt,
+    this.consecutiveFailedChecks = 0,
+    this.isArchived,
+    this.newerReleasesFilteredOut,
+    this.updateHealthEnabled = true,
+    this.updateHealthDismissedVersion,
   });
 
   @override
@@ -104,6 +121,7 @@ class App {
     Map<String, dynamic>? additionalSettings,
     Object? lastUpdateCheck = _sentinel,
     bool? pinned,
+    bool? disabled,
     List<String>? categories,
     List<String>? tags,
     Object? releaseDate = _sentinel,
@@ -113,6 +131,13 @@ class App {
     bool? allowIdChange,
     List<VersionHistoryEntry>? versionHistory,
     Object? pendingRepoRenameUrl = _sentinel,
+    Object? apkSizeBytes = _sentinel,
+    Object? latestVersionChangedAt = _sentinel,
+    int? consecutiveFailedChecks,
+    Object? isArchived = _sentinel,
+    Object? newerReleasesFilteredOut = _sentinel,
+    bool? updateHealthEnabled,
+    Object? updateHealthDismissedVersion = _sentinel,
   }) {
     return App(
         id ?? this.id,
@@ -131,6 +156,7 @@ class App {
             ? this.lastUpdateCheck
             : lastUpdateCheck as DateTime?,
         pinned ?? this.pinned,
+        disabled: disabled ?? this.disabled,
         categories: categories ?? List<String>.from(this.categories),
         tags: tags ?? List<String>.from(this.tags),
         releaseDate: releaseDate == _sentinel
@@ -150,6 +176,24 @@ class App {
             otherAssetUrls ??
             List<MapEntry<String, String>>.from(this.otherAssetUrls),
         versionHistory: versionHistory ?? List.from(this.versionHistory),
+        apkSizeBytes: apkSizeBytes == _sentinel
+            ? this.apkSizeBytes
+            : apkSizeBytes as int?,
+        latestVersionChangedAt: latestVersionChangedAt == _sentinel
+            ? this.latestVersionChangedAt
+            : latestVersionChangedAt as DateTime?,
+        consecutiveFailedChecks:
+            consecutiveFailedChecks ?? this.consecutiveFailedChecks,
+        isArchived: isArchived == _sentinel
+            ? this.isArchived
+            : isArchived as bool?,
+        newerReleasesFilteredOut: newerReleasesFilteredOut == _sentinel
+            ? this.newerReleasesFilteredOut
+            : newerReleasesFilteredOut as int?,
+        updateHealthEnabled: updateHealthEnabled ?? this.updateHealthEnabled,
+        updateHealthDismissedVersion: updateHealthDismissedVersion == _sentinel
+            ? this.updateHealthDismissedVersion
+            : updateHealthDismissedVersion as String?,
       )
       ..pendingRepoRenameUrl = (pendingRepoRenameUrl == _sentinel
           ? this.pendingRepoRenameUrl
@@ -168,6 +212,7 @@ class App {
     Map.from(additionalSettings),
     lastUpdateCheck,
     pinned,
+    disabled: disabled,
     categories: List<String>.from(categories),
     tags: List<String>.from(tags),
     changeLog: changeLog,
@@ -177,6 +222,13 @@ class App {
     allowIdChange: allowIdChange,
     otherAssetUrls: List.from(otherAssetUrls),
     versionHistory: List.from(versionHistory),
+    apkSizeBytes: apkSizeBytes,
+    latestVersionChangedAt: latestVersionChangedAt,
+    consecutiveFailedChecks: consecutiveFailedChecks,
+    isArchived: isArchived,
+    newerReleasesFilteredOut: newerReleasesFilteredOut,
+    updateHealthEnabled: updateHealthEnabled,
+    updateHealthDismissedVersion: updateHealthDismissedVersion,
   )..pendingRepoRenameUrl = pendingRepoRenameUrl;
 
   factory App.fromJson(
@@ -209,6 +261,7 @@ class App {
             ? null
             : DateTime.fromMicrosecondsSinceEpoch(json['lastUpdateCheck']),
         json['pinned'] ?? false,
+        disabled: json['disabled'] ?? false,
         categories: json['categories'] != null
             ? (json['categories'] as List<dynamic>)
                   .map((e) => e.toString())
@@ -217,9 +270,7 @@ class App {
             ? [json['category'] as String]
             : [],
         tags: json['tags'] != null
-            ? (json['tags'] as List<dynamic>)
-                  .map((e) => e.toString())
-                  .toList()
+            ? (json['tags'] as List<dynamic>).map((e) => e.toString()).toList()
             : [],
         releaseDate: json['releaseDate'] == null
             ? null
@@ -241,6 +292,18 @@ class App {
                   )
                   .toList()
             : [],
+        apkSizeBytes: json['apkSizeBytes'] as int?,
+        latestVersionChangedAt: json['latestVersionChangedAt'] == null
+            ? null
+            : DateTime.fromMicrosecondsSinceEpoch(
+                json['latestVersionChangedAt'] as int,
+              ),
+        consecutiveFailedChecks: (json['consecutiveFailedChecks'] as int?) ?? 0,
+        isArchived: json['isArchived'] as bool?,
+        newerReleasesFilteredOut: json['newerReleasesFilteredOut'] as int?,
+        updateHealthEnabled: (json['updateHealthEnabled'] as bool?) ?? true,
+        updateHealthDismissedVersion:
+            json['updateHealthDismissedVersion'] as String?,
       )..pendingRepoRenameUrl = json['pendingRepoRenameUrl'] as String?;
     } on TypeError catch (e) {
       AppLogger.error(
@@ -265,6 +328,7 @@ class App {
     'additionalSettings': safeJsonEncode(additionalSettings),
     'lastUpdateCheck': lastUpdateCheck?.microsecondsSinceEpoch,
     'pinned': pinned,
+    'disabled': disabled,
     'categories': categories,
     'tags': tags,
     'releaseDate': releaseDate?.microsecondsSinceEpoch,
@@ -274,6 +338,13 @@ class App {
     'allowIdChange': allowIdChange,
     'pendingRepoRenameUrl': pendingRepoRenameUrl,
     'versionHistory': versionHistory.map((e) => e.toJson()).toList(),
+    'apkSizeBytes': apkSizeBytes,
+    'latestVersionChangedAt': latestVersionChangedAt?.microsecondsSinceEpoch,
+    'consecutiveFailedChecks': consecutiveFailedChecks,
+    'isArchived': isArchived,
+    'newerReleasesFilteredOut': newerReleasesFilteredOut,
+    'updateHealthEnabled': updateHealthEnabled,
+    'updateHealthDismissedVersion': updateHealthDismissedVersion,
   };
 }
 

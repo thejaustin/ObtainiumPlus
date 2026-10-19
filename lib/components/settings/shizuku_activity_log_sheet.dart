@@ -158,7 +158,9 @@ class _ShizukuActivityLogSheetContentState
                         Icon(
                           Icons.history_toggle_off_rounded,
                           size: 48,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                         const SizedBox(height: 12),
                         Text(
@@ -174,7 +176,10 @@ class _ShizukuActivityLogSheetContentState
                 )
               : ListView.separated(
                   controller: widget.scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   itemCount: entries.length,
                   separatorBuilder: (ctx, i) => const Divider(height: 1),
                   itemBuilder: (ctx, i) {
@@ -210,17 +215,19 @@ class _ShizukuActivityLogSheetContentState
                                   children: [
                                     Text(
                                       e.action,
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                     ),
                                     const Spacer(),
                                     Text(
                                       timeStr,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontSize: 11,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                            fontSize: 11,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -239,7 +246,9 @@ class _ShizukuActivityLogSheetContentState
                                   Text(
                                     e.details!,
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurface.withValues(alpha: 0.85),
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.85,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -252,7 +261,9 @@ class _ShizukuActivityLogSheetContentState
                                         vertical: 2,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: statusColor.withValues(alpha: 0.15),
+                                        color: statusColor.withValues(
+                                          alpha: 0.15,
+                                        ),
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
@@ -267,19 +278,22 @@ class _ShizukuActivityLogSheetContentState
                                     const SizedBox(width: 8),
                                     Text(
                                       '${e.durationMs}ms',
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        fontSize: 11,
-                                      ),
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                            fontSize: 11,
+                                          ),
                                     ),
                                     if (e.latencyMs != null) ...[
                                       const SizedBox(width: 8),
                                       Text(
                                         '• latency: ${e.latencyMs}ms',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                          fontSize: 11,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                              fontSize: 11,
+                                            ),
                                       ),
                                     ],
                                   ],

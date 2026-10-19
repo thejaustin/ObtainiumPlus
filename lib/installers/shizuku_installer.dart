@@ -34,10 +34,28 @@ class ShizukuProviderInfo {
   bool get hasActiveLoopback => activeLoopbackPort != null;
 }
 
+/// How many times to re-check a transiently unavailable Shizuku/Dhizuku binder
+/// before reporting that the service is not running.
+const int _permissionCheckAttempts = 4;
+
+/// Delay between transient binder availability checks.
+const Duration _permissionCheckRetryDelay = Duration(milliseconds: 500);
+
 /// Installs via the Shizuku/Dhizuku/Sui binder API for elevated installs with
 /// no user-facing permission dialog. Supports silent installs.
 class ShizukuInstaller extends Installer {
   ShizukuInstaller(super.settingsProvider);
+
+  /// Maps the `shizukuInstallerMode` setting to the plugin's backend mode.
+  static InstallerMode modeForSetting(String setting) => switch (setting) {
+    'shizuku' => InstallerMode.shizuku,
+    'dhizuku' => InstallerMode.dhizuku,
+    _ => InstallerMode.auto,
+  };
+
+  Future<void> _applyBackend() => ShizukuApkInstaller().setInstallerMode(
+    modeForSetting(settingsProvider.shizukuInstallerMode),
+  );
 
   @override
   String get modeKey => 'shizuku';
@@ -76,8 +94,9 @@ class ShizukuInstaller extends Installer {
   static Future<int?> measureBinderLatencyMs() async {
     final sw = Stopwatch()..start();
     try {
-      final status = await ShizukuApkInstaller().checkPermission()
-          .timeout(const Duration(seconds: 3));
+      final status = await ShizukuApkInstaller().checkPermission().timeout(
+        const Duration(seconds: 3),
+      );
       sw.stop();
       if (status == null ||
           status == 'binder_not_found' ||
@@ -114,9 +133,9 @@ class ShizukuInstaller extends Installer {
   /// Fast pre-flight check to determine if the Shizuku daemon is actively responding.
   static Future<bool> isServiceReady() async {
     try {
-      final status = await ShizukuApkInstaller()
-          .checkPermission()
-          .timeout(const Duration(milliseconds: 750));
+      final status = await ShizukuApkInstaller().checkPermission().timeout(
+        const Duration(milliseconds: 750),
+      );
       return status?.startsWith('authorized') == true ||
           status?.startsWith('granted') == true;
     } catch (_) {
@@ -234,40 +253,40 @@ class ShizukuInstaller extends Installer {
 
   @override
   Future<bool> checkPermission() async {
-    final status = await checkPermissionWithRetry();
-    return status?.startsWith('granted') == true ||
-        status?.startsWith('authorized') == true;
+    await _applyBackend();
+    return (await ShizukuApkInstaller().checkPermission())?.startsWith(
+          'granted',
+        ) ??
+        false;
   }
 
   @override
   Future<void> ensurePermission() async {
-    final status = await checkPermissionWithRetry();
-    if (status?.startsWith('granted') == true ||
-        status?.startsWith('authorized') == true) {
-      return;
+    String? result;
+    for (var attempt = 0; attempt < _permissionCheckAttempts; attempt++) {
+      await _applyBackend();
+      result = await ShizukuApkInstaller().checkPermission();
+      if (result != 'services_not_found' ||
+          attempt == _permissionCheckAttempts - 1) {
+        break;
+      }
+      await Future<void>.delayed(_permissionCheckRetryDelay);
     }
-    final pkg = await getInstalledShizukuPackageId();
-    if (pkg == null) {
-      throw ObtainiumError(tr('shizukuNotInstalled'));
-    }
-    final isPlus = pkg == AppConstants.shizukuPlusId;
-    switch (status) {
+    switch (result) {
+      case 'granted_owner':
+      case 'granted_root':
+      case 'granted_adb':
+        break;
       case 'services_not_found':
-      case 'binder_not_found':
-      case null:
-        throw ObtainiumError(
-          isPlus
-              ? tr('shizukuPlusServiceStopped')
-              : tr('shizukuBinderNotFound'),
-        );
+        throw ObtainiumError(tr('shizukuBinderNotFound'));
       case 'old_shizuku':
         throw ObtainiumError(tr('shizukuOld'));
       case 'old_android_with_adb':
         throw ObtainiumError(tr('shizukuOldAndroidWithADB'));
       case 'denied':
-        throw ObtainiumError(tr('shizukuPermissionDenied'));
+        throw ObtainiumError(tr('cancelled'));
       default:
-        throw ObtainiumError(tr('shizukuBinderNotFound'));
+        throw ObtainiumError(tr('cancelled'));
     }
   }
 
@@ -277,6 +296,7 @@ class ShizukuInstaller extends Installer {
     required String appId,
     Map<String, dynamic> installOptions = const {},
   }) async {
+    await _applyBackend();
     // --- Smart binder pre-check with system fallback ---
     // If the binder is unavailable and shizukuFallbackToSystem is enabled,
     // skip Shizuku entirely and use the session-based stock installer, which
@@ -286,9 +306,11 @@ class ShizukuInstaller extends Installer {
         (settingsProvider.shizukuFallbackToSystem);
     final stopwatch = Stopwatch()..start();
     if (fallbackEnabled) {
-      final preCheckStatus = await ShizukuApkInstaller().checkPermission()
+      final preCheckStatus = await ShizukuApkInstaller()
+          .checkPermission()
           .timeout(const Duration(seconds: 2), onTimeout: () => null);
-      final binderAlive = preCheckStatus?.startsWith('authorized') == true ||
+      final binderAlive =
+          preCheckStatus?.startsWith('authorized') == true ||
           preCheckStatus?.startsWith('granted') == true;
       if (!binderAlive) {
         // Binder is down — gracefully fall back to stock session installer
@@ -302,7 +324,8 @@ class ShizukuInstaller extends Installer {
           targetPackage: appId,
           durationMs: stopwatch.elapsedMilliseconds,
           status: res.isSuccess ? 'success' : 'error',
-          details: 'Shizuku daemon suspended; fell back to stock installer (code $code)',
+          details:
+              'Shizuku daemon suspended; fell back to stock installer (code $code)',
         );
         return res;
       }
@@ -318,9 +341,12 @@ class ShizukuInstaller extends Installer {
     Timer? pollTimer;
 
     final int? targetVersionCode = installOptions['targetVersionCode'] as int?;
-    final String? targetVersionName = installOptions['targetVersionName'] as String?;
-    final int? existingVersionCode = installOptions['existingVersionCode'] as int?;
-    final String? existingVersionName = installOptions['existingVersionName'] as String?;
+    final String? targetVersionName =
+        installOptions['targetVersionName'] as String?;
+    final int? existingVersionCode =
+        installOptions['existingVersionCode'] as int?;
+    final String? existingVersionName =
+        installOptions['existingVersionName'] as String?;
 
     // Concurrent package-verification polling.
     // Adaptive interval: 350ms for the first 10s, then every ~3rd tick (~1050ms)
@@ -342,7 +368,10 @@ class ShizukuInstaller extends Installer {
       // After 10s switch to ~1s effective interval to ease PM pressure
       if (elapsedMs > 10000 && pollTick % 3 != 0) return;
       try {
-        final info = await AppInstallService.getInstalledInfo(appId, printErr: false);
+        final info = await AppInstallService.getInstalledInfo(
+          appId,
+          printErr: false,
+        );
         if (info != null) {
           final currentCode = info.versionCode ?? 0;
           bool isSuccess = false;
@@ -398,28 +427,31 @@ class ShizukuInstaller extends Installer {
     // Fire Shizuku install with a 30s binder-hang guard. A hung binder callback
     // is the primary cause of the indefinite spinner — detect it early, log it,
     // and let polling continue detecting success in the background.
-    runShizuku().timeout(
-      const Duration(seconds: 30),
-      onTimeout: () {
-        ShizukuTelemetryService.instance.log(
-          action: 'binderHang',
-          targetPackage: appId,
-          durationMs: stopwatch.elapsedMilliseconds,
-          status: 'hang',
-          details: 'Shizuku callback silent for 30s; polling continues',
-        );
-        return null; // Don't resolve completer — polling or overall timeout handles it
-      },
-    ).then((code) {
-      if (code != null && !completer.isCompleted) {
-        completer.complete(InstallResult.fromPlatformCode(code));
-      }
-    }).catchError((err) {
-      if (!completer.isCompleted) {
-        // Not a PackageInstaller status: use a distinct unknown code.
-        completer.complete(InstallResult.error(unknownInstallerErrorCode));
-      }
-    });
+    runShizuku()
+        .timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            ShizukuTelemetryService.instance.log(
+              action: 'binderHang',
+              targetPackage: appId,
+              durationMs: stopwatch.elapsedMilliseconds,
+              status: 'hang',
+              details: 'Shizuku callback silent for 30s; polling continues',
+            );
+            return null; // Don't resolve completer — polling or overall timeout handles it
+          },
+        )
+        .then((code) {
+          if (code != null && !completer.isCompleted) {
+            completer.complete(InstallResult.fromPlatformCode(code));
+          }
+        })
+        .catchError((err) {
+          if (!completer.isCompleted) {
+            // Not a PackageInstaller status: use a distinct unknown code.
+            completer.complete(InstallResult.error(unknownInstallerErrorCode));
+          }
+        });
 
     // 90s ceiling: 30s binder hang detection + 60s polling window after
     final res = await completer.future.timeout(
@@ -434,13 +466,13 @@ class ShizukuInstaller extends Installer {
     final statusStr = res.isSuccess
         ? 'success'
         : (isBlockedByAutoBlocker(res.errorCode ?? 0)
-            ? 'blocked'
-            : (res.isCancelled ? 'cancelled' : 'error'));
+              ? 'blocked'
+              : (res.isCancelled ? 'cancelled' : 'error'));
     final detailsMsg = res.isSuccess
         ? 'Successfully committed via Shizuku binder'
         : (res.errorCode != null
-            ? getDiagnosticMessageForErrorCode(res.errorCode!)
-            : 'Outcome: ${res.outcome}');
+              ? getDiagnosticMessageForErrorCode(res.errorCode!)
+              : 'Outcome: ${res.outcome}');
 
     ShizukuTelemetryService.instance.log(
       action: actionName,

@@ -2,10 +2,16 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/host_request_gate.dart';
+import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/source_utils.dart';
+import 'package:obtainium/utils/update_health.dart';
+
+const List<int> minimumUpdateAgeOptions = [0, 1, 2, 3, 5, 7, 14, 30];
 
 abstract class AppSource {
   List<String> hosts = [];
@@ -31,6 +37,8 @@ abstract class AppSource {
   bool inferAppIdEvenWhenTrackOnly = false;
   bool suppressStandardVersionExtraction = false;
   List<String> trustedApkHosts = [];
+  bool enableHostRequestGate = false;
+  int maxConcurrentRequestsPerHost = 2;
   String get sourceIdentifier => runtimeType.toString();
 
   RegExp? _hostRegex;
@@ -48,24 +56,18 @@ abstract class AppSource {
     name = runtimeType.toString();
   }
 
+  final Map<String, ({bool disabled, bool defaultValue})>
+  _agnosticSettingSwitchOverrides = {};
+
   void overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
     String key, {
     bool disabled = true,
     bool defaultValue = true,
   }) {
-    additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly =
-        additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly.map(
-          (e) {
-            return e.map((e2) {
-              if (e2.key == key) {
-                var item = e2 as GeneratedFormSwitch;
-                item.disabled = disabled;
-                item.value = defaultValue;
-              }
-              return e2;
-            }).toList();
-          },
-        ).toList();
+    _agnosticSettingSwitchOverrides[key] = (
+      disabled: disabled,
+      defaultValue: defaultValue,
+    );
   }
 
   String standardizeUrl(String url) {
@@ -158,27 +160,52 @@ abstract class AppSource {
     bool followRedirects = true,
     Object? postBody,
   }) async {
-    var sp = SettingsProvider();
-    await sp.initializeSettings();
-    var sourceConfigSettingValues = await getSourceConfigValues(
-      additionalSettings,
-      sp,
+    Future<Response> perform() async {
+      var sp = SettingsProvider();
+      await sp.initializeSettings();
+      var sourceConfigSettingValues = await getSourceConfigValues(
+        additionalSettings,
+        sp,
+      );
+      Map<String, String>? headers = await getRequestHeaders(
+        additionalSettings,
+        url,
+      );
+      return await SourceUtils.httpRequest(
+        url,
+        method: postBody != null ? 'POST' : 'GET',
+        headers: headers,
+        body: postBody,
+        sourceConfigSettingValues: sourceConfigSettingValues,
+        followRedirects: followRedirects,
+        allowInsecure:
+            additionalSettings['allowInsecure'] == true ||
+            additionalSettings['allowInsecureRedirects'] == true ||
+            allowInsecureRedirects,
+      );
+    }
+
+    if (!enableHostRequestGate) {
+      return perform();
+    }
+    final uri = Uri.parse(url);
+    final host = uri.host;
+    final blockKey = '$host|${_hostGateBucket(uri)}';
+    final gate = HostRequestGate.instance;
+    final response = await gate.run(
+      host,
+      blockKey,
+      maxConcurrentRequestsPerHost,
+      perform,
     );
-    Map<String, String>? headers = await getRequestHeaders(
-      additionalSettings,
-      url,
-    );
-    return await SourceUtils.httpRequest(
-      url,
-      method: postBody != null ? 'POST' : 'GET',
-      headers: headers,
-      body: postBody,
-      sourceConfigSettingValues: sourceConfigSettingValues,
-      followRedirects: followRedirects,
-      allowInsecure: additionalSettings['allowInsecure'] == true ||
-          additionalSettings['allowInsecureRedirects'] == true ||
-          allowInsecureRedirects,
-    );
+    gate.observe(blockKey, response.statusCode, response.headers);
+    return response;
+  }
+
+  static String _hostGateBucket(Uri uri) {
+    if (uri.path.contains('/wp-json/')) return 'api';
+    if (uri.path.endsWith('/feed/')) return 'feed';
+    return 'html';
   }
 
   String sourceSpecificStandardizeURL(String url, {bool forSelection = false}) {
@@ -239,6 +266,21 @@ abstract class AppSource {
     Map<String, dynamic> additionalSettings,
   );
 
+  /// Update-check entry point that also receives the app being updated, so
+  /// sources can avoid repeat work (e.g. scraping) when nothing changed.
+  /// Sources that do not need the previous app just inherit this delegate.
+  Future<APKDetails> getLatestAPKDetailsWithContext(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    App? currentApp,
+  }) {
+    return getLatestAPKDetails(standardUrl, additionalSettings);
+  }
+
+  /// Optional pre-pass before a batch of update checks, allowing sources to
+  /// fetch shared data once (e.g. APKMirror's batched API lookup).
+  Future<void> prefetchUpdateInfo(List<App> apps) async {}
+
   List<List<GeneratedFormItem>> additionalSourceAppSpecificSettingFormItems =
       [];
 
@@ -250,10 +292,7 @@ abstract class AppSource {
     ),
   ];
 
-  // Some additional data may be needed for Apps regardless of Source
-  List<List<GeneratedFormItem>>
-  additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly = [
-    [GeneratedFormSwitch('trackOnly', label: tr('trackOnly'))],
+  List<List<GeneratedFormItem>> get _versionAppSettingFormItems => [
     [
       GeneratedFormTextField(
         'versionExtractionRegEx',
@@ -267,7 +306,7 @@ abstract class AppSource {
         'matchGroupToUse',
         label: tr('matchGroupToUseForX', args: [tr('trimVersionString')]),
         required: false,
-        hint: '\$0',
+        hint: r'$0',
       ),
     ],
     [
@@ -284,16 +323,15 @@ abstract class AppSource {
         value: false,
       ),
     ],
+  ];
+
+  List<List<GeneratedFormItem>> get _apkAppSettingFormItems => [
     [
       GeneratedFormTextField(
         'apkFilterRegEx',
         label: tr('filterAPKsByRegEx'),
         required: false,
-        additionalValidators: [
-          (value) {
-            return SourceUtils.regExValidator(value);
-          },
-        ],
+        additionalValidators: [(value) => SourceUtils.regExValidator(value)],
       ),
     ],
     [
@@ -310,6 +348,44 @@ abstract class AppSource {
         value: true,
       ),
     ],
+  ];
+
+  List<List<GeneratedFormItem>> get _updateAppSettingFormItems => [
+    [
+      GeneratedFormSlider(
+        'minimumUpdateAgeDays',
+        [
+          const MapEntry('', 'useGlobalDefault'),
+          for (final days in minimumUpdateAgeOptions)
+            MapEntry(days.toString(), days == 0 ? 'none' : days.toString()),
+        ],
+        label: tr('minimumUpdateAgeDays'),
+        value: '',
+        required: false,
+      ),
+    ],
+    [
+      GeneratedFormSwitch(
+        'exemptFromBackgroundUpdates',
+        label: tr('exemptFromBackgroundUpdates'),
+      ),
+    ],
+    [
+      GeneratedFormSwitch(
+        'skipUpdateNotifications',
+        label: tr('skipUpdateNotifications'),
+      ),
+    ],
+    [
+      GeneratedFormSwitch(
+        'refreshBeforeDownload',
+        label: tr('refreshBeforeDownload'),
+      ),
+    ],
+  ];
+
+  List<List<GeneratedFormItem>> get _appAppSettingFormItems => [
+    [GeneratedFormSwitch('trackOnly', label: tr('trackOnly'))],
     [GeneratedFormTextField('appName', label: tr('appName'), required: false)],
     [GeneratedFormTextField('appAuthor', label: tr('author'), required: false)],
     [
@@ -326,25 +402,7 @@ abstract class AppSource {
         value: false,
       ),
     ],
-    [
-      GeneratedFormSwitch(
-        'exemptFromBackgroundUpdates',
-        label: tr('exemptFromBackgroundUpdates'),
-      ),
-    ],
-    [
-      GeneratedFormSwitch(
-        'skipUpdateNotifications',
-        label: tr('skipUpdateNotifications'),
-      ),
-    ],
     [GeneratedFormTextField('about', label: tr('about'), required: false)],
-    [
-      GeneratedFormSwitch(
-        'refreshBeforeDownload',
-        label: tr('refreshBeforeDownload'),
-      ),
-    ],
     [
       GeneratedFormSwitch(
         'aggressiveVersionReconciliation',
@@ -361,54 +419,43 @@ abstract class AppSource {
     ],
   ];
 
-  // Previous 2 variables combined into one at runtime for convenient usage + additional processing
-  List<List<GeneratedFormItem>> get combinedAppSpecificSettingFormItems {
-    if (showReleaseDateAsVersionToggle == true) {
-      if (additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
-              .indexWhere(
-                (List<GeneratedFormItem> e) =>
-                    e.indexWhere(
-                      (GeneratedFormItem i) => i.key == 'releaseDateAsVersion',
-                    ) >=
-                    0,
-              ) <
-          0) {
-        additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
-            .insert(
-              additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
-                      .indexWhere(
-                        (List<GeneratedFormItem> e) =>
-                            e.indexWhere(
-                              (GeneratedFormItem i) =>
-                                  i.key == 'versionDetection',
-                            ) >=
-                            0,
-                      ) +
-                  1,
-              [
-                GeneratedFormSwitch(
-                  'releaseDateAsVersion',
-                  label:
-                      '${tr('releaseDateAsVersion')} (${tr('pseudoVersion')})',
-                  value: false,
-                ),
-              ],
-            );
-      }
-    }
-    additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly =
-        additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly
-            .map(
-              (e) => e
-                  .where((ee) => !excludeCommonSettingKeys.contains(ee.key))
-                  .toList(),
-            )
-            .where((e) => e.isNotEmpty)
-            .toList();
+  List<List<GeneratedFormItem>> _filterExcludedKeys(
+    List<List<GeneratedFormItem>> items,
+  ) => items
+      .map(
+        (e) => e
+            .where((ee) => !excludeCommonSettingKeys.contains(ee.key))
+            .toList(),
+      )
+      .where((e) => e.isNotEmpty)
+      .toList();
 
-    var moreConditionalItems = [];
+  List<List<GeneratedFormItem>> get combinedAppSpecificSettingFormItems {
+    var versionItems = cloneFormItems(_versionAppSettingFormItems);
+
+    final versionDetectionIdx = versionItems.indexWhere(
+      (row) => row.any((item) => item.key == 'versionDetection'),
+    );
+    if (showReleaseDateAsVersionToggle &&
+        versionDetectionIdx >= 0 &&
+        !versionItems.any(
+          (row) => row.any((item) => item.key == 'releaseDateAsVersion'),
+        )) {
+      versionItems.insert(versionDetectionIdx + 1, [
+        GeneratedFormSwitch(
+          'releaseDateAsVersion',
+          label: '${tr('releaseDateAsVersion')} (${tr('pseudoVersion')})',
+          value: false,
+        ),
+      ]);
+    }
+    versionItems = _filterExcludedKeys(versionItems);
+
+    final apkItems = _filterExcludedKeys(
+      cloneFormItems(_apkAppSettingFormItems),
+    );
     if (allowIncludeZips) {
-      moreConditionalItems.addAll([
+      apkItems.addAll([
         [
           GeneratedFormSwitch(
             'includeZips',
@@ -422,17 +469,14 @@ abstract class AppSource {
             label: tr('zippedApkFilterRegEx'),
             required: false,
             additionalValidators: [
-              (value) {
-                return SourceUtils.regExValidator(value);
-              },
+              (value) => SourceUtils.regExValidator(value),
             ],
           ),
         ],
       ]);
     }
-
     if (allowIncludeTarballs) {
-      moreConditionalItems.addAll([
+      apkItems.addAll([
         [
           GeneratedFormSwitch(
             'includeTarballs',
@@ -446,31 +490,71 @@ abstract class AppSource {
             label: tr('tarballedApkFilterRegEx'),
             required: false,
             additionalValidators: [
-              (value) {
-                return SourceUtils.regExValidator(value);
-              },
+              (value) => SourceUtils.regExValidator(value),
             ],
           ),
         ],
       ]);
     }
 
+    final updateItems = _filterExcludedKeys(
+      cloneFormItems(_updateAppSettingFormItems),
+    );
+    final appItems = _filterExcludedKeys(
+      cloneFormItems(_appAppSettingFormItems),
+    );
+
     if (versionDetectionDisallowed) {
-      overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
-        'versionDetection',
-        disabled: true,
-        defaultValue: false,
-      );
-      overrideAdditionalAppSpecificSourceAgnosticSettingSwitch(
-        'useVersionCodeAsOSVersion',
-        disabled: true,
-        defaultValue: false,
-      );
+      for (var item in versionItems.expand((row) => row)) {
+        if (item.key == 'versionDetection' ||
+            item.key == 'useVersionCodeAsOSVersion') {
+          (item as GeneratedFormSwitch).disabled = true;
+          item.value = false;
+        }
+      }
     }
+
+    if (_agnosticSettingSwitchOverrides.isNotEmpty) {
+      for (var item in [
+        ...versionItems,
+        ...apkItems,
+        ...updateItems,
+        ...appItems,
+      ].expand((r) => r)) {
+        if (_agnosticSettingSwitchOverrides.containsKey(item.key) &&
+            item is GeneratedFormSwitch) {
+          final override = _agnosticSettingSwitchOverrides[item.key]!;
+          item.disabled = override.disabled;
+          item.value = override.defaultValue;
+        }
+      }
+    }
+
     return [
-      ...additionalSourceAppSpecificSettingFormItems,
-      ...additionalAppSpecificSourceAgnosticSettingFormItemsNeverUseDirectly,
-      ...moreConditionalItems,
+      ...cloneFormItems(additionalSourceAppSpecificSettingFormItems),
+      if (versionItems.isNotEmpty) ...[
+        [GeneratedFormHeader(label: tr('sectionVersionDetection'))],
+        ...versionItems,
+      ],
+      if (apkItems.isNotEmpty) ...[
+        [GeneratedFormHeader(label: tr('sectionApkSelection'))],
+        ...apkItems,
+      ],
+      if (updateItems.isNotEmpty) ...[
+        [GeneratedFormHeader(label: tr('sectionUpdateOptions'))],
+        ...updateItems,
+      ],
+      if (appItems.isNotEmpty) ...[
+        [GeneratedFormHeader(label: tr('sectionAppOptions'))],
+        ...appItems,
+      ],
+      [
+        GeneratedFormHeader(
+          id: updateHealthSectionId,
+          label: tr('sectionUpdateHealthDetection'),
+        ),
+      ],
+      ...updateHealthOverrideFormItems(),
     ];
   }
 

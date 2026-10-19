@@ -119,7 +119,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       Icons.import_export_rounded,
       const ImportExportPage(),
     ),
-    NavigationPageItem('settings', Icons.settings_rounded, const SettingsPage()),
+    NavigationPageItem(
+      'settings',
+      Icons.settings_rounded,
+      const SettingsPage(),
+    ),
   ];
 
   /// Adds/removes the System updates destination when its setting changes,
@@ -138,7 +142,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     _tabController = TabController(
       length: pages.length,
       vsync: this,
-      initialIndex: selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last,
+      initialIndex: selectedIndexHistory.isEmpty
+          ? 0
+          : selectedIndexHistory.last,
     );
     WidgetsBinding.instance.addPostFrameCallback((_) => old.dispose());
   }
@@ -440,8 +446,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> switchToPage(int index) async {
-    final currentTab =
-        selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last;
+    final currentTab = selectedIndexHistory.isEmpty
+        ? 0
+        : selectedIndexHistory.last;
     if (_tabController.index == index && currentTab == index) {
       return;
     }
@@ -487,7 +494,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         : 0;
     // The add-app FAB belongs to the Apps tab only (index 0).
     final showAddFab =
-        plusSettings.plusEnableFAB && !settingsProvider.isTV && currentIndex == 0;
+        plusSettings.plusEnableFAB &&
+        !settingsProvider.isTV &&
+        currentIndex == 0;
 
     // With transitions disabled, render the page directly:
     // PageTransitionSwitcher with Duration.zero can leave the incoming
@@ -644,11 +653,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             : pageBody,
         bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
-            : _buildBottomNavBar(
-                context,
-                plusSettings,
-                currentIndex,
-              ),
+            : _buildBottomNavBar(context, plusSettings, currentIndex),
       ),
     );
   }
@@ -666,24 +671,22 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     // Shared keyboard focus handler
     Widget wrapWithFocus(Widget child) => FocusTraversalGroup(
-          child: Focus(
-            onKeyEvent: (node, event) {
-              if (event is! KeyDownEvent) return KeyEventResult.ignored;
-              if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-                switchToPage((currentIndex + 1) % pages.length);
-                return KeyEventResult.handled;
-              }
-              if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-                switchToPage(
-                  (currentIndex - 1 + pages.length) % pages.length,
-                );
-                return KeyEventResult.handled;
-              }
-              return KeyEventResult.ignored;
-            },
-            child: child,
-          ),
-        );
+      child: Focus(
+        onKeyEvent: (node, event) {
+          if (event is! KeyDownEvent) return KeyEventResult.ignored;
+          if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            switchToPage((currentIndex + 1) % pages.length);
+            return KeyEventResult.handled;
+          }
+          if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            switchToPage((currentIndex - 1 + pages.length) % pages.length);
+            return KeyEventResult.handled;
+          }
+          return KeyEventResult.ignored;
+        },
+        child: child,
+      ),
+    );
 
     final navBar = NavigationBar(
       elevation: 0,
@@ -698,10 +701,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           .map(
             (e) => NavigationDestination(
               icon: Icon(e.icon),
-              selectedIcon: Icon(
-                e.icon,
-                color: colorScheme.onPrimaryContainer,
-              ),
+              selectedIcon: Icon(e.icon, color: colorScheme.onPrimaryContainer),
               label: tr(e.title),
             ),
           )
@@ -773,7 +773,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                       border: Border.all(
                         color: enableGlass
                             ? colorScheme.primary.withValues(alpha: 0.18)
-                            : colorScheme.outlineVariant.withValues(alpha: 0.18),
+                            : colorScheme.outlineVariant.withValues(
+                                alpha: 0.18,
+                              ),
                       ),
                     ),
                     child: Stack(
@@ -816,7 +818,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           enabled: enableGlass,
           sigma: 16,
           child: Container(
-            color: colorScheme.surface.withValues(alpha: enableGlass ? 0.78 : 1.0),
+            color: colorScheme.surface.withValues(
+              alpha: enableGlass ? 0.78 : 1.0,
+            ),
             child: wrapWithFocus(
               Column(
                 mainAxisSize: MainAxisSize.min,
@@ -871,7 +875,9 @@ int stripLinkUnsafeSettings(List<dynamic> apps) {
     final before = settings.length;
     settings.removeWhere((k, _) => _linkUnsafeSettings.contains(k));
     removed += before - settings.length;
-    app['additionalSettings'] = raw is String ? safeJsonEncode(settings) : settings;
+    app['additionalSettings'] = raw is String
+        ? safeJsonEncode(settings)
+        : settings;
   }
   return removed;
 }

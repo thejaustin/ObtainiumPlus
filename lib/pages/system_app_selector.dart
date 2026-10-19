@@ -112,12 +112,12 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       await Future.wait(
         batch.map((pkg) async {
           try {
-            final iconBytes = await pkg.applicationInfo
-                ?.getAppIcon()
-                .timeout(const Duration(seconds: 10));
-            final appName = await pkg.applicationInfo
-                ?.getAppLabel()
-                .timeout(const Duration(seconds: 10));
+            final iconBytes = await pkg.applicationInfo?.getAppIcon().timeout(
+              const Duration(seconds: 10),
+            );
+            final appName = await pkg.applicationInfo?.getAppLabel().timeout(
+              const Duration(seconds: 10),
+            );
             final idx = indexMap[pkg.packageName];
             if (idx != null && idx < _apps.length) {
               if (iconBytes != null) _apps[idx].icon = iconBytes;
@@ -289,7 +289,14 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             final colorScheme = Theme.of(context).colorScheme;
 
                             return AnimatedContainer(
-                              duration: Duration(milliseconds: context.watch<PlusSettingsProvider>().plusEnableEnhancedAnimations ? 280 : 0),
+                              duration: Duration(
+                                milliseconds:
+                                    context
+                                        .watch<PlusSettingsProvider>()
+                                        .plusEnableEnhancedAnimations
+                                    ? 280
+                                    : 0,
+                              ),
                               curve: Easing.emphasizedDecelerate,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(
@@ -298,8 +305,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                 boxShadow: isActive
                                     ? [
                                         BoxShadow(
-                                          color: colorScheme.primary
-                                              .withValues(alpha: 0.14),
+                                          color: colorScheme.primary.withValues(
+                                            alpha: 0.14,
+                                          ),
                                           blurRadius: 10,
                                           spreadRadius: 0.5,
                                           offset: const Offset(0, 1.5),
@@ -320,7 +328,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                       color: isActive
                                           ? colorScheme.primary
                                           : colorScheme.outlineVariant
-                                              .withValues(alpha: 0.4),
+                                                .withValues(alpha: 0.4),
                                       width: isActive ? 1.5 : 1.0,
                                     ),
                                   ),
@@ -339,7 +347,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                       color: isActive
                                           ? colorScheme.primary
                                           : colorScheme.outlineVariant
-                                              .withValues(alpha: 0.4),
+                                                .withValues(alpha: 0.4),
                                       width: isActive ? 1.5 : 1.0,
                                     ),
                                   ),
@@ -549,8 +557,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                   : Icons.view_list_outlined,
                             ),
                             onPressed: () => setState(
-                              () =>
-                                  _viewMode = _viewMode == SystemAppViewMode.list
+                              () => _viewMode =
+                                  _viewMode == SystemAppViewMode.list
                                   ? SystemAppViewMode.grid
                                   : SystemAppViewMode.list,
                             ),
@@ -635,7 +643,11 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       vertical: 8,
                     ),
                     child: AnimatedContainer(
-                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 280
+                            : 0,
+                      ),
                       curve: Easing.emphasizedDecelerate,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(
@@ -644,10 +656,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                         boxShadow: _searchQuery.isNotEmpty
                             ? [
                                 BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.16),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.16),
                                   blurRadius: 14,
                                   spreadRadius: 1,
                                   offset: const Offset(0, 2),
@@ -661,8 +672,11 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                         onChanged: (val) => setState(() => _searchQuery = val),
                         elevation: WidgetStateProperty.all(0),
                         shape: WidgetStateProperty.resolveWith((states) {
-                          final isFocused = states.contains(WidgetState.focused);
-                          final isShifted = isFocused || _searchQuery.isNotEmpty;
+                          final isFocused = states.contains(
+                            WidgetState.focused,
+                          );
+                          final isShifted =
+                              isFocused || _searchQuery.isNotEmpty;
                           return RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(
                               isShifted ? 18.0 : 28.0,
@@ -670,10 +684,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             side: BorderSide(
                               color: isShifted
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .outlineVariant
-                                      .withValues(alpha: 0.3),
+                                  : Theme.of(context).colorScheme.outlineVariant
+                                        .withValues(alpha: 0.3),
                               width: isShifted ? 1.5 : 1.0,
                             ),
                           );
@@ -758,7 +770,11 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   ? null
                   : AnimatedScale(
                       scale: _selectedCount > 0 ? 1.0 : 0.0,
-                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 200
+                            : 0,
+                      ),
                       curve: Curves.easeOutBack,
                       child: ScaleTouchWrapper(
                         hapticOnPressDown: _selectedCount > 0 && !_isImporting,
@@ -780,10 +796,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primary
-                                    .withValues(alpha: 0.38),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.38),
                                 blurRadius: 16,
                                 spreadRadius: 1,
                                 offset: const Offset(0, 6),
@@ -813,14 +828,16 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                     height: 18,
                                     child: ExpressiveCircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color:
-                                          Theme.of(context).colorScheme.onPrimary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
                                     ),
                                   )
                                 : Icon(
                                     Icons.download_outlined,
-                                    color:
-                                        Theme.of(context).colorScheme.onPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary,
                                   ),
                             label: Text(
                               _isImporting
@@ -948,7 +965,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     ? Icons.system_update_rounded
                     : Icons.person_outline_rounded,
               ),
-              onPressed: () => setState(() => _showSystemApps = !_showSystemApps),
+              onPressed: () =>
+                  setState(() => _showSystemApps = !_showSystemApps),
               tooltip: tr('showSystemApps'),
             ),
           ),
@@ -961,7 +979,11 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 AnimatedContainer(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
+                  duration: Duration(
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
+                        ? 280
+                        : 0,
+                  ),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(
@@ -970,10 +992,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     boxShadow: _searchQuery.isNotEmpty
                         ? [
                             BoxShadow(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.16),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.16),
                               blurRadius: 14,
                               spreadRadius: 1,
                               offset: const Offset(0, 2),
@@ -996,10 +1017,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                         side: BorderSide(
                           color: isShifted
                               ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.3),
+                              : Theme.of(context).colorScheme.outlineVariant
+                                    .withValues(alpha: 0.3),
                           width: isShifted ? 1.5 : 1.0,
                         ),
                       );
@@ -1122,7 +1141,11 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ? null
           : AnimatedScale(
               scale: _selectedCount > 0 ? 1.0 : 0.0,
-              duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+              duration: Duration(
+                milliseconds: plusSettings.plusEnableEnhancedAnimations
+                    ? 200
+                    : 0,
+              ),
               curve: Curves.easeOutBack,
               child: ScaleTouchWrapper(
                 hapticOnPressDown: _selectedCount > 0 && !_isImporting,
@@ -1144,10 +1167,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.38),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.38),
                         blurRadius: 16,
                         spreadRadius: 1,
                         offset: const Offset(0, 6),
@@ -1187,7 +1209,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     label: Text(
                       _isImporting
                           ? tr('importing')
-                          : tr('importXApps', args: [_selectedCount.toString()]),
+                          : tr(
+                              'importXApps',
+                              args: [_selectedCount.toString()],
+                            ),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onPrimary,
                       ),
@@ -1221,98 +1246,98 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
       child: Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      elevation: 0,
-      color: pkg.isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withValues(
-              alpha: AppOpacity.moderate,
-            )
-          : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
-              alpha: AppOpacity.half,
-            ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          if (widget.returnUrlOnSelect) {
-            if (pkg.packageName == null) return;
-            Navigator.pop(
-              context,
-              'https://play.google.com/store/apps/details?id=${pkg.packageName}',
-            );
-          } else {
-            setState(() => pkg.isSelected = !pkg.isSelected);
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              _buildIconWidget(pkg.icon, 48),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      pkg.appName ?? pkg.packageName ?? '',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      [
-                        pkg.packageName ?? '',
-                        if (pkg.versionName != null) pkg.versionName!,
-                      ].join('  ·  '),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (appLabels.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: appLabels
-                            .map((label) => _buildLabelChip(label))
-                            .toList(),
-                      ),
-                    ],
-                  ],
-                ),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        elevation: 0,
+        color: pkg.isSelected
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(
+                alpha: AppOpacity.moderate,
+              )
+            : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
+                alpha: AppOpacity.half,
               ),
-              if (!widget.returnUrlOnSelect) ...[
-                ScaleTouchWrapper(
-                  hapticOnPressDown: true,
-                  scaleDownFactor: 0.88,
-                  child: IconButton(
-                    icon: const Icon(Icons.label_outline, size: 20),
-                    onPressed: () => _showLabelEditor(pkg.packageName!),
-                    tooltip: tr('editLabels'),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (widget.returnUrlOnSelect) {
+              if (pkg.packageName == null) return;
+              Navigator.pop(
+                context,
+                'https://play.google.com/store/apps/details?id=${pkg.packageName}',
+              );
+            } else {
+              setState(() => pkg.isSelected = !pkg.isSelected);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _buildIconWidget(pkg.icon, 48),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        pkg.appName ?? pkg.packageName ?? '',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        [
+                          pkg.packageName ?? '',
+                          if (pkg.versionName != null) pkg.versionName!,
+                        ].join('  ·  '),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (appLabels.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          children: appLabels
+                              .map((label) => _buildLabelChip(label))
+                              .toList(),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const SizedBox(width: 4),
-                Checkbox(
-                  value: pkg.isSelected,
-                  onChanged: (value) =>
-                      setState(() => pkg.isSelected = value ?? false),
-                ),
+                if (!widget.returnUrlOnSelect) ...[
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.88,
+                    child: IconButton(
+                      icon: const Icon(Icons.label_outline, size: 20),
+                      onPressed: () => _showLabelEditor(pkg.packageName!),
+                      tooltip: tr('editLabels'),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Checkbox(
+                    value: pkg.isSelected,
+                    onChanged: (value) =>
+                        setState(() => pkg.isSelected = value ?? false),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildGridAppTile(
@@ -1324,99 +1349,100 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
       child: Card(
-      elevation: 0,
-      color: pkg.isSelected
-          ? Theme.of(context).colorScheme.primaryContainer.withValues(
-              alpha: AppOpacity.moderate,
-            )
-          : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
-              alpha: AppOpacity.half,
-            ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          if (widget.returnUrlOnSelect) {
-            if (pkg.packageName == null) return;
-            Navigator.pop(
-              context,
-              'https://play.google.com/store/apps/details?id=${pkg.packageName}',
-            );
-          } else {
-            setState(() => pkg.isSelected = !pkg.isSelected);
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            children: [
-              Expanded(child: _buildIconWidget(pkg.icon, double.infinity)),
-              const SizedBox(height: 6),
-              Text(
-                pkg.appName ?? pkg.packageName ?? '',
-                style: Theme.of(
-                  context,
-                ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.bold),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
+        elevation: 0,
+        color: pkg.isSelected
+            ? Theme.of(context).colorScheme.primaryContainer.withValues(
+                alpha: AppOpacity.moderate,
+              )
+            : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
+                alpha: AppOpacity.half,
               ),
-              if (pkg.versionName != null) ...[
-                const SizedBox(height: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            if (widget.returnUrlOnSelect) {
+              if (pkg.packageName == null) return;
+              Navigator.pop(
+                context,
+                'https://play.google.com/store/apps/details?id=${pkg.packageName}',
+              );
+            } else {
+              setState(() => pkg.isSelected = !pkg.isSelected);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              children: [
+                Expanded(child: _buildIconWidget(pkg.icon, double.infinity)),
+                const SizedBox(height: 6),
                 Text(
-                  pkg.versionName!,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.55),
+                  pkg.appName ?? pkg.packageName ?? '',
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                 ),
-              ],
-              if (appLabels.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: 2,
-                  runSpacing: 2,
-                  children: appLabels
-                      .take(2)
-                      .map((l) => _buildLabelChip(l, small: true))
-                      .toList(),
-                ),
-              ],
-              if (!widget.returnUrlOnSelect) ...[
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Checkbox(
-                      value: pkg.isSelected,
-                      onChanged: (v) =>
-                          setState(() => pkg.isSelected = v ?? false),
-                      visualDensity: VisualDensity.compact,
+                if (pkg.versionName != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    pkg.versionName!,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.55),
                     ),
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.88,
-                      child: IconButton(
-                        icon: const Icon(Icons.label_outline, size: 16),
-                        onPressed: () => _showLabelEditor(pkg.packageName!),
-                        tooltip: tr('editLabels'),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+                if (appLabels.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    spacing: 2,
+                    runSpacing: 2,
+                    children: appLabels
+                        .take(2)
+                        .map((l) => _buildLabelChip(l, small: true))
+                        .toList(),
+                  ),
+                ],
+                if (!widget.returnUrlOnSelect) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Checkbox(
+                        value: pkg.isSelected,
+                        onChanged: (v) =>
+                            setState(() => pkg.isSelected = v ?? false),
+                        visualDensity: VisualDensity.compact,
                       ),
-                    ),
-                  ],
-                ),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.88,
+                        child: IconButton(
+                          icon: const Icon(Icons.label_outline, size: 16),
+                          onPressed: () => _showLabelEditor(pkg.packageName!),
+                          tooltip: tr('editLabels'),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildLabelChip(String label, {bool small = false}) {

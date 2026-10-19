@@ -58,13 +58,12 @@ class AppListView extends StatelessWidget {
     // sorted position after the ordered ones.
     final pinnedOrder = plusSettings.plusPinnedAppsOrder;
     if (pinnedOrder.isNotEmpty) {
-      final position = {
-        for (final (i, a) in pinnedApps.indexed) a.app.id: i,
-      };
+      final position = {for (final (i, a) in pinnedApps.indexed) a.app.id: i};
       int rank(AppInMemory a) {
         final i = pinnedOrder.indexOf(a.app.id);
         return i < 0 ? pinnedOrder.length : i;
       }
+
       // List.sort is not stable: tie-break on the incoming (sorted) position.
       pinnedApps.sort((a, b) {
         final byRank = rank(a).compareTo(rank(b));
@@ -151,7 +150,6 @@ class AppListView extends StatelessWidget {
           behaviorSettings.enableSwipeGestures &&
           !(behaviorSettings.swipeRightAction == AppSwipeAction.none &&
               behaviorSettings.swipeLeftAction == AppSwipeAction.none);
-
 
       Widget child = Dismissible(
         key: Key('dismiss_${app.app.id}'),

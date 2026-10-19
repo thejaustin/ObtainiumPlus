@@ -58,7 +58,8 @@ class _CustomAppBarState extends State<CustomAppBar> {
         widget.leading ?? (canPop ? const BackButton() : null);
 
     // OneUI expanded viewing area height (typically ~240-270dp)
-    final effectiveExpandedHeight = widget.expandedHeight ??
+    final effectiveExpandedHeight =
+        widget.expandedHeight ??
         (220.0 + bottomHeight + (widget.subtitle != null ? 24.0 : 0.0));
 
     if (!isOneHanded) {
@@ -136,7 +137,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
           // Vertical alignment within viewing area
           final verticalCenterOffset = lerpDouble(
             (topPadding + kToolbarHeight / 2) - 10,
-            topPadding + ((effectiveExpandedHeight - bottomHeight - topPadding) / 2) - 14,
+            topPadding +
+                ((effectiveExpandedHeight - bottomHeight - topPadding) / 2) -
+                14,
             curvedT,
           )!;
 
@@ -154,7 +157,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            colorScheme.primaryContainer.withValues(alpha: 0.14),
+                            colorScheme.primaryContainer.withValues(
+                              alpha: 0.14,
+                            ),
                             colorScheme.surface.withValues(alpha: 0.0),
                           ],
                           stops: const [0.0, 1.0],
@@ -222,8 +227,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.75),
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.75,
+                              ),
                             ),
                           ),
                         ),
@@ -235,12 +241,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
               // Bottom widget (e.g. SearchBar in Settings or Filter chips)
               if (widget.bottom != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: widget.bottom!,
-                ),
+                Positioned(left: 0, right: 0, bottom: 0, child: widget.bottom!),
 
               // Hairline bottom border when collapsed
               if (curvedT < 0.5)

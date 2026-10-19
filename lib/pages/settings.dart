@@ -60,7 +60,8 @@ class _SettingsPageState extends State<SettingsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final box = _resultsKey.currentContext?.findRenderObject();
-      final empty = _searchQuery.isNotEmpty &&
+      final empty =
+          _searchQuery.isNotEmpty &&
           box is RenderBox &&
           box.hasSize &&
           box.size.height < 1;
@@ -110,12 +111,18 @@ class _SettingsPageState extends State<SettingsPage> {
       bottomNavigationBar: plusSettings.plusSettingsBottomNavBar
           ? ClipRect(
               child: AnimatedAlign(
-                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
+                duration: Duration(
+                  milliseconds: plusSettings.plusEnableEnhancedAnimations
+                      ? 280
+                      : 0,
+                ),
                 curve: Easing.emphasizedDecelerate,
                 alignment: Alignment.topCenter,
                 heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
                 child: NavigationBar(
-                  backgroundColor: Theme.of(context).colorScheme.surfaceContainer,
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainer,
                   selectedIndex: _selectedSectionIndex,
                   onDestinationSelected: (index) {
                     AppHaptics.selectionClick();
@@ -172,7 +179,11 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                 child: AnimatedContainer(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
+                  duration: Duration(
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
+                        ? 280
+                        : 0,
+                  ),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(
@@ -181,10 +192,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     boxShadow: _searchQuery.isNotEmpty
                         ? [
                             BoxShadow(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.16),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.16),
                               blurRadius: 14,
                               spreadRadius: 1,
                               offset: const Offset(0, 2),
@@ -215,10 +225,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         side: BorderSide(
                           color: isShifted
                               ? Theme.of(context).colorScheme.primary
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.3),
+                              : Theme.of(context).colorScheme.outlineVariant
+                                    .withValues(alpha: 0.3),
                           width: isShifted ? 1.5 : 1.0,
                         ),
                       );
@@ -261,96 +269,102 @@ class _SettingsPageState extends State<SettingsPage> {
                   scrollDirection: Axis.horizontal,
                   physics: plusSettings.scrollPhysics,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  children: [
-                    (
-                      key: 'settingsTabAppearance',
-                      icon: Icons.palette_outlined,
-                    ),
-                    (
-                      key: 'settingsTabUpdatesInstall',
-                      icon: Icons.system_update_rounded,
-                    ),
-                    (
-                      key: 'settingsTabNotifications',
-                      icon: Icons.notifications_outlined,
-                    ),
-                    (
-                      key: 'settingsTabBehavior',
-                      icon: Icons.tune_rounded,
-                    ),
-                    (
-                      key: 'settingsTabAdvancedDebug',
-                      icon: Icons.code_rounded,
-                    ),
-                  ].asMap().entries.map((entry) {
-                    final isSelected = _selectedSectionIndex == entry.key;
-                    final tab = entry.value;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: ChoiceChip(
-                        key: _chipKeys[entry.key],
-                        materialTapTargetSize: MaterialTapTargetSize.padded,
-                        avatar: Icon(
-                          tab.icon,
-                          size: 16,
-                          color: isSelected
-                              ? Theme.of(context).colorScheme.onPrimaryContainer
-                              : Theme.of(context).colorScheme.onSurfaceVariant,
+                  children:
+                      [
+                        (
+                          key: 'settingsTabAppearance',
+                          icon: Icons.palette_outlined,
                         ),
-                        label: Text(tr(tab.key)),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            AppHaptics.selectionClick();
-                            setState(() {
-                              _previousSectionIndex = _selectedSectionIndex;
-                              _selectedSectionIndex = entry.key;
-                            });
-                            _scrollController.animateTo(
-                              0,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOutCubic,
-                            );
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              final chipContext =
-                                  _chipKeys[entry.key].currentContext;
-                              if (!mounted || chipContext == null) return;
-                              Scrollable.ensureVisible(
-                                chipContext,
-                                alignment: 0.5,
-                                duration: const Duration(milliseconds: 250),
-                                curve: Curves.easeOutCubic,
-                              );
-                            });
-                          }
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            CardMetrics.pill(),
+                        (
+                          key: 'settingsTabUpdatesInstall',
+                          icon: Icons.system_update_rounded,
+                        ),
+                        (
+                          key: 'settingsTabNotifications',
+                          icon: Icons.notifications_outlined,
+                        ),
+                        (key: 'settingsTabBehavior', icon: Icons.tune_rounded),
+                        (
+                          key: 'settingsTabAdvancedDebug',
+                          icon: Icons.code_rounded,
+                        ),
+                      ].asMap().entries.map((entry) {
+                        final isSelected = _selectedSectionIndex == entry.key;
+                        final tab = entry.value;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: ChoiceChip(
+                            key: _chipKeys[entry.key],
+                            materialTapTargetSize: MaterialTapTargetSize.padded,
+                            avatar: Icon(
+                              tab.icon,
+                              size: 16,
+                              color: isSelected
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                            ),
+                            label: Text(tr(tab.key)),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              if (selected) {
+                                AppHaptics.selectionClick();
+                                setState(() {
+                                  _previousSectionIndex = _selectedSectionIndex;
+                                  _selectedSectionIndex = entry.key;
+                                });
+                                _scrollController.animateTo(
+                                  0,
+                                  duration: const Duration(milliseconds: 300),
+                                  curve: Curves.easeOutCubic,
+                                );
+                                WidgetsBinding.instance.addPostFrameCallback((
+                                  _,
+                                ) {
+                                  final chipContext =
+                                      _chipKeys[entry.key].currentContext;
+                                  if (!mounted || chipContext == null) return;
+                                  Scrollable.ensureVisible(
+                                    chipContext,
+                                    alignment: 0.5,
+                                    duration: const Duration(milliseconds: 250),
+                                    curve: Curves.easeOutCubic,
+                                  );
+                                });
+                              }
+                            },
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                CardMetrics.pill(),
+                              ),
+                            ),
+                            side: BorderSide.none,
+                            showCheckmark: false,
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainer,
+                            selectedColor: Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer,
+                            labelStyle: TextStyle(
+                              color: isSelected
+                                  ? Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontSize: 13,
+                            ),
                           ),
-                        ),
-                        side: BorderSide.none,
-                        showCheckmark: false,
-                        backgroundColor:
-                            Theme.of(context).colorScheme.surfaceContainer,
-                        selectedColor:
-                            Theme.of(context).colorScheme.primaryContainer,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                          fontSize: 13,
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                        );
+                      }).toList(),
                 ),
               ),
             ),
@@ -358,7 +372,11 @@ class _SettingsPageState extends State<SettingsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             sliver: SliverToBoxAdapter(
               child: AnimatedSwitcher(
-                duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0),
+                duration: Duration(
+                  milliseconds: plusSettings.plusEnableEnhancedAnimations
+                      ? 260
+                      : 0,
+                ),
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (Widget child, Animation<double> animation) {
@@ -373,13 +391,16 @@ class _SettingsPageState extends State<SettingsPage> {
                       curve: Curves.easeOutCubic,
                     ),
                     child: SlideTransition(
-                      position: Tween<Offset>(
-                        begin: beginOffset,
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: animation,
-                        curve: Curves.easeOutCubic,
-                      )),
+                      position:
+                          Tween<Offset>(
+                            begin: beginOffset,
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
                       child: child,
                     ),
                   );
@@ -399,117 +420,117 @@ class _SettingsPageState extends State<SettingsPage> {
                         key: _resultsKey,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                      if (_searchQuery.isEmpty)
-                        _SettingsTabBanner(
-                          key: ValueKey('banner_$_selectedSectionIndex'),
-                          tabIndex: _selectedSectionIndex,
-                        ),
-                      if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 0) ...[
-                        if (_searchQuery.isEmpty &&
-                            plusSettings.plusSettingsUseSubmenuHub) ...[
-                          const VisualThemeSelector(),
-                          const SizedBox(height: 4),
-                          AppearanceHub(
-                            androidInfoFuture: _androidInfoFuture,
-                            themeContent: ThemeSettingsSection(
+                          if (_searchQuery.isEmpty)
+                            _SettingsTabBanner(
+                              key: ValueKey('banner_$_selectedSectionIndex'),
+                              tabIndex: _selectedSectionIndex,
+                            ),
+                          if (_searchQuery.isNotEmpty ||
+                              _selectedSectionIndex == 0) ...[
+                            if (_searchQuery.isEmpty &&
+                                plusSettings.plusSettingsUseSubmenuHub) ...[
+                              const VisualThemeSelector(),
+                              const SizedBox(height: 4),
+                              AppearanceHub(
+                                androidInfoFuture: _androidInfoFuture,
+                                themeContent: ThemeSettingsSection(
+                                  searchQuery: _searchQuery,
+                                  androidInfoFuture: _androidInfoFuture,
+                                  colorsNameMap:
+                                      const <ColorSwatch<Object>, String>{},
+                                  showAdvancedSettings:
+                                      plusSettings.plusShowAdvancedSettings,
+                                  subCategory: 'theme',
+                                ),
+                                appTileContent: AppsViewSettingsSection(
+                                  searchQuery: _searchQuery,
+                                  onSetState: (fn) => setState(fn),
+                                  showAdvancedSettings:
+                                      plusSettings.plusShowAdvancedSettings,
+                                  subCategory: 'tiles',
+                                ),
+                                layoutNavContent: AppsViewSettingsSection(
+                                  searchQuery: _searchQuery,
+                                  onSetState: (fn) => setState(fn),
+                                  showAdvancedSettings:
+                                      plusSettings.plusShowAdvancedSettings,
+                                  subCategory: 'layout',
+                                ),
+                                motionPhysicsContent: ThemeSettingsSection(
+                                  searchQuery: _searchQuery,
+                                  androidInfoFuture: _androidInfoFuture,
+                                  colorsNameMap:
+                                      const <ColorSwatch<Object>, String>{},
+                                  showAdvancedSettings:
+                                      plusSettings.plusShowAdvancedSettings,
+                                  subCategory: 'motion',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              const SettingsLayoutSelector(),
+                            ] else ...[
+                              ThemeSettingsSection(
+                                searchQuery: _searchQuery,
+                                androidInfoFuture: _androidInfoFuture,
+                                colorsNameMap:
+                                    const <ColorSwatch<Object>, String>{},
+                                showAdvancedSettings:
+                                    plusSettings.plusShowAdvancedSettings,
+                              ),
+                              AppsViewSettingsSection(
+                                searchQuery: _searchQuery,
+                                onSetState: (fn) => setState(fn),
+                                showAdvancedSettings:
+                                    plusSettings.plusShowAdvancedSettings,
+                              ),
+                            ],
+                          ],
+                          if (_searchQuery.isNotEmpty ||
+                              _selectedSectionIndex == 1) ...[
+                            UpdateSettingsSection(
                               searchQuery: _searchQuery,
+                              showIntervalLabel: _showIntervalLabel,
+                              onIntervalLabelChange: (val) =>
+                                  setState(() => _showIntervalLabel = val),
                               androidInfoFuture: _androidInfoFuture,
-                              colorsNameMap:
-                                  const <ColorSwatch<Object>, String>{},
                               showAdvancedSettings:
                                   plusSettings.plusShowAdvancedSettings,
-                              subCategory: 'theme',
                             ),
-                            appTileContent: AppsViewSettingsSection(
+                            if (_searchQuery.isEmpty) const _SectionConnector(),
+                            InstallationSection(
                               searchQuery: _searchQuery,
-                              onSetState: (fn) => setState(fn),
                               showAdvancedSettings:
                                   plusSettings.plusShowAdvancedSettings,
-                              subCategory: 'tiles',
                             ),
-                            layoutNavContent: AppsViewSettingsSection(
+                          ],
+                          if (_searchQuery.isNotEmpty ||
+                              _selectedSectionIndex == 2)
+                            NotificationSettingsSection(
                               searchQuery: _searchQuery,
-                              onSetState: (fn) => setState(fn),
                               showAdvancedSettings:
                                   plusSettings.plusShowAdvancedSettings,
-                              subCategory: 'layout',
                             ),
-                            motionPhysicsContent: ThemeSettingsSection(
+                          if (_searchQuery.isNotEmpty ||
+                              _selectedSectionIndex == 3)
+                            AppBehaviorSection(
                               searchQuery: _searchQuery,
-                              androidInfoFuture: _androidInfoFuture,
-                              colorsNameMap:
-                                  const <ColorSwatch<Object>, String>{},
                               showAdvancedSettings:
                                   plusSettings.plusShowAdvancedSettings,
-                              subCategory: 'motion',
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          const SettingsLayoutSelector(),
-                        ] else ...[
-                          ThemeSettingsSection(
-                            searchQuery: _searchQuery,
-                            androidInfoFuture: _androidInfoFuture,
-                            colorsNameMap:
-                                const <ColorSwatch<Object>, String>{},
-                            showAdvancedSettings:
-                                plusSettings.plusShowAdvancedSettings,
-                          ),
-                          AppsViewSettingsSection(
-                            searchQuery: _searchQuery,
-                            onSetState: (fn) => setState(fn),
-                            showAdvancedSettings:
-                                plusSettings.plusShowAdvancedSettings,
-                          ),
-                        ],
-                      ],
-                      if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 1) ...[
-                        UpdateSettingsSection(
-                          searchQuery: _searchQuery,
-                          showIntervalLabel: _showIntervalLabel,
-                          onIntervalLabelChange: (val) =>
-                              setState(() => _showIntervalLabel = val),
-                          androidInfoFuture: _androidInfoFuture,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                        if (_searchQuery.isEmpty)
-                          const _SectionConnector(),
-                        InstallationSection(
-                          searchQuery: _searchQuery,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                      ],
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 2)
-                        NotificationSettingsSection(
-                          searchQuery: _searchQuery,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                      if (_searchQuery.isNotEmpty || _selectedSectionIndex == 3)
-                        AppBehaviorSection(
-                          searchQuery: _searchQuery,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                      if (_searchQuery.isNotEmpty ||
-                          _selectedSectionIndex == 4) ...[
-                        AdvancedSettingsSection(
-                          searchQuery: _searchQuery,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                        if (_searchQuery.isEmpty)
-                          const _SectionConnector(),
-                        TroubleshootingSection(
-                          searchQuery: _searchQuery,
-                          showAdvancedSettings:
-                              plusSettings.plusShowAdvancedSettings,
-                        ),
-                      ],
+                          if (_searchQuery.isNotEmpty ||
+                              _selectedSectionIndex == 4) ...[
+                            AdvancedSettingsSection(
+                              searchQuery: _searchQuery,
+                              showAdvancedSettings:
+                                  plusSettings.plusShowAdvancedSettings,
+                            ),
+                            if (_searchQuery.isEmpty) const _SectionConnector(),
+                            TroubleshootingSection(
+                              searchQuery: _searchQuery,
+                              showAdvancedSettings:
+                                  plusSettings.plusShowAdvancedSettings,
+                            ),
+                          ],
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -717,7 +738,10 @@ class _SettingsEmptyState extends StatelessWidget {
           ScaleTouchWrapper(
             hapticOnPressDown: true,
             scaleDownFactor: 0.94,
-            child: FilledButton.tonal(onPressed: onClear, child: Text(tr('clear'))),
+            child: FilledButton.tonal(
+              onPressed: onClear,
+              child: Text(tr('clear')),
+            ),
           ),
         ],
       ),
@@ -759,7 +783,8 @@ class _SettingsTabBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (tabIndex < 0 || tabIndex >= _tabs.length) return const SizedBox.shrink();
+    if (tabIndex < 0 || tabIndex >= _tabs.length)
+      return const SizedBox.shrink();
     final tab = _tabs[tabIndex];
     final plusSettings = context.watch<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;

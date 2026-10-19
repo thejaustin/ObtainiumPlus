@@ -640,7 +640,6 @@ class DeviceCompatibilityService {
     return AdbPortProber.findActiveLoopbackPort();
   }
 
-
   // --------------------------------------------------------------------------
   // Device Guides for Non-Root / Non-ADB Users
   // --------------------------------------------------------------------------
@@ -652,7 +651,8 @@ class DeviceCompatibilityService {
         return DeviceOptimizationGuide(
           oem: oem,
           title: 'Samsung One UI Optimization',
-          subtitle: 'Resolve Auto Blocker, App Protection scans & background sleep',
+          subtitle:
+              'Resolve Auto Blocker, App Protection scans & background sleep',
           highlights: [
             'One UI 6.0+ Auto Blocker can silently block APK sideloading and package sessions.',
             'Shizuku / ShizukuPlus elevated binder completely bypasses One UI Auto Blocker restrictions.',
@@ -693,7 +693,8 @@ class DeviceCompatibilityService {
         return DeviceOptimizationGuide(
           oem: oem,
           title: 'Xiaomi HyperOS & MIUI Optimization',
-          subtitle: 'Bypass MIUI installer delays, configure Autostart & Battery',
+          subtitle:
+              'Bypass MIUI installer delays, configure Autostart & Battery',
           highlights: [
             'MIUI Security installer intercepts session installs with 5–10s countdowns.',
             'Shizuku / ShizukuPlus elevated mode eliminates the MIUI Security countdown completely.',
@@ -735,7 +736,8 @@ class DeviceCompatibilityService {
         return DeviceOptimizationGuide(
           oem: oem,
           title: 'OnePlus & OPPO (OxygenOS / ColorOS)',
-          subtitle: 'Enable Auto-launch, background activity & unrestricted power',
+          subtitle:
+              'Enable Auto-launch, background activity & unrestricted power',
           highlights: [
             'OxygenOS / ColorOS aggressively freezes network sockets when downloading in background.',
             'PackageInstaller sessions may stall if Auto-launch is disabled.',
@@ -768,7 +770,8 @@ class DeviceCompatibilityService {
         return DeviceOptimizationGuide(
           oem: oem,
           title: 'Nothing OS Optimization',
-          subtitle: 'Leverage pure Android session installs with Unrestricted Battery',
+          subtitle:
+              'Leverage pure Android session installs with Unrestricted Battery',
           highlights: [
             'Nothing OS supports ultra-clean native PackageInstaller sessions and Android 14 User Pre-approval.',
             'Nothing OS RAM management aggressively reclaims background memory during large file downloads unless battery is Unrestricted.',
@@ -823,7 +826,8 @@ class DeviceCompatibilityService {
         return DeviceOptimizationGuide(
           oem: oem,
           title: 'Transsion (Tecno HiOS / Infinix XOS / itelOS)',
-          subtitle: 'Prevent Phone Master & Power Marathon from killing downloads',
+          subtitle:
+              'Prevent Phone Master & Power Marathon from killing downloads',
           highlights: [
             'Phone Master aggressively terminates background tasks within 30 seconds of screen off.',
             'Power Marathon freezes active HTTP sockets, causing download timeouts.',
@@ -911,7 +915,8 @@ class DeviceCompatibilityService {
         return DeviceOptimizationGuide(
           oem: oem,
           title: 'Stock Android / Pixel Optimization',
-          subtitle: 'Unrestricted background performance and native silent updates',
+          subtitle:
+              'Unrestricted background performance and native silent updates',
           highlights: [
             'Android 12+ supports unattended updates when Obtainium is the installing package.',
             'Android 14+ supports User Pre-approval for seamless background installs without root or ADB.',

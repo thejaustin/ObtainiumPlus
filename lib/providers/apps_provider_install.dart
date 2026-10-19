@@ -32,7 +32,8 @@ import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/services/apk_filter_service.dart' show splitMultiApkUrl;
+import 'package:obtainium/services/apk_filter_service.dart'
+    show splitMultiApkUrl;
 import 'package:obtainium/services/http_service.dart';
 import 'package:obtainium/installers/install_utils.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
@@ -68,6 +69,22 @@ const int _bgInstallConfirmAttempts = 20; // 20 × 500ms = 10 seconds
 const int _installConfirmPollAttempts = 300; // 300 × 1s ≈ 5 minutes
 const Duration _installConfirmTimeout = Duration(minutes: 10);
 
+/// Whether an install should be confirmed by polling the package state in
+/// addition to awaiting the installer result (#3255, #3369).
+///
+/// The background stock workaround must not be raced (its result never
+/// arrives, see #896), and the external installer already reports completion
+/// through its own native timeout. Everything else — including Shizuku, whose
+/// result callback can be lost when the installer service stalls — is raced so
+/// one app can never block the install chain indefinitely.
+bool shouldPollForInstallConfirmation(
+  String installerModeKey, {
+  required bool needsBGWorkaround,
+}) {
+  if (needsBGWorkaround) return false;
+  return installerModeKey != 'external';
+}
+
 class _InstallResult {
   final String id;
   final bool willBeSilent;
@@ -102,8 +119,14 @@ extension AppsProviderInstall on AppsProvider {
       if (actualPackageName == null) {
         throw ObtainiumError(tr('couldNotGetIdFromApk'))..url = app.url;
       }
-      final areAliases = AppConstants.arePackageAliases(app.id, actualPackageName);
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
+      final areAliases = AppConstants.arePackageAliases(
+        app.id,
+        actualPackageName,
+      );
+      if (apps[app.id] != null &&
+          !isTempIdBool &&
+          !app.allowIdChange &&
+          !areAliases) {
         throw IDChangedError(actualPackageName, appId: app.id)..url = app.url;
       }
       final idChangeWasAllowed = app.allowIdChange || areAliases;
@@ -253,7 +276,12 @@ extension AppsProviderInstall on AppsProvider {
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
         headers: headers,
-        (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
+        (
+          double? progress, [
+          int? received,
+          int? total,
+          double? speedBytesPerSec,
+        ]) {
           final int? prog = progress?.ceil();
           if (apps[app.id] != null) {
             apps[app.id]!.downloadReceivedBytes = received;
@@ -301,7 +329,7 @@ extension AppsProviderInstall on AppsProvider {
       PackageInfo? newInfo;
       final originalAssetName = app.apkUrls[app.preferredApkIndex].key
           .toLowerCase();
-      final isAPK = downloadedFile.path.toLowerCase().endsWith('.apk');
+      var isAPK = downloadedFile.path.toLowerCase().endsWith('.apk');
       final isXAPK = downloadedFile.path.toLowerCase().endsWith('.xapk');
       final isTarball =
           originalAssetName.endsWith('.tar.gz') ||
@@ -313,7 +341,11 @@ extension AppsProviderInstall on AppsProvider {
         newInfo = await packageManager.getPackageArchiveInfo(
           archiveFilePath: downloadedFile.path,
         );
-      } else {
+        if (newInfo == null) {
+          isAPK = false;
+        }
+      }
+      if (!isAPK || multipleApks) {
         final String apkDirPath = '${downloadedFile.path}-dir';
         if (isTarball) {
           await extractTarballFile(downloadedFile.path, apkDirPath);
@@ -740,17 +772,20 @@ extension AppsProviderInstall on AppsProvider {
     allAPKs.addAll(additionalAPKs.map((a) => a.file.path));
     final installer = getInstaller();
     final InstallResult result =
-        needsBGWorkaround || installer.modeKey != 'stock'
-        ? await installer.installApk(
-            allAPKs,
-            appId: file.appId,
-            installOptions: installOptions,
-          )
-        : await _installWithPollConfirmation(
+        shouldPollForInstallConfirmation(
+          installer.modeKey,
+          needsBGWorkaround: needsBGWorkaround,
+        )
+        ? await _installWithPollConfirmation(
             installer,
             allAPKs,
             file.appId,
             installOptions,
+          )
+        : await installer.installApk(
+            allAPKs,
+            appId: file.appId,
+            installOptions: installOptions,
           );
     bool installed = false;
     if (result.isError) {
@@ -1073,6 +1108,10 @@ extension AppsProviderInstall on AppsProvider {
     NotificationsProvider? notificationsProvider,
   ) async {
     try {
+      await getInstaller().ensurePermission();
+      final BuildContext? installContext = context?.mounted == true
+          ? context
+          : null;
       await _installDownloadedApp(
         res.id,
         res.willBeSilent,
@@ -1080,7 +1119,8 @@ extension AppsProviderInstall on AppsProvider {
         res.downloadedDir,
         installedIds,
         errors,
-        context,
+        // ignore: use_build_context_synchronously
+        installContext,
         notificationsProvider,
       );
     } catch (e) {
@@ -1640,7 +1680,6 @@ extension AppsProviderInstall on AppsProvider {
       if (!isBg) AppHaptics.lightImpact();
       willBeSilent = await canInstallSilently(apps[id]!.app);
       final installer = getInstaller();
-      await installer.ensurePermission();
       // Only the stock installer surfaces a system install prompt that pulls the
       // user away; wait for them to return before proceeding.
       if (!willBeSilent &&

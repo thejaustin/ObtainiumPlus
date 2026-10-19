@@ -90,9 +90,9 @@ class _TalkerScreenState extends State<TalkerScreen> {
                 setState(() {
                   widget.talker.clear();
                 });
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(tr('logHistoryCleared'))));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(tr('logHistoryCleared'))),
+                );
               },
             ),
           ),
@@ -211,7 +211,9 @@ class _TalkerScreenState extends State<TalkerScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ExpansionTile(
-                          key: PageStorageKey<String>('talker_log:${log.timestamp.millisecondsSinceEpoch}:$index'),
+                          key: PageStorageKey<String>(
+                            'talker_log:${log.timestamp.millisecondsSinceEpoch}:$index',
+                          ),
                           leading: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,

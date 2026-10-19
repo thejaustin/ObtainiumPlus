@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:html/parser.dart';
 import 'package:http/http.dart';
@@ -11,8 +12,20 @@ import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
+class FDroidPageMetadata {
+  final Map<int, List<String>> nativecodes;
+  final Map<int, DateTime> addedOn;
+
+  const FDroidPageMetadata({
+    this.nativecodes = const {},
+    this.addedOn = const {},
+  });
+}
+
 class FDroid extends AppSource {
   static const _maxChangeLogCodeUnits = 2048;
+  static const _pageCacheDuration = Duration(minutes: 10);
+  final Map<String, ({FDroidPageMetadata data, DateTime at})> _pageCache = {};
   static const String _fdroidDataBaseUrl =
       'https://gitlab.com/fdroid/fdroiddata/-/raw/master/metadata';
   @override
@@ -28,6 +41,7 @@ class FDroid extends AppSource {
   @override
   List<List<GeneratedFormItem>>
   get additionalSourceAppSpecificSettingFormItems => [
+    [GeneratedFormHeader(label: tr('sectionVersionSelection'))],
     [
       GeneratedFormTextField(
         'filterVersionsByRegEx',
@@ -88,7 +102,8 @@ class FDroid extends AppSource {
         throw NoReleasesError();
       }
       final String host = Uri.parse(standardUrl).host;
-      var details = getAPKUrlsFromFDroidPackagesAPIResponse(
+      final isOfficialHost = !hostChanged || hostIdenticalDespiteAnyChange;
+      var details = await getAPKUrlsFromFDroidPackagesAPIResponse(
         await sourceRequest(
           'https://$host/api/v1/packages/$appId',
           additionalSettings,
@@ -97,8 +112,11 @@ class FDroid extends AppSource {
         standardUrl,
         name,
         additionalSettings: additionalSettings,
+        nativecodePageUrl: isOfficialHost
+            ? 'https://$host/en/packages/$appId/'
+            : null,
       );
-      if (!hostChanged) {
+      if (isOfficialHost) {
         try {
           final res = await sourceRequest(
             '$_fdroidDataBaseUrl/$appId.yml',
@@ -204,13 +222,14 @@ class FDroid extends AppSource {
     }
   }
 
-  APKDetails getAPKUrlsFromFDroidPackagesAPIResponse(
+  Future<APKDetails> getAPKUrlsFromFDroidPackagesAPIResponse(
     Response res,
     String apkUrlPrefix,
     String standardUrl,
     String sourceName, {
     Map<String, dynamic> additionalSettings = const {},
-  }) {
+    String? nativecodePageUrl,
+  }) async {
     final autoSelectHighestVersionCode =
         additionalSettings['autoSelectHighestVersionCode'] == true;
     final trySelectingSuggestedVersionCode =
@@ -284,6 +303,38 @@ class FDroid extends AppSource {
           (element) => element['versionName'] == version,
         );
       }
+      // The F-Droid API exposes neither per-APK architectures nor release
+      // dates. Read them from the package page. Any failure leaves the
+      // unfiltered selection and undated result in place (#2529, #779).
+      final List<dynamic> sameVersionReleases = releases
+          .where((element) => element['versionName'] == version)
+          .toList();
+      FDroidPageMetadata? pageMetadata;
+      if (nativecodePageUrl != null) {
+        pageMetadata = await _getPageMetadata(
+          nativecodePageUrl,
+          additionalSettings,
+        );
+      }
+      if (pageMetadata != null &&
+          additionalSettings['autoApkFilterByArch'] == true &&
+          sameVersionReleases.length > 1 &&
+          pageMetadata.nativecodes.isNotEmpty) {
+        try {
+          final filtered = filterReleasesByNativecode(
+            sameVersionReleases,
+            pageMetadata.nativecodes,
+            await getSupportedAbis(),
+          );
+          if (filtered != null && filtered.isNotEmpty) {
+            releaseChoices = filtered;
+          }
+        } catch (e) {
+          AppLogger.info(
+            'Failed to filter F-Droid APKs by architecture: ${e.toString()}',
+          );
+        }
+      }
       // For the remaining releases, use the toggles to auto-select one if possible
       if (releaseChoices.length > 1) {
         if (autoSelectHighestVersionCode) {
@@ -308,14 +359,187 @@ class FDroid extends AppSource {
       final List<String> apkUrls = releaseChoices
           .map((e) => '${apkUrlPrefix}_${e['versionCode']}.apk')
           .toList();
+      DateTime? releaseDate;
+      if (pageMetadata != null) {
+        final selectedCode = releaseChoices.first['versionCode'];
+        if (selectedCode is int) {
+          releaseDate = pageMetadata.addedOn[selectedCode];
+        }
+        if (releaseDate == null) {
+          final versionCode = sameVersionReleases.first['versionCode'];
+          if (versionCode is int) {
+            releaseDate = pageMetadata.addedOn[versionCode];
+          }
+        }
+      }
       return APKDetails(
         version,
         getApkUrlsFromUrls(apkUrls.toSet().toList()),
         AppNames(sourceName, Uri.parse(standardUrl).pathSegments.last),
+        releaseDate: releaseDate,
       );
     } else {
       throw getObtainiumHttpError(res);
     }
+  }
+
+  /// This device's supported ABIs, in preference order.
+  Future<List<String>> getSupportedAbis() async =>
+      (await DeviceInfoPlugin().androidInfo).supportedAbis;
+
+  Future<FDroidPageMetadata?> _getPageMetadata(
+    String url,
+    Map<String, dynamic> additionalSettings,
+  ) async {
+    final cached = _pageCache[url];
+    if (cached != null &&
+        DateTime.now().difference(cached.at) < _pageCacheDuration) {
+      return cached.data;
+    }
+    try {
+      final res = await sourceRequest(url, additionalSettings);
+      if (res.statusCode == 200) {
+        final metadata = parsePackagePageMetadata(res.body);
+        _pageCache[url] = (data: metadata, at: DateTime.now());
+        return metadata;
+      }
+      AppLogger.info(
+        'F-Droid package page request failed with HTTP ${res.statusCode}: $url',
+      );
+    } catch (e) {
+      AppLogger.info(
+        'Failed to fetch F-Droid package page ($url): ${e.toString()}',
+      );
+    }
+    return null;
+  }
+
+  static int? _versionCodeFromApkUrl(String url) =>
+      int.tryParse(RegExp(r'_(\d+)\.apk$').firstMatch(url)?.group(1) ?? '');
+
+  @override
+  Future<Map<String, List<String>>> getApkAbisByUrl(App app) async {
+    if (hostChanged && !hostIdenticalDespiteAnyChange) return const {};
+    final appId = await tryInferringAppId(app.url);
+    if (appId == null) return const {};
+    final host = Uri.parse(app.url).host;
+    final metadata = await _getPageMetadata(
+      'https://$host/en/packages/$appId/',
+      app.additionalSettings,
+    );
+    if (metadata == null) return const {};
+    final abis = <String, List<String>>{};
+    for (final apk in app.apkUrls) {
+      final versionCode = _versionCodeFromApkUrl(apk.value);
+      if (versionCode != null &&
+          metadata.nativecodes.containsKey(versionCode)) {
+        abis[apk.value] = metadata.nativecodes[versionCode]!;
+      }
+    }
+    return abis;
+  }
+
+  /// Parses the nativecode and "Added on" metadata from an F-Droid package
+  /// page. Each version block lists the native architectures of its APK;
+  /// builds without a nativecode note are universal.
+  static FDroidPageMetadata parsePackagePageMetadata(String html) {
+    final nativecodes = <int, List<String>>{};
+    final addedOn = <int, DateTime>{};
+    final versionCodeRegEx = RegExp(r'_(\d+)\.apk$');
+    final addedOnRegEx = RegExp(r'Added on\s+(.+)');
+    for (final element in parse(html).querySelectorAll('li.package-version')) {
+      int? versionCode;
+      for (final anchor in element.querySelectorAll(
+        '.package-version-download a',
+      )) {
+        final match = versionCodeRegEx.firstMatch(
+          anchor.attributes['href'] ?? '',
+        );
+        if (match != null) {
+          versionCode = int.tryParse(match.group(1)!);
+          break;
+        }
+      }
+      if (versionCode == null) {
+        continue;
+      }
+      final code = element.querySelector('.package-nativecode')?.text.trim();
+      nativecodes[versionCode] = code == null || code.isEmpty
+          ? const []
+          : code
+                .split(',')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList();
+      final header = element.querySelector('.package-version-header')?.text;
+      final rawDate = addedOnRegEx.firstMatch(header ?? '')?.group(1);
+      final date = parseAddedOnDate(rawDate);
+      if (date != null) {
+        addedOn[versionCode] = date;
+      }
+    }
+    return FDroidPageMetadata(nativecodes: nativecodes, addedOn: addedOn);
+  }
+
+  static DateTime? parseAddedOnDate(String? raw) {
+    if (raw == null) return null;
+    final cleaned = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (cleaned.isEmpty) return null;
+    for (final pattern in [
+      'MMM d, yyyy',
+      'MMM dd, yyyy',
+      'd MMM yyyy',
+      'yyyy-MM-dd',
+    ]) {
+      final parsed = DateFormat(pattern, 'en_US').tryParse(cleaned);
+      if (parsed != null) return parsed;
+    }
+    return DateTime.tryParse(cleaned);
+  }
+
+  static Map<int, List<String>> parseNativecodesFromPackagePage(String html) =>
+      parsePackagePageMetadata(html).nativecodes;
+
+  static Map<int, DateTime> parseAddedOnDatesFromPackagePage(String html) =>
+      parsePackagePageMetadata(html).addedOn;
+
+  /// Narrows [releases] to the build that fits this device's [abis], using the
+  /// given versionCode -> nativecode map. The device ABI order is used as the
+  /// preference order, and builds without nativecode are treated as universal.
+  /// Returns null when no nativecode information applies, so the caller can
+  /// keep its unfiltered selection.
+  static List<dynamic>? filterReleasesByNativecode(
+    List<dynamic> releases,
+    Map<int, List<String>> nativecodes,
+    List<String> abis,
+  ) {
+    if (releases.length <= 1 || abis.isEmpty) {
+      return null;
+    }
+    List<String> nativecodeOf(dynamic release) =>
+        nativecodes[release['versionCode']] ?? const [];
+    if (!releases.any((element) => nativecodeOf(element).isNotEmpty)) {
+      return null;
+    }
+    final compatible = releases
+        .where(
+          (element) =>
+              nativecodeOf(element).isEmpty ||
+              nativecodeOf(element).any(abis.contains),
+        )
+        .toList();
+    if (compatible.isEmpty) {
+      return null;
+    }
+    for (final abi in abis) {
+      final abiReleases = compatible
+          .where((element) => nativecodeOf(element).contains(abi))
+          .toList();
+      if (abiReleases.isNotEmpty) {
+        return abiReleases;
+      }
+    }
+    return compatible;
   }
 
   Future<FDroidBrowseResult> browseCategory(String slug, {int page = 1}) async {

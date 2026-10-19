@@ -71,9 +71,9 @@ class VisualThemeSelector extends StatelessWidget {
                 Text(
                   tr('theme'),
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                      ),
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
                 ),
               ],
             ),
@@ -148,72 +148,75 @@ class _ThemeThumbnailCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: AnimatedContainer(
-          duration: Duration(milliseconds: animsEnabled ? 220 : 0),
-          curve: AppConstants.expressiveDecelerate,
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
+            duration: Duration(milliseconds: animsEnabled ? 220 : 0),
+            curve: AppConstants.expressiveDecelerate,
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.outlineVariant.withValues(alpha: 0.3),
-              width: isSelected ? 2.0 : 1.0,
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                width: isSelected ? 2.0 : 1.0,
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Mockup Window
-              Container(
-                height: 58,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isSelected
-                        ? colorScheme.primary.withValues(alpha: 0.5)
-                        : colorScheme.outlineVariant.withValues(alpha: 0.2),
-                    width: 0.8,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Mockup Window
+                Container(
+                  height: 58,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected
+                          ? colorScheme.primary.withValues(alpha: 0.5)
+                          : colorScheme.outlineVariant.withValues(alpha: 0.2),
+                      width: 0.8,
+                    ),
                   ),
+                  clipBehavior: Clip.antiAlias,
+                  child: _buildMockupPreview(context),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: _buildMockupPreview(context),
-              ),
-              const SizedBox(height: 6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (isSelected) ...[
-                    Icon(
-                      Icons.check_circle_rounded,
-                      size: 11,
-                      color: colorScheme.primary,
-                    ),
-                    const SizedBox(width: 3),
-                  ],
-                  Flexible(
-                    child: Text(
-                      label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.onSurfaceVariant,
-                        fontSize: 10.5,
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (isSelected) ...[
+                      Icon(
+                        Icons.check_circle_rounded,
+                        size: 11,
+                        color: colorScheme.primary,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      const SizedBox(width: 3),
+                    ],
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                          fontSize: 10.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _buildMockupPreview(BuildContext context) {
@@ -230,7 +233,12 @@ class _ThemeThumbnailCard extends StatelessWidget {
                 itemColor: const Color(0xFFE2E4E9),
               ),
             ),
-            Container(width: 0.8, color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3)),
+            Container(
+              width: 0.8,
+              color: Theme.of(
+                context,
+              ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+            ),
             Expanded(
               child: _MockHalf(
                 bgColor: const Color(0xFF16171B),

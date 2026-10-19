@@ -1,5 +1,57 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
+import 'package:obtainium/custom_errors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _trackedUrl = 'https://www.apkmirror.com/apk/example/example-app/';
+
+class _FakeApkMirror extends APKMirror {
+  final Future<Response> Function(String url) handler;
+  final requests = <String>[];
+
+  _FakeApkMirror(this.handler);
+
+  @override
+  Future<Response> sourceRequest(
+    String url,
+    Map<String, dynamic> additionalSettings, {
+    bool followRedirects = true,
+    Object? postBody,
+  }) {
+    requests.add(url);
+    return handler(url);
+  }
+}
+
+Map<String, dynamic> _settings({Map<String, dynamic> extra = const {}}) => {
+  'appId': 'com.example.app',
+  'minimumUpdateAgeDays': '0',
+  ...extra,
+};
+
+Response _apiResponse({bool exists = true}) => Response(
+  jsonEncode({
+    'data': [
+      {
+        'pname': 'com.example.app',
+        'exists': exists,
+        'app': {'name': 'Example', 'link': '/apk/example/example-app/'},
+        'developer': {'name': 'Example Dev'},
+        'release': {
+          'version': '2.0',
+          'publish_date': '2026-10-01 00:00:00',
+          'whats_new': '',
+          'link': '/apk/example/example-app/example-2.0-release/',
+        },
+      },
+    ],
+  }),
+  200,
+);
 
 void main() {
   group('apkMirrorVersionFromTitle', () {
@@ -211,5 +263,222 @@ void main() {
         isNull,
       );
     });
+  });
+
+  group('apkMirrorPackageFromIconUrl size suffixes', () {
+    test('strips the feed icon size suffix', () {
+      expect(
+        apkMirrorPackageFromIconUrl(
+          'https://downloadr2.apkmirror.com/x/65a71d34ecd19_com.android.chrome-384x384.png',
+        ),
+        'com.android.chrome',
+      );
+      expect(
+        apkMirrorPackageFromIconUrl(
+          'https://downloadr2.apkmirror.com/x/67189d60d72a1_com.google.android.youtube-480x640.png',
+        ),
+        'com.google.android.youtube',
+      );
+    });
+
+    test('hash-only sized filenames yield null', () {
+      expect(
+        apkMirrorPackageFromIconUrl(
+          'https://downloadr2.apkmirror.com/x/5b466f2e62102-384x384.png',
+        ),
+        isNull,
+      );
+    });
+  });
+
+  group('apkMirrorPackageFromFeedBody', () {
+    test('extracts the package from the first content image', () {
+      const feed = '''
+<rss><channel><item><content:encoded><![CDATA[
+<p><img src="https://downloadr2.apkmirror.com/x/65a_com.android.chrome-384x384.png"></p>
+]]></content:encoded></item></channel></rss>''';
+      expect(apkMirrorPackageFromFeedBody(feed), 'com.android.chrome');
+    });
+
+    test('returns null for hash-only or imageless feeds', () {
+      expect(
+        apkMirrorPackageFromFeedBody(
+          '<img src="https://downloadr2.apkmirror.com/x/5b466f2e62102-384x384.png">',
+        ),
+        isNull,
+      );
+      expect(
+        apkMirrorPackageFromFeedBody('<item><title>x</title></item>'),
+        isNull,
+      );
+    });
+  });
+
+  group('apkMirrorApiEntryMatchesStandardUrl', () {
+    test('matches canonical listings regardless of trailing slash', () {
+      expect(
+        apkMirrorApiEntryMatchesStandardUrl(
+          '/apk/google-inc/chrome/',
+          'https://www.apkmirror.com/apk/google-inc/chrome',
+        ),
+        isTrue,
+      );
+      expect(
+        apkMirrorApiEntryMatchesStandardUrl(
+          '/apk/google-inc/chrome/',
+          'https://www.apkmirror.com/apk/google-inc/chrome/',
+        ),
+        isTrue,
+      );
+    });
+
+    test('rejects a different listing for the same package', () {
+      expect(
+        apkMirrorApiEntryMatchesStandardUrl(
+          '/apk/spotify-ab/spotify-music-android-wear/',
+          'https://www.apkmirror.com/apk/spotify-ab/spotify-music-podcasts',
+        ),
+        isFalse,
+      );
+    });
+
+    test('rejects null/empty/invalid links', () {
+      expect(
+        apkMirrorApiEntryMatchesStandardUrl(
+          null,
+          'https://www.apkmirror.com/apk/google-inc/chrome',
+        ),
+        isFalse,
+      );
+      expect(
+        apkMirrorApiEntryMatchesStandardUrl(
+          '',
+          'https://www.apkmirror.com/apk/google-inc/chrome',
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('apkMirrorApiDate', () {
+    test('parses UTC timestamps', () {
+      expect(
+        apkMirrorApiDate('2026-10-13 21:50:51'),
+        DateTime.utc(2026, 10, 13, 21, 50, 51),
+      );
+    });
+
+    test('handles null/empty/invalid input', () {
+      expect(apkMirrorApiDate(null), isNull);
+      expect(apkMirrorApiDate(''), isNull);
+      expect(apkMirrorApiDate('not a date'), isNull);
+    });
+  });
+
+  group('apkMirrorPlainTextFromHtml', () {
+    test('converts br tags and entities', () {
+      expect(
+        apkMirrorPlainTextFromHtml('<p>Line one<br/>Line two &amp; more</p>'),
+        'Line one\nLine two & more',
+      );
+    });
+
+    test('separates block elements', () {
+      expect(
+        apkMirrorPlainTextFromHtml('<p>First</p><p>Second</p>'),
+        'First\nSecond',
+      );
+      expect(
+        apkMirrorPlainTextFromHtml('<ul><li>A</li><li>B</li></ul>'),
+        'A\nB',
+      );
+    });
+
+    test('returns null for empty content', () {
+      expect(apkMirrorPlainTextFromHtml(null), isNull);
+      expect(apkMirrorPlainTextFromHtml(''), isNull);
+      expect(apkMirrorPlainTextFromHtml('<p>  </p>'), isNull);
+    });
+  });
+
+  group('APKMirror API failure handling', () {
+    TestWidgetsFlutterBinding.ensureInitialized();
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test(
+      'network failures surface as errors and do not block retries',
+      () async {
+        final source = _FakeApkMirror(
+          (_) async => throw const SocketException('offline'),
+        );
+        await expectLater(
+          source.getLatestAPKDetails(_trackedUrl, _settings()),
+          throwsA(isA<SocketException>()),
+        );
+        await expectLater(
+          source.getLatestAPKDetails(_trackedUrl, _settings()),
+          throwsA(isA<SocketException>()),
+        );
+        expect(source.requests.length, 2);
+      },
+    );
+
+    test('a missing API entry falls back to the feed', () async {
+      final source = _FakeApkMirror((url) async {
+        if (url.contains('/wp-json/')) {
+          return Response(jsonEncode({'data': []}), 200);
+        }
+        throw const SocketException('feed hit');
+      });
+      await expectLater(
+        source.getLatestAPKDetails(_trackedUrl, _settings()),
+        throwsA(isA<ObtainiumError>()),
+      );
+      expect(source.requests.any((u) => u.endsWith('/feed/')), isTrue);
+    });
+
+    test(
+      'fallbackToOlderReleases defers a filtered release to the feed',
+      () async {
+        final source = _FakeApkMirror((url) async {
+          if (url.contains('/wp-json/')) return _apiResponse();
+          throw const SocketException('feed hit');
+        });
+        await expectLater(
+          source.getLatestAPKDetails(
+            _trackedUrl,
+            _settings(
+              extra: {
+                'filterReleaseTitlesByRegEx': '^Nope',
+                'fallbackToOlderReleases': true,
+              },
+            ),
+          ),
+          throwsA(isA<ObtainiumError>()),
+        );
+        expect(source.requests.any((u) => u.endsWith('/feed/')), isTrue);
+      },
+    );
+
+    test(
+      'a filtered release without fallback reports no matching release',
+      () async {
+        final source = _FakeApkMirror((url) async {
+          if (url.contains('/wp-json/')) return _apiResponse();
+          throw const SocketException('feed hit');
+        });
+        await expectLater(
+          source.getLatestAPKDetails(
+            _trackedUrl,
+            _settings(extra: {'filterReleaseTitlesByRegEx': '^Nope'}),
+          ),
+          throwsA(isA<NoReleasesError>()),
+        );
+        expect(source.requests.any((u) => u.endsWith('/feed/')), isFalse);
+      },
+    );
   });
 }

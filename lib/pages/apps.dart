@@ -163,8 +163,7 @@ Null Function()? getChangeLogFn(BuildContext context, App app) {
   };
 }
 
-class AppsPageState extends State<AppsPage>
-    with AutomaticKeepAliveClientMixin {
+class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
@@ -348,7 +347,8 @@ class AppsPageState extends State<AppsPage>
     final appsRevision = appsProvider.appsRevision;
     final appsCount = appsProvider.apps.length;
 
-    final canReuse = _memoAllApps != null &&
+    final canReuse =
+        _memoAllApps != null &&
         _memoAppsRevision == appsRevision &&
         _memoAppsCount == appsCount &&
         _memoBaseFilterKey == baseFilterKey &&
@@ -363,22 +363,20 @@ class AppsPageState extends State<AppsPage>
       newInstalls = _memoNewInstalls!;
     } else {
       // Pre-compute lowercase filter tokens once (not per-app inside the loop).
-      final lowerNameTokens =
-          filter.nameFilter.isNotEmpty
-              ? filter.nameFilter
-                  .split(' ')
-                  .where((t) => t.trim().isNotEmpty)
-                  .map((t) => t.toLowerCase())
-                  .toList()
-              : const <String>[];
-      final lowerAuthorTokens =
-          filter.authorFilter.isNotEmpty
-              ? filter.authorFilter
-                  .split(' ')
-                  .where((t) => t.trim().isNotEmpty)
-                  .map((t) => t.toLowerCase())
-                  .toList()
-              : const <String>[];
+      final lowerNameTokens = filter.nameFilter.isNotEmpty
+          ? filter.nameFilter
+                .split(' ')
+                .where((t) => t.trim().isNotEmpty)
+                .map((t) => t.toLowerCase())
+                .toList()
+          : const <String>[];
+      final lowerAuthorTokens = filter.authorFilter.isNotEmpty
+          ? filter.authorFilter
+                .split(' ')
+                .where((t) => t.trim().isNotEmpty)
+                .map((t) => t.toLowerCase())
+                .toList()
+          : const <String>[];
 
       listedApps = listedApps.where((app) {
         if (app.app.installedVersion == app.app.latestVersion &&
@@ -412,9 +410,13 @@ class AppsPageState extends State<AppsPage>
           return false;
         }
         if (filter.sourceFilter.isNotEmpty) {
-          final srcType = app.sourceType ??
+          final srcType =
+              app.sourceType ??
               sourceProvider
-                  .getSource(app.app.url, overrideSource: app.app.overrideSource)
+                  .getSource(
+                    app.app.url,
+                    overrideSource: app.app.overrideSource,
+                  )
                   .runtimeType
                   .toString();
           if (srcType != filter.sourceFilter) return false;
@@ -560,23 +562,43 @@ class AppsPageState extends State<AppsPage>
       listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
       final catSet = <String?>{};
       for (final a in listedApps) {
-        if (a.app.categories.isEmpty) catSet.add(null); else catSet.addAll(a.app.categories);
+        if (a.app.categories.isEmpty)
+          catSet.add(null);
+        else
+          catSet.addAll(a.app.categories);
       }
       listedCategories = catSet.toList()
-        ..sort((a, b) => a == null ? 1 : b == null ? -1 : a.toLowerCase().compareTo(b.toLowerCase()));
+        ..sort(
+          (a, b) => a == null
+              ? 1
+              : b == null
+              ? -1
+              : a.toLowerCase().compareTo(b.toLowerCase()),
+        );
     } else if (filter.statusFilter.contains('uptodate')) {
       listedApps = _memoAllApps!
-          .where((a) =>
-              a.app.installedVersion != null &&
-              !existingUpdates.contains(a.app.id))
+          .where(
+            (a) =>
+                a.app.installedVersion != null &&
+                !existingUpdates.contains(a.app.id),
+          )
           .toList();
       listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
       final catSet = <String?>{};
       for (final a in listedApps) {
-        if (a.app.categories.isEmpty) catSet.add(null); else catSet.addAll(a.app.categories);
+        if (a.app.categories.isEmpty)
+          catSet.add(null);
+        else
+          catSet.addAll(a.app.categories);
       }
       listedCategories = catSet.toList()
-        ..sort((a, b) => a == null ? 1 : b == null ? -1 : a.toLowerCase().compareTo(b.toLowerCase()));
+        ..sort(
+          (a, b) => a == null
+              ? 1
+              : b == null
+              ? -1
+              : a.toLowerCase().compareTo(b.toLowerCase()),
+        );
     } else if (filter.statusFilter.contains('notinstalled')) {
       listedApps = _memoAllApps!
           .where((a) => a.app.installedVersion == null)
@@ -584,10 +606,19 @@ class AppsPageState extends State<AppsPage>
       listedAppIdSet = listedApps.map((e) => e.app.id).toSet();
       final catSet = <String?>{};
       for (final a in listedApps) {
-        if (a.app.categories.isEmpty) catSet.add(null); else catSet.addAll(a.app.categories);
+        if (a.app.categories.isEmpty)
+          catSet.add(null);
+        else
+          catSet.addAll(a.app.categories);
       }
       listedCategories = catSet.toList()
-        ..sort((a, b) => a == null ? 1 : b == null ? -1 : a.toLowerCase().compareTo(b.toLowerCase()));
+        ..sort(
+          (a, b) => a == null
+              ? 1
+              : b == null
+              ? -1
+              : a.toLowerCase().compareTo(b.toLowerCase()),
+        );
     } else {
       listedApps = _memoAllApps!;
       listedAppIdSet = _memoAllAppIdSet!;
@@ -608,8 +639,8 @@ class AppsPageState extends State<AppsPage>
 
     var existingUpdateIdsAllOrSelected = selectedAppIds.isEmpty
         ? (filter.statusFilter.contains('updates')
-            ? listedAppIdSet.toList()
-            : existingUpdates.where(listedAppIdSet.contains).toList())
+              ? listedAppIdSet.toList()
+              : existingUpdates.where(listedAppIdSet.contains).toList())
         : existingUpdates.where(selectedAppIds.contains).toList();
     var newInstallIdsAllOrSelected = newInstalls
         .where(
@@ -639,9 +670,9 @@ class AppsPageState extends State<AppsPage>
     Set<App> selectedApps = selectedAppIds.isEmpty
         ? const <App>{}
         : listedApps
-            .where((a) => selectedAppIds.contains(a.app.id))
-            .map((e) => e.app)
-            .toSet();
+              .where((a) => selectedAppIds.contains(a.app.id))
+              .map((e) => e.app)
+              .toSet();
 
     getLoadingWidgets() {
       // Show M3E skeleton tiles during initial load instead of hourglass icon
@@ -666,7 +697,8 @@ class AppsPageState extends State<AppsPage>
                   crossAxisSpacing: 12,
                   childAspectRatio: GridMetrics.childAspectRatio(
                     columnCount: columnCount,
-                    hasExtraDetails: viewSettings.displayShowVersion ||
+                    hasExtraDetails:
+                        viewSettings.displayShowVersion ||
                         viewSettings.displayShowAuthor ||
                         plusSettings.plusShowTagsInList,
                   ),
@@ -698,7 +730,11 @@ class AppsPageState extends State<AppsPage>
                   children: [
                     TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0.0, end: 1.0),
-                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 800 : 0),
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 800
+                            : 0,
+                      ),
                       curve: Curves.elasticOut,
                       builder: (context, value, child) {
                         return Transform.scale(
@@ -753,9 +789,7 @@ class AppsPageState extends State<AppsPage>
                             );
                           },
                           icon: const Icon(Icons.travel_explore_rounded),
-                          label: Text(
-                            '${tr('search')} "${filter.nameFilter}"',
-                          ),
+                          label: Text('${tr('search')} "${filter.nameFilter}"'),
                         ),
                       ),
                     ],
@@ -781,10 +815,7 @@ class AppsPageState extends State<AppsPage>
               var np = context.read<NotificationsProvider>();
               np.cancel(UpdateNotification([]).id);
               np.cancel(
-                SilentUpdateAttemptNotification(
-                  [],
-                  id: res[0].hashCode,
-                ).id,
+                SilentUpdateAttemptNotification([], id: res[0].hashCode).id,
               );
             }
           })
@@ -804,7 +835,9 @@ class AppsPageState extends State<AppsPage>
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
             side: BorderSide(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
               width: 0.8,
             ),
           ),
@@ -1131,7 +1164,9 @@ class AppsPageState extends State<AppsPage>
 
       capFirstChar(String str) => str[0].toUpperCase() + str.substring(1);
       return ExpansionTile(
-        key: PageStorageKey<String>('category_tile:${listedCategories[index] ?? '__uncategorized__'}'),
+        key: PageStorageKey<String>(
+          'category_tile:${listedCategories[index] ?? '__uncategorized__'}',
+        ),
         initiallyExpanded: true,
         title: Text(
           capFirstChar(listedCategories[index] ?? tr('noCategory')),
@@ -1145,59 +1180,85 @@ class AppsPageState extends State<AppsPage>
 
     getSelectAllButton() {
       final isSelected = selectedAppIds.isNotEmpty;
-      return AnimatedSwitcher(
-        duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
-        child: isSelected
-            ? ScaleTouchWrapper(
-                key: const ValueKey('deselect'),
-                hapticOnPressDown: true,
-                scaleDownFactor: 0.92,
-                child: TextButton.icon(
-                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    clearSelected();
-                  },
-                  icon: Icon(
-                    Icons.deselect_outlined,
-                    color: Theme.of(context).colorScheme.primary,
+      final selecting = !isSelected;
+      final count = selecting ? listedApps.length : selectedAppIds.length;
+      void toggle() {
+        AppHaptics.selectionClick();
+        if (selecting) {
+          selectThese(listedApps.map((e) => e.app).toList());
+        } else {
+          clearSelected();
+        }
+      }
+
+      return Semantics(
+        container: true,
+        button: true,
+        label: '${selecting ? tr('selectAll') : tr('deselectAll')} ($count)',
+        excludeSemantics: true,
+        onTap: toggle,
+        child: AnimatedSwitcher(
+          duration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
+          ),
+          child: isSelected
+              ? ScaleTouchWrapper(
+                  key: const ValueKey('deselect'),
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.92,
+                  child: TextButton.icon(
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    onPressed: toggle,
+                    icon: Icon(
+                      Icons.deselect_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    label: AnimatedSwitcher(
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 200
+                            : 0,
+                      ),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                      child: Text(
+                        selectedAppIds.length.toString(),
+                        key: ValueKey('sel_${selectedAppIds.length}'),
+                      ),
+                    ),
                   ),
-                  label: AnimatedSwitcher(
-                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
-                    transitionBuilder: (child, animation) =>
-                        ScaleTransition(scale: animation, child: child),
-                    child: Text(
-                      selectedAppIds.length.toString(),
-                      key: ValueKey('sel_${selectedAppIds.length}'),
+                )
+              : ScaleTouchWrapper(
+                  key: const ValueKey('selectAll'),
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.92,
+                  child: TextButton.icon(
+                    style: const ButtonStyle(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    onPressed: toggle,
+                    icon: Icon(
+                      Icons.select_all_outlined,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    label: AnimatedSwitcher(
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 200
+                            : 0,
+                      ),
+                      transitionBuilder: (child, animation) =>
+                          ScaleTransition(scale: animation, child: child),
+                      child: Text(
+                        listedApps.length.toString(),
+                        key: ValueKey('all_${listedApps.length}'),
+                      ),
                     ),
                   ),
                 ),
-              )
-            : ScaleTouchWrapper(
-                key: const ValueKey('selectAll'),
-                hapticOnPressDown: true,
-                scaleDownFactor: 0.92,
-                child: TextButton.icon(
-                  style: const ButtonStyle(visualDensity: VisualDensity.compact),
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    selectThese(listedApps.map((e) => e.app).toList());
-                  },
-                  icon: Icon(
-                    Icons.select_all_outlined,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  label: AnimatedSwitcher(
-                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
-                    transitionBuilder: (child, animation) =>
-                        ScaleTransition(scale: animation, child: child),
-                    child: Text(
-                      listedApps.length.toString(),
-                      key: ValueKey('all_${listedApps.length}'),
-                    ),
-                  ),
-                ),
-              ),
+        ),
       );
     }
 
@@ -1554,10 +1615,14 @@ class AppsPageState extends State<AppsPage>
                         : () {
                             var encoder = const JsonEncoder.withIndent("    ");
                             var exportJSON = encoder.convert(
-                              sanitizeJsonValue(appsProvider.generateExportJSON(
-                                appIds: selectedApps.map((e) => e.id).toList(),
-                                overrideExportSettings: 0,
-                              )),
+                              sanitizeJsonValue(
+                                appsProvider.generateExportJSON(
+                                  appIds: selectedApps
+                                      .map((e) => e.id)
+                                      .toList(),
+                                  overrideExportSettings: 0,
+                                ),
+                              ),
                             );
                             String fn =
                                 '${tr('obtainiumExportHyphenatedLowercase')}-${DateTime.now().toIso8601String().replaceAll(':', '-')}-count-${selectedApps.length}';
@@ -1701,7 +1766,9 @@ class AppsPageState extends State<AppsPage>
       final colorScheme = Theme.of(context).colorScheme;
 
       return AnimatedContainer(
-        duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
+        duration: Duration(
+          milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0,
+        ),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
@@ -1806,7 +1873,8 @@ class AppsPageState extends State<AppsPage>
           context,
           preferred: viewSettings.gridColumnCount,
         );
-        final bool showDetails = viewSettings.displayShowVersion ||
+        final bool showDetails =
+            viewSettings.displayShowVersion ||
             viewSettings.displayShowAuthor ||
             plusSettings.plusShowTagsInList;
         final double aspectRatio = GridMetrics.childAspectRatio(
@@ -1819,8 +1887,10 @@ class AppsPageState extends State<AppsPage>
             delegate: SliverChildBuilderDelegate(
               (ctx, index) {
                 final app = listedApps[index];
-                final categoryColor = app.app.categories.isNotEmpty &&
-                        viewSettings.categories[app.app.categories.first] != null
+                final categoryColor =
+                    app.app.categories.isNotEmpty &&
+                        viewSettings.categories[app.app.categories.first] !=
+                            null
                     ? Color(viewSettings.categories[app.app.categories.first]!)
                     : null;
                 return RepaintBoundary(
@@ -1834,9 +1904,7 @@ class AppsPageState extends State<AppsPage>
                         app.app.additionalSettings['isAmbiguousUpdate'] == true,
                     categoryColor: categoryColor,
                     entranceDelay: plusSettings.plusEnableEnhancedAnimations
-                        ? Duration(
-                            milliseconds: index < 10 ? index * 35 : 0,
-                          )
+                        ? Duration(milliseconds: index < 10 ? index * 35 : 0)
                         : Duration.zero,
                     onTap: () {
                       if (selectedAppIds.isNotEmpty) {
@@ -1944,121 +2012,132 @@ class AppsPageState extends State<AppsPage>
                   title: tr('appsString'),
                   subtitle: plusSettings.plusHeaderContextSubtitle
                       ? '${plural('apps', listedApps.length)}' +
-                          (existingUpdates.isNotEmpty
-                              ? ' · ${plural('updatesCount', existingUpdates.length)}'
-                              : '')
+                            (existingUpdates.isNotEmpty
+                                ? ' · ${plural('updatesCount', existingUpdates.length)}'
+                                : '')
                       : null,
                   forceOneHanded:
                       settingsProvider.getAppBarStyleForPage('apps') ==
-                              AppBarStyle.large
-                          ? true
-                          : null,
+                          AppBarStyle.large
+                      ? true
+                      : null,
 
-                        actions: [
-                          if (plusSettings.plusShowAppBarSearch &&
-                              !plusSettings.plusEnableHomeDashboard)
-                            ScaleTouchWrapper(
-                              hapticOnPressDown: true,
-                              scaleDownFactor: 0.88,
-                              child: IconButton(
-                                icon: const Icon(Icons.search_rounded),
-                                tooltip: tr('search'),
-                                onPressed: () {
-                                  AppHaptics.selectionClick();
-                                  CommandCenter.show(context);
-                                },
-                              ),
-                            ),
-                          if (!plusSettings.plusEnableFAB)
-                            // A single InkWell handles tap+long-press on
-                            // one recognizer — nesting IconButton's own
-                            // tap recognizer inside an outer
-                            // GestureDetector(onLongPress:) put two
-                            // recognizers in the same arena and could
-                            // delay/suppress the plain tap.
-                            Tooltip(
-                              message: tr('moreAddOptionsHint'),
-                              child: InkResponse(
-                                radius: 24,
-                                onTap: () {
-                                  AppHaptics.selectionClick();
-                                  CommandCenter.show(context);
-                                },
-                                onLongPress: () {
-                                  AppHaptics.heavyImpact();
-                                  AppActionsFAB.showAddAppMenu(context);
-                                },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(12),
-                                  child: Icon(Icons.add_rounded),
-                                ),
-                              ),
-                            ),
-                          ScaleTouchWrapper(
-                            hapticOnPressDown: true,
-                            scaleDownFactor: 0.88,
-                            child: IconButton(
-                              icon: Icon(
-                                viewSettings.globalViewMode == ViewMode.grid
-                                    ? Icons.view_list_rounded
-                                    : Icons.grid_view_rounded,
-                              ),
-                              tooltip: viewSettings.globalViewMode == ViewMode.grid
-                                  ? tr('listView')
-                                  : tr('gridView'),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                setState(() {
-                                  viewSettings.globalViewMode =
-                                      viewSettings.globalViewMode == ViewMode.grid
-                                          ? ViewMode.list
-                                          : ViewMode.grid;
-                                });
-                              },
-                            ),
-                          ),
-                          ScaleTouchWrapper(
-                            hapticOnPressDown: true,
-                            scaleDownFactor: 0.88,
-                            child: IconButton(
-                              icon: Icon(
-                                filter.isIdenticalTo(neutralFilter, settingsProvider)
-                                    ? Icons.filter_list_rounded
-                                    : Icons.filter_list_off_rounded,
-                                color: filter.isIdenticalTo(neutralFilter, settingsProvider)
-                                    ? null
-                                    : Theme.of(context).colorScheme.primary,
-                              ),
-                              tooltip: filter.isIdenticalTo(neutralFilter, settingsProvider)
-                                  ? tr('filterApps')
-                                  : '${tr('filter')} - ${tr('remove')}',
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                if (filter.isIdenticalTo(neutralFilter, settingsProvider)) {
-                                  showFilterDialog();
-                                } else {
-                                  setState(() {
-                                    filter = AppsFilter();
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          if (!hasExternalSettingsEntry)
-                            ScaleTouchWrapper(
-                              hapticOnPressDown: true,
-                              scaleDownFactor: 0.88,
-                              child: IconButton(
-                                icon: const Icon(Icons.settings_rounded),
-                                tooltip: tr('settings'),
-                                onPressed: () {
-                                  AppHaptics.selectionClick();
-                                  pushRoute(context, const SettingsPage());
-                                },
-                              ),
-                            ),
-                        ],
+                  actions: [
+                    if (plusSettings.plusShowAppBarSearch &&
+                        !plusSettings.plusEnableHomeDashboard)
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.88,
+                        child: IconButton(
+                          icon: const Icon(Icons.search_rounded),
+                          tooltip: tr('search'),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            CommandCenter.show(context);
+                          },
+                        ),
                       ),
+                    if (!plusSettings.plusEnableFAB)
+                      // A single InkWell handles tap+long-press on
+                      // one recognizer — nesting IconButton's own
+                      // tap recognizer inside an outer
+                      // GestureDetector(onLongPress:) put two
+                      // recognizers in the same arena and could
+                      // delay/suppress the plain tap.
+                      Tooltip(
+                        message: tr('moreAddOptionsHint'),
+                        child: InkResponse(
+                          radius: 24,
+                          onTap: () {
+                            AppHaptics.selectionClick();
+                            CommandCenter.show(context);
+                          },
+                          onLongPress: () {
+                            AppHaptics.heavyImpact();
+                            AppActionsFAB.showAddAppMenu(context);
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: Icon(Icons.add_rounded),
+                          ),
+                        ),
+                      ),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.88,
+                      child: IconButton(
+                        icon: Icon(
+                          viewSettings.globalViewMode == ViewMode.grid
+                              ? Icons.view_list_rounded
+                              : Icons.grid_view_rounded,
+                        ),
+                        tooltip: viewSettings.globalViewMode == ViewMode.grid
+                            ? tr('listView')
+                            : tr('gridView'),
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          setState(() {
+                            viewSettings.globalViewMode =
+                                viewSettings.globalViewMode == ViewMode.grid
+                                ? ViewMode.list
+                                : ViewMode.grid;
+                          });
+                        },
+                      ),
+                    ),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.88,
+                      child: IconButton(
+                        icon: Icon(
+                          filter.isIdenticalTo(neutralFilter, settingsProvider)
+                              ? Icons.filter_list_rounded
+                              : Icons.filter_list_off_rounded,
+                          color:
+                              filter.isIdenticalTo(
+                                neutralFilter,
+                                settingsProvider,
+                              )
+                              ? null
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        tooltip:
+                            filter.isIdenticalTo(
+                              neutralFilter,
+                              settingsProvider,
+                            )
+                            ? tr('filterApps')
+                            : '${tr('filter')} - ${tr('remove')}',
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          if (filter.isIdenticalTo(
+                            neutralFilter,
+                            settingsProvider,
+                          )) {
+                            showFilterDialog();
+                          } else {
+                            setState(() {
+                              filter = AppsFilter();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    if (!hasExternalSettingsEntry)
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.88,
+                        child: IconButton(
+                          icon: const Icon(Icons.settings_rounded),
+                          tooltip: tr('settings'),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            pushRoute(context, const SettingsPage());
+                          },
+                        ),
+                      ),
+                  ],
+                ),
                 const SliverToBoxAdapter(child: SideloadingNotice()),
                 if (plusSettings.plusEnableHomeDashboard)
                   SliverToBoxAdapter(
@@ -2082,18 +2161,20 @@ class AppsPageState extends State<AppsPage>
                         });
                       },
                       onUrlInput: (url) {
-                        context.read<AppsProvider>().addAppsByURL([
-                          url,
-                        ]).then((errors) {
-                          if (!context.mounted) return;
-                          if (errors.isNotEmpty) {
-                            showError(errors[0][1], context);
-                          } else {
-                            showMessage(tr('appAdded'), context);
-                          }
-                        }).catchError((Object e) {
-                          if (context.mounted) showError(e, context);
-                        });
+                        context
+                            .read<AppsProvider>()
+                            .addAppsByURL([url])
+                            .then((errors) {
+                              if (!context.mounted) return;
+                              if (errors.isNotEmpty) {
+                                showError(errors[0][1], context);
+                              } else {
+                                showMessage(tr('appAdded'), context);
+                              }
+                            })
+                            .catchError((Object e) {
+                              if (context.mounted) showError(e, context);
+                            });
                       },
                       onDiscoverSearch: _runDiscoverSearch,
                       onCheckUpdates: refresh,
@@ -2120,7 +2201,8 @@ class AppsPageState extends State<AppsPage>
             ),
           ),
         ),
-        persistentFooterButtons: appsProvider.apps.isEmpty ||
+        persistentFooterButtons:
+            appsProvider.apps.isEmpty ||
                 (plusSettings.plusEnableBottomNavBar && selectedAppIds.isEmpty)
             ? null
             : [getFilterButtonsRow()],
@@ -2247,118 +2329,115 @@ class AppsPageState extends State<AppsPage>
       SliverPadding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         sliver: SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (ctx, index) {
-              final entry = _discoverResults.entries.elementAt(index);
-              final url = entry.key;
-              final result = entry.value;
-              final name = result.value.isNotEmpty ? result.value[0] : url;
-              final source = result.key;
-              final isPending = _pendingDiscoverAddUrls.contains(url);
+          delegate: SliverChildBuilderDelegate((ctx, index) {
+            final entry = _discoverResults.entries.elementAt(index);
+            final url = entry.key;
+            final result = entry.value;
+            final name = result.value.isNotEmpty ? result.value[0] : url;
+            final source = result.key;
+            final isPending = _pendingDiscoverAddUrls.contains(url);
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Material(
-                  color: cs.surfaceContainer,
-                  borderRadius: BorderRadius.circular(itemRadius),
-                  child: ScaleTouchWrapper(
-                    hapticOnPressDown: !isPending,
-                    child: ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(itemRadius),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      leading: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                          color: cs.primaryContainer,
-                        ),
-                        child: Center(
-                          child: Text(
-                            name.isNotEmpty ? name[0].toUpperCase() : '?',
-                            style: TextStyle(
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      subtitle: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.secondaryContainer,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              source,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: cs.onSecondaryContainer,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.tune_rounded),
-                            tooltip: tr('advancedOptions'),
-                            onPressed: () {
-                              _clearDiscoverResults();
-                              showAddAppSheet(context: context, initialUrl: url);
-                            },
-                          ),
-                          if (isPending)
-                            const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: ExpressiveCircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                          else
-                            IconButton(
-                              icon: Icon(
-                                Icons.add_circle_outline_rounded,
-                                color: cs.primary,
-                              ),
-                              tooltip: tr('addApp'),
-                              onPressed: () => _addDiscoverApp(url),
-                            ),
-                        ],
-                      ),
-                      onTap: isPending ? null : () => _addDiscoverApp(url),
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Material(
+                color: cs.surfaceContainer,
+                borderRadius: BorderRadius.circular(itemRadius),
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: !isPending,
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(itemRadius),
                     ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    leading: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                        color: cs.primaryContainer,
+                      ),
+                      child: Center(
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                          style: TextStyle(
+                            color: cs.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                    ),
+                    title: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.secondaryContainer,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            source,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: cs.onSecondaryContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.tune_rounded),
+                          tooltip: tr('advancedOptions'),
+                          onPressed: () {
+                            _clearDiscoverResults();
+                            showAddAppSheet(context: context, initialUrl: url);
+                          },
+                        ),
+                        if (isPending)
+                          const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: ExpressiveCircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          )
+                        else
+                          IconButton(
+                            icon: Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: cs.primary,
+                            ),
+                            tooltip: tr('addApp'),
+                            onPressed: () => _addDiscoverApp(url),
+                          ),
+                      ],
+                    ),
+                    onTap: isPending ? null : () => _addDiscoverApp(url),
                   ),
                 ),
-              );
-            },
-            childCount: _discoverResults.length,
-          ),
+              ),
+            );
+          }, childCount: _discoverResults.length),
         ),
       ),
     ];
@@ -2623,7 +2702,10 @@ class _BulkUpdateDialogState extends State<_BulkUpdateDialog> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return GlassDialog(
-      title: tr('changeX', args: [plural('apps', widget.totalApps).toLowerCase()]),
+      title: tr(
+        'changeX',
+        args: [plural('apps', widget.totalApps).toLowerCase()],
+      ),
       icon: Icons.system_update_alt_rounded,
       scrollable: true,
       content: SizedBox(
@@ -2732,17 +2814,18 @@ class _TVSearchBarState extends State<_TVSearchBar> {
           textFocusNode: _textFocus,
           borderRadius: currentRadius,
           child: AnimatedContainer(
-            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
+            duration: Duration(
+              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0,
+            ),
             curve: Easing.emphasizedDecelerate,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(currentRadius),
               boxShadow: isShifted
                   ? [
                       BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.16),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.16),
                         blurRadius: 14,
                         spreadRadius: 1,
                         offset: const Offset(0, 2),
@@ -2758,7 +2841,9 @@ class _TVSearchBarState extends State<_TVSearchBar> {
                 hintText: widget.hintText,
                 prefixIcon: const Icon(Icons.search_rounded),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(currentRadius)),
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(currentRadius),
+                  ),
                 ),
               ),
             ),

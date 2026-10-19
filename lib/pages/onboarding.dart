@@ -238,15 +238,15 @@ class _OnboardingPageState extends State<OnboardingPage>
       leading: Icon(icon, color: iconColor ?? colorScheme.primary),
       title: Text(
         title,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
       ),
       subtitle: Text(
         subtitle,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
       ),
       dense: true,
       trailing: onTap != null
@@ -256,8 +256,9 @@ class _OnboardingPageState extends State<OnboardingPage>
 
     Widget container = Container(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow
-            .withValues(alpha: enableGlass ? 0.45 : 1.0),
+        color: colorScheme.surfaceContainerLow.withValues(
+          alpha: enableGlass ? 0.45 : 1.0,
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(
@@ -287,16 +288,14 @@ class _OnboardingPageState extends State<OnboardingPage>
 
     Widget card = ClipRRect(
       borderRadius: BorderRadius.circular(16),
-      child: ConditionalBlur(
-        enabled: enableGlass,
-        sigma: 10,
-        child: container,
-      ),
+      child: ConditionalBlur(enabled: enableGlass, sigma: 10, child: container),
     );
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: onTap != null ? ScaleTouchWrapper(hapticOnPressDown: true, child: card) : card,
+      child: onTap != null
+          ? ScaleTouchWrapper(hapticOnPressDown: true, child: card)
+          : card,
     );
   }
 
@@ -323,10 +322,9 @@ class _OnboardingPageState extends State<OnboardingPage>
             minimumSize: const Size.fromHeight(48),
             side: isGranted
                 ? BorderSide(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: AppOpacity.half),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: AppOpacity.half),
                   )
                 : null,
           ),
@@ -347,9 +345,9 @@ class _OnboardingPageState extends State<OnboardingPage>
       secondary: Icon(icon, size: 22),
       title: Text(
         title,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
         subtitle,
@@ -580,7 +578,8 @@ class _OnboardingPageState extends State<OnboardingPage>
                                             hapticOnPressDown: true,
                                             scaleDownFactor: 0.94,
                                             child: FilledButton(
-                                              onPressed: () => Navigator.pop(ctx),
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx),
                                               child: const Text('OK'),
                                             ),
                                           ),
@@ -602,7 +601,8 @@ class _OnboardingPageState extends State<OnboardingPage>
                                             hapticOnPressDown: true,
                                             scaleDownFactor: 0.94,
                                             child: FilledButton(
-                                              onPressed: () => Navigator.pop(ctx),
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx),
                                               child: const Text('OK'),
                                             ),
                                           ),

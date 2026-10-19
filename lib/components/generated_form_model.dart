@@ -147,6 +147,7 @@ class GeneratedFormSlider extends GeneratedFormItem {
   /// keys or plain numeric day counts (resolved by the renderer with the
   /// pluralized "day" string).
   final List<MapEntry<String, String>>? opts;
+  final String numericLabelUnitKey;
   late bool required;
 
   GeneratedFormSlider(
@@ -155,6 +156,7 @@ class GeneratedFormSlider extends GeneratedFormItem {
     super.label,
     String super.value = '',
     this.required = true,
+    this.numericLabelUnitKey = 'day',
     List<String? Function(String? value)> super.additionalValidators = const [],
   });
 
@@ -171,6 +173,7 @@ class GeneratedFormSlider extends GeneratedFormItem {
       label: label,
       value: value,
       required: required,
+      numericLabelUnitKey: numericLabelUnitKey,
       additionalValidators: List.from(additionalValidators),
     );
   }
@@ -203,12 +206,27 @@ class GeneratedFormSubForm extends GeneratedFormItem {
   }
 }
 
+/// A non-input section label rendered between form rows. [id] can be used to
+/// scroll a form to the section (via [GlobalObjectKey]).
+class GeneratedFormHeader extends GeneratedFormItem {
+  final String? id;
+
+  GeneratedFormHeader({this.id, required super.label}) : super('');
+
+  @override
+  dynamic ensureType(val) => val;
+
+  @override
+  GeneratedFormHeader clone() => GeneratedFormHeader(id: id, label: label);
+}
+
 Map<String, dynamic> getDefaultValuesFromFormItems(
   List<List<GeneratedFormItem>> items,
 ) {
   final entries = <MapEntry<String, dynamic>>[];
   for (final row in items) {
     for (final el in row) {
+      if (el is GeneratedFormHeader) continue;
       if (el is GeneratedFormSwitch) {
         entries.add(MapEntry(el.key, el.value ?? false));
       } else if (el is GeneratedFormSubForm) {

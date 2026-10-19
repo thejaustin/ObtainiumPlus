@@ -379,11 +379,17 @@ class ThemeBuilder {
       }),
       thumbIcon: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
-          return Icon(Icons.check_rounded,
-              size: 16, color: colorScheme.primary);
+          return Icon(
+            Icons.check_rounded,
+            size: 16,
+            color: colorScheme.primary,
+          );
         }
-        return Icon(Icons.close_rounded,
-            size: 16, color: colorScheme.surfaceContainerHighest);
+        return Icon(
+          Icons.close_rounded,
+          size: 16,
+          color: colorScheme.surfaceContainerHighest,
+        );
       }),
     );
   }
@@ -443,9 +449,7 @@ class ThemeBuilder {
       elevation: 1,
       shape: expressive
           ? RoundedSuperellipseBorder(
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(radius),
-              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
             )
           : RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
@@ -590,8 +594,9 @@ class ThemeBuilder {
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+                borderRadius: BorderRadius.circular(
+                  cornerRadius.clamp(0.0, 24.0),
+                ),
               )
             : const StadiumBorder(),
       ),
@@ -607,8 +612,9 @@ class ThemeBuilder {
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+                borderRadius: BorderRadius.circular(
+                  cornerRadius.clamp(0.0, 24.0),
+                ),
               )
             : const StadiumBorder(),
       ),
@@ -624,8 +630,9 @@ class ThemeBuilder {
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+                borderRadius: BorderRadius.circular(
+                  cornerRadius.clamp(0.0, 24.0),
+                ),
               )
             : const StadiumBorder(),
       ),
@@ -641,8 +648,9 @@ class ThemeBuilder {
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
             ? RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(cornerRadius.clamp(0.0, 24.0)),
+                borderRadius: BorderRadius.circular(
+                  cornerRadius.clamp(0.0, 24.0),
+                ),
               )
             : const StadiumBorder(),
       ),

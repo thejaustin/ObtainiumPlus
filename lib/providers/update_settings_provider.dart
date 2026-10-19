@@ -63,8 +63,9 @@ class UpdateSettingsProvider with ChangeNotifier {
       valInterpolated = 15;
     } else {
       final computed = updateIntervalInterpolator.compute(val);
-      valInterpolated =
-          (computed.isNaN || computed.isInfinite) ? 360 : computed.round();
+      valInterpolated = (computed.isNaN || computed.isInfinite)
+          ? 360
+          : computed.round();
     }
     if (valInterpolated < 60) {
       prefs?.setInt('updateInterval', valInterpolated);
@@ -140,6 +141,15 @@ class UpdateSettingsProvider with ChangeNotifier {
 
   set checkUpdateOnDetailPage(bool show) {
     prefs?.setBool('checkUpdateOnDetailPage', show);
+    notifyListeners();
+  }
+
+  bool get allowAddingAppsWithoutCheck {
+    return prefs?.safeBool('allowAddingAppsWithoutCheck') ?? false;
+  }
+
+  set allowAddingAppsWithoutCheck(bool value) {
+    prefs?.setBool('allowAddingAppsWithoutCheck', value);
     notifyListeners();
   }
 

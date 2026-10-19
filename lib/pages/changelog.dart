@@ -33,10 +33,7 @@ class _ReleaseItem {
 // ─── Public entry point ─────────────────────────────────────────────────────
 
 /// Shows the "What's New" bottom sheet. Call from home.dart after a version bump.
-Future<void> showWhatsNewSheet(
-  BuildContext context, {
-  String? targetVersion,
-}) {
+Future<void> showWhatsNewSheet(BuildContext context, {String? targetVersion}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -68,11 +65,7 @@ class ChangelogPage extends StatefulWidget {
   final bool isModal;
   final String? targetVersion;
 
-  const ChangelogPage({
-    super.key,
-    this.isModal = false,
-    this.targetVersion,
-  });
+  const ChangelogPage({super.key, this.isModal = false, this.targetVersion});
 
   @override
   State<ChangelogPage> createState() => _ChangelogPageState();
@@ -84,7 +77,9 @@ class _ChangelogPageState extends State<ChangelogPage> {
   @override
   void initState() {
     super.initState();
-    _future = _fetchReleases(widget.targetVersion ?? currentObtainiumPlusVersion);
+    _future = _fetchReleases(
+      widget.targetVersion ?? currentObtainiumPlusVersion,
+    );
   }
 
   @override
@@ -102,17 +97,21 @@ class _ChangelogPageState extends State<ChangelogPage> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-                      child: SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: ExpressiveCircularProgressIndicator(),
-                      ),
-                    );
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: ExpressiveCircularProgressIndicator(),
+              ),
+            );
           }
-          if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
             return _ErrorState(
               onRetry: () => setState(() {
-                _future = _fetchReleases(widget.targetVersion ?? currentObtainiumPlusVersion);
+                _future = _fetchReleases(
+                  widget.targetVersion ?? currentObtainiumPlusVersion,
+                );
               }),
             );
           }
@@ -166,12 +165,16 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
           curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow.withValues(
-                  alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
-                ),
-            borderRadius: BorderRadius.vertical(top: Radius.circular(radius + 4)),
+              alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
+            ),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(radius + 4),
+            ),
             border: Border.all(
               color: colorScheme.outline.withValues(
-                alpha: enableGlass ? AppConstants.glassBorderAlpha : AppOpacity.subtle,
+                alpha: enableGlass
+                    ? AppConstants.glassBorderAlpha
+                    : AppOpacity.subtle,
               ),
             ),
           ),
@@ -186,12 +189,12 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(
-                      child: SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: ExpressiveCircularProgressIndicator(),
-                      ),
-                    );
+                        child: SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: ExpressiveCircularProgressIndicator(),
+                        ),
+                      );
                     }
                     if (snapshot.hasError ||
                         !snapshot.hasData ||
@@ -203,7 +206,8 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                       );
                     }
                     final releases = snapshot.data!;
-                    final selected = releases[_selectedIndex.clamp(0, releases.length - 1)];
+                    final selected =
+                        releases[_selectedIndex.clamp(0, releases.length - 1)];
                     return Column(
                       children: [
                         if (releases.length > 1)
@@ -271,9 +275,9 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
                 ),
                 Text(
                   'Version ${widget.targetVersion}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
               ],
             ),
@@ -402,12 +406,12 @@ class _MarkdownBody extends StatelessWidget {
           fontWeight: FontWeight.bold,
           color: colorScheme.primary,
         ),
-        h2: Theme.of(context).textTheme.titleMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ),
-        h3: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        h2: Theme.of(
+          context,
+        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        h3: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
         p: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45),
         listBullet: TextStyle(color: colorScheme.primary),
         blockquoteDecoration: BoxDecoration(
@@ -548,7 +552,9 @@ class _ErrorState extends StatelessWidget {
 Future<List<_ReleaseItem>> _fetchReleases(String targetVersion) async {
   // 1. Try specific release tag first for speed
   try {
-    final tag = targetVersion.startsWith('v') ? targetVersion : 'v$targetVersion';
+    final tag = targetVersion.startsWith('v')
+        ? targetVersion
+        : 'v$targetVersion';
     final res = await get(
       Uri.parse(
         'https://api.github.com/repos/thejaustin/ObtainiumPlus/releases/tags/$tag',
@@ -572,10 +578,7 @@ Future<List<_ReleaseItem>> _fetchReleases(String targetVersion) async {
           ];
           // Fetch earlier releases in the background to populate chips
           try {
-            final extras = await _fetchRecentList(
-              perPage: 6,
-              excludeTag: tag,
-            );
+            final extras = await _fetchRecentList(perPage: 6, excludeTag: tag);
             return [...items, ...extras];
           } catch (_) {
             return items;
@@ -627,11 +630,9 @@ Future<List<_ReleaseItem>> _fetchRecentList({
     final name = (release['name'] ?? '').toString();
     final body = _cleanBody((release['body'] ?? '').toString().trim());
     if (body.isEmpty && name.isEmpty) continue;
-    items.add(_ReleaseItem(
-      tag: tag,
-      name: name.isNotEmpty ? name : tag,
-      body: body,
-    ));
+    items.add(
+      _ReleaseItem(tag: tag, name: name.isNotEmpty ? name : tag, body: body),
+    );
   }
   return items;
 }
@@ -654,8 +655,14 @@ String _cleanBody(String body) {
 
   // 3. Unwrap <details> collapsible blocks instead of deleting their contents,
   // so technical/commit changelogs remain visible in the app.
-  cleaned = cleaned.replaceAll(RegExp(r'</?details>', caseSensitive: false), '');
-  cleaned = cleaned.replaceAll(RegExp(r'<summary>.*?</summary>', caseSensitive: false), '');
+  cleaned = cleaned.replaceAll(
+    RegExp(r'</?details>', caseSensitive: false),
+    '',
+  );
+  cleaned = cleaned.replaceAll(
+    RegExp(r'<summary>.*?</summary>', caseSensitive: false),
+    '',
+  );
 
   // 4. Clean up any leftover duplicate dividers or trailing spacing
   cleaned = cleaned.replaceAll(RegExp(r'(\n---\s*){2,}'), '\n---\n');
@@ -663,7 +670,8 @@ String _cleanBody(String body) {
   return cleaned.trim();
 }
 
-String _bundledFallback(String version) => '''
+String _bundledFallback(String version) =>
+    '''
 **Obtainium+ $version**
 
 ### ✨ Highlights & Features
@@ -676,4 +684,5 @@ String _bundledFallback(String version) => '''
 
 ---
 [View All Releases on GitHub](https://github.com/thejaustin/ObtainiumPlus/releases)
-'''.trim();
+'''
+        .trim();

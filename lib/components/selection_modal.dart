@@ -81,7 +81,9 @@ class _SelectionModalState extends State<SelectionModal> {
     entrySelections.forEach((key, value) {
       var searchableText = key.value.isEmpty ? key.key : key.value[0];
       if (filterRegex.isEmpty ||
-          (re != null ? re.hasMatch(searchableText) : searchableText.contains(filterRegex))) {
+          (re != null
+              ? re.hasMatch(searchableText)
+              : searchableText.contains(filterRegex))) {
         filteredEntrySelections.putIfAbsent(key, () => value);
       }
     });
@@ -94,7 +96,9 @@ class _SelectionModalState extends State<SelectionModal> {
         var searchableText = key.value.isEmpty ? key.key : key.value[0];
         if (reCI != null
             ? reCI.hasMatch(searchableText)
-            : searchableText.toLowerCase().contains(filterRegex.toLowerCase())) {
+            : searchableText.toLowerCase().contains(
+                filterRegex.toLowerCase(),
+              )) {
           filteredEntrySelections.putIfAbsent(key, () => value);
         }
       });
@@ -202,7 +206,12 @@ class _SelectionModalState extends State<SelectionModal> {
                     Flexible(
                       child: SingleChildScrollView(
                         padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-                        child: _buildContent(context, radius, colorScheme, plusSettings),
+                        child: _buildContent(
+                          context,
+                          radius,
+                          colorScheme,
+                          plusSettings,
+                        ),
                       ),
                     ),
                     const Divider(height: 1, thickness: 0.5),
@@ -330,29 +339,29 @@ class _SelectionModalState extends State<SelectionModal> {
                       );
                     },
               child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  entry.value.isEmpty ? entry.key : entry.value[0],
-                  style: TextStyle(
-                    decoration: widget.titlesAreLinks
-                        ? TextDecoration.underline
-                        : null,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.start,
-                ),
-                if (widget.titlesAreLinks)
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    Uri.parse(entry.key).host,
+                    entry.value.isEmpty ? entry.key : entry.value[0],
                     style: TextStyle(
-                      decoration: TextDecoration.underline,
-                      fontSize: 12,
-                      color: colorScheme.onSurface.withValues(alpha: 0.8),
+                      decoration: widget.titlesAreLinks
+                          ? TextDecoration.underline
+                          : null,
+                      fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.start,
                   ),
-              ],
-            ),
+                  if (widget.titlesAreLinks)
+                    Text(
+                      Uri.parse(entry.key).host,
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.8),
+                      ),
+                    ),
+                ],
+              ),
             ),
           );
 
@@ -407,7 +416,11 @@ class _SelectionModalState extends State<SelectionModal> {
                   ),
                 )
               : AnimatedContainer(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                  duration: Duration(
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
+                        ? 200
+                        : 0,
+                  ),
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
                     color: entrySelections[entry] == true

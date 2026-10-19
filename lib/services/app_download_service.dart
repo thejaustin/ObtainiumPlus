@@ -74,8 +74,14 @@ class AppDownloadService {
     // newInfo.packageName is String? — null means the APK archive couldn't report
     // its package name; treat it as "no ID change" to avoid a null crash.
     if (newInfo.packageName != null && app.id != newInfo.packageName) {
-      final areAliases = AppConstants.arePackageAliases(app.id, newInfo.packageName!);
-      if (apps[app.id] != null && !isTempIdBool && !app.allowIdChange && !areAliases) {
+      final areAliases = AppConstants.arePackageAliases(
+        app.id,
+        newInfo.packageName!,
+      );
+      if (apps[app.id] != null &&
+          !isTempIdBool &&
+          !app.allowIdChange &&
+          !areAliases) {
         throw IDChangedError(newInfo.packageName!, appId: app.id);
       }
       var idChangeWasAllowed = app.allowIdChange || areAliases;
@@ -340,12 +346,19 @@ class AppDownloadService {
         downloadUrl,
         fileNameNoExt,
         source.urlsAlwaysHaveExtension,
-        (double? progress, [int? received, int? total, double? speedBytesPerSec]) {
-          int? prog = (progress == null || progress.isNaN || progress.isInfinite)
+        (
+          double? progress, [
+          int? received,
+          int? total,
+          double? speedBytesPerSec,
+        ]) {
+          int? prog =
+              (progress == null || progress.isNaN || progress.isInfinite)
               ? null
               : progress.ceil();
           if (apps[app.id] != null) {
-            if (received != null) apps[app.id]!.downloadReceivedBytes = received;
+            if (received != null)
+              apps[app.id]!.downloadReceivedBytes = received;
             if (total != null) apps[app.id]!.downloadTotalBytes = total;
             apps[app.id]!.downloadSpeedBytesPerSec = speedBytesPerSec;
             apps[app.id]!.downloadProgress = progress;
@@ -360,13 +373,17 @@ class AppDownloadService {
             speedBytesPerSec: speedBytesPerSec,
           );
           final now = DateTime.now();
-          final shouldNotify = prog != null &&
+          final shouldNotify =
+              prog != null &&
               prevProg != prog &&
               (prevProg == null ||
                   prog == 100 ||
                   ((prog - prevProg!).abs() >= 2 &&
                       (lastNotificationTime == null ||
-                          now.difference(lastNotificationTime!).inMilliseconds >= 300)));
+                          now
+                                  .difference(lastNotificationTime!)
+                                  .inMilliseconds >=
+                              300)));
           if (shouldNotify) {
             notificationsProvider?.notify(notif);
             prevProg = prog;
@@ -376,7 +393,8 @@ class AppDownloadService {
         APKDir.path,
         useExisting: useExisting,
         headers: headers,
-        allowInsecure: app.additionalSettings['allowInsecure'] == true ||
+        allowInsecure:
+            app.additionalSettings['allowInsecure'] == true ||
             source.allowInsecureRedirects,
         logs: logs,
         isCancelled: isCancelled != null ? () => isCancelled!(app.id) : null,
@@ -391,9 +409,9 @@ class AppDownloadService {
 
       // Verify SHA-256 digest if available
       final dynamic rawShaMap = app.additionalSettings['assetSha256s'];
-      final Map<dynamic, dynamic>? shaMap =
-          rawShaMap is Map ? rawShaMap : null;
-      final expectedSha = shaMap?[downloadUrl]?.toString() ??
+      final Map<dynamic, dynamic>? shaMap = rawShaMap is Map ? rawShaMap : null;
+      final expectedSha =
+          shaMap?[downloadUrl]?.toString() ??
           shaMap?[app.apkUrls[apkIndex].key]?.toString() ??
           app.additionalSettings['expectedSha256']?.toString();
       if (expectedSha != null && expectedSha.trim().isNotEmpty) {
@@ -782,7 +800,8 @@ class AppDownloadService {
     }
     if (installer is ShizukuInstaller) {
       final resCode = await installer.checkPermissionWithRetry();
-      final isGranted = resCode?.startsWith('authorized') == true ||
+      final isGranted =
+          resCode?.startsWith('authorized') == true ||
           resCode?.startsWith('granted') == true;
       if (isGranted) return;
 

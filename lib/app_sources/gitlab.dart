@@ -55,6 +55,7 @@ class GitLab extends AppSource {
   @override
   List<List<GeneratedFormItem>>
   get additionalSourceAppSpecificSettingFormItems => [
+    [GeneratedFormHeader(label: tr('sectionReleaseSelection'))],
     AppSource.fallbackToOlderReleasesFormItem,
   ];
 
@@ -164,10 +165,14 @@ class GitLab extends AppSource {
         additionalSettings,
       );
       ensureHttpSuccess(res0);
-      final int? projectId = jsonDecode(res0.body)['id'];
+      final dynamic projectJson = jsonDecode(res0.body);
+      final int? projectId = projectJson['id'];
       if (projectId == null) {
         throw NoReleasesError();
       }
+      final bool? projectArchived = projectJson['archived'] is bool
+          ? projectJson['archived'] as bool
+          : null;
 
       // Request data from REST API
       final String releasesPath = trackOnly ? 'repository/tags' : 'releases';
@@ -300,6 +305,7 @@ class GitLab extends AppSource {
         '^${RegExp.escape(standardUrl)}/-/jobs/[0-9]+/artifacts/file/[^/]+',
       );
       finalResult = finalResult.copyWith(
+        isArchived: projectArchived,
         apkUrls: finalResult.apkUrls.map((apkUrl) {
           if (jobArtifactRegex.hasMatch(apkUrl.value)) {
             return MapEntry(

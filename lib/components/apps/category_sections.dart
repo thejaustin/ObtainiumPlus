@@ -70,8 +70,9 @@ class CategorySections extends StatelessWidget {
     // Pre-compute pending-update counts per category in O(N)
     final categoryUpdateCounts = <String?, int>{};
     appsByCategory.forEach((cat, apps) {
-      categoryUpdateCounts[cat] =
-          apps.where((a) => pendingUpdates.contains(a.app.id)).length;
+      categoryUpdateCounts[cat] = apps
+          .where((a) => pendingUpdates.contains(a.app.id))
+          .length;
     });
 
     if (isGridView) {
@@ -163,7 +164,8 @@ class CategorySections extends StatelessWidget {
         ? _calculateAdaptiveColumns(context)
         : settingsProvider.gridColumnCount;
 
-    final bool showDetails = settingsProvider.displayShowVersion ||
+    final bool showDetails =
+        settingsProvider.displayShowVersion ||
         settingsProvider.displayShowAuthor ||
         plusSettings.plusShowTagsInList;
     final double aspectRatio = GridMetrics.childAspectRatio(
@@ -300,7 +302,9 @@ class CategorySections extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 7.5, vertical: 2.5),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+              color: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.65,
+              ),
               borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(alpha: 0.2),
@@ -408,7 +412,9 @@ class CategorySections extends StatelessWidget {
         ),
       ),
       child: ExpansionTile(
-        key: PageStorageKey<String>('category_tile:${categoryName ?? '__uncategorized__'}'),
+        key: PageStorageKey<String>(
+          'category_tile:${categoryName ?? '__uncategorized__'}',
+        ),
         initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
         title: categoryTitle,
         trailing: Row(

@@ -335,9 +335,7 @@ Widget _buildActions(BuildContext context) {
               if (nav != null) {
                 Navigator.push(
                   nav.context,
-                  MaterialPageRoute(
-                    builder: (context) => const DiscoverPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const DiscoverPage()),
                 );
               }
             },

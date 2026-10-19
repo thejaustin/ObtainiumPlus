@@ -277,11 +277,7 @@ class _SquigglyPainter extends CustomPainter {
       );
     } else {
       // Indeterminate mode: draw full background track
-      canvas.drawLine(
-        Offset(0, centerY),
-        Offset(size.width, centerY),
-        bgPaint,
-      );
+      canvas.drawLine(Offset(0, centerY), Offset(size.width, centerY), bgPaint);
 
       // M3 Expressive Indeterminate: smooth morphing wave with M3 curve expansion/contraction
       const double wavelength = 28.0;
@@ -479,7 +475,9 @@ class _WavyCircularPainter extends CustomPainter {
 
       for (double a = 0; a <= sweepAngle; a += 0.02) {
         final double progressAtA = sweepAngle > 0 ? a / sweepAngle : 0.0;
-        final double ramp = progressAtA > 0.85 ? (1.0 - progressAtA) / 0.15 : 1.0;
+        final double ramp = progressAtA > 0.85
+            ? (1.0 - progressAtA) / 0.15
+            : 1.0;
         final double currentAmplitude = amplitude * ramp;
         final double currentRadius =
             radius +

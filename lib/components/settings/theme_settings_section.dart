@@ -451,7 +451,9 @@ class ThemeSettingsSection extends StatelessWidget {
                       color: colorScheme.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(radius),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -488,7 +490,9 @@ class ThemeSettingsSection extends StatelessWidget {
                             Text(
                               'v1.0.0',
                               style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                           ],
                         ),
@@ -503,10 +507,10 @@ class ThemeSettingsSection extends StatelessWidget {
                     height: 28,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
                     decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(
-                        radius.clamp(0, 20),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.5,
                       ),
+                      borderRadius: BorderRadius.circular(radius.clamp(0, 20)),
                       border: Border.all(
                         color: colorScheme.primary.withValues(alpha: 0.2),
                       ),
@@ -799,8 +803,9 @@ class ThemeSettingsSection extends StatelessWidget {
                   ? Text(
                       'Shapes the color palette generated from your system wallpaper',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant
-                            .withValues(alpha: 0.8),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                       ),
                     )
                   : null,

@@ -165,8 +165,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                     title: tr('settingsUseHeroCards'),
                     subtitle: tr('settingsUseHeroCardsDesc'),
                     value: plusSettings.plusSettingsUseHeroCards,
-                    onChanged: (v) =>
-                        plusSettings.plusSettingsUseHeroCards = v,
+                    onChanged: (v) => plusSettings.plusSettingsUseHeroCards = v,
                   ),
                 ],
               ),
@@ -249,49 +248,52 @@ class _LayoutModeButton extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
           child: AnimatedContainer(
-          duration: Duration(milliseconds: animsEnabled ? 200 : 0),
-          curve: Curves.easeOutCubic,
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.45)
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
+            duration: Duration(milliseconds: animsEnabled ? 200 : 0),
+            curve: Curves.easeOutCubic,
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? colorScheme.primary
-                  : colorScheme.outlineVariant.withValues(alpha: 0.25),
-              width: isSelected ? 1.5 : 1.0,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 16,
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.45)
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
+                    : colorScheme.outlineVariant.withValues(alpha: 0.25),
+                width: isSelected ? 1.5 : 1.0,
               ),
-              const SizedBox(width: 6),
-              Flexible(
-                child: Text(
-                  title,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    color: isSelected
-                        ? colorScheme.primary
-                        : colorScheme.onSurface,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  size: 16,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    title,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : colorScheme.onSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ));
+    );
   }
 }

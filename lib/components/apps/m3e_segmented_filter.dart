@@ -75,7 +75,10 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
       builder: (context, constraints) {
         final totalWidth = constraints.maxWidth;
         const inset = 3.5;
-        final trackWidth = (totalWidth - (inset * 2)).clamp(0.0, double.infinity);
+        final trackWidth = (totalWidth - (inset * 2)).clamp(
+          0.0,
+          double.infinity,
+        );
         final segmentWidth = trackWidth / segments.length;
         final activeIndex = _currentIndex.clamp(0, segments.length - 1);
 
@@ -160,11 +163,7 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(pillRadius),
-      child: ConditionalBlur(
-        enabled: isGlass,
-        sigma: 8,
-        child: content,
-      ),
+      child: ConditionalBlur(enabled: isGlass, sigma: 8, child: content),
     );
   }
 }
@@ -234,16 +233,16 @@ class _SegmentItem extends StatelessWidget {
                     duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
                       color: fgColor,
-                      fontFamily:
-                          Theme.of(context).textTheme.labelLarge?.fontFamily,
+                      fontFamily: Theme.of(
+                        context,
+                      ).textTheme.labelLarge?.fontFamily,
                     ),
                     overflow: TextOverflow.ellipsis,
-                    child: Text(
-                      data.label,
-                      maxLines: 1,
-                    ),
+                    child: Text(data.label, maxLines: 1),
                   ),
                 ),
                 if (data.badgeCount != null) ...[
@@ -266,10 +265,11 @@ class _SegmentItem extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: (isSelected
-                                    ? colorScheme.primary
-                                    : colorScheme.error)
-                                .withValues(alpha: 0.28),
+                            color:
+                                (isSelected
+                                        ? colorScheme.primary
+                                        : colorScheme.error)
+                                    .withValues(alpha: 0.28),
                             blurRadius: 4,
                             offset: const Offset(0, 1),
                           ),

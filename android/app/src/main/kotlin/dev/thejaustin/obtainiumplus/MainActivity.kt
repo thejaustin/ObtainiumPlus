@@ -35,10 +35,14 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val EXTERNAL_INSTALL_CHANNEL = "dev.imranr.obtainium/external_install"
+        const val DOCUMENT_TREE_CHANNEL = "dev.imranr.obtainium/document_tree"
         const val APK_MIME = "application/vnd.android.package-archive"
 
         /** Request code for tracked external-installer launches. */
         const val THIRD_PARTY_INSTALL_REQUEST_CODE = 5108
+
+        /** Request code for the read+write document-tree picker. */
+        const val DOCUMENT_TREE_REQUEST_CODE = 5209
 
         /** Hard ceiling for a tracked external install (5 minutes). */
         const val INSTALL_TIMEOUT_MS = 300_000L
@@ -51,6 +55,13 @@ class MainActivity : FlutterActivity() {
         const val CANCEL_GRACE_MS = 30_000L
 
         /**
+         * After the installer explicitly reports a cancellation, only wait a
+         * short time for a last-moment package broadcast before clearing the
+         * installing state.
+         */
+        const val CANCEL_RESULT_GRACE_MS = 5_000L
+
+        /**
          * Extra set by installers that support [Intent.EXTRA_RETURN_RESULT] on
          * failure; holds a PackageManager INSTALL_FAILED_* code. The constant
          * is hidden, so the raw key is used.
@@ -60,6 +71,8 @@ class MainActivity : FlutterActivity() {
 
     // Holds the pending result while the native account picker Activity is open.
     private var pendingPickerResult: MethodChannel.Result? = null
+
+    private var pendingDocumentTreeResult: MethodChannel.Result? = null
 
     // A share intent that arrived before the Flutter engine attached; replayed
     // once configureFlutterEngine runs so the share isn't silently dropped.
@@ -96,10 +109,10 @@ class MainActivity : FlutterActivity() {
             complete(installed = false, errorCode = null)
         }
 
-        fun scheduleCancelGrace() {
+        fun scheduleCancelGrace(delayMs: Long = CANCEL_GRACE_MS) {
             if (responded || graceScheduled) return
             graceScheduled = true
-            installHandler.postDelayed(graceRunnable, CANCEL_GRACE_MS)
+            installHandler.postDelayed(graceRunnable, delayMs)
         }
 
         /** Drops a pending grace: the user went back to the installer. */
@@ -255,6 +268,15 @@ class MainActivity : FlutterActivity() {
                 // An uncaught exception becomes a null reply, which Dart sees as
                 // MissingPluginException instead of a catchable PlatformException.
                 try { result.error("NATIVE_ERROR", e.message, null) } catch (_: Exception) {}
+            }
+        }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
+            DOCUMENT_TREE_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "pickDocumentTree" -> pickDocumentTree(result)
+                else -> result.notImplemented()
             }
         }
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
@@ -688,12 +710,34 @@ class MainActivity : FlutterActivity() {
                     // RESULT_CANCELED is also what installers that do not
                     // implement EXTRA_RETURN_RESULT produce on finish, and
                     // singleInstance installers (e.g. InstallerX-Revived)
-                    // return it immediately. Only treat it as "the installer
-                    // is gone" once it actually took focus; otherwise wait for
-                    // the package broadcast or the hard timeout.
-                    else -> if (watcher.focusLost) watcher.scheduleCancelGrace()
+                    // return it immediately. Use a short grace for an explicit
+                    // cancel result; the longer grace remains for focus-only
+                    // returns.
+                    else -> watcher.scheduleCancelGrace(
+                        delayMs = CANCEL_RESULT_GRACE_MS,
+                    )
                 }
             }
+            return
+        }
+        if (requestCode == DOCUMENT_TREE_REQUEST_CODE) {
+            val pending = pendingDocumentTreeResult
+            pendingDocumentTreeResult = null
+            val uri = data?.data
+            if (resultCode != Activity.RESULT_OK || uri == null) {
+                pending?.success(null)
+                return
+            }
+            try {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+                )
+            } catch (_: Exception) {
+                // Session-only access; later availability checks report it.
+            }
+            pending?.success(uri.toString())
             return
         }
         @Suppress("DEPRECATION")
@@ -795,6 +839,33 @@ class MainActivity : FlutterActivity() {
             },
             null  // null handler → callback runs on main thread
         )
+    }
+
+    /**
+     * Opens the system folder picker requesting read+write persistable access.
+     * shared_storage can only request one of the two, so a persisted export
+     * directory loses read access after a restart (#3227).
+     */
+    @Suppress("DEPRECATION")
+    private fun pickDocumentTree(methodResult: MethodChannel.Result) {
+        if (pendingDocumentTreeResult != null) {
+            methodResult.error("BUSY", "A folder picker is already open", null)
+            return
+        }
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            addFlags(
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION,
+            )
+        }
+        pendingDocumentTreeResult = methodResult
+        try {
+            startActivityForResult(intent, DOCUMENT_TREE_REQUEST_CODE)
+        } catch (e: Exception) {
+            pendingDocumentTreeResult = null
+            methodResult.error("NO_PICKER", e.message, null)
+        }
     }
 
     private fun getGsfId(): String? {

@@ -45,10 +45,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
       duration: const Duration(milliseconds: 1400),
     );
     _pulseAnimation = Tween<double>(begin: 0.45, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _pulseController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     _loadStatus();
   }
@@ -163,7 +160,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     }
 
     return AnimatedContainer(
-      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 300 : 0),
+      duration: Duration(
+        milliseconds: plusSettings.plusEnableEnhancedAnimations ? 300 : 0,
+      ),
       margin: widget.margin,
       decoration: BoxDecoration(
         color: containerColor,
@@ -222,8 +221,12 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                                 ),
                                 decoration: BoxDecoration(
                                   color: isPlus
-                                      ? colorScheme.primary.withValues(alpha: 0.15)
-                                      : colorScheme.secondary.withValues(alpha: 0.15),
+                                      ? colorScheme.primary.withValues(
+                                          alpha: 0.15,
+                                        )
+                                      : colorScheme.secondary.withValues(
+                                          alpha: 0.15,
+                                        ),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
@@ -254,7 +257,8 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
 
                   // Animated Status Indicator Dot
                   FadeTransition(
-                    opacity: (isRunning || _isTesting) &&
+                    opacity:
+                        (isRunning || _isTesting) &&
                             plusSettings.plusEnableEnhancedAnimations
                         ? _pulseAnimation
                         : const AlwaysStoppedAnimation(1.0),
@@ -267,7 +271,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         boxShadow: isRunning
                             ? [
                                 BoxShadow(
-                                  color: colorScheme.primary.withValues(alpha: 0.4),
+                                  color: colorScheme.primary.withValues(
+                                    alpha: 0.4,
+                                  ),
                                   blurRadius: 6,
                                   spreadRadius: 2,
                                 ),
@@ -290,7 +296,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -301,7 +309,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                             size: 13,
                             color: latency < 50
                                 ? colorScheme.primary
-                                : (latency < 120 ? colorScheme.tertiary : colorScheme.error),
+                                : (latency < 120
+                                      ? colorScheme.tertiary
+                                      : colorScheme.error),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -311,7 +321,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                               fontWeight: FontWeight.w600,
                               color: latency < 50
                                   ? colorScheme.primary
-                                  : (latency < 120 ? colorScheme.tertiary : colorScheme.error),
+                                  : (latency < 120
+                                        ? colorScheme.tertiary
+                                        : colorScheme.error),
                             ),
                           ),
                         ],
@@ -324,7 +336,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.5,
+                        ),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(
@@ -354,41 +368,58 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                 ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () {
-                      AppHaptics.lightImpact();
-                      ShizukuInstaller.openShizukuManager();
-                    },
-                    child: Ink(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: colorScheme.tertiaryContainer.withValues(alpha: 0.5),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: colorScheme.tertiary.withValues(alpha: 0.4),
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        AppHaptics.lightImpact();
+                        ShizukuInstaller.openShizukuManager();
+                      },
+                      child: Ink(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.bolt_rounded, size: 16, color: colorScheme.tertiary),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              tr('shizukuAdbPortOpenHint', args: ['${info?.activeLoopbackPort}']),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: colorScheme.onTertiaryContainer,
+                        decoration: BoxDecoration(
+                          color: colorScheme.tertiaryContainer.withValues(
+                            alpha: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: colorScheme.tertiary.withValues(alpha: 0.4),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.bolt_rounded,
+                              size: 16,
+                              color: colorScheme.tertiary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                tr(
+                                  'shizukuAdbPortOpenHint',
+                                  args: ['${info?.activeLoopbackPort}'],
+                                ),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                  color: colorScheme.onTertiaryContainer,
+                                ),
                               ),
                             ),
-                          ),
-                          Icon(Icons.chevron_right_rounded, size: 18, color: colorScheme.tertiary),
-                        ],
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: colorScheme.tertiary,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                )),
+                ),
               ],
 
               const SizedBox(height: 12),
@@ -417,7 +448,9 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                           ? const SizedBox(
                               width: 14,
                               height: 14,
-                              child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                              child: ExpressiveCircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
                             )
                           : const Icon(Icons.refresh_rounded, size: 15),
                       label: Text(
@@ -428,7 +461,10 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                     ),
                     const SizedBox(width: 8),
                     ActionChip(
-                      avatar: const Icon(Icons.medical_services_outlined, size: 15),
+                      avatar: const Icon(
+                        Icons.medical_services_outlined,
+                        size: 15,
+                      ),
                       label: Text(
                         tr('serviceDoctor'),
                         style: const TextStyle(fontSize: 12),

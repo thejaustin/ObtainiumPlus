@@ -12,7 +12,8 @@ import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/services/apk_filter_service.dart' show joinMultiApkUrl;
+import 'package:obtainium/services/apk_filter_service.dart'
+    show joinMultiApkUrl;
 
 /// Maps RuStore download URLs to a single `apkUrls` entry. A lone URL is served
 /// as an `.apk` beside its `.zip` container; several URLs are a base APK plus
@@ -159,7 +160,8 @@ class RuStore extends AppSource {
         throw NoReleasesError();
       }
 
-      final String appName = appDetails['appName']?.toString().trim().isNotEmpty == true
+      final String appName =
+          appDetails['appName']?.toString().trim().isNotEmpty == true
           ? appDetails['appName']
           : appId;
       final String author = appDetails['companyName'] ?? name;

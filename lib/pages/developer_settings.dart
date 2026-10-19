@@ -540,7 +540,9 @@ class DeveloperSettingsPage extends StatelessWidget {
         final enableGlass = plusSettings.plusEnableGlassmorphism;
         final sheet = Container(
           decoration: BoxDecoration(
-            color: enableGlass ? cs.surface.withValues(alpha: 0.78) : cs.surfaceContainerLow,
+            color: enableGlass
+                ? cs.surface.withValues(alpha: 0.78)
+                : cs.surfaceContainerLow,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(
               top: BorderSide(
@@ -886,7 +888,10 @@ void showDeviceProfilePicker(BuildContext context) {
                 ),
               ),
               trailing: authProvider.selectedProfile.name == p.name
-                  ? Icon(Icons.check, color: Theme.of(context).colorScheme.primary)
+                  ? Icon(
+                      Icons.check,
+                      color: Theme.of(context).colorScheme.primary,
+                    )
                   : null,
               onTap: () {
                 authProvider.setDeviceProfile(p);
@@ -944,7 +949,9 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final content = Container(
       decoration: BoxDecoration(
-        color: enableGlass ? cs.surface.withValues(alpha: 0.78) : cs.surfaceContainerLow,
+        color: enableGlass
+            ? cs.surface.withValues(alpha: 0.78)
+            : cs.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(
@@ -1057,7 +1064,9 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
 
     final content = Container(
       decoration: BoxDecoration(
-        color: enableGlass ? cs.surface.withValues(alpha: 0.78) : cs.surfaceContainerLow,
+        color: enableGlass
+            ? cs.surface.withValues(alpha: 0.78)
+            : cs.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
           top: BorderSide(
@@ -1093,11 +1102,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Chip(
-                avatar: Icon(
-                  Icons.check_circle,
-                  color: cs.primary,
-                  size: 16,
-                ),
+                avatar: Icon(Icons.check_circle, color: cs.primary, size: 16),
                 label: Text(tr('activeTokenReady')),
                 onDeleted: () => authProvider.clearBundle(),
                 deleteIcon: const Icon(Icons.close, size: 16),

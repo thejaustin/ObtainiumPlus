@@ -108,16 +108,15 @@ class BackupCrypto {
             .bytes,
       );
       final iv = base64Decode(envelope['iv'] as String);
-      final cipher = PaddedBlockCipherImpl(
-        PKCS7Padding(),
-        CBCBlockCipher(AESEngine()),
-      )..init(
-          false,
-          PaddedBlockCipherParameters(
-            ParametersWithIV(KeyParameter(key), iv),
-            null,
-          ),
-        );
+      final cipher =
+          PaddedBlockCipherImpl(PKCS7Padding(), CBCBlockCipher(AESEngine()))
+            ..init(
+              false,
+              PaddedBlockCipherParameters(
+                ParametersWithIV(KeyParameter(key), iv),
+                null,
+              ),
+            );
       final plain = cipher.process(base64Decode(envelope['data'] as String));
       final text = utf8.decode(plain);
       jsonDecode(text); // wrong password yields garbage, not JSON

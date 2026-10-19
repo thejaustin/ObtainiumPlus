@@ -308,7 +308,8 @@ class AppUpdateService {
                 if (retries > 0 && isNetworkError) {
                   final attempt = 3 - retries;
                   final baseMs = [1000, 2000, 4000][attempt];
-                  final jitterMs = (Random().nextDouble() * baseMs * 0.5).round();
+                  final jitterMs = (Random().nextDouble() * baseMs * 0.5)
+                      .round();
                   retries--;
                   await Future.delayed(
                     Duration(milliseconds: baseMs + jitterMs),
@@ -390,7 +391,11 @@ class AppUpdateService {
           isCandidate = true;
         }
       } else if (!nonInstalledOnly) {
-        if (areVersionsDifferent(app, app.installedVersion, app.latestVersion)) {
+        if (areVersionsDifferent(
+          app,
+          app.installedVersion,
+          app.latestVersion,
+        )) {
           if (includeAmbiguous ||
               app.additionalSettings['isAmbiguousUpdate'] != true) {
             isCandidate = true;
@@ -407,9 +412,8 @@ class AppUpdateService {
   /// Single-pass variant: returns installed-apps-with-pending-updates as a
   /// [Set] (for O(1) lookup) and not-yet-installed apps as a [List], avoiding
   /// two separate O(n) passes over the apps map.
-  static ({Set<String> updates, List<String> newInstalls}) findAllPendingUpdates(
-    Map<String, AppInMemory> apps,
-  ) {
+  static ({Set<String> updates, List<String> newInstalls})
+  findAllPendingUpdates(Map<String, AppInMemory> apps) {
     final updates = <String>{};
     final newInstalls = <String>[];
     for (final entry in apps.values) {

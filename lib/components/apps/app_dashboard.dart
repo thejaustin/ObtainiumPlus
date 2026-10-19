@@ -70,8 +70,9 @@ class _AppDashboardState extends State<AppDashboard>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final animsEnabled =
-          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      final animsEnabled = context
+          .read<PlusSettingsProvider>()
+          .plusEnableEnhancedAnimations;
       if (animsEnabled) {
         _entranceController.forward();
       } else {
@@ -127,8 +128,7 @@ class _AppDashboardState extends State<AppDashboard>
       _cachedUpdateApps = _cachedApps!
           .where((app) => pendingUpdates.contains(app.app.id))
           .toList();
-      _cachedPinnedApps =
-          _cachedApps!.where((app) => app.app.pinned).toList();
+      _cachedPinnedApps = _cachedApps!.where((app) => app.app.pinned).toList();
       _cachedInstalledCount = _cachedApps!
           .where((app) => app.app.installedVersion != null)
           .length;
@@ -143,7 +143,8 @@ class _AppDashboardState extends State<AppDashboard>
         .toList();
     final updatesAvailable = _cachedUpdateApps!.length;
     final idleUpdates = updateApps.length;
-    final showRecent = idleUpdates > 0 &&
+    final showRecent =
+        idleUpdates > 0 &&
         !appsProvider.gettingUpdates &&
         (totalApps >= 5 || updatesAvailable > 1);
     final pinnedApps = _cachedPinnedApps!;
@@ -222,7 +223,9 @@ class _AppDashboardState extends State<AppDashboard>
 
           // Recent updates — Adaptive Hide + AnimatedSize
           AnimatedSize(
-            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 320 : 0),
+            duration: Duration(
+              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 320 : 0,
+            ),
             curve: Easing.emphasizedDecelerate,
             child: showRecent
                 ? _animated(
@@ -349,8 +352,12 @@ class _AppDashboardState extends State<AppDashboard>
                         app.icon!,
                         fit: BoxFit.contain,
                         filterQuality: FilterQuality.medium,
-                        cacheWidth: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
-                        cacheHeight: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
+                        cacheWidth:
+                            (48 * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
+                        cacheHeight:
+                            (48 * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
                       )
                     : const Icon(Icons.apps_rounded, size: 24);
               },
@@ -412,43 +419,47 @@ class _AppDashboardState extends State<AppDashboard>
                         width: 60,
                         height: 60,
                         filterQuality: FilterQuality.medium,
-                        cacheWidth: (60 * MediaQuery.devicePixelRatioOf(context)).round(),
-                        cacheHeight: (60 * MediaQuery.devicePixelRatioOf(context)).round(),
+                        cacheWidth:
+                            (60 * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
+                        cacheHeight:
+                            (60 * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
                       ),
-                  )
-                else
-                  Center(
-                    child: Icon(
-                      Icons.apps_rounded,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: AppOpacity.half),
-                    ),
-                  ),
-                Positioned(
-                  right: 4,
-                  top: 4,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.surface,
-                        width: 1.5,
+                    )
+                  else
+                    Center(
+                      child: Icon(
+                        Icons.apps_rounded,
+                        color: Theme.of(context).colorScheme.primary.withValues(
+                          alpha: AppOpacity.half,
+                        ),
                       ),
                     ),
+                  Positioned(
+                    right: 4,
+                    top: 4,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.error,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.surface,
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildBatchActionsHub(
     BuildContext context,

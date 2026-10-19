@@ -119,9 +119,7 @@ $logs''';
                     setState(() {
                       logString = null;
                       _logsFuture = context.read<LogsProvider>().get(
-                        after: DateTime.now().subtract(
-                          const Duration(days: 7),
-                        ),
+                        after: DateTime.now().subtract(const Duration(days: 7)),
                       );
                     });
                   },

@@ -124,11 +124,7 @@ class AppConstants {
   /// allows install-status detection to transparently locate installed aliases.
   static const List<Set<String>> packageAliasGroups = [
     // Shizuku family
-    {
-      shizukuPlusId,
-      shizukuStockId,
-      dhizukuId,
-    },
+    {shizukuPlusId, shizukuStockId, dhizukuId},
     // Obtainium family
     {
       obtainiumPlusId,
@@ -137,15 +133,9 @@ class AppConstants {
       'dev.imranr.obtainium.debug',
     },
     // AppManager family
-    {
-      appManagerId,
-      'io.github.muntashirakon.AppManager.debug',
-    },
+    {appManagerId, 'io.github.muntashirakon.AppManager.debug'},
     // Termux family
-    {
-      termuxPlusId,
-      'com.termux',
-    },
+    {termuxPlusId, 'com.termux'},
   ];
 
   /// Returns true if [id1] and [id2] are identical or belong to the same alias group.

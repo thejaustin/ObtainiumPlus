@@ -24,12 +24,14 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
       duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
-    _pulseScale = Tween<double>(begin: 1.0, end: 1.5).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
-    );
-    _pulseOpacity = Tween<double>(begin: 0.6, end: 0.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
-    );
+    _pulseScale = Tween<double>(
+      begin: 1.0,
+      end: 1.5,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeOut));
+    _pulseOpacity = Tween<double>(
+      begin: 0.6,
+      end: 0.0,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeOut));
     _checkQuality();
   }
 
@@ -127,10 +129,7 @@ class _NetworkIndicatorState extends State<NetworkIndicator>
               curve: Curves.easeOutCubic,
               width: 8,
               height: 8,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             ),
           ],
         ),

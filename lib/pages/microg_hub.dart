@@ -132,7 +132,9 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final appsProvider = context.watch<AppsProvider>();
-    final animsEnabled = context.watch<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+    final animsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
 
     // Calculate overall progress from selected components
     double overallProgress = 0;
@@ -291,7 +293,11 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildProviderSection(ColorScheme cs, BuildContext context, bool animsEnabled) {
+  Widget _buildProviderSection(
+    ColorScheme cs,
+    BuildContext context,
+    bool animsEnabled,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

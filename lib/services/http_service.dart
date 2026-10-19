@@ -271,10 +271,11 @@ class HttpService {
     try {
       // A server that stalls mid-body would otherwise hold the request (and
       // an update-check worker) forever.
-      final bytes = (await response
-              .fold<BytesBuilder>(BytesBuilder(), (b, d) => b..add(d))
-              .timeout(const Duration(seconds: 60)))
-          .toBytes();
+      final bytes =
+          (await response
+                  .fold<BytesBuilder>(BytesBuilder(), (b, d) => b..add(d))
+                  .timeout(const Duration(seconds: 60)))
+              .toBytes();
 
       final headers = <String, String>{};
       response.headers.forEach((name, values) {
@@ -318,10 +319,9 @@ class HttpService {
         }
         return RateLimitError(1);
       }
-      final reason =
-          res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty
-              ? res.reasonPhrase!
-              : tr('errorWithHttpStatusCode', args: ['403']);
+      final reason = res.reasonPhrase != null && res.reasonPhrase!.isNotEmpty
+          ? res.reasonPhrase!
+          : tr('errorWithHttpStatusCode', args: ['403']);
       return ObtainiumHttpError(403, reason);
     }
     return ObtainiumError(

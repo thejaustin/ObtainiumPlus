@@ -118,15 +118,17 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                   sigma: 15,
                   enabled: plusSettings.plusEnableGlassmorphism,
                   child: AnimatedContainer(
-                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+                    duration: Duration(
+                      milliseconds: plusSettings.plusEnableEnhancedAnimations
+                          ? 200
+                          : 0,
+                    ),
                     width: double.infinity,
                     height: 80 + (_heightFactor.value * 300),
                     decoration: BoxDecoration(
                       color: colorScheme.surfaceContainerLow.withValues(
-                                alpha: plusSettings.plusEnableGlassmorphism
-                                    ? 0.7
-                                    : 1.0,
-                              ),
+                        alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                      ),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
                         color: colorScheme.outlineVariant.withValues(
@@ -136,7 +138,9 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                       ),
                       boxShadow: AppShadows.smooth(
                         color: Colors.black,
-                        opacity: plusSettings.plusEnableGlassmorphism ? 0.2 : 0.1,
+                        opacity: plusSettings.plusEnableGlassmorphism
+                            ? 0.2
+                            : 0.1,
                         blurFactor: plusSettings.plusEnableGlassmorphism
                             ? 1.2
                             : 1.0,
@@ -149,114 +153,114 @@ class _AppDescriptionSliderState extends State<AppDescriptionSlider>
                         scaleDownFactor: 0.98,
                         child: InkWell(
                           onTap: _toggleExpansion,
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.primaryContainer
-                                          .withValues(alpha: AppOpacity.half),
-                                      borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer
+                                            .withValues(alpha: AppOpacity.half),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.info_outline_rounded,
+                                        color: colorScheme.primary,
+                                        size: 20,
+                                      ),
                                     ),
-                                    child: Icon(
-                                      Icons.info_outline_rounded,
-                                      color: colorScheme.primary,
-                                      size: 20,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          tr('about'),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                        if (!_isExpanded)
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
                                           Text(
-                                            about.split('\n').first,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            tr('about'),
                                             style: Theme.of(context)
                                                 .textTheme
-                                                .bodySmall
+                                                .titleMedium
                                                 ?.copyWith(
-                                                  color: colorScheme
-                                                      .onSurfaceVariant,
+                                                  fontWeight: FontWeight.bold,
                                                 ),
                                           ),
-                                      ],
+                                          if (!_isExpanded)
+                                            Text(
+                                              about.split('\n').first,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  Icon(
-                                    _isExpanded
-                                        ? Icons.keyboard_arrow_down_rounded
-                                        : Icons.keyboard_arrow_up_rounded,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ],
-                              ),
-                              if (_heightFactor.value > 0.1) ...[
-                                const SizedBox(height: 16),
-                                Expanded(
-                                  child: Opacity(
-                                    opacity: _heightFactor.value,
-                                    child: SingleChildScrollView(
-                                      physics: const BouncingScrollPhysics(),
-                                      child: MarkdownBody(
-                                        data: about,
-                                        onTapLink: (text, href, title) =>
-                                            href != null
-                                            ? launchUrlString(
-                                                href,
-                                                mode: LaunchMode
-                                                    .externalApplication,
-                                              )
-                                            : null,
-                                        extensionSet: md.ExtensionSet(
-                                          md
-                                              .ExtensionSet
-                                              .gitHubFlavored
-                                              .blockSyntaxes,
-                                          [
-                                            md.EmojiSyntax(),
-                                            ...md
+                                    Icon(
+                                      _isExpanded
+                                          ? Icons.keyboard_arrow_down_rounded
+                                          : Icons.keyboard_arrow_up_rounded,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ],
+                                ),
+                                if (_heightFactor.value > 0.1) ...[
+                                  const SizedBox(height: 16),
+                                  Expanded(
+                                    child: Opacity(
+                                      opacity: _heightFactor.value,
+                                      child: SingleChildScrollView(
+                                        physics: const BouncingScrollPhysics(),
+                                        child: MarkdownBody(
+                                          data: about,
+                                          onTapLink: (text, href, title) =>
+                                              href != null
+                                              ? launchUrlString(
+                                                  href,
+                                                  mode: LaunchMode
+                                                      .externalApplication,
+                                                )
+                                              : null,
+                                          extensionSet: md.ExtensionSet(
+                                            md
                                                 .ExtensionSet
                                                 .gitHubFlavored
-                                                .inlineSyntaxes,
-                                          ],
-                                        ),
-                                        styleSheet: MarkdownStyleSheet(
-                                          p: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium
-                                              ?.copyWith(
-                                                color: colorScheme.onSurface
-                                                    .withValues(alpha: 0.9),
-                                              ),
+                                                .blockSyntaxes,
+                                            [
+                                              md.EmojiSyntax(),
+                                              ...md
+                                                  .ExtensionSet
+                                                  .gitHubFlavored
+                                                  .inlineSyntaxes,
+                                            ],
+                                          ),
+                                          styleSheet: MarkdownStyleSheet(
+                                            p: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.copyWith(
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.9),
+                                                ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ],
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     ),
                   ),
                 ),

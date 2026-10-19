@@ -217,9 +217,7 @@ class AppActionsContextMenu {
                             );
                             if (context.mounted && !ok) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(tr('archiveAppFailed')),
-                                ),
+                                SnackBar(content: Text(tr('archiveAppFailed'))),
                               );
                             }
                           },

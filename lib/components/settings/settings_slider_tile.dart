@@ -100,9 +100,9 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
           // The morphing badge above already shows the value; keep `label`
           // for semantics but suppress the theme's drag bubble.
           SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              showValueIndicator: ShowValueIndicator.never,
-            ),
+            data: SliderTheme.of(
+              context,
+            ).copyWith(showValueIndicator: ShowValueIndicator.never),
             child: Slider(
               value: widget.value,
               min: widget.min,

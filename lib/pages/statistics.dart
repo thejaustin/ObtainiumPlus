@@ -50,8 +50,9 @@ class _StatisticsPageState extends State<StatisticsPage>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final animsEnabled =
-          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      final animsEnabled = context
+          .read<PlusSettingsProvider>()
+          .plusEnableEnhancedAnimations;
       if (animsEnabled) {
         _entranceController.forward();
       } else {
@@ -410,7 +411,8 @@ class _StatisticsPageState extends State<StatisticsPage>
                     return TweenAnimationBuilder<double>(
                       tween: Tween(begin: 0.0, end: fraction),
                       duration: Duration(
-                        milliseconds: context
+                        milliseconds:
+                            context
                                 .read<PlusSettingsProvider>()
                                 .plusEnableEnhancedAnimations
                             ? 500 + e.key * 100
@@ -514,17 +516,23 @@ class _StatisticsPageState extends State<StatisticsPage>
                           end: Alignment.bottomRight,
                           colors: [
                             item.color.withValues(
-                              alpha: plusSettings.plusEnableGlassmorphism ? 0.07 : 0.09,
+                              alpha: plusSettings.plusEnableGlassmorphism
+                                  ? 0.07
+                                  : 0.09,
                             ),
                             theme.colorScheme.surfaceContainerLow.withValues(
-                              alpha: plusSettings.plusEnableGlassmorphism ? 0.45 : 1.0,
+                              alpha: plusSettings.plusEnableGlassmorphism
+                                  ? 0.45
+                                  : 1.0,
                             ),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(itemRadius),
                         border: Border.all(
                           color: item.color.withValues(
-                            alpha: plusSettings.plusEnableGlassmorphism ? 0.18 : 0.14,
+                            alpha: plusSettings.plusEnableGlassmorphism
+                                ? 0.18
+                                : 0.14,
                           ),
                           width: 1.2,
                         ),
@@ -625,15 +633,10 @@ class _StatisticsPageState extends State<StatisticsPage>
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                primaryColor.withValues(alpha: 0.06),
-                bgColor,
-              ],
+              colors: [primaryColor.withValues(alpha: 0.06), bgColor],
             ),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: primaryColor.withValues(alpha: 0.16),
-            ),
+            border: Border.all(color: primaryColor.withValues(alpha: 0.16)),
           ),
           child: CustomPaint(
             size: Size.infinite,
@@ -744,10 +747,7 @@ class _ActivityPainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          color.withValues(alpha: 0.42),
-          color.withValues(alpha: 0.0),
-        ],
+        colors: [color.withValues(alpha: 0.42), color.withValues(alpha: 0.0)],
       ).createShader(Rect.fromLTRB(0, 0, size.width, size.height));
 
     final path = Path();

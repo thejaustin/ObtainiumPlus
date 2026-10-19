@@ -1,6 +1,19 @@
 ## [Upcoming]
 
-<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+### 🔄 Upstream 1.7.0 & 1.7.1 Full Feature Parity
+- **Complete Upstream Integration** — Merged and verified all upstream features and bugfixes across 148 commits between v1.6.17 and v1.7.1.
+- **Update Health Dashboard** — Dedicated Update Health page tracking stale or broken sources, consecutive check failures, and per-app health alerts.
+- **Disable Apps Without Removing** — Toggle to disable specific apps without deleting them, keeping their records and settings while skipping updates.
+- **Category Exclusions** — Exclude chosen categories from manual and background update checks.
+- **Offline Placeholder App Support** — Ability to save apps even when initial network checks fail, verifying and completing metadata later.
+- **Tri-State Background Guards** — Fine-grained independent toggles for update checks and background installs on Wi-Fi and while charging.
+- **Samsung Galaxy Store Complete Overhaul** — Official endpoints, regional ODS downloads, China CSC MCC/MNC network-code derivation, and rate limit bounds.
+- **APKMirror Batched Checks & Scoped Scraping** — Batched API checks and scoped scraping to drastically reduce request volume.
+- **F-Droid Nativecode Architecture Filtering** — Multi-architecture support using page nativecode metadata with device ABI preference ordering and universal fallbacks.
+- **HTML Release Date Extraction** — Scoped HTML release-date extraction to the selected APK container block.
+- **Shizuku / Dhizuku Backend Selection** — Added backend selection (`auto`, `shizuku`, `dhizuku`), transient binder retries, and bounded install timeouts to prevent batch update hangs.
+- **MediaStore TV Storage & Exports** — Added MediaStore-backed `Downloads/Obtainium/` destination for TVs without document pickers, import conflict warnings, and primary-volume external cache selection.
+- **Accessibility & Translations** — TalkBack accessibility semantics, added Bengali (bn) translation, and updated English strings across all 32 locales.
 
 ---
 

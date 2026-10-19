@@ -2,12 +2,14 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/version_service.dart' show isAppUpdateable;
 import 'package:obtainium/utils/min_update_age.dart';
+import 'package:obtainium/utils/update_health.dart';
 
 /// Update checking and pending-update bookkeeping for [AppsProvider].
 extension AppsProviderUpdates on AppsProvider {
@@ -20,7 +22,9 @@ extension AppsProviderUpdates on AppsProvider {
   Future<App?> fetchUpdate(String appId) async {
     final App? currentApp = apps[appId]?.app;
     // Pause update checks until the user resolves a pending repo rename.
-    if (currentApp == null || currentApp.hasPendingRepoRename) {
+    if (currentApp == null ||
+        currentApp.disabled ||
+        currentApp.hasPendingRepoRename) {
       return null;
     }
     final SourceProvider sourceProvider = SourceProvider();
@@ -40,6 +44,14 @@ extension AppsProviderUpdates on AppsProvider {
     } else if (newApp.apkUrls.isNotEmpty) {
       newApp.preferredApkIndex = 0;
     }
+    newApp = newApp.copyWith(
+      consecutiveFailedChecks: 0,
+      latestVersionChangedAt:
+          newApp.latestVersion != currentApp.latestVersion ||
+              currentApp.latestVersionChangedAt == null
+          ? DateTime.now()
+          : currentApp.latestVersionChangedAt,
+    );
     return newApp;
   }
 
@@ -103,7 +115,10 @@ extension AppsProviderUpdates on AppsProvider {
     final minAge = DateTime.now().subtract(
       Duration(minutes: updateSettings.updateInterval),
     );
+    final excludedCategories = settingsProvider.categoriesExcludedFromChecks;
     final List<String> appIds = apps.values
+        .where((app) => !app.app.disabled)
+        .where((app) => !app.app.categories.any(excludedCategories.contains))
         .where(
           (app) =>
               forceAll ||
@@ -170,6 +185,28 @@ extension AppsProviderUpdates on AppsProvider {
         );
       }
       total = appIds.length;
+      final prefetchGroups = <AppSource, List<App>>{};
+      final sourceProvider = SourceProvider();
+      for (final appId in appIds) {
+        final app = apps[appId]?.app;
+        if (app == null) continue;
+        try {
+          final source = sourceProvider.getSource(
+            app.url,
+            overrideSource: app.overrideSource,
+          );
+          prefetchGroups.putIfAbsent(source, () => []).add(app);
+        } on ObtainiumError {
+          // The per-app check surfaces unsupported URLs.
+        }
+      }
+      for (final group in prefetchGroups.entries) {
+        try {
+          await group.key.prefetchUpdateInfo(group.value);
+        } catch (e) {
+          AppLogger.info('Update prefetch failed: $e');
+        }
+      }
       final List<App> fetched = [];
       // Apps whose check failed: their check time is still advanced so the
       // background task doesn't retry them every 15 minutes; they become due
@@ -207,7 +244,14 @@ extension AppsProviderUpdates on AppsProvider {
             errors.add(appId, e, appName: apps[appId]?.name);
             final app = apps[appId]?.app;
             if (app != null) {
-              failedApps.add(app.copyWith(lastUpdateCheck: DateTime.now()));
+              failedApps.add(
+                app.copyWith(
+                  lastUpdateCheck: DateTime.now(),
+                  consecutiveFailedChecks: shouldCountFailedCheck(e)
+                      ? app.consecutiveFailedChecks + 1
+                      : app.consecutiveFailedChecks,
+                ),
+              );
             }
           }
         }
@@ -279,6 +323,7 @@ extension AppsProviderUpdates on AppsProvider {
     final List<String> updateAppIds = [];
     for (final appId in apps.keys) {
       final app = apps[appId]!.app;
+      if (app.disabled) continue;
       final installed = app.installedVersion;
       if (installedOnly) {
         if (installed == null) continue;

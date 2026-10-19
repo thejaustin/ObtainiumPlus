@@ -100,11 +100,11 @@ Never rethrowOrWrapError(
 class ObtainiumHttpError extends ObtainiumError {
   final int statusCode;
   ObtainiumHttpError(this.statusCode, [String message = ''])
-      : super(
-          message.isNotEmpty ? message : 'HTTP $statusCode',
-          code: 'HTTP_ERROR',
-          data: {'statusCode': statusCode},
-        );
+    : super(
+        message.isNotEmpty ? message : 'HTTP $statusCode',
+        code: 'HTTP_ERROR',
+        data: {'statusCode': statusCode},
+      );
 }
 
 typedef HTTPStatusError = ObtainiumHttpError;
@@ -297,6 +297,39 @@ class MultiAppMultiError extends ObtainiumError {
   }) =>
       '$errString [${list2FriendlyString(appIds.map((id) => appIdNames.containsKey(id) == true ? '${appIdNames[id]}${includeIdsWithNames ? ' ($id)' : ''}' : id).toList())}]';
 
+  String _notificationErrorSummary(int remaining) => remaining <= 0
+      ? ''
+      : '\n\n${remaining == 1 ? tr('andOneMoreError') : plural('andNMoreErrors', remaining)}';
+
+  /// Joins all error groups for a single notification, capping the body below
+  /// Android's notification text limit and summarizing any surplus groups.
+  String notificationErrorString({int maxChars = 900}) {
+    final entries = idsByErrorString.entries.toList();
+    if (entries.isEmpty) return '';
+    final groupTexts = entries
+        .map((entry) => errorsAppsString(entry.key, entry.value))
+        .toList();
+    final full = groupTexts.join('\n\n');
+    if (full.length <= maxChars) return full;
+
+    const summaryReserve = 80;
+    final contentBudget = maxChars - summaryReserve;
+    var included = '';
+    var includedGroups = 0;
+    for (final text in groupTexts) {
+      final candidate = included.isEmpty ? text : '$included\n\n$text';
+      if (candidate.length > contentBudget) break;
+      included = candidate;
+      includedGroups++;
+    }
+    if (includedGroups == 0) {
+      final cutoff = (contentBudget - 1).clamp(0, groupTexts.first.length);
+      included = '${groupTexts.first.substring(0, cutoff).trimRight()}…';
+      return '$included${_notificationErrorSummary(groupTexts.length - 1)}';
+    }
+    return '$included${_notificationErrorSummary(groupTexts.length - includedGroups)}';
+  }
+
   @override
   String toString() => idsByErrorString.entries
       .map((e) => errorsAppsString(e.key, e.value))
@@ -337,9 +370,10 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
       data?['hardBlock'] == true
           ? tr('signingCertMismatchHardBlock')
           : tr('signingCertMismatchMessage'),
-    'ID_CHANGED' => data?['appId'] != null
-        ? '${tr('appIdMismatch')} (${data?['appId']} → ${data?['newId']})'
-        : '${tr('appIdMismatch')} - ${data?['newId'] ?? ''}',
+    'ID_CHANGED' =>
+      data?['appId'] != null
+          ? '${tr('appIdMismatch')} (${data?['appId']} → ${data?['newId']})'
+          : '${tr('appIdMismatch')} - ${data?['newId'] ?? ''}',
     'REPO_RENAMED' => tr('repoRenamed'),
     'NOT_IMPLEMENTED' => tr('functionNotImplemented'),
     _ => data?['message']?.toString() ?? tr('unexpectedError'),

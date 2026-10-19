@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:material_ui/material_ui.dart'
     show MaterialUiCompatibilityBridge;
 import 'package:flutter/services.dart';
+import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
@@ -91,7 +92,9 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
           title: e is MultiAppMultiError
               ? tr(isError ? 'someErrors' : 'updates')
               : tr(isError ? 'unexpectedError' : 'unknown'),
-          icon: isError ? Icons.error_outline_rounded : Icons.info_outline_rounded,
+          icon: isError
+              ? Icons.error_outline_rounded
+              : Icons.info_outline_rounded,
           content: GestureDetector(
             onLongPress: () {
               unawaited(copyToClipboard(context, e.toString()));
@@ -391,6 +394,92 @@ class _TvFocusRingState extends State<TvFocusRing> {
   }
 }
 
+class TvInitialFocus extends StatefulWidget {
+  final Widget child;
+
+  const TvInitialFocus({super.key, required this.child});
+
+  @override
+  State<TvInitialFocus> createState() => _TvInitialFocusState();
+}
+
+class _TvInitialFocusState extends State<TvInitialFocus> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !context.read<SettingsProvider>().isTV) return;
+      final scope = FocusScope.of(context);
+      if (scope.hasFocus) return;
+      final policy = FocusTraversalGroup.maybeOf(context);
+      if (policy == null) return;
+      FocusNode? first = policy.findFirstFocus(scope, ignoreCurrentFocus: true);
+      // Skip leading app-bar buttons (e.g. Back) so the first content
+      // control gets the ring.
+      for (var i = 0; i < 4 && first != null; i++) {
+        final ctx = first.context;
+        final inAppBar =
+            ctx?.findAncestorWidgetOfExactType<CustomAppBar>() != null ||
+            ctx?.findAncestorWidgetOfExactType<SliverAppBar>() != null ||
+            ctx?.findAncestorWidgetOfExactType<AppBar>() != null;
+        if (!inAppBar) break;
+        if (!first.nextFocus()) return;
+        first = FocusManager.instance.primaryFocus;
+      }
+      first?.requestFocus();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+
+/// A tappable app icon with a single, explicit accessibility node.
+///
+/// Wrapping the visual [InkWell] in a container semantics node with
+/// `excludeSemantics` prevents TalkBack from stopping on a second, unlabeled
+/// node at the same bounds. Callers pass an action-oriented label such as
+/// "Open Obtainium" rather than only the app name.
+class AppIconAction extends StatelessWidget {
+  final Widget child;
+  final String semanticLabel;
+  final bool enabled;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final double borderRadius;
+
+  const AppIconAction({
+    super.key,
+    required this.child,
+    required this.semanticLabel,
+    this.enabled = true,
+    this.onTap,
+    this.onLongPress,
+    this.borderRadius = 12,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      container: true,
+      button: enabled,
+      label: semanticLabel,
+      excludeSemantics: true,
+      onTap: enabled ? onTap : null,
+      onLongPress: onLongPress,
+      child: TvFocusRing(
+        borderRadius: borderRadius,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(borderRadius),
+          onTap: enabled ? onTap : null,
+          onLongPress: onLongPress,
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class ConnectedCard extends StatelessWidget {
   final Widget child;
   final bool isFirst;
@@ -665,15 +754,147 @@ class ToggleTile extends StatelessWidget {
                 onPressed: () =>
                     showHelpDialog(context, title: label, content: helpWidgets),
               ),
-            Switch(
-              value: value,
-              onChanged: onChanged == null
-                  ? null
-                  : hapticSwitchOnChanged(context, onChanged!),
+            Semantics(
+              container: true,
+              label: label,
+              toggled: value,
+              enabled: onChanged != null,
+              excludeSemantics: true,
+              onTap: onChanged == null ? null : () => onChanged!(!value),
+              child: Switch(
+                value: value,
+                onChanged: onChanged == null
+                    ? null
+                    : hapticSwitchOnChanged(context, onChanged!),
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A labelled slider over a fixed list of integer options, with the chosen
+/// value rendered by [labelBuilder]. Mirrors the update-interval/minimum-age
+/// sliders in the settings page and stays its own [StatefulWidget] so dragging
+/// only rebuilds this tile; the value is committed when the drag ends.
+class NumericOptionSliderTile extends StatefulWidget {
+  final String label;
+  final List<int> options;
+  final int value;
+  final ValueChanged<int> onChanged;
+  final String Function(int value) labelBuilder;
+
+  const NumericOptionSliderTile({
+    super.key,
+    required this.label,
+    required this.options,
+    required this.value,
+    required this.onChanged,
+    required this.labelBuilder,
+  });
+
+  @override
+  State<NumericOptionSliderTile> createState() =>
+      _NumericOptionSliderTileState();
+}
+
+class _NumericOptionSliderTileState extends State<NumericOptionSliderTile> {
+  late double sliderVal;
+  bool showLabel = true;
+
+  int get _selected =>
+      widget.options[sliderVal.round().clamp(0, widget.options.length - 1)];
+
+  String get _label => widget.labelBuilder(_selected);
+
+  @override
+  void initState() {
+    super.initState();
+    _syncFromValue();
+  }
+
+  @override
+  void didUpdateWidget(covariant NumericOptionSliderTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value ||
+        oldWidget.options.length != widget.options.length) {
+      _syncFromValue();
+    }
+  }
+
+  void _syncFromValue() {
+    final index = widget.options.indexOf(widget.value);
+    sliderVal = (index >= 0 ? index : 0).toDouble();
+  }
+
+  void _commit() => widget.onChanged(_selected);
+
+  @override
+  Widget build(BuildContext context) {
+    final max = (widget.options.length - 1).toDouble();
+    final rawSlider = Slider(
+      value: sliderVal,
+      max: max,
+      divisions: widget.options.length > 1 ? widget.options.length - 1 : null,
+      label: _label,
+      onChanged: (double value) {
+        setState(() {
+          sliderVal = value;
+        });
+      },
+      onChangeStart: (double value) {
+        setState(() {
+          showLabel = false;
+        });
+      },
+      onChangeEnd: (double value) {
+        setState(() {
+          showLabel = true;
+        });
+        _commit();
+      },
+    );
+
+    final Widget slider = context.read<SettingsProvider>().isTV
+        ? Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.remove),
+                onPressed: sliderVal <= 0
+                    ? null
+                    : () {
+                        setState(() {
+                          sliderVal = (sliderVal - 1).clamp(0.0, max);
+                        });
+                        _commit();
+                      },
+              ),
+              Expanded(child: Text(_label, textAlign: TextAlign.center)),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: sliderVal >= max
+                    ? null
+                    : () {
+                        setState(() {
+                          sliderVal = (sliderVal + 1).clamp(0.0, max);
+                        });
+                        _commit();
+                      },
+              ),
+            ],
+          )
+        : rawSlider;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        showLabel
+            ? Text('${widget.label}: $_label')
+            : const SizedBox(height: 20),
+        slider,
+      ],
     );
   }
 }

@@ -186,12 +186,15 @@ class AdvancedSettingsSection extends StatelessWidget {
       if (_matches(tr('factoryReset'))) ...[
         const Divider(),
         ListTile(
-          leading: Icon(Icons.warning_amber_rounded, color: Theme.of(context).colorScheme.error),
+          leading: Icon(
+            Icons.warning_amber_rounded,
+            color: Theme.of(context).colorScheme.error,
+          ),
           title: Text(
             tr('factoryReset'),
-            style: Theme.of(
-              context,
-            ).textTheme.bodyLarge?.copyWith(color: Theme.of(context).colorScheme.error),
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
           ),
           subtitle: Text(tr('factoryResetDescription')),
           onTap: () => _showResetConfirmation(context),
@@ -235,15 +238,18 @@ class AdvancedSettingsSection extends StatelessWidget {
               onPressed: () async {
                 AppHaptics.heavyImpact();
                 await StartupRepairService.factoryReset();
-              if (context.mounted) {
-                // Should ideally restart app, but clearing and showing msg for now
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(tr('factoryResetComplete'))),
-                );
-                Navigator.pop(ctx);
-              }
-            },
-              child: Text(tr('reset'), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                if (context.mounted) {
+                  // Should ideally restart app, but clearing and showing msg for now
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(tr('factoryResetComplete'))),
+                  );
+                  Navigator.pop(ctx);
+                }
+              },
+              child: Text(
+                tr('reset'),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             ),
           ),
         ],
@@ -389,14 +395,16 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       _verificationResult = null;
     });
     try {
-      final response = await http.get(
-        Uri.parse('https://api.github.com/user'),
-        headers: {
-          'Authorization': 'Bearer $token',
-          'User-Agent': 'ObtainiumPlus',
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('https://api.github.com/user'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'User-Agent': 'ObtainiumPlus',
+              'Accept': 'application/vnd.github.v3+json',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (!mounted) return;
       if (response.statusCode == 200) {
@@ -407,7 +415,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         setState(() {
           _isVerifying = false;
           _verificationSuccess = true;
-          _verificationResult = '✓ Verified as @$login ($remaining/$limit requests/hr)';
+          _verificationResult =
+              '✓ Verified as @$login ($remaining/$limit requests/hr)';
         });
         AppHaptics.selectionClick();
       } else if (response.statusCode == 401) {
@@ -420,7 +429,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         setState(() {
           _isVerifying = false;
           _verificationSuccess = false;
-          _verificationResult = 'Token check returned HTTP ${response.statusCode}';
+          _verificationResult =
+              'Token check returned HTTP ${response.statusCode}';
         });
       }
     } catch (e) {
@@ -679,7 +689,9 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                         child: SizedBox(
                           width: 20,
                           height: 20,
-                          child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                          child: ExpressiveCircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
                         ),
                       ),
                     ),
@@ -783,13 +795,21 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: _verificationSuccess
-                  ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5)
-                  : Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
+                  ? Theme.of(
+                      context,
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.5)
+                  : Theme.of(
+                      context,
+                    ).colorScheme.errorContainer.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: _verificationSuccess
-                    ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-                    : Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.3)
+                    : Theme.of(
+                        context,
+                      ).colorScheme.error.withValues(alpha: 0.3),
               ),
             ),
             child: Text(

@@ -27,253 +27,281 @@ Future<List<String>?> showTagEditor({
     return await showDialog<List<String>>(
       context: context,
       builder: (ctx) => StatefulBuilder(
-      builder: (context, setSheetState) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 24,
-          ),
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-            decoration: BoxDecoration(
-              color: enableGlass
-                  ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)
-                  : Theme.of(context).colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: Theme.of(
-                  context,
-                ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
-                width: 1,
-              ),
-              boxShadow: AppShadows.smooth(
-                color: Colors.black,
-                opacity: enableGlass ? 0.2 : 0.1,
-                blurFactor: enableGlass ? 1.5 : 1.0,
-              ),
+        builder: (context, setSheetState) {
+          return Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 24,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
-              child: ConditionalBlur(
-                sigma: 15,
-                enabled: enableGlass,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildHeader(context, enableGlass),
-                    const Divider(height: 1),
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Add new tag with M3E shape morphing
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ValueListenableBuilder<TextEditingValue>(
-                                    valueListenable: _controller,
-                                    builder: (context, val, _) {
-                                      final isFocused = _focusNode.hasFocus;
-                                      final hasText = val.text.isNotEmpty;
-                                      final isActive = isFocused || hasText;
-                                      final colorScheme =
-                                          Theme.of(context).colorScheme;
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
+              decoration: BoxDecoration(
+                color: enableGlass
+                    ? Theme.of(
+                        context,
+                      ).colorScheme.surface.withValues(alpha: 0.85)
+                    : Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+                  width: 1,
+                ),
+                boxShadow: AppShadows.smooth(
+                  color: Colors.black,
+                  opacity: enableGlass ? 0.2 : 0.1,
+                  blurFactor: enableGlass ? 1.5 : 1.0,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: ConditionalBlur(
+                  sigma: 15,
+                  enabled: enableGlass,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildHeader(context, enableGlass),
+                      const Divider(height: 1),
+                      Flexible(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Add new tag with M3E shape morphing
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ValueListenableBuilder<TextEditingValue>(
+                                      valueListenable: _controller,
+                                      builder: (context, val, _) {
+                                        final isFocused = _focusNode.hasFocus;
+                                        final hasText = val.text.isNotEmpty;
+                                        final isActive = isFocused || hasText;
+                                        final colorScheme = Theme.of(
+                                          context,
+                                        ).colorScheme;
 
-                                      return AnimatedContainer(
-                                        duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
-                                        curve: Easing.emphasizedDecelerate,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            isActive ? 14.0 : 24.0,
+                                        return AnimatedContainer(
+                                          duration: Duration(
+                                            milliseconds:
+                                                plusSettings
+                                                    .plusEnableEnhancedAnimations
+                                                ? 280
+                                                : 0,
                                           ),
-                                          boxShadow: isActive
-                                              ? [
-                                                  BoxShadow(
-                                                    color: colorScheme.primary
-                                                        .withValues(
-                                                          alpha: 0.14,
-                                                        ),
-                                                    blurRadius: 10,
-                                                    spreadRadius: 0.5,
-                                                    offset: const Offset(0, 1.5),
-                                                  ),
-                                                ]
-                                              : null,
-                                        ),
-                                        child: TextField(
-                                          controller: _controller,
-                                          focusNode: _focusNode,
-                                          decoration: InputDecoration(
-                                            hintText: tr('newTag'),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    isActive ? 14.0 : 24.0,
-                                                  ),
-                                              borderSide: BorderSide(
-                                                color: isActive
-                                                    ? colorScheme.primary
-                                                    : colorScheme.outlineVariant
-                                                        .withValues(alpha: 0.4),
-                                                width: isActive ? 1.5 : 1.0,
-                                              ),
+                                          curve: Easing.emphasizedDecelerate,
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(
+                                              isActive ? 14.0 : 24.0,
                                             ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(14.0),
-                                              borderSide: BorderSide(
-                                                color: colorScheme.primary,
-                                                width: 1.6,
-                                              ),
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    isActive ? 14.0 : 24.0,
-                                                  ),
-                                              borderSide: BorderSide(
-                                                color: isActive
-                                                    ? colorScheme.primary
-                                                    : colorScheme.outlineVariant
-                                                        .withValues(alpha: 0.4),
-                                                width: isActive ? 1.5 : 1.0,
-                                              ),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 16,
-                                                  vertical: 12,
-                                                ),
-                                            prefixIcon: const Icon(
-                                              Icons.tag_outlined,
-                                            ),
-                                            suffixIcon: hasText
-                                                ? IconButton(
-                                                    icon: const Icon(
-                                                      Icons.clear,
-                                                      size: 18,
+                                            boxShadow: isActive
+                                                ? [
+                                                    BoxShadow(
+                                                      color: colorScheme.primary
+                                                          .withValues(
+                                                            alpha: 0.14,
+                                                          ),
+                                                      blurRadius: 10,
+                                                      spreadRadius: 0.5,
+                                                      offset: const Offset(
+                                                        0,
+                                                        1.5,
+                                                      ),
                                                     ),
-                                                    tooltip: tr('clear'),
-                                                    onPressed: () {
-                                                      _controller.clear();
-                                                      setSheetState(() {});
-                                                    },
-                                                  )
+                                                  ]
                                                 : null,
                                           ),
-                                          onChanged: (_) =>
-                                              setSheetState(() {}),
-                                          onSubmitted: (value) {
-                                            if (value.trim().isNotEmpty) {
-                                              setSheetState(() {
-                                                selectedTags.add(value.trim());
-                                                _controller.clear();
-                                              });
-                                            }
-                                          },
-                                        ),
-                                      );
-                                    },
+                                          child: TextField(
+                                            controller: _controller,
+                                            focusNode: _focusNode,
+                                            decoration: InputDecoration(
+                                              hintText: tr('newTag'),
+                                              border: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      isActive ? 14.0 : 24.0,
+                                                    ),
+                                                borderSide: BorderSide(
+                                                  color: isActive
+                                                      ? colorScheme.primary
+                                                      : colorScheme
+                                                            .outlineVariant
+                                                            .withValues(
+                                                              alpha: 0.4,
+                                                            ),
+                                                  width: isActive ? 1.5 : 1.0,
+                                                ),
+                                              ),
+                                              focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(14.0),
+                                                borderSide: BorderSide(
+                                                  color: colorScheme.primary,
+                                                  width: 1.6,
+                                                ),
+                                              ),
+                                              enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(
+                                                      isActive ? 14.0 : 24.0,
+                                                    ),
+                                                borderSide: BorderSide(
+                                                  color: isActive
+                                                      ? colorScheme.primary
+                                                      : colorScheme
+                                                            .outlineVariant
+                                                            .withValues(
+                                                              alpha: 0.4,
+                                                            ),
+                                                  width: isActive ? 1.5 : 1.0,
+                                                ),
+                                              ),
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                    vertical: 12,
+                                                  ),
+                                              prefixIcon: const Icon(
+                                                Icons.tag_outlined,
+                                              ),
+                                              suffixIcon: hasText
+                                                  ? IconButton(
+                                                      icon: const Icon(
+                                                        Icons.clear,
+                                                        size: 18,
+                                                      ),
+                                                      tooltip: tr('clear'),
+                                                      onPressed: () {
+                                                        _controller.clear();
+                                                        setSheetState(() {});
+                                                      },
+                                                    )
+                                                  : null,
+                                            ),
+                                            onChanged: (_) =>
+                                                setSheetState(() {}),
+                                            onSubmitted: (value) {
+                                              if (value.trim().isNotEmpty) {
+                                                setSheetState(() {
+                                                  selectedTags.add(
+                                                    value.trim(),
+                                                  );
+                                                  _controller.clear();
+                                                });
+                                              }
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
                                   ),
+                                  const SizedBox(width: 8),
+                                  ScaleTouchWrapper(
+                                    scaleDownFactor: 0.92,
+                                    hapticOnPressDown: true,
+                                    child: IconButton.filled(
+                                      icon: const Icon(Icons.add),
+                                      tooltip: tr('add'),
+                                      onPressed: () {
+                                        if (_controller.text
+                                            .trim()
+                                            .isNotEmpty) {
+                                          setSheetState(() {
+                                            selectedTags.add(
+                                              _controller.text.trim(),
+                                            );
+                                            _controller.clear();
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Existing tags
+                              if (allTags.isNotEmpty) ...[
+                                Text(
+                                  tr('existingTags'),
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelMedium,
                                 ),
-                                const SizedBox(width: 8),
-                                ScaleTouchWrapper(
-                                  scaleDownFactor: 0.92,
-                                  hapticOnPressDown: true,
-                                  child: IconButton.filled(
-                                    icon: const Icon(Icons.add),
-                                    tooltip: tr('add'),
-                                    onPressed: () {
-                                      if (_controller.text.trim().isNotEmpty) {
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: allTags.map((tag) {
+                                    final isSelected = selectedTags.contains(
+                                      tag,
+                                    );
+                                    return FilterChip(
+                                      label: Text(tag),
+                                      selected: isSelected,
+                                      onSelected: (selected) {
                                         setSheetState(() {
-                                          selectedTags.add(
-                                            _controller.text.trim(),
-                                          );
-                                          _controller.clear();
+                                          if (selected) {
+                                            selectedTags.add(tag);
+                                          } else {
+                                            selectedTags.remove(tag);
+                                          }
                                         });
-                                      }
-                                    },
-                                  ),
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+
+                              // Selected tags
+                              if (selectedTags.isNotEmpty) ...[
+                                Text(
+                                  tr('selectedTags'),
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.labelMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: selectedTags.map((tag) {
+                                    return Chip(
+                                      label: Text(tag),
+                                      deleteIcon: const Icon(
+                                        Icons.close,
+                                        size: 18,
+                                      ),
+                                      onDeleted: () {
+                                        setSheetState(() {
+                                          selectedTags.remove(tag);
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
                                 ),
                               ],
-                            ),
-
-                            const SizedBox(height: 20),
-
-                            // Existing tags
-                            if (allTags.isNotEmpty) ...[
-                              Text(
-                                tr('existingTags'),
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: allTags.map((tag) {
-                                  final isSelected = selectedTags.contains(tag);
-                                  return FilterChip(
-                                    label: Text(tag),
-                                    selected: isSelected,
-                                    onSelected: (selected) {
-                                      setSheetState(() {
-                                        if (selected) {
-                                          selectedTags.add(tag);
-                                        } else {
-                                          selectedTags.remove(tag);
-                                        }
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                              const SizedBox(height: 16),
                             ],
-
-                            // Selected tags
-                            if (selectedTags.isNotEmpty) ...[
-                              Text(
-                                tr('selectedTags'),
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: selectedTags.map((tag) {
-                                  return Chip(
-                                    label: Text(tag),
-                                    deleteIcon: const Icon(
-                                      Icons.close,
-                                      size: 18,
-                                    ),
-                                    onDeleted: () {
-                                      setSheetState(() {
-                                        selectedTags.remove(tag);
-                                      });
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            ],
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                    _buildActions(context, selectedTags.toList()),
-                  ],
+                      _buildActions(context, selectedTags.toList()),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-    ),
-  );
+          );
+        },
+      ),
+    );
   } finally {
     _controller.dispose();
     _focusNode.dispose();
@@ -286,9 +314,9 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
     decoration: BoxDecoration(
       gradient: LinearGradient(
         colors: [
-          Theme.of(context).colorScheme.primary.withValues(
-            alpha: enableGlass ? 0.10 : 0.07,
-          ),
+          Theme.of(
+            context,
+          ).colorScheme.primary.withValues(alpha: enableGlass ? 0.10 : 0.07),
           Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
             alpha: enableGlass ? 0.40 : 0.90,
           ),

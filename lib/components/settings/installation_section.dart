@@ -70,7 +70,8 @@ class _InstallationSectionState extends State<InstallationSection>
       bool granted = false;
       if (pkg != null) {
         final status = await ShizukuApkInstaller().checkPermission();
-        granted = status?.startsWith('authorized') == true ||
+        granted =
+            status?.startsWith('authorized') == true ||
             status?.startsWith('granted') == true;
       }
       if (mounted) {
@@ -103,7 +104,6 @@ class _InstallationSectionState extends State<InstallationSection>
     if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
     return text.toLowerCase().contains(widget.searchQuery!.toLowerCase());
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -151,9 +151,9 @@ class _InstallationSectionState extends State<InstallationSection>
               ),
               title: Text(
                 tr('devicePerformanceAndCompatibility'),
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
               subtitle: FutureBuilder<String>(
                 future: DeviceUtils.getDeviceSummary(),
@@ -172,10 +172,11 @@ class _InstallationSectionState extends State<InstallationSection>
                         const SizedBox(height: 4),
                         Text(
                           'Detected: $detected',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w500,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -405,11 +406,11 @@ class _InstallationSectionState extends State<InstallationSection>
     PlusSettingsProvider plusSettings,
   ) {
     final currentMode = behaviorSettings.installerMode;
-    final shizukuAvailable =
-        _installedShizukuPkg != null && _isShizukuGranted;
+    final shizukuAvailable = _installedShizukuPkg != null && _isShizukuGranted;
     final shizukuInstalled = _installedShizukuPkg != null;
     final isShizukuPlus = _installedShizukuPkg == AppConstants.shizukuPlusId;
-    final hasExternal = behaviorSettings.externalInstallerPackage != null &&
+    final hasExternal =
+        behaviorSettings.externalInstallerPackage != null &&
         behaviorSettings.externalInstallerPackage!.isNotEmpty;
 
     Future<void> onSelectShizuku() async {
@@ -450,10 +451,7 @@ class _InstallationSectionState extends State<InstallationSection>
         case 'old_shizuku':
           _showError(context, ObtainiumError(tr('shizukuOld')));
         case 'old_android_with_adb':
-          _showError(
-            context,
-            ObtainiumError(tr('shizukuOldAndroidWithADB')),
-          );
+          _showError(context, ObtainiumError(tr('shizukuOldAndroidWithADB')));
         case 'denied':
           _showError(context, ObtainiumError(tr('shizukuPermissionDenied')));
         default:
@@ -463,7 +461,8 @@ class _InstallationSectionState extends State<InstallationSection>
     }
 
     Widget buildChip(String label, {bool available = true, Color? color}) {
-      final chipColor = color ??
+      final chipColor =
+          color ??
           (available
               ? Theme.of(context).colorScheme.primaryContainer
               : Theme.of(context).colorScheme.surfaceContainerHighest);
@@ -539,22 +538,20 @@ class _InstallationSectionState extends State<InstallationSection>
                         Flexible(
                           child: Text(
                             title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
                                   fontWeight: selected
                                       ? FontWeight.w600
                                       : FontWeight.normal,
                                   color: enabled
                                       ? (selected
-                                          ? Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                          : null)
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .onSurfaceVariant,
+                                            ? Theme.of(
+                                                context,
+                                              ).colorScheme.onSurface
+                                            : null)
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                 ),
                           ),
                         ),
@@ -562,7 +559,10 @@ class _InstallationSectionState extends State<InstallationSection>
                           const SizedBox(width: 6),
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 200),
-                            child: KeyedSubtree(key: ValueKey(chip.hashCode), child: chip),
+                            child: KeyedSubtree(
+                              key: ValueKey(chip.hashCode),
+                              child: chip,
+                            ),
                           ),
                         ],
                       ],
@@ -571,8 +571,8 @@ class _InstallationSectionState extends State<InstallationSection>
                     Text(
                       description,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -587,7 +587,12 @@ class _InstallationSectionState extends State<InstallationSection>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, top: 12, bottom: 2),
+          padding: const EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 12,
+            bottom: 2,
+          ),
           child: Row(
             children: [
               Icon(
@@ -598,9 +603,9 @@ class _InstallationSectionState extends State<InstallationSection>
               const SizedBox(width: 8),
               Text(
                 tr('installerMethodLabel'),
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -624,8 +629,8 @@ class _InstallationSectionState extends State<InstallationSection>
           description: shizukuAvailable
               ? tr('installMethodShizukuDescription')
               : shizukuInstalled
-                  ? tr('shizukuBinderNotFound')
-                  : tr('shizukuNotInstalled'),
+              ? tr('shizukuBinderNotFound')
+              : tr('shizukuNotInstalled'),
           chip: shizukuAvailable
               ? buildChip(tr('installerAvailable'))
               : buildChip(tr('installerUnavailable'), available: false),
@@ -664,7 +669,10 @@ class _InstallationSectionState extends State<InstallationSection>
                   child: Material(
                     color: Colors.transparent,
                     borderRadius: BorderRadius.circular(
-                      (plusSettings.plusSettingsCornerRadius * 0.5).clamp(8.0, 20.0),
+                      (plusSettings.plusSettingsCornerRadius * 0.5).clamp(
+                        8.0,
+                        20.0,
+                      ),
                     ),
                     child: Ink(
                       decoration: BoxDecoration(
@@ -673,13 +681,14 @@ class _InstallationSectionState extends State<InstallationSection>
                             .surfaceContainerHighest
                             .withValues(alpha: 0.4),
                         borderRadius: BorderRadius.circular(
-                          (plusSettings.plusSettingsCornerRadius * 0.5).clamp(8.0, 20.0),
+                          (plusSettings.plusSettingsCornerRadius * 0.5).clamp(
+                            8.0,
+                            20.0,
+                          ),
                         ),
                         border: Border(
                           left: BorderSide(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .primary
+                            color: Theme.of(context).colorScheme.primary
                                 .withValues(alpha: AppOpacity.moderate),
                             width: 3,
                           ),
@@ -698,19 +707,21 @@ class _InstallationSectionState extends State<InstallationSection>
 
                           SwitchListTile.adaptive(
                             dense: true,
-                            secondary: const Icon(Icons.shop_outlined, size: 20),
+                            secondary: const Icon(
+                              Icons.shop_outlined,
+                              size: 20,
+                            ),
                             title: Text(
                               tr('shizukuPretendToBeGooglePlay'),
-                              style:
-                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
                             ),
                             subtitle: Text(
                               tr('shizukuPretendToBeGooglePlayDescription'),
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            value: behaviorSettings.shizukuPretendToBeGooglePlay,
+                            value:
+                                behaviorSettings.shizukuPretendToBeGooglePlay,
                             onChanged: (v) {
                               AppHaptics.selectionClick();
                               behaviorSettings.shizukuPretendToBeGooglePlay = v;
@@ -719,14 +730,14 @@ class _InstallationSectionState extends State<InstallationSection>
 
                           SwitchListTile.adaptive(
                             dense: true,
-                            secondary:
-                                const Icon(Icons.swap_horiz_rounded, size: 20),
+                            secondary: const Icon(
+                              Icons.swap_horiz_rounded,
+                              size: 20,
+                            ),
                             title: Text(
                               tr('shizukuFallbackToSystem'),
-                              style:
-                                  Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w500),
                             ),
                             subtitle: Text(
                               tr('shizukuFallbackToSystemDescription'),
@@ -751,43 +762,42 @@ class _InstallationSectionState extends State<InstallationSection>
                                 duration: Duration(
                                   milliseconds:
                                       plusSettings.plusEnableEnhancedAnimations
-                                          ? 200
-                                          : 0,
+                                      ? 200
+                                      : 0,
                                 ),
                                 child: Text(
                                   _isTestingBinder
                                       ? tr('testingBinder')
                                       : _binderLatencyMs != null
-                                          ? tr(
-                                              'binderLatency',
-                                              args: ['$_binderLatencyMs'],
-                                            )
-                                          : tr('testBinderConnection'),
+                                      ? tr(
+                                          'binderLatency',
+                                          args: ['$_binderLatencyMs'],
+                                        )
+                                      : tr('testBinderConnection'),
                                   key: ValueKey<String>(
                                     _isTestingBinder
                                         ? 'testing'
                                         : _binderLatencyMs != null
-                                            ? 'result_$_binderLatencyMs'
-                                            : 'idle',
+                                        ? 'result_$_binderLatencyMs'
+                                        : 'idle',
                                   ),
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w500,
-                                        color: _binderLatencyMs != null &&
+                                        color:
+                                            _binderLatencyMs != null &&
                                                 !_isTestingBinder
                                             ? (_binderLatencyMs! < 50
-                                                ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                                : _binderLatencyMs! < 120
-                                                    ? Theme.of(context)
-                                                        .colorScheme
-                                                        .tertiary
-                                                    : Theme.of(context)
-                                                        .colorScheme
-                                                        .error)
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary
+                                                  : _binderLatencyMs! < 120
+                                                  ? Theme.of(
+                                                      context,
+                                                    ).colorScheme.tertiary
+                                                  : Theme.of(
+                                                      context,
+                                                    ).colorScheme.error)
                                             : null,
                                       ),
                                 ),
@@ -796,9 +806,10 @@ class _InstallationSectionState extends State<InstallationSection>
                                   ? const SizedBox(
                                       width: 20,
                                       height: 20,
-                                      child: ExpressiveCircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
+                                      child:
+                                          ExpressiveCircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
                                     )
                                   : FilledButton.tonal(
                                       style: FilledButton.styleFrom(
@@ -812,7 +823,9 @@ class _InstallationSectionState extends State<InstallationSection>
                                         _testBinderLatency();
                                       },
                                       child: Text(
-                                        _binderLatencyMs != null ? 'Retest' : 'Test',
+                                        _binderLatencyMs != null
+                                            ? 'Retest'
+                                            : 'Test',
                                         style: const TextStyle(fontSize: 12),
                                       ),
                                     ),
@@ -826,7 +839,11 @@ class _InstallationSectionState extends State<InstallationSection>
         ),
 
         AnimatedOpacity(
-          opacity: (currentMode == 'shizuku' && behaviorSettings.shizukuFallbackToSystem) ? 1.0 : 0.0,
+          opacity:
+              (currentMode == 'shizuku' &&
+                  behaviorSettings.shizukuFallbackToSystem)
+              ? 1.0
+              : 0.0,
           duration: Duration(
             milliseconds: plusSettings.plusEnableEnhancedAnimations
                 ? AppConstants.mediumAnimationMs
@@ -845,8 +862,8 @@ class _InstallationSectionState extends State<InstallationSection>
                 Text(
                   tr('installerFallbackLabel'),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

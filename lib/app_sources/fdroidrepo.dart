@@ -78,6 +78,7 @@ class FDroidRepo extends AppSource {
   @override
   List<List<GeneratedFormItem>>
   get additionalSourceAppSpecificSettingFormItems => [
+    [GeneratedFormHeader(label: tr('sectionAppIdentifier'))],
     [
       GeneratedFormTextField(
         'appIdOrName',
@@ -86,6 +87,7 @@ class FDroidRepo extends AppSource {
         required: true,
       ),
     ],
+    [GeneratedFormHeader(label: tr('sectionVersionSelection'))],
     [
       GeneratedFormSwitch(
         'pickHighestVersionCode',

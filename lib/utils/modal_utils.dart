@@ -4,7 +4,6 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
-
 /// Shows a modal bottom sheet that is draggable from its scrollable content.
 Future<T?> showDraggableModalBottomSheet<T>({
   required BuildContext context,
@@ -21,7 +20,9 @@ Future<T?> showDraggableModalBottomSheet<T>({
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     useSafeArea: false, // Handled internally
-    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
+    barrierColor: Theme.of(
+      context,
+    ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),
     builder: (context) {
       return DraggableScrollableSheet(
         initialChildSize: initialChildSize,
@@ -37,14 +38,18 @@ Future<T?> showDraggableModalBottomSheet<T>({
               child: Container(
                 decoration: BoxDecoration(
                   color: enableGlass
-                      ? Theme.of(context).colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlphaStrong)
+                      ? Theme.of(context).colorScheme.surface.withValues(
+                          alpha: AppConstants.glassSurfaceAlphaStrong,
+                        )
                       : Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(28),
                   ),
                   border: Border(
                     top: BorderSide(
-                      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.15),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.15),
                       width: 1,
                     ),
                   ),

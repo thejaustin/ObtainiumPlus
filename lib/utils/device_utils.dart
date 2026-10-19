@@ -150,7 +150,9 @@ class DeviceUtils {
       final info = await getAndroidInfo();
       final manufacturer = info.manufacturer.toLowerCase();
       final brand = info.brand.toLowerCase();
-      return manufacturer.contains('motorola') || brand.contains('motorola') || brand.contains('moto');
+      return manufacturer.contains('motorola') ||
+          brand.contains('motorola') ||
+          brand.contains('moto');
     } catch (_) {
       return false;
     }
@@ -164,7 +166,8 @@ class DeviceUtils {
       final info = await getAndroidInfo();
       final m = info.manufacturer.toLowerCase();
       final b = info.brand.toLowerCase();
-      if (m.contains('oneplus') || b.contains('oneplus')) return DeviceOEM.oneplus;
+      if (m.contains('oneplus') || b.contains('oneplus'))
+        return DeviceOEM.oneplus;
       if (m.contains('oppo') || b.contains('oppo')) return DeviceOEM.oppo;
       if (m.contains('realme') || b.contains('realme')) return DeviceOEM.realme;
     } catch (_) {}

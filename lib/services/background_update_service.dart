@@ -242,11 +242,13 @@ class BackgroundUpdateService {
               progress.isNaN ||
               progress.isInfinite ||
               progress <= 0 ||
-              total == 0) return;
+              total == 0)
+            return;
           final checked = (progress * total).round().clamp(0, total);
           final progPercent = ((checked / total) * 100).round().clamp(1, 100);
           if ((progPercent - lastNotifiedProgPercent).abs() < 5 &&
-              progPercent < 99) return;
+              progPercent < 99)
+            return;
           lastNotifiedProgPercent = progPercent;
           notif.message = '$checked / $total';
           notif.progPercent = progPercent;
@@ -335,9 +337,8 @@ class BackgroundUpdateService {
         // One failing probe must not abort the whole background run.
         final silentFlags = await Future.wait(
           updates.map(
-            (App app) => appsProvider
-                .canInstallSilently(app)
-                .catchError((_) => false),
+            (App app) =>
+                appsProvider.canInstallSilently(app).catchError((_) => false),
           ),
         );
         List<App> toNotify = [];
@@ -384,17 +385,9 @@ class BackgroundUpdateService {
           );
         }
         if (toThrow.rawErrors.isNotEmpty) {
-          for (var element in toThrow.idsByErrorString.entries) {
-            notificationsProvider.notify(
-              ErrorCheckingUpdatesNotification(
-                (errors ?? toThrow).errorsAppsString(
-                  element.key,
-                  element.value,
-                ),
-                id: Random().nextInt(10000),
-              ),
-            );
-          }
+          notificationsProvider.notify(
+            ErrorCheckingUpdatesNotification(toThrow.notificationErrorString()),
+          );
         }
 
         if (toRetry.isNotEmpty) {

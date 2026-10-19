@@ -87,8 +87,19 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   );
   final FocusNode _nameFocus = FocusNode();
   late Color _color = widget.initialColor;
+  late bool _excludeFromChecks;
 
   bool get _isEditing => widget.existingName != null;
+
+  @override
+  void initState() {
+    super.initState();
+    _excludeFromChecks =
+        widget.existingName != null &&
+        context.read<SettingsProvider>().categoriesExcludedFromChecks.contains(
+          widget.existingName,
+        );
+  }
 
   @override
   void dispose() {
@@ -135,6 +146,12 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     }
     cats[name] = _color.toARGB32();
     settingsProvider.setCategories(cats, appsProvider: appsProvider);
+    final excluded = Set<String>.from(
+      settingsProvider.categoriesExcludedFromChecks,
+    );
+    excluded.remove(name);
+    if (_excludeFromChecks) excluded.add(name);
+    settingsProvider.categoriesExcludedFromChecks = excluded;
     if (context.mounted) {
       // ignore: use_build_context_synchronously
       Navigator.of(context).pop(CategoryEditResult(name: name, previous: prev));
@@ -208,35 +225,35 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
           borderRadius: 24,
           child: InkWell(
             onTap: onTap,
-          customBorder: const CircleBorder(),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: selected ? cs.onSurface : cs.outlineVariant,
-                width: selected ? 3 : 1,
+            customBorder: const CircleBorder(),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: selected ? cs.onSurface : cs.outlineVariant,
+                  width: selected ? 3 : 1,
+                ),
               ),
+              child: icon == null
+                  ? (selected
+                        ? Icon(
+                            Icons.check,
+                            size: 20,
+                            color:
+                                ThemeData.estimateBrightnessForColor(color) ==
+                                    Brightness.dark
+                                ? Colors.white
+                                : Colors.black,
+                          )
+                        : null)
+                  : Center(child: icon),
             ),
-            child: icon == null
-                ? (selected
-                      ? Icon(
-                          Icons.check,
-                          size: 20,
-                          color:
-                              ThemeData.estimateBrightnessForColor(color) ==
-                                  Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
-                        )
-                      : null)
-                : Center(child: icon),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -318,6 +335,14 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 8),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text(tr('skipUpdateChecks')),
+              value: _excludeFromChecks,
+              onChanged: (value) => setState(() => _excludeFromChecks = value),
+            ),
+            const SizedBox(height: 16),
             Padding(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewPadding.bottom + 8,
@@ -332,8 +357,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                         icon: const Icon(Icons.delete_outline),
                         label: Text(tr('remove')),
                         style: TextButton.styleFrom(
-                          foregroundColor:
-                              Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(context).colorScheme.error,
                         ),
                       ),
                     ),
@@ -483,9 +507,16 @@ class _CategorySelectorState extends State<CategorySelector> {
         spacing: 8,
         runSpacing: 8,
         children: [
-          Tooltip(
-            message: tr('newCategory'),
-            child: ActionChip(label: const Text('+'), onPressed: _create),
+          Semantics(
+            container: true,
+            button: true,
+            label: tr('newCategory'),
+            excludeSemantics: true,
+            onTap: _create,
+            child: Tooltip(
+              message: tr('newCategory'),
+              child: ActionChip(label: const Text('+'), onPressed: _create),
+            ),
           ),
         ],
       );
@@ -508,9 +539,7 @@ class _CategorySelectorState extends State<CategorySelector> {
                   onLongPress: () => _edit(name),
                   child: FilterChip(
                     avatar: CircleAvatar(
-                      backgroundColor: Color(
-                        categories[name] ?? 0xFFCCCCCC,
-                      ),
+                      backgroundColor: Color(categories[name] ?? 0xFFCCCCCC),
                       radius: 7,
                     ),
                     label: Text(name),
@@ -560,11 +589,18 @@ class CategoryManager extends StatelessWidget {
             ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const Spacer(),
-          Tooltip(
-            message: tr('newCategory'),
-            child: ActionChip(
-              label: const Text('+'),
-              onPressed: () => showCategoryEditor(context),
+          Semantics(
+            container: true,
+            button: true,
+            label: tr('newCategory'),
+            excludeSemantics: true,
+            onTap: () => showCategoryEditor(context),
+            child: Tooltip(
+              message: tr('newCategory'),
+              child: ActionChip(
+                label: const Text('+'),
+                onPressed: () => showCategoryEditor(context),
+              ),
             ),
           ),
         ],

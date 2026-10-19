@@ -794,7 +794,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
                                     var temp =
                                         values[fieldKey]
                                             as Map<String, MapEntry<int, bool>>;
-                                    temp.removeWhere((key, value) => value.value);
+                                    temp.removeWhere(
+                                      (key, value) => value.value,
+                                    );
                                     values[fieldKey] = temp;
                                     someValueChanged();
                                   });
@@ -912,7 +914,9 @@ class _GeneratedFormState extends State<GeneratedForm> {
                         scaleDownFactor: 0.92,
                         child: TextButton.icon(
                           style: TextButton.styleFrom(
-                            foregroundColor: Theme.of(context).colorScheme.error,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
                           ),
                           onPressed: (values[fieldKey].length > 0)
                               ? () {

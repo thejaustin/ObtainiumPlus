@@ -60,19 +60,18 @@ class _AppGridTileState extends State<AppGridTile>
     _entranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
     );
-    _entranceSlide = Tween<Offset>(
-      begin: const Offset(0, 0.06),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _entranceController,
-        curve: AppConstants.expressiveDecelerate,
-      ),
-    );
+    _entranceSlide =
+        Tween<Offset>(begin: const Offset(0, 0.06), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: AppConstants.expressiveDecelerate,
+          ),
+        );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final animsEnabled =
-          context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations;
+      final animsEnabled = context
+          .read<PlusSettingsProvider>()
+          .plusEnableEnhancedAnimations;
       if (!animsEnabled) {
         _entranceController.value = 1.0;
         return;
@@ -123,326 +122,366 @@ class _AppGridTileState extends State<AppGridTile>
         position: _entranceSlide,
         child: LayoutBuilder(
           builder: (context, constraints) {
-        // Adaptive horizontal layout detection (e.g. tablet landscape rows or 1-column grids)
-        final bool isHorizontal =
-            constraints.maxWidth / constraints.maxHeight > 1.5;
+            // Adaptive horizontal layout detection (e.g. tablet landscape rows or 1-column grids)
+            final bool isHorizontal =
+                constraints.maxWidth / constraints.maxHeight > 1.5;
 
-        final double availableWidth = constraints.maxWidth - 20;
+            final double availableWidth = constraints.maxWidth - 20;
 
-        // Adaptive icon sizing proportional to tile width
-        final double iconSize = isHorizontal
-            ? (constraints.maxHeight * 0.65).clamp(38.0, 80.0)
-            : (availableWidth * 0.50).clamp(42.0, 74.0);
+            // Adaptive icon sizing proportional to tile width
+            final double iconSize = isHorizontal
+                ? (constraints.maxHeight * 0.65).clamp(38.0, 80.0)
+                : (availableWidth * 0.50).clamp(42.0, 74.0);
 
-        final plusSettings = context.watch<PlusSettingsProvider>();
-        final viewSettings = context.watch<ViewSettingsProvider>();
-        final colorScheme = Theme.of(context).colorScheme;
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+            final plusSettings = context.watch<PlusSettingsProvider>();
+            final viewSettings = context.watch<ViewSettingsProvider>();
+            final colorScheme = Theme.of(context).colorScheme;
+            final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-            ? plusSettings.plusHomeCornerRadius
-            : plusSettings.plusGlobalCornerRadius;
-        final double cardBorderRadius = CardMetrics.cardFor(
-          baseRadius,
-          constraints.maxWidth,
-        );
-        final double iconBorderRadius = CardMetrics.inner(baseRadius);
-        final double padding = (availableWidth * 0.08).clamp(6.0, 12.0);
-        final double badgeSize = (iconSize * 0.28).clamp(14.0, 20.0);
+            final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+                ? plusSettings.plusHomeCornerRadius
+                : plusSettings.plusGlobalCornerRadius;
+            final double cardBorderRadius = CardMetrics.cardFor(
+              baseRadius,
+              constraints.maxWidth,
+            );
+            final double iconBorderRadius = CardMetrics.inner(baseRadius);
+            final double padding = (availableWidth * 0.08).clamp(6.0, 12.0);
+            final double badgeSize = (iconSize * 0.28).clamp(14.0, 20.0);
 
-        // Resolve category color for M3E accent ribbon
-        final Color? resolvedCategoryColor = widget.categoryColor ??
-            (widget.appInMemory.app.categories.isNotEmpty &&
-                    viewSettings.categories[widget.appInMemory.app.categories.first] != null
-                ? Color(viewSettings.categories[widget.appInMemory.app.categories.first]!)
-                : null);
+            // Resolve category color for M3E accent ribbon
+            final Color? resolvedCategoryColor =
+                widget.categoryColor ??
+                (widget.appInMemory.app.categories.isNotEmpty &&
+                        viewSettings.categories[widget
+                                .appInMemory
+                                .app
+                                .categories
+                                .first] !=
+                            null
+                    ? Color(
+                        viewSettings.categories[widget
+                            .appInMemory
+                            .app
+                            .categories
+                            .first]!,
+                      )
+                    : null);
 
-        final curve = plusSettings.plusEnableEnhancedAnimations
-            ? (plusSettings.plusEnableMaterialExpressive
-                  ? AppConstants.expressiveStandard
-                  : AppConstants.standardStandard)
-            : Curves.easeInOut;
+            final curve = plusSettings.plusEnableEnhancedAnimations
+                ? (plusSettings.plusEnableMaterialExpressive
+                      ? AppConstants.expressiveStandard
+                      : AppConstants.standardStandard)
+                : Curves.easeInOut;
 
-        // Surface color tokens aligned with Material 3 Expressive
-        Color cardColor;
-        if (widget.isSelected) {
-          cardColor = colorScheme.primaryContainer.withValues(alpha: 0.85);
-        } else if (plusSettings.plusEnableGlassmorphism) {
-          cardColor = colorScheme.surface.withValues(
-            alpha: AppConstants.glassSurfaceAlpha,
-          );
-        } else if (widget.hasUpdate) {
-          cardColor = colorScheme.primaryContainer.withValues(
-            alpha: isDark ? 0.22 : 0.14,
-          );
-        } else if (widget.appInMemory.app.pinned) {
-          cardColor = colorScheme.surfaceContainerHighest.withValues(
-            alpha: isDark ? 0.40 : 0.50,
-          );
-        } else {
-          cardColor = colorScheme.surfaceContainerLow;
-        }
+            // Surface color tokens aligned with Material 3 Expressive
+            Color cardColor;
+            if (widget.isSelected) {
+              cardColor = colorScheme.primaryContainer.withValues(alpha: 0.85);
+            } else if (plusSettings.plusEnableGlassmorphism) {
+              cardColor = colorScheme.surface.withValues(
+                alpha: AppConstants.glassSurfaceAlpha,
+              );
+            } else if (widget.hasUpdate) {
+              cardColor = colorScheme.primaryContainer.withValues(
+                alpha: isDark ? 0.22 : 0.14,
+              );
+            } else if (widget.appInMemory.app.pinned) {
+              cardColor = colorScheme.surfaceContainerHighest.withValues(
+                alpha: isDark ? 0.40 : 0.50,
+              );
+            } else {
+              cardColor = colorScheme.surfaceContainerLow;
+            }
 
-        // Border styling with M3E stroke hierarchy
-        Border cardBorder;
-        if (widget.isSelected) {
-          cardBorder = Border.all(color: colorScheme.primary, width: 2.0);
-        } else if (widget.appInMemory.app.pinned && plusSettings.plusPinnedBorderAccent) {
-          cardBorder = Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.65),
-            width: 1.5,
-          );
-        } else if (widget.hasUpdate) {
-          cardBorder = Border.all(
-            color: (widget.isAmbiguous ? colorScheme.tertiary : colorScheme.secondary)
-                .withValues(alpha: 0.45),
-            width: 1.2,
-          );
-        } else if (plusSettings.plusEnableGlassmorphism) {
-          cardBorder = Border.all(
-            color: colorScheme.onSurface.withValues(
-              alpha: AppConstants.glassBorderAlpha,
-            ),
-            width: 0.8,
-          );
-        } else {
-          cardBorder = Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.25),
-            width: 0.8,
-          );
-        }
+            // Border styling with M3E stroke hierarchy
+            Border cardBorder;
+            if (widget.isSelected) {
+              cardBorder = Border.all(color: colorScheme.primary, width: 2.0);
+            } else if (widget.appInMemory.app.pinned &&
+                plusSettings.plusPinnedBorderAccent) {
+              cardBorder = Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.65),
+                width: 1.5,
+              );
+            } else if (widget.hasUpdate) {
+              cardBorder = Border.all(
+                color:
+                    (widget.isAmbiguous
+                            ? colorScheme.tertiary
+                            : colorScheme.secondary)
+                        .withValues(alpha: 0.45),
+                width: 1.2,
+              );
+            } else if (plusSettings.plusEnableGlassmorphism) {
+              cardBorder = Border.all(
+                color: colorScheme.onSurface.withValues(
+                  alpha: AppConstants.glassBorderAlpha,
+                ),
+                width: 0.8,
+              );
+            } else {
+              cardBorder = Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                width: 0.8,
+              );
+            }
 
-        List<BoxShadow>? cardShadow;
-        if (widget.isSelected && plusSettings.plusEnableGlassmorphism) {
-          // Glow only when glass is on — border+background already signal
-          // selection when glass is off, and glow without clipping bleeds.
-          cardShadow = AppShadows.glow(
-            color: colorScheme.primary,
-            intensity: 0.6,
-          );
-        } else if (widget.hasUpdate && plusSettings.plusEnableGlassmorphism) {
-          cardShadow = AppShadows.smooth(
-            color: widget.isAmbiguous ? colorScheme.tertiary : colorScheme.secondary,
-            opacity: isDark ? 0.18 : 0.10,
-            blurFactor: 0.7,
-          );
-        } else {
-          cardShadow = [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.04),
-              blurRadius: isDark ? 6 : 8,
-              offset: const Offset(0, 2),
-            ),
-          ];
-        }
+            List<BoxShadow>? cardShadow;
+            if (widget.isSelected && plusSettings.plusEnableGlassmorphism) {
+              // Glow only when glass is on — border+background already signal
+              // selection when glass is off, and glow without clipping bleeds.
+              cardShadow = AppShadows.glow(
+                color: colorScheme.primary,
+                intensity: 0.6,
+              );
+            } else if (widget.hasUpdate &&
+                plusSettings.plusEnableGlassmorphism) {
+              cardShadow = AppShadows.smooth(
+                color: widget.isAmbiguous
+                    ? colorScheme.tertiary
+                    : colorScheme.secondary,
+                opacity: isDark ? 0.18 : 0.10,
+                blurFactor: 0.7,
+              );
+            } else {
+              cardShadow = [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.20 : 0.04),
+                  blurRadius: isDark ? 6 : 8,
+                  offset: const Offset(0, 2),
+                ),
+              ];
+            }
 
-        return AnimatedScale(
-          scale: _isPressed ? 0.96 : 1.0,
-          duration: Duration(milliseconds: _isPressed ? 80 : 320),
-          curve: _isPressed ? Curves.easeIn : AppConstants.expressiveSpring,
-          child: AnimatedContainer(
-            duration: Duration(
-              milliseconds: plusSettings.plusEnableEnhancedAnimations
-                  ? AppConstants.shortAnimationMs
-                  : 200,
-            ),
-            curve: plusSettings.plusEnableEnhancedAnimations
-                ? Curves.easeOutCubic
-                : Curves.easeInOut,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(cardBorderRadius),
-              color: cardColor,
-              border: cardBorder,
-              boxShadow: cardShadow,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(cardBorderRadius),
-              child: Stack(
-                children: [
-                  // 1. Backdrop blur (clipped inside card)
-                  // Cards use glassBlurSigmaSoft (12) not glassBlurSigma (24) —
-                  // strong blur on 20+ grid cards causes GPU layer overload.
-                  if (plusSettings.plusEnableGlassmorphism)
-                    Positioned.fill(
-                      child: ConditionalBlur(
-                        enabled: true,
-                        sigma: AppConstants.glassBlurSigmaSoft,
-                        child: const SizedBox.expand(),
-                      ),
-                    ),
-
-                  // 2. Glass sheen gradient
-                  if (plusSettings.plusEnableGlassmorphism)
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: Theme.of(context).brightness == Brightness.dark
-                                ? [
-                                    Colors.white.withValues(alpha: 0.08),
-                                    Colors.white.withValues(alpha: 0.02),
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.04),
-                                  ]
-                                : [
-                                    Colors.white.withValues(alpha: 0.38),
-                                    Colors.white.withValues(alpha: 0.12),
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.02),
-                                  ],
-                            stops: const [0.0, 0.2, 0.6, 1.0],
+            return AnimatedScale(
+              scale: _isPressed ? 0.96 : 1.0,
+              duration: Duration(milliseconds: _isPressed ? 80 : 320),
+              curve: _isPressed ? Curves.easeIn : AppConstants.expressiveSpring,
+              child: AnimatedContainer(
+                duration: Duration(
+                  milliseconds: plusSettings.plusEnableEnhancedAnimations
+                      ? AppConstants.shortAnimationMs
+                      : 200,
+                ),
+                curve: plusSettings.plusEnableEnhancedAnimations
+                    ? Curves.easeOutCubic
+                    : Curves.easeInOut,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(cardBorderRadius),
+                  color: cardColor,
+                  border: cardBorder,
+                  boxShadow: cardShadow,
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(cardBorderRadius),
+                  child: Stack(
+                    children: [
+                      // 1. Backdrop blur (clipped inside card)
+                      // Cards use glassBlurSigmaSoft (12) not glassBlurSigma (24) —
+                      // strong blur on 20+ grid cards causes GPU layer overload.
+                      if (plusSettings.plusEnableGlassmorphism)
+                        Positioned.fill(
+                          child: ConditionalBlur(
+                            enabled: true,
+                            sigma: AppConstants.glassBlurSigmaSoft,
+                            child: const SizedBox.expand(),
                           ),
                         ),
-                      ),
-                    ),
 
-                  // 3. Top specular highlight streak
-                  if (plusSettings.plusEnableGlassmorphism)
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 1.0,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withValues(
-                                alpha: Theme.of(context).brightness == Brightness.dark ? 0.18 : 0.50,
+                      // 2. Glass sheen gradient
+                      if (plusSettings.plusEnableGlassmorphism)
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors:
+                                    Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? [
+                                        Colors.white.withValues(alpha: 0.08),
+                                        Colors.white.withValues(alpha: 0.02),
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.04),
+                                      ]
+                                    : [
+                                        Colors.white.withValues(alpha: 0.38),
+                                        Colors.white.withValues(alpha: 0.12),
+                                        Colors.transparent,
+                                        Colors.black.withValues(alpha: 0.02),
+                                      ],
+                                stops: const [0.0, 0.2, 0.6, 1.0],
                               ),
-                              Colors.white.withValues(alpha: 0.0),
-                            ],
+                            ),
                           ),
                         ),
-                      ),
-                    ),
 
-                  // 4. Category Accent Ribbon (M3E)
-                  if (plusSettings.plusCategoryAccentRibbon &&
-                      resolvedCategoryColor != null)
-                    Positioned(
-                      top: 0,
-                      left: cardBorderRadius * 0.5,
-                      right: cardBorderRadius * 0.5,
-                      child: Container(
-                        height: 3.5,
-                        decoration: BoxDecoration(
-                          color: resolvedCategoryColor,
-                          borderRadius: const BorderRadius.vertical(
-                            bottom: Radius.circular(3),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: resolvedCategoryColor.withValues(alpha: 0.4),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                  // 5. Main Card Tap Target & Interactive Surface (InkWell)
-                  Positioned.fill(
-                    child: Semantics(
-                      label: _buildSemanticLabel(),
-                      button: true,
-                      selected: widget.isSelected,
-                      child: Listener(
-                        onPointerDown: (_) => AppHaptics.tapDown(),
-                        child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: widget.onTap,
-                          onLongPress: () {
-                            AppHaptics.mediumImpact();
-                            widget.onLongPress();
-                          },
-                          onHighlightChanged: (highlighted) {
-                            setState(() => _isPressed = highlighted);
-                          },
-                          borderRadius: BorderRadius.circular(cardBorderRadius),
-                          splashColor: colorScheme.primary.withValues(alpha: 0.12),
-                          highlightColor:
-                              colorScheme.primary.withValues(alpha: 0.06),
-                          child: Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: padding,
-                              vertical: padding + 2,
-                            ),
-                            child: isHorizontal
-                                ? _buildHorizontalContent(
-                                    iconSize,
-                                    iconBorderRadius,
-                                    badgeSize,
-                                    plusSettings,
-                                    viewSettings,
-                                    cardColor,
-                                  )
-                                : _buildVerticalContent(
-                                    iconSize,
-                                    iconBorderRadius,
-                                    badgeSize,
-                                    plusSettings,
-                                    viewSettings,
-                                    cardColor,
+                      // 3. Top specular highlight streak
+                      if (plusSettings.plusEnableGlassmorphism)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            height: 1.0,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.white.withValues(
+                                    alpha:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? 0.18
+                                        : 0.50,
                                   ),
+                                  Colors.white.withValues(alpha: 0.0),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
+
+                      // 4. Category Accent Ribbon (M3E)
+                      if (plusSettings.plusCategoryAccentRibbon &&
+                          resolvedCategoryColor != null)
+                        Positioned(
+                          top: 0,
+                          left: cardBorderRadius * 0.5,
+                          right: cardBorderRadius * 0.5,
+                          child: Container(
+                            height: 3.5,
+                            decoration: BoxDecoration(
+                              color: resolvedCategoryColor,
+                              borderRadius: const BorderRadius.vertical(
+                                bottom: Radius.circular(3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: resolvedCategoryColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                      // 5. Main Card Tap Target & Interactive Surface (InkWell)
+                      Positioned.fill(
+                        child: Semantics(
+                          label: _buildSemanticLabel(),
+                          button: true,
+                          selected: widget.isSelected,
+                          child: Listener(
+                            onPointerDown: (_) => AppHaptics.tapDown(),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: widget.onTap,
+                                onLongPress: () {
+                                  AppHaptics.mediumImpact();
+                                  widget.onLongPress();
+                                },
+                                onHighlightChanged: (highlighted) {
+                                  setState(() => _isPressed = highlighted);
+                                },
+                                borderRadius: BorderRadius.circular(
+                                  cardBorderRadius,
+                                ),
+                                splashColor: colorScheme.primary.withValues(
+                                  alpha: 0.12,
+                                ),
+                                highlightColor: colorScheme.primary.withValues(
+                                  alpha: 0.06,
+                                ),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: padding,
+                                    vertical: padding + 2,
+                                  ),
+                                  child: isHorizontal
+                                      ? _buildHorizontalContent(
+                                          iconSize,
+                                          iconBorderRadius,
+                                          badgeSize,
+                                          plusSettings,
+                                          viewSettings,
+                                          cardColor,
+                                        )
+                                      : _buildVerticalContent(
+                                          iconSize,
+                                          iconBorderRadius,
+                                          badgeSize,
+                                          plusSettings,
+                                          viewSettings,
+                                          cardColor,
+                                        ),
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+
+                      // 6. Pinned Indicator (Top-Left)
+                      if (widget.appInMemory.app.pinned && !widget.isSelected)
+                        Positioned(
+                          top: 6,
+                          left: 6,
+                          child: _buildOverlayBadge(
+                            icon: Icons.push_pin_rounded,
+                            backgroundColor: colorScheme.primaryContainer
+                                .withValues(alpha: 0.9),
+                            iconColor: colorScheme.primary,
+                            borderColor: colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+
+                      // 7. Repo Renamed Indicator
+                      if (widget.appInMemory.app.hasPendingRepoRename)
+                        Positioned(
+                          top: 6,
+                          left:
+                              (widget.appInMemory.app.pinned &&
+                                  !widget.isSelected)
+                              ? 30
+                              : 6,
+                          child: _buildOverlayBadge(
+                            icon: Icons.info_outline_rounded,
+                            backgroundColor: colorScheme.errorContainer
+                                .withValues(alpha: 0.9),
+                            iconColor: colorScheme.onErrorContainer,
+                            borderColor: colorScheme.error.withValues(
+                              alpha: 0.4,
+                            ),
+                            tooltip: tr('repoRenamed'),
+                          ),
+                        ),
+
+                      // 8. Multi-Select Checkmark (Top-Right)
+                      if (widget.isSelected)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: _buildOverlayBadge(
+                            icon: Icons.check_rounded,
+                            backgroundColor: colorScheme.primary,
+                            iconColor: colorScheme.onPrimary,
+                            circle: true,
+                            shadow: true,
+                          ),
+                        ),
+                    ],
                   ),
-
-                  // 6. Pinned Indicator (Top-Left)
-                  if (widget.appInMemory.app.pinned && !widget.isSelected)
-                    Positioned(
-                      top: 6,
-                      left: 6,
-                      child: _buildOverlayBadge(
-                        icon: Icons.push_pin_rounded,
-                        backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.9),
-                        iconColor: colorScheme.primary,
-                        borderColor: colorScheme.primary.withValues(alpha: 0.3),
-                      ),
-                    ),
-
-                  // 7. Repo Renamed Indicator
-                  if (widget.appInMemory.app.hasPendingRepoRename)
-                    Positioned(
-                      top: 6,
-                      left: (widget.appInMemory.app.pinned && !widget.isSelected)
-                          ? 30
-                          : 6,
-                      child: _buildOverlayBadge(
-                        icon: Icons.info_outline_rounded,
-                        backgroundColor: colorScheme.errorContainer.withValues(alpha: 0.9),
-                        iconColor: colorScheme.onErrorContainer,
-                        borderColor: colorScheme.error.withValues(alpha: 0.4),
-                        tooltip: tr('repoRenamed'),
-                      ),
-                    ),
-
-                  // 8. Multi-Select Checkmark (Top-Right)
-                  if (widget.isSelected)
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: _buildOverlayBadge(
-                        icon: Icons.check_rounded,
-                        backgroundColor: colorScheme.primary,
-                        iconColor: colorScheme.onPrimary,
-                        circle: true,
-                        shadow: true,
-                      ),
-                    ),
-                ],
+                ),
               ),
-            ),
-          ),
-        );
+            );
           },
         ),
       ),
@@ -492,7 +531,8 @@ class _AppGridTileState extends State<AppGridTile>
         // Footer: Action Pill or Status Pill
         if (widget.hasUpdate) ...[
           _buildUpdateVersionPill(colorScheme),
-        ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
+        ] else if (viewSettings.displayShowVersion ||
+            viewSettings.displayShowAuthor) ...[
           _buildUpToDatePill(colorScheme, viewSettings),
         ],
         // Tag chips
@@ -538,17 +578,17 @@ class _AppGridTileState extends State<AppGridTile>
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 13,
-                  fontWeight:
-                      widget.appInMemory.app.pinned || widget.hasUpdate
-                          ? FontWeight.w700
-                          : FontWeight.w600,
+                  fontWeight: widget.appInMemory.app.pinned || widget.hasUpdate
+                      ? FontWeight.w700
+                      : FontWeight.w600,
                   letterSpacing: -0.2,
                 ),
               ),
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
                 _buildUpdateVersionPill(colorScheme),
-              ] else if (viewSettings.displayShowVersion || viewSettings.displayShowAuthor) ...[
+              ] else if (viewSettings.displayShowVersion ||
+                  viewSettings.displayShowAuthor) ...[
                 const SizedBox(height: 3),
                 _buildUpToDatePill(colorScheme, viewSettings),
               ],
@@ -597,13 +637,20 @@ class _AppGridTileState extends State<AppGridTile>
               ),
             ),
             child: AnimatedSwitcher(
-              duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 350 : 0),
+              duration: Duration(
+                milliseconds: plusSettings.plusEnableEnhancedAnimations
+                    ? 350
+                    : 0,
+              ),
               switchInCurve: AppConstants.expressiveDecelerate,
               switchOutCurve: AppConstants.expressiveAccelerate,
               transitionBuilder: (child, animation) => FadeTransition(
                 opacity: animation,
                 child: ScaleTransition(
-                  scale: Tween<double>(begin: 0.82, end: 1.0).animate(animation),
+                  scale: Tween<double>(
+                    begin: 0.82,
+                    end: 1.0,
+                  ).animate(animation),
                   child: child,
                 ),
               ),
@@ -616,8 +663,12 @@ class _AppGridTileState extends State<AppGridTile>
                         fit: BoxFit.contain,
                         gaplessPlayback: true,
                         filterQuality: FilterQuality.medium,
-                        cacheWidth: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
-                        cacheHeight: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
+                        cacheWidth:
+                            (iconSize * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
+                        cacheHeight:
+                            (iconSize * MediaQuery.devicePixelRatioOf(context))
+                                .round(),
                       ),
                     )
                   : AppIconShimmer(
@@ -694,7 +745,6 @@ class _AppGridTileState extends State<AppGridTile>
     );
   }
 
-
   Widget _buildUpToDatePill(
     ColorScheme colorScheme,
     ViewSettingsProvider viewSettings,
@@ -755,10 +805,7 @@ class _AppGridTileState extends State<AppGridTile>
           .take(2)
           .map(
             (tag) => Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 5,
-                vertical: 1.5,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
               decoration: BoxDecoration(
                 color: colorScheme.secondaryContainer.withValues(alpha: 0.35),
                 borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
@@ -888,7 +935,8 @@ class _AppGridTileState extends State<AppGridTile>
                           child: Text(
                             () {
                               if (downloadProgress < 0) {
-                                final total = widget.appInMemory.downloadTotalBytes;
+                                final total =
+                                    widget.appInMemory.downloadTotalBytes;
                                 return total != null && total > 0
                                     ? '${tr('installing')} · ${formatBytes(total)}'
                                     : tr('installing');
@@ -896,7 +944,8 @@ class _AppGridTileState extends State<AppGridTile>
                               final speed = formatSpeed(
                                 widget.appInMemory.downloadSpeedBytesPerSec,
                               );
-                              final safePercent = (downloadProgress.isNaN ||
+                              final safePercent =
+                                  (downloadProgress.isNaN ||
                                       downloadProgress.isInfinite)
                                   ? 0
                                   : downloadProgress.toInt();
@@ -904,10 +953,11 @@ class _AppGridTileState extends State<AppGridTile>
                                   ? '$safePercent% · $speed'
                                   : '$safePercent%';
                             }(),
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
                             overflow: TextOverflow.ellipsis,
                             maxLines: 1,
                           ),
@@ -928,7 +978,9 @@ class _AppGridTileState extends State<AppGridTile>
                     ),
                     const SizedBox(height: 3),
                     ExpressiveProgressIndicator(
-                      value: downloadProgress >= 0 ? downloadProgress / 100 : null,
+                      value: downloadProgress >= 0
+                          ? downloadProgress / 100
+                          : null,
                       height: 3.5,
                     ),
                   ],
@@ -1087,9 +1139,7 @@ class AppIconActionBadge extends StatelessWidget {
               ? tr('ambiguousUpdate')
               : (needsInstall ? tr('install') : tr('update'));
           face = Icon(
-            isAmbiguous
-                ? Icons.help_outline_rounded
-                : Icons.download_rounded,
+            isAmbiguous ? Icons.help_outline_rounded : Icons.download_rounded,
             size: d * 0.6,
             color: fg,
           );

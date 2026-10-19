@@ -158,129 +158,114 @@ void main() {
   }
 
   for (var tab = 0; tab <= 8; tab++) {
-    testWidgets(
-      'settings section $tab builds without throwing',
-      (tester) async {
-        late Widget app;
-        // Provider setup does real async work (platform channels, prefs) that
-        // never completes inside the widget test's fake-async zone
-        await tester.runAsync(() async {
-          await EasyLocalization.ensureInitialized();
-          app = await buildSettingsApp(tab);
-        });
-        await pumpCapturingErrors(tester, app);
-        expect(find.byType(SettingsPage), findsOneWidget);
-      },
-      timeout: const Timeout(Duration(minutes: 1)),
-    );
+    testWidgets('settings section $tab builds without throwing', (
+      tester,
+    ) async {
+      late Widget app;
+      // Provider setup does real async work (platform channels, prefs) that
+      // never completes inside the widget test's fake-async zone
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(tab);
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+    }, timeout: const Timeout(Duration(minutes: 1)));
   }
 
   // #336/#337: flex_color_picker's colour-code field (Appearance tab) is a
   // material_ui TextField, which needs material_ui's own MaterialLocalizations.
   // Only the en-only Default delegate was registered, so every other locale
   // crashed with a null check on opening settings.
-  testWidgets(
-    'settings page builds in a non-English locale',
-    (tester) async {
-      late Widget app;
-      await tester.runAsync(() async {
-        await EasyLocalization.ensureInitialized();
-        app = await buildSettingsApp(0, locale: const Locale('zh'));
-      });
-      await pumpCapturingErrors(tester, app);
-      expect(find.byType(SettingsPage), findsOneWidget);
-    },
-    timeout: const Timeout(Duration(minutes: 1)),
-  );
+  testWidgets('settings page builds in a non-English locale', (tester) async {
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0, locale: const Locale('zh'));
+    });
+    await pumpCapturingErrors(tester, app);
+    expect(find.byType(SettingsPage), findsOneWidget);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
   for (final variant in const [
     ('TV focus theme', true, false, Brightness.light),
     ('match-system theme', false, true, Brightness.light),
     ('dark theme', false, false, Brightness.dark),
   ]) {
-    testWidgets(
-      'settings page builds with the ${variant.$1}',
-      (tester) async {
-        late Widget app;
-        await tester.runAsync(() async {
-          await EasyLocalization.ensureInitialized();
-          app = await buildSettingsApp(
-            1,
-            isTV: variant.$2,
-            matchSystemMaterialStyle: variant.$3,
-            brightness: variant.$4,
-          );
-        });
-        await pumpCapturingErrors(tester, app);
-        expect(find.byType(SettingsPage), findsOneWidget);
-      },
-      timeout: const Timeout(Duration(minutes: 1)),
-    );
+    testWidgets('settings page builds with the ${variant.$1}', (tester) async {
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(
+          1,
+          isTV: variant.$2,
+          matchSystemMaterialStyle: variant.$3,
+          brightness: variant.$4,
+        );
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+    }, timeout: const Timeout(Duration(minutes: 1)));
   }
 
   // First screen of every fresh install; restored after being unreachable
   // from May to October.
-  testWidgets(
-    'onboarding page builds',
-    (tester) async {
-      late Widget app;
-      await tester.runAsync(() async {
-        await EasyLocalization.ensureInitialized();
-        app = await buildSettingsApp(0, home: OnboardingPage(onDone: () {}));
-      });
-      final errors = <FlutterErrorDetails>[];
-      final base = FlutterError.onError;
-      FlutterError.onError = (d) {
-        errors.add(d);
-        base?.call(d);
-      };
-      try {
-        await tester.pumpWidget(app);
-        for (var i = 0; i < 40; i++) {
-          await tester.runAsync(
-            () => Future<void>.delayed(const Duration(milliseconds: 50)),
-          );
-          await tester.pump(const Duration(milliseconds: 100));
-          if (tester.any(find.byType(OnboardingPage))) break;
-        }
-        await tester.pump(const Duration(seconds: 1));
-      } finally {
-        FlutterError.onError = base;
+  testWidgets('onboarding page builds', (tester) async {
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0, home: OnboardingPage(onDone: () {}));
+    });
+    final errors = <FlutterErrorDetails>[];
+    final base = FlutterError.onError;
+    FlutterError.onError = (d) {
+      errors.add(d);
+      base?.call(d);
+    };
+    try {
+      await tester.pumpWidget(app);
+      for (var i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        if (tester.any(find.byType(OnboardingPage))) break;
       }
-      for (final d in errors) {
-        // ignore: avoid_print
-        print('──── onboarding error ────\n$d');
-      }
-      expect(tester.takeException(), isNull);
-      expect(find.byType(OnboardingPage), findsOneWidget);
-    },
-    timeout: const Timeout(Duration(minutes: 1)),
-  );
+      await tester.pump(const Duration(seconds: 1));
+    } finally {
+      FlutterError.onError = base;
+    }
+    for (final d in errors) {
+      // ignore: avoid_print
+      print('──── onboarding error ────\n$d');
+    }
+    expect(tester.takeException(), isNull);
+    expect(find.byType(OnboardingPage), findsOneWidget);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
-  testWidgets(
-    'settings page survives corrupted preference types',
-    (tester) async {
-      // The issue #217 corruption class: keys stored with the wrong type
-      // (JSON import) or stale enum indexes must not blank the page
-      SharedPreferences.setMockInitialValues({
-        'plusSettingsBottomNavBar': false, // keep nav bar hidden (see setUp comment)
-        'plusSettingsCornerRadius': 16, // int where double expected
-        'plusGlobalCornerRadius': 'oops', // string where double expected
-        'theme': 99, // out-of-range enum index
-        'themeVariant': -1, // negative enum index
-        'plusEnableGlassmorphism': 'true', // string where bool expected
-        'updateIntervalSliderVal': 9999.0, // beyond slider max
-      });
-      late Widget app;
-      await tester.runAsync(() async {
-        await EasyLocalization.ensureInitialized();
-        app = await buildSettingsApp(0);
-      });
-      await pumpCapturingErrors(tester, app);
-      expect(find.byType(SettingsPage), findsOneWidget);
-    },
-    timeout: const Timeout(Duration(minutes: 1)),
-  );
+  testWidgets('settings page survives corrupted preference types', (
+    tester,
+  ) async {
+    // The issue #217 corruption class: keys stored with the wrong type
+    // (JSON import) or stale enum indexes must not blank the page
+    SharedPreferences.setMockInitialValues({
+      'plusSettingsBottomNavBar':
+          false, // keep nav bar hidden (see setUp comment)
+      'plusSettingsCornerRadius': 16, // int where double expected
+      'plusGlobalCornerRadius': 'oops', // string where double expected
+      'theme': 99, // out-of-range enum index
+      'themeVariant': -1, // negative enum index
+      'plusEnableGlassmorphism': 'true', // string where bool expected
+      'updateIntervalSliderVal': 9999.0, // beyond slider max
+    });
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0);
+    });
+    await pumpCapturingErrors(tester, app);
+    expect(find.byType(SettingsPage), findsOneWidget);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 }
 
 class _MemoryAssetLoader extends AssetLoader {

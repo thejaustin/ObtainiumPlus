@@ -78,9 +78,9 @@ class _CommandCenterState extends State<CommandCenter> {
         if (errors.isNotEmpty) {
           showError(errors[0][1], context);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(tr('appAdded'))),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
           if (Navigator.canPop(context)) Navigator.pop(context);
         }
       } else {
@@ -89,9 +89,9 @@ class _CommandCenterState extends State<CommandCenter> {
           if (errors.isNotEmpty) {
             showError(errors[0][1], globalCtx);
           } else {
-            ScaffoldMessenger.of(globalCtx).showSnackBar(
-              SnackBar(content: Text(tr('appAdded'))),
-            );
+            ScaffoldMessenger.of(
+              globalCtx,
+            ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
           }
         }
       }
@@ -272,7 +272,9 @@ class _CommandCenterState extends State<CommandCenter> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
           child: ClipRRect(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(sheetRadius),
+            ),
             child: ConditionalBlur(
               sigma: AppConstants.glassBlurSigma,
               enabled: plusSettings.plusEnableGlassmorphism,
@@ -280,10 +282,12 @@ class _CommandCenterState extends State<CommandCenter> {
                 height: MediaQuery.of(context).size.height * 0.85,
                 decoration: BoxDecoration(
                   color: plusSettings.plusEnableGlassmorphism
-                      ? theme.colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                      ? theme.colorScheme.surface.withValues(
+                          alpha: AppConstants.glassSurfaceAlpha,
+                        )
                       : (isDark
-                          ? theme.colorScheme.surfaceContainerHighest
-                          : theme.colorScheme.surfaceContainerLow),
+                            ? theme.colorScheme.surfaceContainerHighest
+                            : theme.colorScheme.surfaceContainerLow),
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(sheetRadius),
                   ),
@@ -322,7 +326,9 @@ class _CommandCenterState extends State<CommandCenter> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: AnimatedContainer(
-                        duration: Duration(milliseconds: animsEnabled ? 280 : 0),
+                        duration: Duration(
+                          milliseconds: animsEnabled ? 280 : 0,
+                        ),
                         curve: Easing.emphasizedDecelerate,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
@@ -374,10 +380,12 @@ class _CommandCenterState extends State<CommandCenter> {
                                 color: (_isFocused || _query.isNotEmpty)
                                     ? theme.colorScheme.primary
                                     : (plusSettings.plusEnableGlassmorphism
-                                        ? theme.colorScheme.onSurface.withValues(
-                                            alpha: AppConstants.glassBorderAlpha,
-                                          )
-                                        : Colors.transparent),
+                                          ? theme.colorScheme.onSurface
+                                                .withValues(
+                                                  alpha: AppConstants
+                                                      .glassBorderAlpha,
+                                                )
+                                          : Colors.transparent),
                                 width: (_isFocused || _query.isNotEmpty)
                                     ? 1.8
                                     : 1.0,
@@ -391,11 +399,13 @@ class _CommandCenterState extends State<CommandCenter> {
                                 color: (_isFocused || _query.isNotEmpty)
                                     ? theme.colorScheme.primary
                                     : (plusSettings.plusEnableGlassmorphism
-                                        ? theme.colorScheme.onSurface.withValues(
-                                            alpha: AppConstants.glassBorderAlpha,
-                                          )
-                                        : theme.colorScheme.outlineVariant
-                                            .withValues(alpha: 0.3)),
+                                          ? theme.colorScheme.onSurface
+                                                .withValues(
+                                                  alpha: AppConstants
+                                                      .glassBorderAlpha,
+                                                )
+                                          : theme.colorScheme.outlineVariant
+                                                .withValues(alpha: 0.3)),
                                 width: (_isFocused || _query.isNotEmpty)
                                     ? 1.8
                                     : 1.0,
@@ -436,98 +446,111 @@ class _CommandCenterState extends State<CommandCenter> {
                     // Content
                     Expanded(
                       child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: animsEnabled ? 260 : 0),
+                        duration: Duration(
+                          milliseconds: animsEnabled ? 260 : 0,
+                        ),
                         switchInCurve: Curves.easeOutCubic,
                         switchOutCurve: Curves.easeInCubic,
                         transitionBuilder: (child, animation) => FadeTransition(
                           opacity: animation,
                           child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 0.04),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            )),
+                            position:
+                                Tween<Offset>(
+                                  begin: const Offset(0, 0.04),
+                                  end: Offset.zero,
+                                ).animate(
+                                  CurvedAnimation(
+                                    parent: animation,
+                                    curve: Curves.easeOutCubic,
+                                  ),
+                                ),
                             child: child,
                           ),
                         ),
                         child: _query.isEmpty
-                          ? KeyedSubtree(
-                              key: const ValueKey('initial'),
-                              child: _buildInitialState(),
-                            )
-                          : KeyedSubtree(
-                              key: const ValueKey('results'),
-                              child: ListView(
-                                keyboardDismissBehavior:
-                                    ScrollViewKeyboardDismissBehavior.onDrag,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                            ? KeyedSubtree(
+                                key: const ValueKey('initial'),
+                                child: _buildInitialState(),
+                              )
+                            : KeyedSubtree(
+                                key: const ValueKey('results'),
+                                child: ListView(
+                                  keyboardDismissBehavior:
+                                      ScrollViewKeyboardDismissBehavior.onDrag,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  children: [
+                                    AnimatedSize(
+                                      duration: Duration(
+                                        milliseconds: animsEnabled ? 300 : 0,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      child: _localResults.isNotEmpty
+                                          ? Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                _buildSectionHeader(
+                                                  tr('myApps'),
+                                                ),
+                                                ..._localResults.map(
+                                                  _buildLocalResult,
+                                                ),
+                                                const SizedBox(height: 16),
+                                              ],
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                    AnimatedSize(
+                                      duration: Duration(
+                                        milliseconds: animsEnabled ? 300 : 0,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      child: isUrl
+                                          ? Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                _buildSectionHeader(
+                                                  tr('actions'),
+                                                ),
+                                                _buildUrlActionContent(),
+                                                const SizedBox(height: 16),
+                                              ],
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                    AnimatedSize(
+                                      duration: Duration(
+                                        milliseconds: animsEnabled ? 300 : 0,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                      child:
+                                          (_query.isNotEmpty &&
+                                              (!isUrl ||
+                                                  RegExp(
+                                                    r'^https?://(?:www\.)?github\.com/[^/]+/?$',
+                                                    caseSensitive: false,
+                                                  ).hasMatch(_query)))
+                                          ? Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                _buildSectionHeader(
+                                                  tr('discover'),
+                                                ),
+                                                _buildSearchResultsList(),
+                                              ],
+                                            )
+                                          : const SizedBox.shrink(),
+                                    ),
+                                  ],
                                 ),
-                                children: [
-                                  AnimatedSize(
-                                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-                                    curve: Curves.easeOutCubic,
-                                    child: _localResults.isNotEmpty
-                                        ? Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              _buildSectionHeader(tr('myApps')),
-                                              ..._localResults.map(
-                                                _buildLocalResult,
-                                              ),
-                                              const SizedBox(height: 16),
-                                            ],
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
-                                  AnimatedSize(
-                                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-                                    curve: Curves.easeOutCubic,
-                                    child: isUrl
-                                        ? Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              _buildSectionHeader(
-                                                tr('actions'),
-                                              ),
-                                              _buildUrlActionContent(),
-                                              const SizedBox(height: 16),
-                                            ],
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
-                                  AnimatedSize(
-                                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-                                    curve: Curves.easeOutCubic,
-                                    child:
-                                        (_query.isNotEmpty &&
-                                            (!isUrl ||
-                                                RegExp(
-                                                  r'^https?://(?:www\.)?github\.com/[^/]+/?$',
-                                                  caseSensitive: false,
-                                                ).hasMatch(_query)))
-                                        ? Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              _buildSectionHeader(
-                                                tr('discover'),
-                                              ),
-                                              _buildSearchResultsList(),
-                                            ],
-                                          )
-                                        : const SizedBox.shrink(),
-                                  ),
-                                ],
                               ),
-                            ),
                       ),
                     ),
                   ],
@@ -611,8 +634,12 @@ class _CommandCenterState extends State<CommandCenter> {
                               app.icon!,
                               fit: BoxFit.cover,
                               filterQuality: FilterQuality.medium,
-                              cacheWidth: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
-                              cacheHeight: (48 * MediaQuery.devicePixelRatioOf(context)).round(),
+                              cacheWidth:
+                                  (48 * MediaQuery.devicePixelRatioOf(context))
+                                      .round(),
+                              cacheHeight:
+                                  (48 * MediaQuery.devicePixelRatioOf(context))
+                                      .round(),
                             ),
                           )
                         : const Icon(Icons.apps_rounded),
@@ -733,103 +760,103 @@ class _CommandCenterState extends State<CommandCenter> {
               ),
             ),
             child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: Material(
-              color: theme.colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(itemRadius),
-              child: ScaleTouchWrapper(
-                hapticOnPressDown: true,
-                child: ListTile(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(itemRadius),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 4,
-                  ),
-                  leading: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(itemRadius * 0.75),
-                      color: theme.colorScheme.primaryContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Material(
+                color: theme.colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(itemRadius),
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  child: ListTile(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(itemRadius),
                     ),
-                    child: Center(
-                      child: Text(
-                        name.isNotEmpty ? name[0].toUpperCase() : '?',
-                        style: TextStyle(
-                          color: theme.colorScheme.onPrimaryContainer,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                        ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 4,
+                    ),
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(itemRadius * 0.75),
+                        color: theme.colorScheme.primaryContainer,
                       ),
-                    ),
-                  ),
-                  title: Text(
-                    name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  subtitle: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+                      child: Center(
                         child: Text(
-                          source,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: theme.colorScheme.onSecondaryContainer,
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                          style: TextStyle(
+                            color: theme.colorScheme.onPrimaryContainer,
                             fontWeight: FontWeight.bold,
+                            fontSize: 20,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.tune_rounded),
-                        tooltip: tr('advancedOptions'),
-                        onPressed: () => _openAddApp(url),
+                    ),
+                    title: Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
-                      _pendingAddUrls.contains(url)
-                          ? const Padding(
-                              padding: EdgeInsets.all(12),
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: ExpressiveCircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                          : IconButton(
-                              icon: Icon(
-                                Icons.add_circle_outline_rounded,
-                                color: theme.colorScheme.primary,
-                              ),
-                              tooltip: tr('addApp'),
-                              onPressed: () => _submitAddAppUrl(url),
+                    ),
+                    subtitle: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondaryContainer,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            source,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.onSecondaryContainer,
+                              fontWeight: FontWeight.bold,
                             ),
-                    ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.tune_rounded),
+                          tooltip: tr('advancedOptions'),
+                          onPressed: () => _openAddApp(url),
+                        ),
+                        _pendingAddUrls.contains(url)
+                            ? const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: ExpressiveCircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                              )
+                            : IconButton(
+                                icon: Icon(
+                                  Icons.add_circle_outline_rounded,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                tooltip: tr('addApp'),
+                                onPressed: () => _submitAddAppUrl(url),
+                              ),
+                      ],
+                    ),
+                    onTap: _pendingAddUrls.contains(url)
+                        ? null
+                        : () => _submitAddAppUrl(url),
                   ),
-                  onTap: _pendingAddUrls.contains(url)
-                      ? null
-                      : () => _submitAddAppUrl(url),
                 ),
               ),
             ),
-          ),
           );
         }),
       ],
@@ -859,9 +886,7 @@ class _CommandCenterState extends State<CommandCenter> {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            trailing: _isAddingUrl
-                ? null
-                : const Icon(Icons.arrow_forward),
+            trailing: _isAddingUrl ? null : const Icon(Icons.arrow_forward),
             onTap: _isAddingUrl ? null : () => _submitAddAppUrl(_query),
           ),
           Divider(
@@ -1031,17 +1056,17 @@ class _CommandCenterState extends State<CommandCenter> {
                 label: Text(src.name),
                 onSelected: (bool selected) {
                   AppHaptics.selectionClick();
-                final newList = List<String>.from(settings.searchDeselected);
-                if (selected) {
-                  newList.remove(src.name);
-                } else {
-                  newList.add(src.name);
-                }
-                settings.searchDeselected = newList;
-                if (_query.isNotEmpty) {
-                  _handleSearch(_query);
-                }
-              },
+                  final newList = List<String>.from(settings.searchDeselected);
+                  if (selected) {
+                    newList.remove(src.name);
+                  } else {
+                    newList.add(src.name);
+                  }
+                  settings.searchDeselected = newList;
+                  if (_query.isNotEmpty) {
+                    _handleSearch(_query);
+                  }
+                },
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(chipRadius),
                 ),

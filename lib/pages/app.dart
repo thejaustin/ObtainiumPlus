@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -37,6 +38,22 @@ import 'package:android_package_manager/android_package_manager.dart'
     hide LaunchMode;
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+
+/// Whether opening the detail page should resolve the selected APK's size.
+///
+/// The probe makes network requests, so it must follow the same
+/// "check for updates on opening an app detail page" setting as the update
+/// check itself.
+bool shouldProbeDownloadSize({
+  required bool checkUpdateOnDetailPage,
+  required bool hasDownload,
+  required bool updating,
+  required bool areDownloadsRunning,
+}) =>
+    checkUpdateOnDetailPage &&
+    !hasDownload &&
+    !updating &&
+    !areDownloadsRunning;
 
 class AppPage extends StatefulWidget {
   const AppPage({
@@ -158,18 +175,28 @@ class _AppPageState extends State<AppPage> {
                       ? Chip(
                           label: Text(
                             'Default',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                           avatar: Icon(
                             Icons.star_rounded,
                             size: 14,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          backgroundColor: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.6),
-                          side: BorderSide(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), width: 0.8),
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.6),
+                          side: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.3),
+                            width: 0.8,
+                          ),
                           shape: const StadiumBorder(),
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           visualDensity: VisualDensity.compact,
@@ -458,7 +485,10 @@ class _AppPageState extends State<AppPage> {
         (!viewSettings.showAppWebpage && widget.showOppositeOfPreferredView);
     getUpdate(String id, {bool resetVersion = false}) async {
       try {
-        if (mounted) setState(() { updating = true; });
+        if (mounted)
+          setState(() {
+            updating = true;
+          });
         await appsProvider.checkUpdate(id);
         if (resetVersion) {
           appsProvider.apps[id]?.app.additionalSettings['versionDetection'] =
@@ -478,7 +508,10 @@ class _AppPageState extends State<AppPage> {
           showError(err, context);
         }
       } finally {
-        if (mounted) setState(() { updating = false; });
+        if (mounted)
+          setState(() {
+            updating = false;
+          });
       }
     }
 
@@ -571,200 +604,268 @@ class _AppPageState extends State<AppPage> {
                     enabled: plusSettings.plusEnableGlassmorphism,
                     sigma: AppConstants.glassBlurSigma,
                     child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: plusSettings.plusEnableGlassmorphism
-                          ? Theme.of(context).colorScheme.surface.withValues(
-                              alpha: AppConstants.glassSurfaceAlpha,
-                            )
-                          : Theme.of(context).colorScheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(cardRadius),
-                      border: Border.all(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
                         color: plusSettings.plusEnableGlassmorphism
-                            ? Theme.of(context).colorScheme.onSurface.withValues(
-                                alpha: AppConstants.glassBorderAlpha,
+                            ? Theme.of(context).colorScheme.surface.withValues(
+                                alpha: AppConstants.glassSurfaceAlpha,
                               )
-                            : Theme.of(context).colorScheme.outlineVariant.withValues(
-                                alpha: 0.5,
-                              ),
+                            : Theme.of(context).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(cardRadius),
+                        border: Border.all(
+                          color: plusSettings.plusEnableGlassmorphism
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(
+                                  alpha: AppConstants.glassBorderAlpha,
+                                )
+                              : Theme.of(context).colorScheme.outlineVariant
+                                    .withValues(alpha: 0.5),
+                        ),
                       ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  versionLines,
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (changeLogFn != null || app?.app.releaseDate != null) ...[
-                                  const SizedBox(height: 6),
-                                  ScaleTouchWrapper(
-                                    hapticOnPressDown: changeLogFn != null,
-                                    scaleDownFactor: 0.90,
-                                    child: InkWell(
-                                    borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-                                    onTap: changeLogFn != null
-                                        ? () {
-                                            AppHaptics.selectionClick();
-                                            changeLogFn();
-                                          }
-                                        : null,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-                                        borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.history_rounded,
-                                            size: 13,
-                                            color: Theme.of(context).colorScheme.primary,
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      versionLines,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            app?.app.releaseDate?.toLocal().toString().split('.').first ??
-                                                tr('changes'),
-                                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                              color: Theme.of(context).colorScheme.primary,
-                                              fontWeight: FontWeight.w600,
+                                    ),
+                                    if (changeLogFn != null ||
+                                        app?.app.releaseDate != null) ...[
+                                      const SizedBox(height: 6),
+                                      ScaleTouchWrapper(
+                                        hapticOnPressDown: changeLogFn != null,
+                                        scaleDownFactor: 0.90,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(
+                                            CardMetrics.pillRadius,
+                                          ),
+                                          onTap: changeLogFn != null
+                                              ? () {
+                                                  AppHaptics.selectionClick();
+                                                  changeLogFn();
+                                                }
+                                              : null,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withValues(alpha: 0.08),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                    CardMetrics.pillRadius,
+                                                  ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.history_rounded,
+                                                  size: 13,
+                                                  color: Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  app?.app.releaseDate
+                                                          ?.toLocal()
+                                                          .toString()
+                                                          .split('.')
+                                                          .first ??
+                                                      tr('changes'),
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .labelSmall
+                                                      ?.copyWith(
+                                                        color: Theme.of(
+                                                          context,
+                                                        ).colorScheme.primary,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                        ],
+                                        ),
                                       ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                              if (app?.app.installedVersion != null &&
+                                  app?.app.installedVersion ==
+                                      app?.app.latestVersion)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(
+                                      CardMetrics.pillRadius,
                                     ),
                                   ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle_rounded,
+                                        size: 14,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        tr('upToDate'),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onPrimaryContainer,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ],
-                            ),
+                                )
+                              else if (app != null &&
+                                  app.app.installedVersion != null &&
+                                  AppUpdateService.areVersionsDifferent(
+                                    app.app,
+                                    app.app.installedVersion,
+                                    app.app.latestVersion,
+                                  ))
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 5,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(
+                                      CardMetrics.pillRadius,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.arrow_upward_rounded,
+                                        size: 14,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onPrimaryContainer,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        tr('updateAvailable'),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSecondaryContainer,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
                           ),
-                          if (app?.app.installedVersion != null &&
-                              app?.app.installedVersion == app?.app.latestVersion)
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.check_circle_rounded,
-                                    size: 14,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                          if (infoLines.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            const Divider(height: 1),
+                            const SizedBox(height: 10),
+                            Text(
+                              infoLines,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    height: 1.4,
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    tr('upToDate'),
-                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                            ),
+                          ],
+                          if (app?.app.apkUrls.isNotEmpty == true ||
+                              app?.app.otherAssetUrls.isNotEmpty == true) ...[
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                style: TextButton.styleFrom(
+                                  visualDensity: VisualDensity.compact,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
                                   ),
-                                ],
-                              ),
-                            )
-                          else if (app != null &&
-                              app.app.installedVersion != null &&
-                              AppUpdateService.areVersionsDifferent(
-                                app.app,
-                                app.app.installedVersion,
-                                app.app.latestVersion,
-                              ))
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.arrow_upward_rounded,
-                                    size: 14,
-                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                ),
+                                onPressed: app?.app == null || updating
+                                    ? null
+                                    : () async {
+                                        try {
+                                          await appsProvider.downloadAppAssets([
+                                            app!.app.id,
+                                          ], context);
+                                        } catch (e) {
+                                          if (context.mounted)
+                                            showError(e, context);
+                                        }
+                                      },
+                                icon: const Icon(
+                                  Icons.attachment_rounded,
+                                  size: 16,
+                                ),
+                                label: Text(
+                                  tr(
+                                    'downloadX',
+                                    args: [
+                                      lowerCaseIfEnglish(tr('releaseAsset')),
+                                    ],
                                   ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    tr('updateAvailable'),
-                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                      color: Theme.of(context).colorScheme.onSecondaryContainer,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(fontWeight: FontWeight.w600),
+                                ),
                               ),
                             ),
+                          ],
                         ],
                       ),
-                      if (infoLines.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        const Divider(height: 1),
-                        const SizedBox(height: 10),
-                        Text(
-                          infoLines,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                      if (app?.app.apkUrls.isNotEmpty == true ||
-                          app?.app.otherAssetUrls.isNotEmpty == true) ...[
-                        const SizedBox(height: 10),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton.icon(
-                            style: TextButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            ),
-                            onPressed: app?.app == null || updating
-                                ? null
-                                : () async {
-                                    try {
-                                      await appsProvider.downloadAppAssets([
-                                        app!.app.id,
-                                      ], context);
-                                    } catch (e) {
-                                      if (context.mounted) showError(e, context);
-                                    }
-                                  },
-                            icon: const Icon(Icons.attachment_rounded, size: 16),
-                            label: Text(
-                              tr(
-                                'downloadX',
-                                args: [lowerCaseIfEnglish(tr('releaseAsset'))],
-                              ),
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
 
           /* Certificate Hashes */
           if (app != null && app.certificateHashes.isNotEmpty)
@@ -830,23 +931,34 @@ class _AppPageState extends State<AppPage> {
                           (tag) => Chip(
                             label: Text(
                               tag,
-                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSecondaryContainer,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSecondaryContainer,
+                                  ),
                             ),
                             avatar: Icon(
                               Icons.label_rounded,
                               size: 14,
                               color: Theme.of(context).colorScheme.secondary,
                             ),
-                            backgroundColor: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                            backgroundColor: Theme.of(context)
+                                .colorScheme
+                                .secondaryContainer
+                                .withValues(alpha: 0.5),
                             side: BorderSide(
-                              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.25),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.secondary.withValues(alpha: 0.25),
                               width: 0.8,
                             ),
                             shape: const StadiumBorder(),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 0,
+                            ),
                             visualDensity: VisualDensity.compact,
                           ),
                         )
@@ -988,34 +1100,37 @@ class _AppPageState extends State<AppPage> {
             ),
           ),
           child: Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(actionRadius),
-          child: InkWell(
-            onTap: onTap,
+            color: Colors.transparent,
             borderRadius: BorderRadius.circular(actionRadius),
-            splashColor: color.withValues(alpha: 0.18),
-            highlightColor: color.withValues(alpha: 0.08),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-              child: Column(
-                children: [
-                  Icon(icon, color: color, size: 20),
-                  const SizedBox(height: 4),
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(actionRadius),
+              splashColor: color.withValues(alpha: 0.18),
+              highlightColor: color.withValues(alpha: 0.08),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 8,
+                ),
+                child: Column(
+                  children: [
+                    Icon(icon, color: color, size: 20),
+                    const SizedBox(height: 4),
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
         ),
       );
     }
@@ -1197,7 +1312,8 @@ class _AppPageState extends State<AppPage> {
         iconData = Icons.ac_unit_rounded;
         color = const Color(0xFF1ABC9C);
         sourceName = 'CoolApk';
-      } else if (url.contains('appgallery.huawei.com') || url.contains('appgallery.cloud.huawei.com')) {
+      } else if (url.contains('appgallery.huawei.com') ||
+          url.contains('appgallery.cloud.huawei.com')) {
         iconData = Icons.widgets_rounded;
         color = const Color(0xFFCF0A2C);
         sourceName = 'AppGallery';
@@ -1256,7 +1372,9 @@ class _AppPageState extends State<AppPage> {
                                 offset: const Offset(0, 10),
                               ),
                               BoxShadow(
-                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.10),
                                 blurRadius: 32,
                                 spreadRadius: -2,
                                 offset: const Offset(0, 4),
@@ -1268,29 +1386,38 @@ class _AppPageState extends State<AppPage> {
                         ? ScaleTouchWrapper(
                             hapticOnPressDown: app != null,
                             scaleDownFactor: 0.92,
-                            child: InkWell(
-                            onTap: app == null
-                                ? null
-                                : () => pm.openApp(app.app.id),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: Image.memory(
-                                app!.icon!,
-                                height: iconSize,
-                                width: iconSize,
-                                fit: BoxFit.contain,
-                                gaplessPlayback: true,
-                                filterQuality: FilterQuality.medium,
-                                cacheWidth: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
-                                cacheHeight: (iconSize * MediaQuery.devicePixelRatioOf(context)).round(),
+                            child: AppIconAction(
+                              semanticLabel: tr('openApp', args: [app!.name]),
+                              onTap: app == null
+                                  ? null
+                                  : () => pm.openApp(app.app.id),
+                              borderRadius: 24,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.memory(
+                                  app.icon!,
+                                  height: iconSize,
+                                  width: iconSize,
+                                  fit: BoxFit.contain,
+                                  gaplessPlayback: true,
+                                  filterQuality: FilterQuality.medium,
+                                  cacheWidth:
+                                      (iconSize *
+                                              MediaQuery.devicePixelRatioOf(
+                                                context,
+                                              ))
+                                          .round(),
+                                  cacheHeight:
+                                      (iconSize *
+                                              MediaQuery.devicePixelRatioOf(
+                                                context,
+                                              ))
+                                          .round(),
+                                ),
                               ),
                             ),
-                          ),
                           )
-                        : AppIconShimmer(
-                            size: iconSize,
-                            borderRadius: 24,
-                          ),
+                        : AppIconShimmer(size: iconSize, borderRadius: 24),
                   ),
                 ),
               ],
@@ -1341,30 +1468,30 @@ class _AppPageState extends State<AppPage> {
           hapticOnPressDown: app?.app.url != null,
           scaleDownFactor: 0.95,
           child: InkWell(
-          onTap: () {
-            if (app?.app.url != null) {
-              launchUrlString(
-                app?.app.url ?? '',
-                mode: LaunchMode.externalApplication,
-              );
-            }
-          },
-          onLongPress: () {
-            Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
-          },
-          child: Text(
-            app?.app.url ?? '',
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Theme.of(context).colorScheme.secondary,
-              decoration: TextDecoration.underline,
+            onTap: () {
+              if (app?.app.url != null) {
+                launchUrlString(
+                  app?.app.url ?? '',
+                  mode: LaunchMode.externalApplication,
+                );
+              }
+            },
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: app?.app.url ?? ''));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(tr('copiedToClipboard'))));
+            },
+            child: Text(
+              app?.app.url ?? '',
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.secondary,
+                decoration: TextDecoration.underline,
+              ),
             ),
-          ),
           ),
         ),
         getInfoColumn(),
@@ -1447,7 +1574,8 @@ class _AppPageState extends State<AppPage> {
         app.app.additionalSettings = values;
         if (source?.enforceTrackOnly == true) {
           app.app.additionalSettings['trackOnly'] = true;
-          if (context.mounted) showMessage(tr('appsFromSourceAreTrackOnly'), context);
+          if (context.mounted)
+            showMessage(tr('appsFromSourceAreTrackOnly'), context);
         }
         var versionDetectionEnabled =
             app.app.additionalSettings['versionDetection'] == true &&
@@ -1489,30 +1617,34 @@ class _AppPageState extends State<AppPage> {
       final defaultStoreName = plusSettings.plusDefaultStoreName;
 
       final isInstalled = app?.app.installedVersion != null;
-      final hasUpdate = isInstalled &&
+      final hasUpdate =
+          isInstalled &&
           AppUpdateService.areVersionsDifferent(
             app!.app,
             app!.app.installedVersion,
             app!.app.latestVersion,
           );
-      final isDownloading = app?.downloadProgress != null || areDownloadsRunning;
+      final isDownloading =
+          app?.downloadProgress != null || areDownloadsRunning;
       final canAct = !updating && (!isInstalled || hasUpdate) && !isDownloading;
 
       final buttonText = defaultStoreName != null
-          ? (isInstalled ? 'Update in $defaultStoreName' : 'Install in $defaultStoreName')
+          ? (isInstalled
+                ? 'Update in $defaultStoreName'
+                : 'Install in $defaultStoreName')
           : (isInstalled
-              ? (!trackOnly ? tr('update') : tr('markUpdated'))
-              : (!trackOnly ? tr('install') : tr('markInstalled')));
+                ? (!trackOnly ? tr('update') : tr('markUpdated'))
+                : (!trackOnly ? tr('install') : tr('markInstalled')));
 
       // ── M3E state machine ─────────────────────────────────────────────────
       // Each state drives shape, color, and content independently.
       final String stateKey = isDownloading
           ? 'downloading'
           : (isInstalled && !hasUpdate)
-              ? 'open'
-              : isInstalled
-                  ? 'update'
-                  : 'install';
+          ? 'open'
+          : isInstalled
+          ? 'update'
+          : 'install';
 
       final ShapeBorder targetShape = isDownloading
           ? const StadiumBorder()
@@ -1521,18 +1653,18 @@ class _AppPageState extends State<AppPage> {
       final Color fillColor = isDownloading
           ? colorScheme.surfaceContainerHighest
           : (isInstalled && !hasUpdate)
-              ? colorScheme.secondaryContainer
-              : isInstalled
-                  ? colorScheme.tertiaryContainer
-                  : colorScheme.primary;
+          ? colorScheme.secondaryContainer
+          : isInstalled
+          ? colorScheme.tertiaryContainer
+          : colorScheme.primary;
 
       final Color onColor = isDownloading
           ? colorScheme.onSurfaceVariant
           : (isInstalled && !hasUpdate)
-              ? colorScheme.onSecondaryContainer
-              : isInstalled
-                  ? colorScheme.onTertiaryContainer
-                  : colorScheme.onPrimary;
+          ? colorScheme.onSecondaryContainer
+          : isInstalled
+          ? colorScheme.onTertiaryContainer
+          : colorScheme.onPrimary;
 
       // Content for each state, keyed so AnimatedSwitcher replaces them
       Widget content;
@@ -1587,7 +1719,9 @@ class _AppPageState extends State<AppPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isInstalled ? Icons.system_update_alt_rounded : Icons.download_rounded,
+              isInstalled
+                  ? Icons.system_update_alt_rounded
+                  : Icons.download_rounded,
               size: 18,
               color: onColor,
             ),
@@ -1631,7 +1765,9 @@ class _AppPageState extends State<AppPage> {
               return;
             }
             try {
-              final successMessage = !isInstalled ? tr('installed') : tr('appsUpdated');
+              final successMessage = !isInstalled
+                  ? tr('installed')
+                  : tr('appsUpdated');
               AppHaptics.heavyImpact();
               final res = await appsProvider.downloadAndInstallLatestApps(
                 app?.app.id != null ? [app!.app.id] : [],
@@ -1646,7 +1782,9 @@ class _AppPageState extends State<AppPage> {
               if (res.isNotEmpty && context.mounted) {
                 var np = context.read<NotificationsProvider>();
                 np.cancel(UpdateNotification([]).id);
-                np.cancel(SilentUpdateAttemptNotification([], id: res[0].hashCode).id);
+                np.cancel(
+                  SilentUpdateAttemptNotification([], id: res[0].hashCode).id,
+                );
               }
             } catch (e) {
               if (context.mounted) showError(e, context);
@@ -1685,12 +1823,15 @@ class _AppPageState extends State<AppPage> {
                     duration: morphDuration,
                     curve: morphCurve,
                     builder: (ctx, shape, _) {
-                      final resolvedShape = shape ??
+                      final resolvedShape =
+                          shape ??
                           RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           );
                       return AnimatedContainer(
-                        duration: Duration(milliseconds: animsEnabled ? 260 : 0),
+                        duration: Duration(
+                          milliseconds: animsEnabled ? 260 : 0,
+                        ),
                         curve: morphCurve,
                         width: width,
                         height: 48,
@@ -1721,15 +1862,16 @@ class _AppPageState extends State<AppPage> {
                                     FadeTransition(
                                       opacity: anim,
                                       child: ScaleTransition(
-                                        scale: Tween<double>(
-                                          begin: 0.85,
-                                          end: 1.0,
-                                        ).animate(
-                                          CurvedAnimation(
-                                            parent: anim,
-                                            curve: Curves.easeOutCubic,
-                                          ),
-                                        ),
+                                        scale:
+                                            Tween<double>(
+                                              begin: 0.85,
+                                              end: 1.0,
+                                            ).animate(
+                                              CurvedAnimation(
+                                                parent: anim,
+                                                curve: Curves.easeOutCubic,
+                                              ),
+                                            ),
                                         child: child,
                                       ),
                                     ),
@@ -1768,171 +1910,202 @@ class _AppPageState extends State<AppPage> {
             child: Row(
               children: [
                 Expanded(child: getInstallOrUpdateButton()),
-                  const SizedBox(width: 8.0),
-                  ScaleTouchWrapper(
-                    hapticOnPressDown: app?.app.id != null,
-                    scaleDownFactor: 0.92,
-                    child: IconButton.filledTonal(
-                      icon: const Icon(Icons.storefront_outlined),
-                      tooltip: tr('openInStore'),
+                const SizedBox(width: 8.0),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: app?.app.id != null,
+                  scaleDownFactor: 0.92,
+                  child: IconButton.filledTonal(
+                    icon: const Icon(Icons.storefront_outlined),
+                    tooltip: tr('openInStore'),
                     onPressed: app?.app.id != null
                         ? () {
                             AppHaptics.selectionClick();
                             _showStoreChooser(context, app!.app.id);
                           }
                         : null,
-                    ),
                   ),
+                ),
                 const SizedBox(width: 4.0),
                 ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   scaleDownFactor: 0.92,
                   child: PopupMenuButton<String>(
-                  tooltip: tr('more'),
-                  icon: Icon(
-                    Icons.more_vert,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  onSelected: (value) async {
-                    AppHaptics.selectionClick();
-                    switch (value) {
-                      case 'additionalOptions':
-                        var values = await showAdditionalOptionsDialog();
-                        handleAdditionalOptionChanges(values);
-                        break;
-                      case 'settings':
-                        if (app != null) {
-                          appsProvider.openAppSettings(app.app.id);
-                        }
-                        break;
-                      case 'moreInfo':
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext ctx) {
-                            return GlassDialog(
-                              title: app?.name ?? tr('app'),
-                              content: getFullInfoColumn(small: true),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(context).pop(),
-                                  child: Text(tr('continue')),
-                                ),
-                              ],
+                    tooltip: tr('more'),
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    onSelected: (value) async {
+                      AppHaptics.selectionClick();
+                      switch (value) {
+                        case 'additionalOptions':
+                          var values = await showAdditionalOptionsDialog();
+                          handleAdditionalOptionChanges(values);
+                          break;
+                        case 'settings':
+                          if (app != null) {
+                            appsProvider.openAppSettings(app.app.id);
+                          }
+                          break;
+                        case 'moreInfo':
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext ctx) {
+                              return GlassDialog(
+                                title: app?.name ?? tr('app'),
+                                content: getFullInfoColumn(small: true),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(),
+                                    child: Text(tr('continue')),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          break;
+                        case 'markUpdated':
+                          showMarkUpdatedDialog();
+                          break;
+                        case 'resetStatus':
+                          if (app != null) {
+                            app.app.installedVersion = null;
+                            appsProvider.saveApps([app.app]);
+                          }
+                          break;
+                        case 'toggleDisabled':
+                          if (app != null) {
+                            AppHaptics.selectionClick();
+                            app.app = app.app.copyWith(
+                              disabled: !app.app.disabled,
                             );
-                          },
-                        );
-                        break;
-                      case 'markUpdated':
-                        showMarkUpdatedDialog();
-                        break;
-                      case 'resetStatus':
-                        if (app != null) {
-                          app.app.installedVersion = null;
-                          appsProvider.saveApps([app.app]);
-                        }
-                        break;
-                      case 'remove':
-                        appsProvider
-                            .removeAppsWithModal(
-                              context,
-                              app != null ? [app.app] : [],
-                            )
-                            .then((value) {
-                              if (value == true && context.mounted) {
-                                Navigator.of(context).pop();
-                              }
-                            });
-                        break;
-                    }
-                  },
-                  itemBuilder: (context) {
-                    final isUpdating =
-                        app?.downloadProgress != null || updating;
-                    return [
-                      if (source != null &&
-                          source.combinedAppSpecificSettingFormItems.isNotEmpty)
-                        PopupMenuItem(
-                          value: 'additionalOptions',
-                          enabled: !isUpdating,
-                          child: ListTile(
-                            leading: const Icon(Icons.edit_outlined),
-                            title: Text(tr('additionalOptions')),
-                            dense: true,
-                          ),
-                        ),
-                      if (app != null && app.installedInfo != null)
-                        PopupMenuItem(
-                          value: 'settings',
-                          child: ListTile(
-                            leading: const Icon(Icons.settings_outlined),
-                            title: Text(tr('settings')),
-                            dense: true,
-                          ),
-                        ),
-                      if (app != null && showAppWebpageFinal)
-                        PopupMenuItem(
-                          value: 'moreInfo',
-                          child: ListTile(
-                            leading: const Icon(Icons.info_outline),
-                            title: Text(tr('more')),
-                            dense: true,
-                          ),
-                        ),
-                      if (app != null &&
-                          app.app.installedVersion != null &&
-                          AppUpdateService.areVersionsDifferent(
-                            app.app,
-                            app.app.installedVersion,
-                            app.app.latestVersion,
-                          ) &&
-                          !isVersionDetectionStandard &&
-                          !trackOnly)
-                        PopupMenuItem(
-                          value: 'markUpdated',
-                          enabled: !isUpdating,
-                          child: ListTile(
-                            leading: const Icon(Icons.done_all_rounded),
-                            title: Text(tr('markUpdated')),
-                            dense: true,
-                          ),
-                        ),
-                      if ((!isVersionDetectionStandard || trackOnly) &&
-                          app != null &&
-                          app.app.installedVersion != null &&
-                          !AppUpdateService.areVersionsDifferent(
-                            app.app,
-                            app.app.installedVersion,
-                            app.app.latestVersion,
-                          ))
-                        PopupMenuItem(
-                          value: 'resetStatus',
-                          enabled: !isUpdating,
-                          child: ListTile(
-                            leading: const Icon(Icons.restore_rounded),
-                            title: Text(tr('resetInstallStatus')),
-                            dense: true,
-                          ),
-                        ),
-                      const PopupMenuDivider(),
-                      PopupMenuItem(
-                        value: 'remove',
-                        enabled: !isUpdating,
-                        child: ListTile(
-                          leading: Icon(
-                            Icons.delete_outline_rounded,
-                            color: Theme.of(context).colorScheme.error,
-                          ),
-                          title: Text(
-                            tr('remove'),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.error,
+                            unawaited(appsProvider.saveApps([app.app]));
+                            setState(() {});
+                          }
+                          break;
+                        case 'remove':
+                          appsProvider
+                              .removeAppsWithModal(
+                                context,
+                                app != null ? [app.app] : [],
+                              )
+                              .then((value) {
+                                if (value == true && context.mounted) {
+                                  Navigator.of(context).pop();
+                                }
+                              });
+                          break;
+                      }
+                    },
+                    itemBuilder: (context) {
+                      final isUpdating =
+                          app?.downloadProgress != null || updating;
+                      return [
+                        if (source != null &&
+                            source
+                                .combinedAppSpecificSettingFormItems
+                                .isNotEmpty)
+                          PopupMenuItem(
+                            value: 'additionalOptions',
+                            enabled: !isUpdating,
+                            child: ListTile(
+                              leading: const Icon(Icons.edit_outlined),
+                              title: Text(tr('additionalOptions')),
+                              dense: true,
                             ),
                           ),
-                          dense: true,
+                        if (app != null && app.installedInfo != null)
+                          PopupMenuItem(
+                            value: 'settings',
+                            child: ListTile(
+                              leading: const Icon(Icons.settings_outlined),
+                              title: Text(tr('settings')),
+                              dense: true,
+                            ),
+                          ),
+                        if (app != null && showAppWebpageFinal)
+                          PopupMenuItem(
+                            value: 'moreInfo',
+                            child: ListTile(
+                              leading: const Icon(Icons.info_outline),
+                              title: Text(tr('more')),
+                              dense: true,
+                            ),
+                          ),
+                        if (app != null &&
+                            app.app.installedVersion != null &&
+                            AppUpdateService.areVersionsDifferent(
+                              app.app,
+                              app.app.installedVersion,
+                              app.app.latestVersion,
+                            ) &&
+                            !isVersionDetectionStandard &&
+                            !trackOnly)
+                          PopupMenuItem(
+                            value: 'markUpdated',
+                            enabled: !isUpdating,
+                            child: ListTile(
+                              leading: const Icon(Icons.done_all_rounded),
+                              title: Text(tr('markUpdated')),
+                              dense: true,
+                            ),
+                          ),
+                        if ((!isVersionDetectionStandard || trackOnly) &&
+                            app != null &&
+                            app.app.installedVersion != null &&
+                            !AppUpdateService.areVersionsDifferent(
+                              app.app,
+                              app.app.installedVersion,
+                              app.app.latestVersion,
+                            ))
+                          PopupMenuItem(
+                            value: 'resetStatus',
+                            enabled: !isUpdating,
+                            child: ListTile(
+                              leading: const Icon(Icons.restore_rounded),
+                              title: Text(tr('resetInstallStatus')),
+                              dense: true,
+                            ),
+                          ),
+                        if (app != null)
+                          PopupMenuItem(
+                            value: 'toggleDisabled',
+                            enabled: !isUpdating,
+                            child: ListTile(
+                              leading: Icon(
+                                app.app.disabled
+                                    ? Icons.play_arrow_rounded
+                                    : Icons.block_outlined,
+                              ),
+                              title: Text(
+                                app.app.disabled
+                                    ? tr('enableApp')
+                                    : tr('disableApp'),
+                              ),
+                              dense: true,
+                            ),
+                          ),
+                        const PopupMenuDivider(),
+                        PopupMenuItem(
+                          value: 'remove',
+                          enabled: !isUpdating,
+                          child: ListTile(
+                            leading: Icon(
+                              Icons.delete_outline_rounded,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            title: Text(
+                              tr('remove'),
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                            dense: true,
+                          ),
                         ),
-                      ),
-                    ];
-                  },
+                      ];
+                    },
                   ),
                 ),
               ],
@@ -1993,7 +2166,9 @@ class _AppPageState extends State<AppPage> {
         child: Container(
           decoration: BoxDecoration(
             color: enableGlass
-                ? colorScheme.surface.withValues(alpha: AppConstants.glassSurfaceAlpha)
+                ? colorScheme.surface.withValues(
+                    alpha: AppConstants.glassSurfaceAlpha,
+                  )
                 : colorScheme.surfaceContainerLow,
             border: Border(
               top: BorderSide(
@@ -2059,6 +2234,10 @@ class _AppPageState extends State<AppPage> {
       return RefreshIndicator(
         onRefresh: () async {
           if (app != null) {
+            if (app.app.disabled) {
+              showMessage(tr('appDisabledNoUpdateCheck'), context);
+              return;
+            }
             getUpdate(app.app.id);
           }
         },

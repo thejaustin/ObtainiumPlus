@@ -179,7 +179,9 @@ class AppInstallService {
     final targetPkg = info?.packageName ?? resolved;
     final AndroidIntent intent = AndroidIntent(
       action: 'android.settings.APP_NOTIFICATION_SETTINGS',
-      arguments: <String, dynamic>{'android.provider.extra.APP_PACKAGE': targetPkg},
+      arguments: <String, dynamic>{
+        'android.provider.extra.APP_PACKAGE': targetPkg,
+      },
     );
     await _launchSettingsIntent(intent);
   }
@@ -557,15 +559,17 @@ class AppInstallService {
 
     scheduleNextPoll();
 
-    AndroidPackageInstaller.installApk(apkFilePath: apkFilePath).then((code) {
-      if (!completer.isCompleted) {
-        completer.complete(code);
-      }
-    }).catchError((err) {
-      if (!completer.isCompleted) {
-        completer.completeError(err);
-      }
-    });
+    AndroidPackageInstaller.installApk(apkFilePath: apkFilePath)
+        .then((code) {
+          if (!completer.isCompleted) {
+            completer.complete(code);
+          }
+        })
+        .catchError((err) {
+          if (!completer.isCompleted) {
+            completer.completeError(err);
+          }
+        });
 
     final result = await completer.future;
     timer?.cancel();
@@ -605,10 +609,9 @@ class AppInstallService {
     final nonNullNewInfo = newInfo;
     final int? code = await _synchronizedCommit(() async {
       if (installer is RootInstaller) {
-        final res = await installer.installApk(
-          [file.path],
-          appId: targetPackageName,
-        );
+        final res = await installer.installApk([
+          file.path,
+        ], appId: targetPackageName);
         return res.errorCode ?? (res.isSuccess ? 0 : 3);
       } else if (installer is ShizukuInstaller) {
         final res = await installer.installApk(
@@ -624,10 +627,9 @@ class AppInstallService {
         );
         return res.errorCode ?? (res.isSuccess ? 0 : 3);
       } else if (installer is ExternalInstaller) {
-        final res = await installer.installApk(
-          [file.path],
-          appId: targetPackageName,
-        );
+        final res = await installer.installApk([
+          file.path,
+        ], appId: targetPackageName);
         return res.errorCode ?? (res.isSuccess ? 0 : 3);
       } else {
         return await installStockWithPolling(
@@ -1035,13 +1037,15 @@ class AppInstallService {
       MultiAppMultiError errors = MultiAppMultiError();
       if (installer.wantsContainerHandoff) {
         try {
-          final result = await _synchronizedCommit(() => installer.installApk(
-            [dir.file.path],
-            appId: dir.appId,
-            installOptions: {
-              'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
-            },
-          ));
+          final result = await _synchronizedCommit(
+            () => installer.installApk(
+              [dir.file.path],
+              appId: dir.appId,
+              installOptions: {
+                'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+              },
+            ),
+          );
           if (result.isError) {
             throw InstallError(result.errorCode!, appId: dir.appId);
           }

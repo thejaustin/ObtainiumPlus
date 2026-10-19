@@ -250,7 +250,10 @@ class AuthProvider with ChangeNotifier {
   Future<void> refreshBundle(String dispenserUrl) async {
     final bundle = await AuthService.fetchAnonymousBundle(dispenserUrl);
     _anonymousBundle = bundle;
-    await _storage.write(key: _kAnonBundle, value: safeJsonEncode(bundle.toJson()));
+    await _storage.write(
+      key: _kAnonBundle,
+      value: safeJsonEncode(bundle.toJson()),
+    );
     await rotateDeviceId();
     notifyListeners();
   }

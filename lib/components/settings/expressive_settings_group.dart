@@ -132,7 +132,9 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     // Build the leading icon widget (tinted container style)
     Widget? leadingWidget = widget.icon != null
         ? AnimatedContainer(
-            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0),
+            duration: Duration(
+              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0,
+            ),
             curve: Curves.easeOutCubic,
             width: 36,
             height: 36,
@@ -261,46 +263,49 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
           ),
         RepaintBoundary(
           child: AnimatedContainer(
-            duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0),
+            duration: Duration(
+              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
+            ),
             curve: Curves.easeOutCubic,
             child: Card(
-            elevation: 0,
-            margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 6),
-            color: colorScheme.surfaceContainerLow
-                    .withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
-                    ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(radius),
-              side: BorderSide(
-                color: _isExpanded
-                    ? colorScheme.primary.withValues(alpha: 0.38)
-                    : colorScheme.outlineVariant.withValues(
-                        alpha: plusSettings.plusEnableGlassmorphism ? 0.4 : 0.18,
-                      ),
-                width: _isExpanded ? 1.2 : 1.0,
+              elevation: 0,
+              margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 6),
+              color: colorScheme.surfaceContainerLow.withValues(
+                alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
               ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(radius),
-              child: ConditionalBlur(
-                enabled: plusSettings.plusEnableGlassmorphism,
-                sigma: AppConstants.glassBlurSigmaSoft,
-                child: _buildCardContent(
-                  context,
-                  content,
-                  trailing,
-                  radius,
-                  isCompact,
-                  colorScheme,
-                  leadingWidget: leadingWidget,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(radius),
+                side: BorderSide(
+                  color: _isExpanded
+                      ? colorScheme.primary.withValues(alpha: 0.38)
+                      : colorScheme.outlineVariant.withValues(
+                          alpha: plusSettings.plusEnableGlassmorphism
+                              ? 0.4
+                              : 0.18,
+                        ),
+                  width: _isExpanded ? 1.2 : 1.0,
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(radius),
+                child: ConditionalBlur(
+                  enabled: plusSettings.plusEnableGlassmorphism,
+                  sigma: AppConstants.glassBlurSigmaSoft,
+                  child: _buildCardContent(
+                    context,
+                    content,
+                    trailing,
+                    radius,
+                    isCompact,
+                    colorScheme,
+                    leadingWidget: leadingWidget,
+                  ),
                 ),
               ),
             ),
           ),
         ),
-      ),
-    ],
+      ],
     );
   }
 

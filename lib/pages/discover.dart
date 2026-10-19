@@ -327,7 +327,9 @@ class DiscoverPageState extends State<DiscoverPage> {
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final staggerMs = animsEnabled ? (80 + (resultIndex < 8 ? resultIndex * 35 : 0)) : 0;
+    final staggerMs = animsEnabled
+        ? (80 + (resultIndex < 8 ? resultIndex * 35 : 0))
+        : 0;
     return TweenAnimationBuilder<double>(
       key: ValueKey(url),
       duration: Duration(milliseconds: staggerMs + 220),
@@ -341,46 +343,46 @@ class DiscoverPageState extends State<DiscoverPage> {
         ),
       ),
       child: ScaleTouchWrapper(
-      hapticOnPressDown: true,
-      child: ListTile(
-        leading: DiscoverAppIcon(
-          iconUrl: iconUrl,
-          sourceName: sourceName,
-          size: 44,
-          borderRadius: CardMetrics.inner(radius),
-        ),
-        title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (description.isNotEmpty)
-              Text(
-                description,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
+        hapticOnPressDown: true,
+        child: ListTile(
+          leading: DiscoverAppIcon(
+            iconUrl: iconUrl,
+            sourceName: sourceName,
+            size: 44,
+            borderRadius: CardMetrics.inner(radius),
+          ),
+          title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (description.isNotEmpty)
+                Text(
+                  description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              const SizedBox(height: 4),
+              DiscoverSourceChip(
+                sourceName: sourceName,
+                borderRadius: CardMetrics.inner(radius),
               ),
-            const SizedBox(height: 4),
-            DiscoverSourceChip(
-              sourceName: sourceName,
-              borderRadius: CardMetrics.inner(radius),
-            ),
-          ],
-        ),
-        isThreeLine: description.isNotEmpty,
-        trailing: FilledButton.tonal(
-          onPressed: () {
+            ],
+          ),
+          isThreeLine: description.isNotEmpty,
+          trailing: FilledButton.tonal(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              _openAddApp(url);
+            },
+            style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+            child: Text(tr('add')),
+          ),
+          onTap: () {
             AppHaptics.selectionClick();
             _openAddApp(url);
           },
-          style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
-          child: Text(tr('add')),
         ),
-        onTap: () {
-          AppHaptics.selectionClick();
-          _openAddApp(url);
-        },
-      ),
       ),
     );
   }
@@ -405,7 +407,9 @@ class DiscoverPageState extends State<DiscoverPage> {
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(radius);
-    final staggerMs = animsEnabled ? (60 + (resultIndex < 12 ? resultIndex * 40 : 0)) : 0;
+    final staggerMs = animsEnabled
+        ? (60 + (resultIndex < 12 ? resultIndex * 40 : 0))
+        : 0;
 
     return TweenAnimationBuilder<double>(
       key: ValueKey(url),
@@ -420,131 +424,131 @@ class DiscoverPageState extends State<DiscoverPage> {
         ),
       ),
       child: ClipRRect(
-      borderRadius: BorderRadius.circular(cardRadius),
-      child: ConditionalBlur(
-        sigma: 12,
-        enabled: plusSettings.plusEnableGlassmorphism,
-        child: AnimatedContainer(
-          duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow.withValues(
-                  alpha: plusSettings.plusEnableGlassmorphism ? 0.65 : 1.0,
-                ),
-            borderRadius: BorderRadius.circular(cardRadius),
-            border: Border.all(
-              color: theme.colorScheme.outline.withValues(
-                alpha: plusSettings.plusEnableGlassmorphism ? 0.15 : 0.08,
+        borderRadius: BorderRadius.circular(cardRadius),
+        child: ConditionalBlur(
+          sigma: 12,
+          enabled: plusSettings.plusEnableGlassmorphism,
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: animsEnabled ? 300 : 0),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerLow.withValues(
+                alpha: plusSettings.plusEnableGlassmorphism ? 0.65 : 1.0,
               ),
-              width: 1.2,
+              borderRadius: BorderRadius.circular(cardRadius),
+              border: Border.all(
+                color: theme.colorScheme.outline.withValues(
+                  alpha: plusSettings.plusEnableGlassmorphism ? 0.15 : 0.08,
+                ),
+                width: 1.2,
+              ),
             ),
-          ),
-          child: Stack(
-            children: [
-              if (plusSettings.plusEnableGlassmorphism)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isDark
-                            ? [
-                                Colors.white.withValues(alpha: 0.15),
-                                Colors.white.withValues(alpha: 0.05),
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.2),
-                              ]
-                            : [
-                                Colors.white.withValues(alpha: 0.7),
-                                Colors.white.withValues(alpha: 0.2),
-                                Colors.transparent,
-                                Colors.black.withValues(alpha: 0.05),
-                              ],
-                        stops: const [0.0, 0.3, 0.8, 1.0],
+            child: Stack(
+              children: [
+                if (plusSettings.plusEnableGlassmorphism)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isDark
+                              ? [
+                                  Colors.white.withValues(alpha: 0.15),
+                                  Colors.white.withValues(alpha: 0.05),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.2),
+                                ]
+                              : [
+                                  Colors.white.withValues(alpha: 0.7),
+                                  Colors.white.withValues(alpha: 0.2),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.05),
+                                ],
+                          stops: const [0.0, 0.3, 0.8, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(cardRadius),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      _openAddApp(url);
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: DiscoverAppIcon(
+                                iconUrl: iconUrl,
+                                sourceName: sourceName,
+                                size: 64,
+                                borderRadius: CardMetrics.inner(radius),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          if (description.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 4),
+                          Center(
+                            child: DiscoverSourceChip(
+                              sourceName: sourceName,
+                              borderRadius: CardMetrics.inner(radius),
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          FilledButton.tonal(
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              _openAddApp(url);
+                            },
+                            style: FilledButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  CardMetrics.inner(radius),
+                                ),
+                              ),
+                            ),
+                            child: Text(tr('add')),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
-              ScaleTouchWrapper(
-                hapticOnPressDown: true,
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(cardRadius),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    _openAddApp(url);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          child: Center(
-                            child: DiscoverAppIcon(
-                              iconUrl: iconUrl,
-                              sourceName: sourceName,
-                              size: 64,
-                              borderRadius: CardMetrics.inner(radius),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: -0.2,
-                          ),
-                        ),
-                        if (description.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            description,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                              height: 1.2,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 4),
-                        Center(
-                          child: DiscoverSourceChip(
-                            sourceName: sourceName,
-                            borderRadius: CardMetrics.inner(radius),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        FilledButton.tonal(
-                          onPressed: () {
-                            AppHaptics.selectionClick();
-                            _openAddApp(url);
-                          },
-                          style: FilledButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                CardMetrics.inner(radius),
-                              ),
-                            ),
-                          ),
-                          child: Text(tr('add')),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -594,119 +598,120 @@ class DiscoverPageState extends State<DiscoverPage> {
         ? {for (final s in _suggestions) s.url: s.iconUrl}
         : <String, String?>{};
     final scrollContent = CustomScrollView(
-        physics: plusSettings.scrollPhysics,
-        slivers: [
-          if (widget.showAppBar) CustomAppBar(title: tr('discover')),
-          if (widget.showSearchBar)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    AnimatedContainer(
-                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
-                      curve: Easing.emphasizedDecelerate,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          _isSearchFocused || searchQuery.isNotEmpty
-                              ? 18.0
-                              : 28.0,
-                        ),
-                        boxShadow: (_isSearchFocused || searchQuery.isNotEmpty)
-                            ? [
-                                BoxShadow(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withValues(alpha: 0.16),
-                                  blurRadius: 14,
-                                  spreadRadius: 1,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
+      physics: plusSettings.scrollPhysics,
+      slivers: [
+        if (widget.showAppBar) CustomAppBar(title: tr('discover')),
+        if (widget.showSearchBar)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  AnimatedContainer(
+                    duration: Duration(
+                      milliseconds: plusSettings.plusEnableEnhancedAnimations
+                          ? 280
+                          : 0,
+                    ),
+                    curve: Easing.emphasizedDecelerate,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(
+                        _isSearchFocused || searchQuery.isNotEmpty
+                            ? 18.0
+                            : 28.0,
                       ),
-                      child: TextField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        decoration: InputDecoration(
-                          hintText: tr('searchSomeSourcesLabel'),
-                          prefixIcon: IconButton(
-                            icon: const Icon(Icons.tune),
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              showSearchOptions();
-                            },
-                            tooltip: tr('searchOptions'),
-                          ),
-                          suffixIcon: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (searchQuery.isNotEmpty)
-                                IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  tooltip: tr('clear'),
-                                  onPressed: () {
-                                    AppHaptics.selectionClick();
-                                    _searchDebounce?.cancel();
-                                    _searchController.clear();
-                                    setState(() {
-                                      searchQuery = '';
-                                      results = {};
-                                    });
-                                  },
-                                ),
+                      boxShadow: (_isSearchFocused || searchQuery.isNotEmpty)
+                          ? [
+                              BoxShadow(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.16),
+                                blurRadius: 14,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 2),
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      decoration: InputDecoration(
+                        hintText: tr('searchSomeSourcesLabel'),
+                        prefixIcon: IconButton(
+                          icon: const Icon(Icons.tune),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            showSearchOptions();
+                          },
+                          tooltip: tr('searchOptions'),
+                        ),
+                        suffixIcon: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (searchQuery.isNotEmpty)
                               IconButton(
-                                icon: const Icon(Icons.search),
-                                tooltip: tr('search'),
+                                icon: const Icon(Icons.clear),
+                                tooltip: tr('clear'),
                                 onPressed: () {
                                   AppHaptics.selectionClick();
-                                  runSearch();
+                                  _searchDebounce?.cancel();
+                                  _searchController.clear();
+                                  setState(() {
+                                    searchQuery = '';
+                                    results = {};
+                                  });
                                 },
                               ),
-                            ],
+                            IconButton(
+                              icon: const Icon(Icons.search),
+                              tooltip: tr('search'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                runSearch();
+                              },
+                            ),
+                          ],
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            _isSearchFocused || searchQuery.isNotEmpty
+                                ? 18.0
+                                : 28.0,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              _isSearchFocused || searchQuery.isNotEmpty
-                                  ? 18.0
-                                  : 28.0,
-                            ),
-                            borderSide: BorderSide(
-                              color: (_isSearchFocused || searchQuery.isNotEmpty)
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outlineVariant,
-                              width: (_isSearchFocused || searchQuery.isNotEmpty)
-                                  ? 1.8
-                                  : 1.0,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(
-                              _isSearchFocused || searchQuery.isNotEmpty
-                                  ? 18.0
-                                  : 28.0,
-                            ),
-                            borderSide: BorderSide(
-                              color: (_isSearchFocused || searchQuery.isNotEmpty)
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context)
-                                      .colorScheme
-                                      .outlineVariant
-                                      .withValues(alpha: 0.3),
-                              width: (_isSearchFocused || searchQuery.isNotEmpty)
-                                  ? 1.8
-                                  : 1.0,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18.0),
-                            borderSide: BorderSide(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 1.8,
-                            ),
+                          borderSide: BorderSide(
+                            color: (_isSearchFocused || searchQuery.isNotEmpty)
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outlineVariant,
+                            width: (_isSearchFocused || searchQuery.isNotEmpty)
+                                ? 1.8
+                                : 1.0,
                           ),
                         ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(
+                            _isSearchFocused || searchQuery.isNotEmpty
+                                ? 18.0
+                                : 28.0,
+                          ),
+                          borderSide: BorderSide(
+                            color: (_isSearchFocused || searchQuery.isNotEmpty)
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context).colorScheme.outlineVariant
+                                      .withValues(alpha: 0.3),
+                            width: (_isSearchFocused || searchQuery.isNotEmpty)
+                                ? 1.8
+                                : 1.0,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(18.0),
+                          borderSide: BorderSide(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1.8,
+                          ),
+                        ),
+                      ),
                       onChanged: (value) {
                         // setState so the clear button and per-source filter
                         // chips react to the query as it is typed
@@ -732,241 +737,243 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                   ),
                   AnimatedSize(
-                    duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0),
-                      curve: Curves.easeInOutCubic,
-                      child: searchQuery.isNotEmpty
-                          ? Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(height: 12),
-                                Consumer<SettingsProvider>(
-                                  builder: (context, settingsProvider, child) {
-                                    return Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: searchableSources.map((source) {
-                                        final isSelected = !settingsProvider
-                                            .searchDeselected
-                                            .contains(source.name);
-                                        return FilterChip(
-                                          label: Text(source.name),
-                                          selected: isSelected,
-                                          onSelected: (selected) {
-                                            AppHaptics.selectionClick();
-                                            final currentDeselected =
-                                                List<String>.from(
-                                              settingsProvider.searchDeselected,
+                    duration: Duration(
+                      milliseconds: plusSettings.plusEnableEnhancedAnimations
+                          ? 250
+                          : 0,
+                    ),
+                    curve: Curves.easeInOutCubic,
+                    child: searchQuery.isNotEmpty
+                        ? Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 12),
+                              Consumer<SettingsProvider>(
+                                builder: (context, settingsProvider, child) {
+                                  return Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: searchableSources.map((source) {
+                                      final isSelected = !settingsProvider
+                                          .searchDeselected
+                                          .contains(source.name);
+                                      return FilterChip(
+                                        label: Text(source.name),
+                                        selected: isSelected,
+                                        onSelected: (selected) {
+                                          AppHaptics.selectionClick();
+                                          final currentDeselected =
+                                              List<String>.from(
+                                                settingsProvider
+                                                    .searchDeselected,
+                                              );
+                                          if (selected) {
+                                            currentDeselected.remove(
+                                              source.name,
                                             );
-                                            if (selected) {
-                                              currentDeselected
-                                                  .remove(source.name);
-                                            } else {
-                                              currentDeselected
-                                                  .add(source.name);
-                                            }
-                                            settingsProvider.searchDeselected =
-                                                currentDeselected;
-                                            if (searchQuery.isNotEmpty) {
-                                              runSearch();
-                                            }
-                                          },
-                                        );
-                                      }).toList(),
-                                    );
-                                  },
-                                ),
-                              ],
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          // Category chips — visible when no search query is active
-          if (searchQuery.isEmpty) _buildCategoryChips(),
-          // Suggested apps feed — shown while Discover is idle (no query,
-          // no category, no results). Reuses the same tiles as search.
-          if (showSuggestions) ...[
-            SliverToBoxAdapter(
-              child: DiscoverSectionHeader(
-                title: tr('discoverSuggestedHeader'),
-                trailing: IconButton(
-                  tooltip: isGridView ? tr('listView') : tr('gridView'),
-                  icon: Icon(
-                    isGridView
-                        ? Icons.view_list_rounded
-                        : Icons.grid_view_rounded,
+                                          } else {
+                                            currentDeselected.add(source.name);
+                                          }
+                                          settingsProvider.searchDeselected =
+                                              currentDeselected;
+                                          if (searchQuery.isNotEmpty) {
+                                            runSearch();
+                                          }
+                                        },
+                                      );
+                                    }).toList(),
+                                  );
+                                },
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
                   ),
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    viewSettings.discoverViewMode =
-                        isGridView ? ViewMode.list : ViewMode.grid;
-                  },
-                ),
+                ],
               ),
             ),
-            isGridView
-                ? SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 200,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 0.7,
-                          ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final url = suggestionResults.keys.elementAt(index);
-                        return _buildAppGrid(
-                          url,
-                          plusSettings,
-                          from: suggestionResults,
-                          iconUrl: suggestionIcons[url],
-                          resultIndex: index,
-                        );
-                      }, childCount: suggestionResults.length),
-                    ),
-                  )
-                : SliverList(
+          ),
+        // Category chips — visible when no search query is active
+        if (searchQuery.isEmpty) _buildCategoryChips(),
+        // Suggested apps feed — shown while Discover is idle (no query,
+        // no category, no results). Reuses the same tiles as search.
+        if (showSuggestions) ...[
+          SliverToBoxAdapter(
+            child: DiscoverSectionHeader(
+              title: tr('discoverSuggestedHeader'),
+              trailing: IconButton(
+                tooltip: isGridView ? tr('listView') : tr('gridView'),
+                icon: Icon(
+                  isGridView
+                      ? Icons.view_list_rounded
+                      : Icons.grid_view_rounded,
+                ),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  viewSettings.discoverViewMode = isGridView
+                      ? ViewMode.list
+                      : ViewMode.grid;
+                },
+              ),
+            ),
+          ),
+          isGridView
+              ? SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.7,
+                        ),
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final url = suggestionResults.keys.elementAt(index);
-                      final result = suggestionResults[url];
-                      if (result == null) return const SizedBox.shrink();
-                      final name = result.value.isNotEmpty
-                          ? result.value[0]
-                          : '';
-                      final description = result.value.length > 1
-                          ? result.value[1]
-                          : '';
-                      return _buildListResultTile(
+                      return _buildAppGrid(
                         url,
-                        name,
-                        description,
-                        result.key,
+                        plusSettings,
+                        from: suggestionResults,
                         iconUrl: suggestionIcons[url],
                         resultIndex: index,
                       );
                     }, childCount: suggestionResults.length),
                   ),
-          ],
-          if (searching || results.isNotEmpty)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
-                child: Row(
-                  children: [
-                    if (!searching)
-                      Text(
-                        plural('apps', results.length),
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                      ),
-                    const Spacer(),
-                    IconButton(
-                      tooltip: isGridView ? tr('listView') : tr('gridView'),
-                      icon: Icon(
-                        isGridView
-                            ? Icons.view_list_rounded
-                            : Icons.grid_view_rounded,
-                      ),
-                      onPressed: () {
-                        AppHaptics.selectionClick();
-                        viewSettings.discoverViewMode =
-                            isGridView ? ViewMode.list : ViewMode.grid;
-                      },
-                    ),
-                  ],
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final url = suggestionResults.keys.elementAt(index);
+                    final result = suggestionResults[url];
+                    if (result == null) return const SizedBox.shrink();
+                    final name = result.value.isNotEmpty ? result.value[0] : '';
+                    final description = result.value.length > 1
+                        ? result.value[1]
+                        : '';
+                    return _buildListResultTile(
+                      url,
+                      name,
+                      description,
+                      result.key,
+                      iconUrl: suggestionIcons[url],
+                      resultIndex: index,
+                    );
+                  }, childCount: suggestionResults.length),
                 ),
+        ],
+        if (searching || results.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 8, 0),
+              child: Row(
+                children: [
+                  if (!searching)
+                    Text(
+                      plural('apps', results.length),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  const Spacer(),
+                  IconButton(
+                    tooltip: isGridView ? tr('listView') : tr('gridView'),
+                    icon: Icon(
+                      isGridView
+                          ? Icons.view_list_rounded
+                          : Icons.grid_view_rounded,
+                    ),
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      viewSettings.discoverViewMode = isGridView
+                          ? ViewMode.list
+                          : ViewMode.grid;
+                    },
+                  ),
+                ],
               ),
             ),
-          if (searching)
-            isGridView
-                ? SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 200,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 0.7,
-                          ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => const AppTileSkeleton(isGrid: true),
-                        childCount: 6,
-                      ),
-                    ),
-                  )
-                : SliverList(
+          ),
+        if (searching)
+          isGridView
+              ? SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.7,
+                        ),
                     delegate: SliverChildBuilderDelegate(
-                      (context, index) => const AppTileSkeleton(isGrid: false),
+                      (context, index) => const AppTileSkeleton(isGrid: true),
                       childCount: 6,
                     ),
-                  )
-          else if (results.isNotEmpty)
-            isGridView
-                ? SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverGrid(
-                      gridDelegate:
-                          const SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 200,
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            childAspectRatio: 0.7,
-                          ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildAppGrid(
-                          results.keys.elementAt(index),
-                          plusSettings,
-                          resultIndex: index,
+                  ),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => const AppTileSkeleton(isGrid: false),
+                    childCount: 6,
+                  ),
+                )
+        else if (results.isNotEmpty)
+          isGridView
+              ? SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 200,
+                          mainAxisSpacing: 16,
+                          crossAxisSpacing: 16,
+                          childAspectRatio: 0.7,
                         ),
-                        childCount: results.length,
-                      ),
-                    ),
-                  )
-                : SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final url = results.keys.elementAt(index);
-                      final result = results[url];
-                      if (result == null) return const SizedBox.shrink();
-                      final name = result.value.isNotEmpty
-                          ? result.value[0]
-                          : '';
-                      final description = result.value.length > 1
-                          ? result.value[1]
-                          : '';
-                      final sourceName = result.key;
-                      return _buildListResultTile(
-                        url,
-                        name,
-                        description,
-                        sourceName,
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) => _buildAppGrid(
+                        results.keys.elementAt(index),
+                        plusSettings,
                         resultIndex: index,
-                      );
-                    }, childCount: results.length),
-                  )
-          else if (!searching && searchQuery.isNotEmpty)
-            SliverFillRemaining(
-              child: EmptyStateWidget(
-                icon: Icons.search_off_rounded,
-                title: tr('noResults'),
-                subtitle: tr('tryAdjustingFilters'),
-              ),
+                      ),
+                      childCount: results.length,
+                    ),
+                  ),
+                )
+              : SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final url = results.keys.elementAt(index);
+                    final result = results[url];
+                    if (result == null) return const SizedBox.shrink();
+                    final name = result.value.isNotEmpty ? result.value[0] : '';
+                    final description = result.value.length > 1
+                        ? result.value[1]
+                        : '';
+                    final sourceName = result.key;
+                    return _buildListResultTile(
+                      url,
+                      name,
+                      description,
+                      sourceName,
+                      resultIndex: index,
+                    );
+                  }, childCount: results.length),
+                )
+        else if (!searching && searchQuery.isNotEmpty)
+          SliverFillRemaining(
+            child: EmptyStateWidget(
+              icon: Icons.search_off_rounded,
+              title: tr('noResults'),
+              subtitle: tr('tryAdjustingFilters'),
             ),
-          // Load more button for browse mode
-          if (_isBrowseMode && results.isNotEmpty && _browseHasMore)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: ScaleTouchWrapper(
-                  hapticOnPressDown: !_loadingMore,
-                  scaleDownFactor: 0.96,
-                  child: FilledButton.tonal(
+          ),
+        // Load more button for browse mode
+        if (_isBrowseMode && results.isNotEmpty && _browseHasMore)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: ScaleTouchWrapper(
+                hapticOnPressDown: !_loadingMore,
+                scaleDownFactor: 0.96,
+                child: FilledButton.tonal(
                   onPressed: _loadingMore ? null : _loadMoreBrowse,
                   child: _loadingMore
                       ? const SizedBox(
@@ -978,11 +985,11 @@ class DiscoverPageState extends State<DiscoverPage> {
                         )
                       : Text(tr('loadMore')),
                 ),
-                ),
               ),
             ),
-        ],
-      );
+          ),
+      ],
+    );
 
     if (!widget.showAppBar) {
       return scrollContent;

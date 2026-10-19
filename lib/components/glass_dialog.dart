@@ -40,7 +40,9 @@ class GlassDialog extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
         decoration: BoxDecoration(
           color: enableGlass
-              ? Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: AppConstants.glassSurfaceAlpha)
+              ? Theme.of(context).colorScheme.surfaceContainerHigh.withValues(
+                  alpha: AppConstants.glassSurfaceAlpha,
+                )
               : Theme.of(context).colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(
@@ -85,13 +87,17 @@ class GlassDialog extends StatelessWidget {
                     _buildActions(context),
                 ],
               );
-              if (!enableGlass) return inner;
+              final materialInner = Material(
+                type: MaterialType.transparency,
+                child: inner,
+              );
+              if (!enableGlass) return materialInner;
               return BackdropFilter(
                 filter: ImageFilter.blur(
                   sigmaX: AppConstants.glassBlurSigma,
                   sigmaY: AppConstants.glassBlurSigma,
                 ),
-                child: inner,
+                child: materialInner,
               );
             },
           ),

@@ -16,12 +16,7 @@ import 'package:obtainium/utils/modal_utils.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
 /// Live connectivity and permission status for Shizuku/ShizukuPlus.
-enum ShizukuLiveStatus {
-  active,
-  permissionNeeded,
-  notRunning,
-  rootless,
-}
+enum ShizukuLiveStatus { active, permissionNeeded, notRunning, rootless }
 
 /// Shows the Device Compatibility & Performance Sheet.
 Future<void> showDeviceOptimizationSheet({required BuildContext context}) {
@@ -491,7 +486,9 @@ class _DeviceOptimizationSheetContentState
                     // Hero Diagnostics Banner
                     Card(
                       elevation: 0,
-                      color: colorScheme.primaryContainer.withValues(alpha: 0.35),
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.35,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
@@ -508,7 +505,9 @@ class _DeviceOptimizationSheetContentState
                                 Container(
                                   padding: const EdgeInsets.all(10),
                                   decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(alpha: 0.12),
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.12,
+                                    ),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
@@ -520,7 +519,8 @@ class _DeviceOptimizationSheetContentState
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -529,10 +529,12 @@ class _DeviceOptimizationSheetContentState
                                               _deviceModel.isNotEmpty
                                                   ? '$_deviceManufacturer $_deviceModel'
                                                   : 'Detected Device',
-                                              style: theme.textTheme.titleMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: colorScheme.onSurface,
-                                              ),
+                                              style: theme.textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        colorScheme.onSurface,
+                                                  ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -544,10 +546,13 @@ class _DeviceOptimizationSheetContentState
                                               vertical: 2,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: colorScheme.primary.withValues(alpha: 0.15),
-                                              borderRadius: BorderRadius.circular(8),
+                                              color: colorScheme.primary
+                                                  .withValues(alpha: 0.15),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                               border: Border.all(
-                                                color: colorScheme.primary.withValues(alpha: 0.4),
+                                                color: colorScheme.primary
+                                                    .withValues(alpha: 0.4),
                                                 width: 0.8,
                                               ),
                                             ),
@@ -576,9 +581,11 @@ class _DeviceOptimizationSheetContentState
                                       const SizedBox(height: 2),
                                       Text(
                                         'Android $_androidVersion (API $_sdkInt) • ${_getOEMLabel(_detectedOEM)}',
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: colorScheme.onSurfaceVariant,
-                                        ),
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
                                       ),
                                     ],
                                   ),
@@ -603,57 +610,74 @@ class _DeviceOptimizationSheetContentState
                                           : () async {
                                               AppHaptics.selectionClick();
                                               await DeviceCompatibilityService.requestIgnoreBatteryOptimizations();
-                                              final unrestricted = await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
-                                            if (mounted) {
-                                              setState(() => _isBatteryUnrestricted = unrestricted);
-                                            }
-                                          },
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _isBatteryUnrestricted == true
-                                            ? colorScheme.primary.withValues(alpha: 0.15)
-                                            : colorScheme.errorContainer.withValues(alpha: 0.6),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: _isBatteryUnrestricted == true
-                                              ? colorScheme.primary.withValues(alpha: 0.4)
-                                              : colorScheme.error.withValues(alpha: 0.4),
-                                          width: 0.8,
+                                              final unrestricted =
+                                                  await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+                                              if (mounted) {
+                                                setState(
+                                                  () => _isBatteryUnrestricted =
+                                                      unrestricted,
+                                                );
+                                              }
+                                            },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
                                         ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _isBatteryUnrestricted == true
-                                                ? Icons.battery_charging_full_rounded
-                                                : Icons.battery_alert_rounded,
-                                            size: 13,
-                                            color: _isBatteryUnrestricted == true
-                                                ? colorScheme.primary
-                                                : colorScheme.error,
+                                        decoration: BoxDecoration(
+                                          color: _isBatteryUnrestricted == true
+                                              ? colorScheme.primary.withValues(
+                                                  alpha: 0.15,
+                                                )
+                                              : colorScheme.errorContainer
+                                                    .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
                                           ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _isBatteryUnrestricted == true
-                                                ? tr('batteryUnrestricted')
-                                                : tr('batteryOptimized'),
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _isBatteryUnrestricted == true
+                                          border: Border.all(
+                                            color:
+                                                _isBatteryUnrestricted == true
+                                                ? colorScheme.primary
+                                                      .withValues(alpha: 0.4)
+                                                : colorScheme.error.withValues(
+                                                    alpha: 0.4,
+                                                  ),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              _isBatteryUnrestricted == true
+                                                  ? Icons
+                                                        .battery_charging_full_rounded
+                                                  : Icons.battery_alert_rounded,
+                                              size: 13,
+                                              color:
+                                                  _isBatteryUnrestricted == true
                                                   ? colorScheme.primary
                                                   : colorScheme.error,
                                             ),
-                                          ),
-                                        ],
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _isBatteryUnrestricted == true
+                                                  ? tr('batteryUnrestricted')
+                                                  : tr('batteryOptimized'),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color:
+                                                    _isBatteryUnrestricted ==
+                                                        true
+                                                    ? colorScheme.primary
+                                                    : colorScheme.error,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                  ),
                                   ),
                                 ],
                                 ScaleTouchWrapper(
@@ -661,44 +685,52 @@ class _DeviceOptimizationSheetContentState
                                   scaleDownFactor: 0.90,
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(8),
-                                    onTap: () =>
-                                        _handleShizukuChipTap(context),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _getShizukuChipColor(colorScheme).withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: _getShizukuChipColor(colorScheme).withValues(alpha: 0.4),
-                                        width: 0.8,
+                                    onTap: () => _handleShizukuChipTap(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
                                       ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          _getShizukuChipIcon(),
-                                          size: 13,
-                                          color: _getShizukuChipColor(colorScheme),
+                                      decoration: BoxDecoration(
+                                        color: _getShizukuChipColor(
+                                          colorScheme,
+                                        ).withValues(alpha: 0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: _getShizukuChipColor(
+                                            colorScheme,
+                                          ).withValues(alpha: 0.4),
+                                          width: 0.8,
                                         ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          _getShizukuChipLabel(),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                            color: _getShizukuChipColor(colorScheme),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            _getShizukuChipIcon(),
+                                            size: 13,
+                                            color: _getShizukuChipColor(
+                                              colorScheme,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            _getShizukuChipLabel(),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _getShizukuChipColor(
+                                                colorScheme,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                                ),
-                                if (_shizukuStatus == ShizukuLiveStatus.active ||
+                                if (_shizukuStatus ==
+                                        ShizukuLiveStatus.active ||
                                     _binderLatencyMs != null ||
                                     _isTestingBinder)
                                   ScaleTouchWrapper(
@@ -707,46 +739,54 @@ class _DeviceOptimizationSheetContentState
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(8),
                                       onTap: _testBinderLatency,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.tertiaryContainer
-                                            .withValues(alpha: 0.4),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: colorScheme.tertiary
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.tertiaryContainer
                                               .withValues(alpha: 0.4),
-                                          width: 0.8,
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: colorScheme.tertiary
+                                                .withValues(alpha: 0.4),
+                                            width: 0.8,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.speed_rounded,
+                                              size: 13,
+                                              color: colorScheme.tertiary,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              _isTestingBinder
+                                                  ? tr('testing')
+                                                  : _binderLatencyMs != null
+                                                  ? tr(
+                                                      'binderLatency',
+                                                      args: [
+                                                        '$_binderLatencyMs',
+                                                      ],
+                                                    )
+                                                  : tr('testBinderConnection'),
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme
+                                                    .onTertiaryContainer,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.speed_rounded,
-                                            size: 13,
-                                            color: colorScheme.tertiary,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _isTestingBinder
-                                                ? tr('testing')
-                                                : _binderLatencyMs != null
-                                                    ? tr('binderLatency', args: ['$_binderLatencyMs'])
-                                                    : tr('testBinderConnection'),
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: colorScheme.onTertiaryContainer,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
                                     ),
-                                  ),
                                   ),
                                 ScaleTouchWrapper(
                                   hapticOnPressDown: true,
@@ -759,7 +799,9 @@ class _DeviceOptimizationSheetContentState
                                       ),
                                     ),
                                     icon: const Icon(
-                                        Icons.copy_rounded, size: 14),
+                                      Icons.copy_rounded,
+                                      size: 14,
+                                    ),
                                     label: Text(tr('copySpecs')),
                                     onPressed: () =>
                                         _copySpecsToClipboard(context),
@@ -781,7 +823,9 @@ class _DeviceOptimizationSheetContentState
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer.withValues(alpha: 0.4),
+                          color: colorScheme.secondaryContainer.withValues(
+                            alpha: 0.4,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: colorScheme.secondary.withValues(alpha: 0.2),
@@ -806,7 +850,9 @@ class _DeviceOptimizationSheetContentState
                             TextButton(
                               style: TextButton.styleFrom(
                                 visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
                               ),
                               onPressed: () {
                                 AppHaptics.selectionClick();
@@ -822,7 +868,11 @@ class _DeviceOptimizationSheetContentState
                     const SizedBox(height: 16),
 
                     AnimatedSwitcher(
-                      duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0),
+                      duration: Duration(
+                        milliseconds: plusSettings.plusEnableEnhancedAnimations
+                            ? 260
+                            : 0,
+                      ),
                       switchInCurve: Curves.easeOutCubic,
                       switchOutCurve: Curves.easeInCubic,
                       transitionBuilder: (child, anim) {
@@ -844,210 +894,233 @@ class _DeviceOptimizationSheetContentState
                           children: [
                             // Guide Header
                             Row(
-                      children: [
-                        Icon(
-                          _getOEMIcon(guide.oem),
-                          color: colorScheme.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            guide.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
+                              children: [
+                                Icon(
+                                  _getOEMIcon(guide.oem),
+                                  color: colorScheme.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    guide.title,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: colorScheme.onSurface,
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      guide.subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Quick Action Shortcuts Section
-                    if (guide.actions.isNotEmpty) ...[
-                      Text(
-                        'Direct Settings Shortcuts',
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ...guide.actions.map(
-                        (action) => Card(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          elevation: 0,
-                          color: colorScheme.surfaceContainerLow,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(
-                              color: colorScheme.outline.withValues(alpha: 0.1),
-                            ),
-                          ),
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 2,
-                            ),
-                            leading: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.launch_rounded,
-                                color: colorScheme.primary,
-                                size: 18,
-                              ),
-                            ),
-                            title: Text(
-                              action.label,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            subtitle: Text(
-                              action.description,
+                            const SizedBox(height: 4),
+                            Text(
+                              guide.subtitle,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onSurfaceVariant,
                               ),
                             ),
-                            trailing: FilledButton.tonal(
-                              style: FilledButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(horizontal: 14),
-                              ),
-                              onPressed: () async {
-                                AppHaptics.lightImpact();
-                                final ok = await action.action();
-                                if (!ok && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text(
-                                        'Setting could not be opened automatically. Please check system settings.',
-                                      ),
-                                      behavior: SnackBarBehavior.floating,
-                                    ),
-                                  );
-                                }
-                              },
-                              child: Text(tr('openSetting')),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
 
-                    // Important Highlights Section
-                    Text(
-                      tr('knownOEMBehaviors'),
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...guide.highlights.map(
-                      (item) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 3, right: 10),
-                              child: Icon(
-                                Icons.warning_amber_rounded,
-                                size: 17,
-                                color: colorScheme.error,
-                              ),
-                            ),
-                            Expanded(
-                              child: Text(
-                                item,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurface,
+                            const SizedBox(height: 16),
+
+                            // Quick Action Shortcuts Section
+                            if (guide.actions.isNotEmpty) ...[
+                              Text(
+                                'Direct Settings Shortcuts',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: colorScheme.primary,
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Recommended Step-by-Step Setup
-                    Text(
-                      tr('recommendedConfigurationSteps'),
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...guide.steps.asMap().entries.map(
-                      (entry) => Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: 24,
-                              height: 24,
-                              margin: const EdgeInsets.only(right: 10, top: 1),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primaryContainer,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '${entry.key + 1}',
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onPrimaryContainer,
+                              const SizedBox(height: 8),
+                              ...guide.actions.map(
+                                (action) => Card(
+                                  margin: const EdgeInsets.only(bottom: 8),
+                                  elevation: 0,
+                                  color: colorScheme.surfaceContainerLow,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    side: BorderSide(
+                                      color: colorScheme.outline.withValues(
+                                        alpha: 0.1,
+                                      ),
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 2,
+                                    ),
+                                    leading: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer
+                                            .withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.launch_rounded,
+                                        color: colorScheme.primary,
+                                        size: 18,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      action.label,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                    subtitle: Text(
+                                      action.description,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                    ),
+                                    trailing: FilledButton.tonal(
+                                      style: FilledButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                        ),
+                                      ),
+                                      onPressed: () async {
+                                        AppHaptics.lightImpact();
+                                        final ok = await action.action();
+                                        if (!ok && context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                'Setting could not be opened automatically. Please check system settings.',
+                                              ),
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      child: Text(tr('openSetting')),
+                                    ),
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            // Important Highlights Section
+                            Text(
+                              tr('knownOEMBehaviors'),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              ),
                             ),
-                            Expanded(
-                              child: Text(
-                                entry.value,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: colorScheme.onSurface,
+                            const SizedBox(height: 8),
+                            ...guide.highlights.map(
+                              (item) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                        top: 3,
+                                        right: 10,
+                                      ),
+                                      child: Icon(
+                                        Icons.warning_amber_rounded,
+                                        size: 17,
+                                        color: colorScheme.error,
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        item,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: colorScheme.onSurface,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
+
+                            const SizedBox(height: 16),
+
+                            // Recommended Step-by-Step Setup
+                            Text(
+                              tr('recommendedConfigurationSteps'),
+                              style: theme.textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            ...guide.steps.asMap().entries.map(
+                              (entry) => Padding(
+                                padding: const EdgeInsets.only(bottom: 10),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      width: 24,
+                                      height: 24,
+                                      margin: const EdgeInsets.only(
+                                        right: 10,
+                                        top: 1,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${entry.key + 1}',
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: colorScheme
+                                                    .onPrimaryContainer,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        entry.value,
+                                        style: theme.textTheme.bodyMedium
+                                            ?.copyWith(
+                                              color: colorScheme.onSurface,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            const SizedBox(height: 14),
+
+                            // Shizuku & ShizukuPlus Hero Status Card
+                            const ShizukuStatusCard(margin: EdgeInsets.zero),
                           ],
                         ),
                       ),
                     ),
-
-                    const SizedBox(height: 14),
-
-                    // Shizuku & ShizukuPlus Hero Status Card
-                    const ShizukuStatusCard(margin: EdgeInsets.zero),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 10),
+                    const SizedBox(height: 10),
 
                     // Non-root / Non-ADB Pro-tip Card
                     Container(
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        color: colorScheme.tertiaryContainer.withValues(alpha: 0.4),
+                        color: colorScheme.tertiaryContainer.withValues(
+                          alpha: 0.4,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: colorScheme.tertiary.withValues(alpha: 0.25),

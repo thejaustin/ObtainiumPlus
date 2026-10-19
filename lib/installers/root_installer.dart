@@ -119,5 +119,4 @@ class RootInstaller extends Installer {
 
   static String _quoteShell(String path) =>
       "'${path.replaceAll("'", "'\\''")}'";
-
 }

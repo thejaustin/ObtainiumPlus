@@ -58,7 +58,11 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     );
   }
 
-  Widget _buildInstallCard(ColorScheme cs, PluginProvider pluginProvider, PlusSettingsProvider plusSettings) {
+  Widget _buildInstallCard(
+    ColorScheme cs,
+    PluginProvider pluginProvider,
+    PlusSettingsProvider plusSettings,
+  ) {
     return Card(
       elevation: 0,
       color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
@@ -98,7 +102,11 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                 final isActive = isFocused || hasText;
 
                 return AnimatedContainer(
-                  duration: Duration(milliseconds: plusSettings.plusEnableEnhancedAnimations ? 280 : 0),
+                  duration: Duration(
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
+                        ? 280
+                        : 0,
+                  ),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(isActive ? 16.0 : 26.0),
@@ -164,8 +172,9 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                               icon: const Icon(Icons.download_rounded),
                               onPressed: () {
                                 if (_urlController.text.isNotEmpty) {
-                                  pluginProvider
-                                      .installFromUrl(_urlController.text);
+                                  pluginProvider.installFromUrl(
+                                    _urlController.text,
+                                  );
                                   _urlController.clear();
                                   FocusScope.of(context).unfocus();
                                 }
