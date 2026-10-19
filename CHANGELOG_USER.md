@@ -1,5 +1,11 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.1-p4] — 2026-10-19
+
 ### 🔄 Upstream 1.7.0 & 1.7.1 Full Feature Parity
 - **Complete Upstream Integration** — Merged and verified all upstream features and bugfixes across 148 commits between v1.6.17 and v1.7.1.
 - **Update Health Dashboard** — Dedicated Update Health page tracking stale or broken sources, consecutive check failures, and per-app health alerts.
