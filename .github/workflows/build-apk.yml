@@ -109,16 +109,6 @@ jobs:
           CURRENT_BASE=$(echo "$CURRENT_VERSION" | sed -E 's/-[pr][0-9]+$//')
           BASE_VERSION="$CURRENT_BASE"
 
-          # Detect if upstream has released a newer base semver tag
-          UPSTREAM_TAG=$(git ls-remote --tags https://github.com/ImranR98/Obtainium.git 'refs/tags/v*' 2>/dev/null | awk '{print $2}' | sed 's|refs/tags/v||' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
-          if [ -n "$UPSTREAM_TAG" ]; then
-            HIGHER_VERSION=$(printf '%s\n%s\n' "$BASE_VERSION" "$UPSTREAM_TAG" | sort -V | tail -n 1)
-            if [ "$HIGHER_VERSION" != "$BASE_VERSION" ]; then
-              echo "Upstream base version ($UPSTREAM_TAG) is newer than current base ($BASE_VERSION). Aligning base version."
-              BASE_VERSION="$UPSTREAM_TAG"
-            fi
-          fi
-
           if [ "$IS_FULL_RELEASE" = "true" ]; then
             # Full release: change -p to -r and reset to 1, or bump existing -r
             LATEST_R=$(git tag -l "v${BASE_VERSION}-r*" | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+-r[0-9]+$" | sed -E 's/.*-r//' | sort -n | tail -n 1)
@@ -283,19 +273,8 @@ jobs:
           # Extract upcoming notes from CHANGELOG_USER.md if explicitly written
           USER_NOTES=""
           HAS_UPCOMING="false"
-          if [ -f "CHANGELOG_USER.md" ]; then
-            USER_NOTES=$(python3 -c "
-import sys, re
-try:
-    with open('CHANGELOG_USER.md', 'r') as f:
-        content = f.read()
-    top = content.split('---')[0]
-    clean = re.sub(r'^## \[(Upcoming|Unreleased)\]', '', top, flags=re.I)
-    clean = re.sub(r'<!--.*?-->', '', clean, flags=re.DOTALL).strip()
-    sys.stdout.write(clean)
-except Exception:
-    pass
-")
+          if [ -f "CHANGELOG_USER.md" ] && [ -f "scripts/archive-changelog.py" ]; then
+            USER_NOTES=$(python3 scripts/archive-changelog.py --get-upcoming || true)
             if [ -n "$USER_NOTES" ]; then
               HAS_UPCOMING="true"
             fi
@@ -356,26 +335,8 @@ except Exception:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add pubspec.yaml lib/utils/version_constant.dart
-          if [ "${{ steps.build_changelog.outputs.has_upcoming }}" = "true" ]; then
-            python3 -c "
-import sys, re, datetime
-try:
-    with open('CHANGELOG_USER.md', 'r') as f:
-        content = f.read()
-    today = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d')
-    version = '${{ steps.bump_version.outputs.version }}'
-    parts = content.split('---', 1)
-    if len(parts) > 1:
-        top_notes = re.sub(r'^## \[(Upcoming|Unreleased)\]', '', parts[0], flags=re.I)
-        top_notes = re.sub(r'<!--.*?-->', '', top_notes, flags=re.DOTALL).strip()
-        rest = parts[1].strip()
-        new_header = '## [Upcoming]\n\n<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->\n\n---\n\n'
-        archived_section = f'## [{version}] — {today}\n\n{top_notes}\n\n---\n\n'
-        with open('CHANGELOG_USER.md', 'w') as f:
-            f.write(new_header + archived_section + rest + '\n')
-except Exception as e:
-    print('Failed to archive CHANGELOG_USER.md:', e, file=sys.stderr)
-"
+          if [ "${{ steps.build_changelog.outputs.has_upcoming }}" = "true" ] && [ -f "scripts/archive-changelog.py" ]; then
+            python3 scripts/archive-changelog.py --archive "${{ steps.bump_version.outputs.version }}" || true
             git add CHANGELOG_USER.md
           fi
           git commit -m "chore: Auto-bump version to ${{ steps.bump_version.outputs.version }}"

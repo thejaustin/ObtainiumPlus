@@ -31,6 +31,7 @@ Pushing to `main` triggers `build-apk.yml` automatically: analyze → flutter te
 | Never call plain `tr()` on plural translation keys (`apps`, `url`, `minute`, `hour`, `day`, `apk`, `certificateHash`, `removeAppQuestion`, … any nested-object key in `assets/translations/en.json`) | easy_localization casts the resolved map `as String?` → TypeError → blank page in release. Root cause of the persistent blank settings page (fixed v1.4.3-p42). Use `plural()` or a literal |
 | `TextDirection` in files importing easy_localization must be prefix-qualified (`ui.TextDirection.ltr`) | easy_localization re-exports intl's TextDirection |
 | Don't hand-edit `lib/utils/version_constant.dart` | Auto-synced by the CI bump step |
+| Upstream version matching MUST merge upstream commits | When updating the version string to match upstream, ALL upstream commits and features MUST be merged first. Never bump base version without merging upstream code |
 | Version-ordering guard: unknown ordering MUST fall through to "offer the update" | `areVersionsDifferent` is string-based; `compareVersionStrings` (`lib/utils/version_utils.dart`) only suppresses confidently-older offers (v1.4.3-p43). Never suppress updates for unusual versioning schemes. Tests: `test/version_ordering_test.dart` |
 
 ## Testing
