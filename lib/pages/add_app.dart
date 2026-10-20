@@ -1450,9 +1450,11 @@ class AddAppPageState extends State<AddAppPage> {
                       ? Theme.of(context).colorScheme.onSurface.withValues(
                           alpha: AppConstants.glassBorderAlpha,
                         )
-                      : Theme.of(
-                          context,
-                        ).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      : Theme.of(context).colorScheme.outlineVariant.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
                 ),
               ),
             ),

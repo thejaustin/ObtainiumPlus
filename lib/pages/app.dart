@@ -620,8 +620,16 @@ class _AppPageState extends State<AppPage> {
                                 ).colorScheme.onSurface.withValues(
                                   alpha: AppConstants.glassBorderAlpha,
                                 )
-                              : Theme.of(context).colorScheme.outlineVariant
-                                    .withValues(alpha: 0.5),
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.outlineVariant.withValues(
+                                  alpha:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? 0.35
+                                      : 0.65,
+                                ),
+                          width: 1.0,
                         ),
                       ),
                       child: Column(

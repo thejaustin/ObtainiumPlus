@@ -477,7 +477,7 @@ class _StatisticsPageState extends State<StatisticsPage>
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 14,
             mainAxisSpacing: 14,
-            childAspectRatio: 1.45,
+            childAspectRatio: 1.35,
           ),
           itemCount: items.length,
           itemBuilder: (context, index) {

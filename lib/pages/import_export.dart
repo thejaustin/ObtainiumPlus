@@ -607,7 +607,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                 ? colorScheme.onSurface.withValues(
                     alpha: AppConstants.glassBorderAlpha,
                   )
-                : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                : colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
+            width: 1.0,
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -772,8 +777,13 @@ class _ImportExportPageState extends State<ImportExportPage> {
                                   alpha: AppConstants.glassBorderAlpha,
                                 )
                               : colorScheme.outlineVariant.withValues(
-                                  alpha: 0.4,
+                                  alpha:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? 0.35
+                                      : 0.65,
                                 ),
+                          width: 1.0,
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,

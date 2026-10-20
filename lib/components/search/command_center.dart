@@ -298,7 +298,7 @@ class _CommandCenterState extends State<CommandCenter> {
                               alpha: AppConstants.glassBorderAlpha,
                             )
                           : theme.colorScheme.outlineVariant.withValues(
-                              alpha: AppOpacity.subtle,
+                              alpha: isDark ? 0.35 : 0.65,
                             ),
                     ),
                     left: BorderSide(
@@ -356,7 +356,7 @@ class _CommandCenterState extends State<CommandCenter> {
                             prefixIcon: const Icon(Icons.search),
                             suffixIcon: _query.isNotEmpty
                                 ? IconButton(
-                                    icon: const Icon(Icons.clear),
+                                    icon: const Icon(Icons.clear_rounded),
                                     tooltip: tr('clear'),
                                     onPressed: () {
                                       AppHaptics.selectionClick();
@@ -364,7 +364,24 @@ class _CommandCenterState extends State<CommandCenter> {
                                       _onSearchChanged('');
                                     },
                                   )
-                                : null,
+                                : IconButton(
+                                    icon: const Icon(
+                                      Icons.content_paste_rounded,
+                                      size: 20,
+                                    ),
+                                    tooltip: tr('paste'),
+                                    onPressed: () async {
+                                      final data = await Clipboard.getData(
+                                        Clipboard.kTextPlain,
+                                      );
+                                      final text = data?.text?.trim() ?? '';
+                                      if (text.isNotEmpty) {
+                                        AppHaptics.selectionClick();
+                                        _controller.text = text;
+                                        _onSearchChanged(text);
+                                      }
+                                    },
+                                  ),
                             filled: true,
                             fillColor: theme.colorScheme.surfaceContainerHigh
                                 .withValues(
