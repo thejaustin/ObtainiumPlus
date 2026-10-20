@@ -215,10 +215,18 @@ class _StatisticsPageState extends State<StatisticsPage>
               .where((l) => l.timestamp.isAfter(sevenDaysAgo))
               .length;
 
+          final screenWidth = MediaQuery.of(context).size.width;
+          final double adaptiveMargin = screenWidth > 840
+              ? (screenWidth - 840) / 2
+              : 16.0;
+
           return SingleChildScrollView(
             controller: widget.scrollController,
             physics: plusSettings.scrollPhysics,
-            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 16.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

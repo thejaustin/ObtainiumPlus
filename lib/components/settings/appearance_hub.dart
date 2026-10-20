@@ -8,6 +8,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -151,85 +152,94 @@ class AppearanceHub extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return ClipRRect(
-          borderRadius: BorderRadius.vertical(top: sheetRadius),
-          child: ConditionalBlur(
-            sigma: 16,
-            enabled: plusSettings.plusEnableGlassmorphism,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.88,
-              decoration: BoxDecoration(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.9)
-                    : (Theme.of(context).brightness == Brightness.dark
-                          ? colorScheme.surfaceContainerHigh
-                          : colorScheme.surfaceContainerLow),
-                borderRadius: BorderRadius.vertical(top: sheetRadius),
-                border: Border(
-                  top: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(
-                      alpha: Theme.of(context).brightness == Brightness.dark
-                          ? 0.35
-                          : 0.65,
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 840),
+            child: ClipRRect(
+              borderRadius: BorderRadius.vertical(top: sheetRadius),
+              child: ConditionalBlur(
+                sigma: 16,
+                enabled: plusSettings.plusEnableGlassmorphism,
+                child: Container(
+                  height: MediaQuery.of(context).size.height * 0.88,
+                  decoration: BoxDecoration(
+                    color: plusSettings.plusEnableGlassmorphism
+                        ? colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.9,
+                          )
+                        : (Theme.of(context).brightness == Brightness.dark
+                              ? colorScheme.surfaceContainerHigh
+                              : colorScheme.surfaceContainerLow),
+                    borderRadius: BorderRadius.vertical(top: sheetRadius),
+                    border: Border(
+                      top: BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                        width: 1.0,
+                      ),
                     ),
-                    width: 1.0,
+                  ),
+                  child: Column(
+                    children: [
+                      // Handle
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 10),
+                        width: 38,
+                        height: 4.5,
+                        decoration: BoxDecoration(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.6,
+                          ),
+                          borderRadius: BorderRadius.circular(2.5),
+                        ),
+                      ),
+                      // Header
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 4, 16, 12),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: accentColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(icon, color: accentColor, size: 22),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
+                                    ),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close_rounded),
+                              tooltip: tr('close'),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      // Body
+                      Expanded(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: child,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              child: Column(
-                children: [
-                  // Handle
-                  Container(
-                    margin: const EdgeInsets.symmetric(vertical: 10),
-                    width: 38,
-                    height: 4.5,
-                    decoration: BoxDecoration(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                  ),
-                  // Header
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 16, 12),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(icon, color: accentColor, size: 22),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded),
-                          tooltip: tr('close'),
-                          onPressed: () => Navigator.pop(context),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Divider(height: 1),
-                  // Body
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: child,
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
@@ -260,18 +270,24 @@ class _HubCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
 
     return ScaleTouchWrapper(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(cardRadius),
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(cardRadius),
               border: Border.all(
                 color: colorScheme.outlineVariant.withValues(
                   alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
@@ -286,7 +302,7 @@ class _HubCard extends StatelessWidget {
                   height: 44,
                   decoration: BoxDecoration(
                     color: accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(innerRadius),
                   ),
                   child: Icon(icon, color: accentColor, size: 22),
                 ),
@@ -321,7 +337,9 @@ class _HubCard extends StatelessWidget {
                           color: colorScheme.surfaceContainerHighest.withValues(
                             alpha: 0.4,
                           ),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(
+                            CardMetrics.pillRadius,
+                          ),
                         ),
                         child: Text(
                           summary,

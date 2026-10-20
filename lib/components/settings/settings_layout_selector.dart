@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -19,13 +20,18 @@ class SettingsLayoutSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final currentMode = plusSettings.plusSettingsLayoutMode;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Material(
         color: colorScheme.surfaceContainerLow,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(cardRadius),
           side: BorderSide(
             color: colorScheme.outlineVariant.withValues(
               alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
@@ -46,7 +52,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           color: colorScheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(innerRadius),
                         ),
                         child: Icon(
                           Icons.dashboard_customize_rounded,
@@ -187,13 +193,18 @@ class SettingsLayoutSelector extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(innerRadius),
         ),
         child: SwitchListTile.adaptive(
           dense: true,
@@ -238,9 +249,12 @@ class _LayoutModeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final animsEnabled = context
-        .watch<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
 
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
@@ -248,7 +262,7 @@ class _LayoutModeButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(innerRadius),
           child: AnimatedContainer(
             duration: Duration(milliseconds: animsEnabled ? 200 : 0),
             curve: Curves.easeOutCubic,
@@ -257,7 +271,7 @@ class _LayoutModeButton extends StatelessWidget {
               color: isSelected
                   ? colorScheme.primaryContainer.withValues(alpha: 0.45)
                   : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(innerRadius),
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary

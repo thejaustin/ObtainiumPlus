@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -125,9 +126,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       }),
     );
 
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
+    final radius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(radius);
 
     // Build the leading icon widget (tinted container style)
     Widget? leadingWidget = widget.icon != null
@@ -142,7 +145,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
               color: colorScheme.primary.withValues(
                 alpha: _isExpanded ? 0.22 : 0.12,
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(innerRadius),
             ),
             child: Icon(
               widget.icon,
@@ -208,7 +211,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                           height: 32,
                           decoration: BoxDecoration(
                             color: colorScheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(9),
+                            borderRadius: BorderRadius.circular(innerRadius),
                           ),
                           child: Icon(
                             widget.icon,

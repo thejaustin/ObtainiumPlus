@@ -72,55 +72,64 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           onTap: () => AppInstallService.openUsageAccessSettings(),
         ),
       if (_matches(tr('appLogs')))
-        ListTile(
-          leading: Icon(
-            Icons.bug_report_outlined,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          child: ListTile(
+            leading: Icon(
+              Icons.bug_report_outlined,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            title: Text(
+              tr('appLogs'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('appLogsDescription')),
+            onTap: () {
+              AppHaptics.selectionClick();
+              showDialog(
+                context: context,
+                builder: (context) => const LogsDialog(),
+              );
+            },
           ),
-          title: Text(
-            tr('appLogs'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('appLogsDescription')),
-          onTap: () {
-            AppHaptics.selectionClick();
-            showDialog(
-              context: context,
-              builder: (context) => const LogsDialog(),
-            );
-          },
         ),
       if (_matches(tr('statistics')))
-        ListTile(
-          leading: Icon(
-            Icons.bar_chart_rounded,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          child: ListTile(
+            leading: Icon(
+              Icons.bar_chart_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            title: Text(
+              tr('statistics'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('statisticsDescription')),
+            onTap: () {
+              AppHaptics.selectionClick();
+              pushRoute(context, const StatisticsPage());
+            },
           ),
-          title: Text(
-            tr('statistics'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('statisticsDescription')),
-          onTap: () {
-            AppHaptics.selectionClick();
-            pushRoute(context, const StatisticsPage());
-          },
         ),
       if (_matches(tr('viewChangelog')))
-        ListTile(
-          leading: Icon(
-            Icons.history_edu_rounded,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          child: ListTile(
+            leading: Icon(
+              Icons.history_edu_rounded,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            title: Text(
+              tr('viewChangelog'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('viewChangelogDescription')),
+            onTap: () {
+              AppHaptics.selectionClick();
+              pushRoute(context, const ChangelogPage());
+            },
           ),
-          title: Text(
-            tr('viewChangelog'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('viewChangelogDescription')),
-          onTap: () {
-            AppHaptics.selectionClick();
-            pushRoute(context, const ChangelogPage());
-          },
         ),
       if (_matches(tr('plusShowChangelogAfterUpdate')))
         SwitchListTile.adaptive(
@@ -135,63 +144,69 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           subtitle: Text(tr('plusShowChangelogAfterUpdateDescription')),
           value: plusSettings.plusShowChangelogAfterUpdate,
           onChanged: (v) {
-            AppHaptics.selectionClick();
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             plusSettings.plusShowChangelogAfterUpdate = v;
           },
         ),
       if (!plusSettings.plusDeveloperMode)
-        ListTile(
-          leading: Icon(
-            Icons.help_outline,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          title: Text(
-            tr('lookingForDevOptions'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: Text(tr('devOptionsHint')),
-          onTap: () {
-            setState(() {
-              _devModeTapCount++;
-            });
-            AppHaptics.lightImpact();
-            if (_devModeTapCount >= 7) {
-              plusSettings.plusDeveloperMode = true;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Developer & Diagnostics options enabled!'),
-                ),
-              );
-            } else if (_devModeTapCount > 2) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'You are ${7 - _devModeTapCount} steps away from being a developer.',
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          child: ListTile(
+            leading: Icon(
+              Icons.help_outline,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: Text(
+              tr('lookingForDevOptions'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('devOptionsHint')),
+            onTap: () {
+              setState(() {
+                _devModeTapCount++;
+              });
+              AppHaptics.lightImpact();
+              if (_devModeTapCount >= 7) {
+                plusSettings.plusDeveloperMode = true;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Developer & Diagnostics options enabled!'),
                   ),
-                  duration: const Duration(milliseconds: 500),
-                ),
-              );
-            }
-          },
+                );
+              } else if (_devModeTapCount > 2) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'You are ${7 - _devModeTapCount} steps away from being a developer.',
+                    ),
+                    duration: const Duration(milliseconds: 500),
+                  ),
+                );
+              }
+            },
+          ),
         ),
       if (plusSettings.plusDeveloperMode)
-        ListTile(
-          leading: Icon(
-            Icons.developer_mode_rounded,
-            color: Theme.of(context).colorScheme.primary,
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          child: ListTile(
+            leading: Icon(
+              Icons.developer_mode_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            title: Text(
+              tr('developerAndDiagnostics'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: const Text(
+              'Configure advanced diagnostic tools and Play Store plugins',
+            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              AppHaptics.selectionClick();
+              pushRoute(context, const DeveloperSettingsPage());
+            },
           ),
-          title: Text(
-            tr('developerAndDiagnostics'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: const Text(
-            'Configure advanced diagnostic tools and Play Store plugins',
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            AppHaptics.selectionClick();
-            pushRoute(context, const DeveloperSettingsPage());
-          },
         ),
       const Divider(),
       _buildCleanupTile(

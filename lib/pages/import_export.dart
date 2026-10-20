@@ -29,6 +29,7 @@ import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
@@ -98,9 +99,15 @@ class _ImportExportPageState extends State<ImportExportPage> {
     var appsProvider = context.watch<AppsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
+    final rawRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(rawRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
 
     final exportDirKey = behaviorSettings.prefs?.safeString('exportDir');
     if (_exportDirFuture == null || exportDirKey != _lastExportDirKey) {
@@ -632,7 +639,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         color: (iconColor ?? colorScheme.primary).withValues(
                           alpha: 0.12,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(innerRadius),
                       ),
                       child: Icon(
                         icon,
@@ -682,7 +689,10 @@ class _ImportExportPageState extends State<ImportExportPage> {
         slivers: <Widget>[
           CustomAppBar(title: tr('importExport')),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 8,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // ── EXPORT section ─────────────────────────────────────

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/plus_features_sheet.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -38,6 +39,10 @@ class PlusFeaturesSection extends StatelessWidget {
     return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
         final bool isEnabled = settings.enableAllPlusFeatures;
+        final baseRadius = settings.plusOverrideIndividualCornerRadius
+            ? settings.plusSettingsCornerRadius
+            : settings.plusGlobalCornerRadius;
+        final cardRadius = CardMetrics.card(baseRadius);
 
         return AnimatedContainer(
           duration: Duration(
@@ -49,7 +54,7 @@ class PlusFeaturesSection extends StatelessWidget {
             color: isEnabled
                 ? colorScheme.primaryContainer.withValues(alpha: 0.25)
                 : colorScheme.surfaceContainerLow.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(cardRadius),
             border: Border.all(
               color: isEnabled
                   ? colorScheme.primary.withValues(alpha: 0.45)
@@ -59,7 +64,7 @@ class PlusFeaturesSection extends StatelessWidget {
           ),
           child: Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(cardRadius),
             child: SwitchListTile.adaptive(
               dense: true,
               contentPadding: const EdgeInsets.symmetric(horizontal: 16),

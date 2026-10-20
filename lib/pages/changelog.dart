@@ -43,17 +43,22 @@ Future<void> showWhatsNewSheet(BuildContext context, {String? targetVersion}) {
     elevation: 0,
     barrierColor: Colors.black54,
     builder: (ctx) {
-      return DraggableScrollableSheet(
-        initialChildSize: 0.82,
-        minChildSize: 0.45,
-        maxChildSize: 0.95,
-        expand: false,
-        builder: (context, scrollController) {
-          return _WhatsNewSheet(
-            targetVersion: targetVersion ?? currentObtainiumPlusVersion,
-            scrollController: scrollController,
-          );
-        },
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 840),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.82,
+            minChildSize: 0.45,
+            maxChildSize: 0.95,
+            expand: false,
+            builder: (context, scrollController) {
+              return _WhatsNewSheet(
+                targetVersion: targetVersion ?? currentObtainiumPlusVersion,
+                scrollController: scrollController,
+              );
+            },
+          ),
+        ),
       );
     },
   );
@@ -449,34 +454,42 @@ class _ReleaseListState extends State<_ReleaseList> {
     final releases = widget.releases;
     final selected = releases[_selectedIndex.clamp(0, releases.length - 1)];
 
-    return Column(
-      children: [
-        if (releases.length > 1)
-          SizedBox(
-            height: 56,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: releases.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                final release = releases[i];
-                final isSelected = i == _selectedIndex;
-                return ChoiceChip(
-                  label: Text(release.tag),
-                  selected: isSelected,
-                  onSelected: (_) => setState(() => _selectedIndex = i),
-                );
-              },
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 840),
+        child: Column(
+          children: [
+            if (releases.length > 1)
+              SizedBox(
+                height: 56,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  itemCount: releases.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    final release = releases[i];
+                    final isSelected = i == _selectedIndex;
+                    return ChoiceChip(
+                      label: Text(release.tag),
+                      selected: isSelected,
+                      onSelected: (_) => setState(() => _selectedIndex = i),
+                    );
+                  },
+                ),
+              ),
+            Expanded(
+              child: _MarkdownBody(
+                body: selected.body,
+                scrollController: _scrollController,
+              ),
             ),
-          ),
-        Expanded(
-          child: _MarkdownBody(
-            body: selected.body,
-            scrollController: _scrollController,
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

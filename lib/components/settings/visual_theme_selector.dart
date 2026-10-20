@@ -5,6 +5,7 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -137,16 +138,20 @@ class _ThemeThumbnailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final animsEnabled = context
-        .watch<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
 
     return ScaleTouchWrapper(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(cardRadius),
           child: AnimatedContainer(
             duration: Duration(milliseconds: animsEnabled ? 220 : 0),
             curve: AppConstants.expressiveDecelerate,
@@ -155,7 +160,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
               color: isSelected
                   ? colorScheme.primaryContainer.withValues(alpha: 0.35)
                   : colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(cardRadius),
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
@@ -174,7 +179,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
                 Container(
                   height: 58,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(innerRadius),
                     border: Border.all(
                       color: isSelected
                           ? colorScheme.primary.withValues(alpha: 0.5)
