@@ -36,7 +36,7 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
         subtitle: Text(subtitle),
         value: value(settings),
         onChanged: (v) {
-          AppHaptics.selectionClick();
+          v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
           onChanged(settings, v);
         },
       );

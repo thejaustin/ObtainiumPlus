@@ -80,7 +80,12 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                   border: Border.all(
                     color: _isDragging
                         ? colorScheme.primary.withValues(alpha: 0.5)
-                        : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                        : colorScheme.outlineVariant.withValues(
+                            alpha:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? 0.35
+                                : 0.65,
+                          ),
                     width: _isDragging ? 1.5 : 1.0,
                   ),
                 ),

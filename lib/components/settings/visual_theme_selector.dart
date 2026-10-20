@@ -159,7 +159,11 @@ class _ThemeThumbnailCard extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
-                    : colorScheme.outlineVariant.withValues(alpha: 0.3),
+                    : colorScheme.outlineVariant.withValues(
+                        alpha: theme.brightness == Brightness.dark
+                            ? 0.35
+                            : 0.65,
+                      ),
                 width: isSelected ? 2.0 : 1.0,
               ),
             ),

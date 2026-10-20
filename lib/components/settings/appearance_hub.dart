@@ -141,6 +141,10 @@ class AppearanceHub extends StatelessWidget {
   }) {
     final plusSettings = context.read<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final sheetRadius = Radius.circular(radius.clamp(20.0, 36.0));
 
     showModalBottomSheet(
       context: context,
@@ -148,7 +152,7 @@ class AppearanceHub extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+          borderRadius: BorderRadius.vertical(top: sheetRadius),
           child: ConditionalBlur(
             sigma: 16,
             enabled: plusSettings.plusEnableGlassmorphism,
@@ -160,12 +164,15 @@ class AppearanceHub extends StatelessWidget {
                     : (Theme.of(context).brightness == Brightness.dark
                           ? colorScheme.surfaceContainerHigh
                           : colorScheme.surfaceContainerLow),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(28),
-                ),
+                borderRadius: BorderRadius.vertical(top: sheetRadius),
                 border: Border(
                   top: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                    color: colorScheme.outlineVariant.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.35
+                          : 0.65,
+                    ),
+                    width: 1.0,
                   ),
                 ),
               ),
@@ -266,7 +273,10 @@ class _HubCard extends StatelessWidget {
               color: colorScheme.surfaceContainerLow,
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+                color: colorScheme.outlineVariant.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
+                ),
+                width: 1.0,
               ),
             ),
             child: Row(

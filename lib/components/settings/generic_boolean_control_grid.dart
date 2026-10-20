@@ -36,7 +36,11 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
         final colorScheme = Theme.of(context).colorScheme;
         final isCompact = plusSettings.plusUseCompactSettings;
         final screenWidth = MediaQuery.of(context).size.width;
-        final crossAxisCount = screenWidth > 600 ? 3 : (isCompact ? 3 : 2);
+        final crossAxisCount = screenWidth >= 1100
+            ? 5
+            : (screenWidth >= 800
+                  ? 4
+                  : (screenWidth > 550 ? 3 : (isCompact ? 3 : 2)));
         final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
             ? plusSettings.plusSettingsCornerRadius
             : plusSettings.plusGlobalCornerRadius;
@@ -56,7 +60,9 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                   borderRadius: BorderRadius.circular(cardRadius),
                   side: BorderSide(
                     color: colorScheme.outlineVariant.withValues(
-                      alpha: plusSettings.plusEnableGlassmorphism ? 0.4 : 0.18,
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.35
+                          : 0.65,
                     ),
                   ),
                 ),
@@ -230,7 +236,11 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
           border: Border.all(
             color: value
                 ? colorScheme.primary.withValues(alpha: 0.55)
-                : colorScheme.outlineVariant.withValues(alpha: 0.4),
+                : colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
             width: value ? 1.5 : 1.0,
           ),
         ),

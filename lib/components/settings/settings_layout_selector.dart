@@ -27,7 +27,9 @@ class SettingsLayoutSelector extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+            color: colorScheme.outlineVariant.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
+            ),
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -210,7 +212,7 @@ class SettingsLayoutSelector extends StatelessWidget {
           ),
           value: value,
           onChanged: (v) {
-            AppHaptics.selectionClick();
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             onChanged(v);
           },
         ),
@@ -259,7 +261,11 @@ class _LayoutModeButton extends StatelessWidget {
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
-                    : colorScheme.outlineVariant.withValues(alpha: 0.25),
+                    : colorScheme.outlineVariant.withValues(
+                        alpha: theme.brightness == Brightness.dark
+                            ? 0.35
+                            : 0.65,
+                      ),
                 width: isSelected ? 1.5 : 1.0,
               ),
             ),

@@ -277,11 +277,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                 borderRadius: BorderRadius.circular(radius),
                 side: BorderSide(
                   color: _isExpanded
-                      ? colorScheme.primary.withValues(alpha: 0.38)
+                      ? colorScheme.primary.withValues(alpha: 0.5)
                       : colorScheme.outlineVariant.withValues(
-                          alpha: plusSettings.plusEnableGlassmorphism
-                              ? 0.4
-                              : 0.18,
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
                         ),
                   width: _isExpanded ? 1.2 : 1.0,
                 ),
