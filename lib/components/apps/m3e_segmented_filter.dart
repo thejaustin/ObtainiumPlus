@@ -44,30 +44,33 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final animsEnabled = context
-        .watch<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final pillRadius = CardMetrics.pill(radius);
-    final innerPillRadius = pillRadius - 3.5;
+    final innerPillRadius = (pillRadius - 3.5).clamp(8.0, double.infinity);
 
     final segments = [
       _SegmentData(
         mode: 'all',
         label: tr('all'),
         icon: Icons.apps_rounded,
-        badgeCount: null,
+        badgeCount: totalApps > 0 ? totalApps : null,
+        isUrgentBadge: false,
       ),
       _SegmentData(
         mode: 'updates',
         label: tr('updates'),
         icon: Icons.update_rounded,
         badgeCount: updatesCount > 0 ? updatesCount : null,
+        isUrgentBadge: true,
       ),
       _SegmentData(
         mode: 'installed',
         label: tr('installed'),
         icon: Icons.install_mobile_rounded,
-        badgeCount: null,
+        badgeCount: installedCount > 0 ? installedCount : null,
+        isUrgentBadge: false,
       ),
     ];
 
@@ -84,16 +87,19 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
 
         return Container(
           height: 48,
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             color: isGlass
                 ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
                 : colorScheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(pillRadius),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(
-                alpha: isGlass ? 0.35 : 0.22,
+            shape: CardMetrics.shape(
+              pillRadius,
+              expressive: isM3E,
+              side: BorderSide(
+                color: colorScheme.outlineVariant.withValues(
+                  alpha: isGlass ? 0.35 : 0.22,
+                ),
+                width: 1.0,
               ),
-              width: 1.0,
             ),
           ),
           child: Stack(
@@ -107,10 +113,19 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                 bottom: inset,
                 width: segmentWidth,
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(innerPillRadius),
-                    boxShadow: [
+                    shape: CardMetrics.shape(
+                      innerPillRadius,
+                      expressive: isM3E,
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.22,
+                        ),
+                        width: 0.6,
+                      ),
+                    ),
+                    shadows: [
                       BoxShadow(
                         color: colorScheme.primary.withValues(alpha: 0.14),
                         blurRadius: 8,
@@ -123,10 +138,6 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                         offset: const Offset(0, 1),
                       ),
                     ],
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.22),
-                      width: 0.6,
-                    ),
                   ),
                 ),
               ),
@@ -143,6 +154,7 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                             data: segments[i],
                             isSelected: i == activeIndex,
                             innerRadius: innerPillRadius,
+                            isM3E: isM3E,
                             onTap: () {
                               if (segments[i].mode != currentMode) {
                                 AppHaptics.selectionClick();
@@ -173,12 +185,14 @@ class _SegmentData {
   final String label;
   final IconData icon;
   final int? badgeCount;
+  final bool isUrgentBadge;
 
   const _SegmentData({
     required this.mode,
     required this.label,
     required this.icon,
     this.badgeCount,
+    this.isUrgentBadge = false,
   });
 }
 
@@ -186,12 +200,14 @@ class _SegmentItem extends StatelessWidget {
   final _SegmentData data;
   final bool isSelected;
   final double innerRadius;
+  final bool isM3E;
   final VoidCallback onTap;
 
   const _SegmentItem({
     required this.data,
     required this.isSelected,
     required this.innerRadius,
+    required this.isM3E,
     required this.onTap,
   });
 
@@ -204,6 +220,20 @@ class _SegmentItem extends StatelessWidget {
     final fgColor = isSelected
         ? colorScheme.onSecondaryContainer
         : colorScheme.onSurfaceVariant;
+
+    final Color badgeBgColor;
+    final Color badgeFgColor;
+    if (data.isUrgentBadge) {
+      badgeBgColor = isSelected ? colorScheme.primary : colorScheme.error;
+      badgeFgColor = isSelected ? colorScheme.onPrimary : colorScheme.onError;
+    } else {
+      badgeBgColor = isSelected
+          ? colorScheme.primary.withValues(alpha: 0.16)
+          : colorScheme.surfaceContainerHighest.withValues(alpha: 0.7);
+      badgeFgColor = isSelected
+          ? colorScheme.primary
+          : colorScheme.onSurfaceVariant;
+    }
 
     return ScaleTouchWrapper(
       scaleDownFactor: 0.94,
@@ -227,7 +257,7 @@ class _SegmentItem extends StatelessWidget {
                     color: fgColor,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 5),
                 Flexible(
                   child: AnimatedDefaultTextStyle(
                     duration: Duration(milliseconds: animsEnabled ? 200 : 0),
@@ -246,7 +276,7 @@ class _SegmentItem extends StatelessWidget {
                   ),
                 ),
                 if (data.badgeCount != null) ...[
-                  const SizedBox(width: 5),
+                  const SizedBox(width: 4),
                   AnimatedScale(
                     scale: 1.0,
                     duration: Duration(milliseconds: animsEnabled ? 260 : 0),
@@ -255,34 +285,28 @@ class _SegmentItem extends StatelessWidget {
                       duration: Duration(milliseconds: animsEnabled ? 260 : 0),
                       curve: Easing.emphasizedDecelerate,
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 6.5,
-                        vertical: 2.0,
+                        horizontal: 5.5,
+                        vertical: 1.8,
                       ),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.error,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                (isSelected
-                                        ? colorScheme.primary
-                                        : colorScheme.error)
-                                    .withValues(alpha: 0.28),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
+                      decoration: ShapeDecoration(
+                        color: badgeBgColor,
+                        shape: CardMetrics.shape(10, expressive: isM3E),
+                        shadows: data.isUrgentBadge
+                            ? [
+                                BoxShadow(
+                                  color: badgeBgColor.withValues(alpha: 0.28),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(
                         '${data.badgeCount}',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: FontWeight.bold,
-                          color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onError,
+                          color: badgeFgColor,
                           height: 1.1,
                         ),
                       ),

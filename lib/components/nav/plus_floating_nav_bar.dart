@@ -3,8 +3,11 @@ import 'dart:ui' show lerpDouble;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/pages/home.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/motion.dart';
+import 'package:provider/provider.dart';
 
 /// Floating pill nav bar with a stretchy morphing indicator and icon bounce.
 ///
@@ -149,6 +152,9 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final isM3E = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableMaterialExpressive;
     final n = widget.pages.length;
 
     return LayoutBuilder(
@@ -181,9 +187,9 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                     child: Container(
                       width: pillW,
                       height: pillH,
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(18),
+                        shape: CardMetrics.shape(18, expressive: isM3E),
                       ),
                     ),
                   ),

@@ -20,6 +20,7 @@ class SettingsLayoutSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final currentMode = plusSettings.plusSettingsLayoutMode;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -30,8 +31,9 @@ class SettingsLayoutSelector extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Material(
         color: colorScheme.surfaceContainerLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardRadius),
+        shape: CardMetrics.shape(
+          cardRadius,
+          expressive: isM3E,
           side: BorderSide(
             color: colorScheme.outlineVariant.withValues(
               alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
@@ -49,10 +51,14 @@ class SettingsLayoutSelector extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(innerRadius),
+                        width: 36,
+                        height: 36,
+                        decoration: ShapeDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.14),
+                          shape: CardMetrics.shape(
+                            innerRadius,
+                            expressive: isM3E,
+                          ),
                         ),
                         child: Icon(
                           Icons.dashboard_customize_rounded,
@@ -60,7 +66,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                           color: colorScheme.primary,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,6 +206,7 @@ class SettingsLayoutSelector extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -208,9 +215,9 @@ class SettingsLayoutSelector extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Container(
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-          borderRadius: BorderRadius.circular(innerRadius),
+          shape: CardMetrics.shape(innerRadius, expressive: isM3E),
         ),
         child: SwitchListTile.adaptive(
           dense: true,
@@ -257,6 +264,7 @@ class _LayoutModeButton extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -268,25 +276,28 @@ class _LayoutModeButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(innerRadius),
+          customBorder: CardMetrics.shape(innerRadius, expressive: isM3E),
           child: AnimatedContainer(
             duration: Duration(milliseconds: animsEnabled ? 200 : 0),
             curve: Curves.easeOutCubic,
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: isSelected
                   ? colorScheme.primaryContainer.withValues(alpha: 0.45)
                   : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(innerRadius),
-              border: Border.all(
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.outlineVariant.withValues(
-                        alpha: theme.brightness == Brightness.dark
-                            ? 0.35
-                            : 0.65,
-                      ),
-                width: isSelected ? 1.5 : 1.0,
+              shape: CardMetrics.shape(
+                innerRadius,
+                expressive: isM3E,
+                side: BorderSide(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant.withValues(
+                          alpha: theme.brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                  width: isSelected ? 1.5 : 1.0,
+                ),
               ),
             ),
             child: Row(

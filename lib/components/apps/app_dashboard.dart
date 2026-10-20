@@ -183,22 +183,61 @@ class _AppDashboardState extends State<AppDashboard>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    tr('pinnedApps'),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.push_pin_rounded,
+                        size: 15,
+                        color: colorScheme.primary,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        tr('pinnedApps'),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1.5,
+                        ),
+                        decoration: ShapeDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          shape: CardMetrics.shape(
+                            CardMetrics.pill(radius),
+                            expressive:
+                                plusSettings.plusEnableMaterialExpressive,
+                          ),
+                        ),
+                        child: Text(
+                          '${pinnedApps.length}',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
                   SizedBox(
-                    height: 56,
+                    height: 76,
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
+                      physics: plusSettings.scrollPhysics,
                       itemCount: pinnedApps.length,
                       separatorBuilder: (_, __) => const SizedBox(width: 10),
-                      itemBuilder: (context, index) =>
-                          _buildPinnedIcon(context, pinnedApps[index], radius),
+                      itemBuilder: (context, index) => _buildPinnedIcon(
+                        context,
+                        pinnedApps[index],
+                        radius,
+                        isM3E: plusSettings.plusEnableMaterialExpressive,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -232,40 +271,129 @@ class _AppDashboardState extends State<AppDashboard>
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SizedBox(height: 24),
+                        const SizedBox(height: 20),
                         Row(
                           children: [
-                            Text(
-                              tr('recentUpdates'),
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
+                            Expanded(
+                              child: ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                onTap: () => widget.onFilterChanged('updates'),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.system_update_alt_rounded,
+                                      size: 16,
+                                      color: colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        tr('recentUpdates'),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color:
+                                                  colorScheme.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6.5,
+                                        vertical: 1.5,
+                                      ),
+                                      decoration: ShapeDecoration(
+                                        color: colorScheme.primaryContainer,
+                                        shape: CardMetrics.shape(
+                                          CardMetrics.pill(radius),
+                                          expressive: plusSettings
+                                              .plusEnableMaterialExpressive,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        '$idleUpdates',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w700,
+                                              color: colorScheme
+                                                  .onPrimaryContainer,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 8),
                             ScaleTouchWrapper(
                               hapticOnPressDown: true,
-                              onTap: () => widget.onFilterChanged('updates'),
-                              child: Padding(
+                              scaleDownFactor: 0.94,
+                              onTap: () {
+                                AppHaptics.mediumImpact();
+                                appsProvider.downloadAndInstallLatestApps(
+                                  updateApps.map((a) => a.app.id).toList(),
+                                  context,
+                                );
+                              },
+                              child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 4,
-                                  vertical: 2,
+                                  horizontal: 10,
+                                  vertical: 5,
                                 ),
-                                child: Text(
-                                  plural('apps', idleUpdates),
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(color: colorScheme.primary),
+                                decoration: ShapeDecoration(
+                                  color: colorScheme.primaryContainer,
+                                  shape: CardMetrics.shape(
+                                    CardMetrics.pill(radius),
+                                    expressive: plusSettings
+                                        .plusEnableMaterialExpressive,
+                                    side: BorderSide(
+                                      color: colorScheme.primary.withValues(
+                                        alpha: 0.25,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.download_rounded,
+                                      size: 14,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      tr('update'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color:
+                                                colorScheme.onPrimaryContainer,
+                                          ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 10),
                         SizedBox(
-                          height: 64,
+                          height: 80,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
+                            physics: plusSettings.scrollPhysics,
                             itemCount: idleUpdates.clamp(0, 10),
                             separatorBuilder: (_, __) =>
                                 const SizedBox(width: 12),
@@ -274,6 +402,8 @@ class _AppDashboardState extends State<AppDashboard>
                                   context,
                                   updateApps[index],
                                   radius,
+                                  isM3E:
+                                      plusSettings.plusEnableMaterialExpressive,
                                 ),
                           ),
                         ),
@@ -311,56 +441,121 @@ class _AppDashboardState extends State<AppDashboard>
   Widget _buildPinnedIcon(
     BuildContext context,
     AppInMemory app,
-    double radius,
-  ) {
+    double radius, {
+    required bool isM3E,
+  }) {
     final itemRadius = CardMetrics.inner(radius);
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasUpdate =
+        app.app.installedVersion != null &&
+        app.app.installedVersion != app.app.latestVersion;
+
     return Tooltip(
       message: app.name,
       child: ScaleTouchWrapper(
         onTap: () => _openApp(context, app),
         onLongPress: () => _toggleSelect(context, app),
         hapticOnPressDown: true,
-        child: Container(
-          width: 56,
-          height: 56,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(itemRadius),
-            color: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.outlineVariant.withValues(alpha: 0.4),
-              width: 1.0,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Builder(
-              builder: (ctx) {
-                if (app.icon == null && app.installedInfo != null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (ctx.mounted && app.icon == null) {
-                      ctx.read<AppsProvider>().updateAppIcon(app.app.id);
-                    }
-                  });
-                }
-                return app.icon != null
-                    ? Image.memory(
-                        app.icon!,
-                        fit: BoxFit.contain,
-                        filterQuality: FilterQuality.medium,
-                        cacheWidth:
-                            (48 * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
-                        cacheHeight:
-                            (48 * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
-                      )
-                    : const Icon(Icons.apps_rounded, size: 24);
-              },
-            ),
+        child: SizedBox(
+          width: 62,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: ShapeDecoration(
+                  color: colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.55,
+                  ),
+                  shape: CardMetrics.shape(
+                    itemRadius,
+                    expressive: isM3E,
+                    side: BorderSide(
+                      color: hasUpdate
+                          ? colorScheme.primary.withValues(alpha: 0.45)
+                          : colorScheme.outlineVariant.withValues(alpha: 0.35),
+                      width: hasUpdate ? 1.3 : 1.0,
+                    ),
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Center(
+                        child: Builder(
+                          builder: (ctx) {
+                            if (app.icon == null && app.installedInfo != null) {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (ctx.mounted && app.icon == null) {
+                                  ctx.read<AppsProvider>().updateAppIcon(
+                                    app.app.id,
+                                  );
+                                }
+                              });
+                            }
+                            return app.icon != null
+                                ? Image.memory(
+                                    app.icon!,
+                                    fit: BoxFit.contain,
+                                    filterQuality: FilterQuality.medium,
+                                    cacheWidth:
+                                        (44 *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
+                                    cacheHeight:
+                                        (44 *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
+                                  )
+                                : Icon(
+                                    Icons.apps_rounded,
+                                    size: 24,
+                                    color: colorScheme.primary,
+                                  );
+                          },
+                        ),
+                      ),
+                    ),
+                    if (hasUpdate)
+                      Positioned(
+                        right: 3,
+                        top: 3,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: colorScheme.surface,
+                              width: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                app.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurfaceVariant,
+                  height: 1.15,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -370,90 +565,123 @@ class _AppDashboardState extends State<AppDashboard>
   Widget _buildRecentUpdateIcon(
     BuildContext context,
     AppInMemory app,
-    double radius,
-  ) {
+    double radius, {
+    required bool isM3E,
+  }) {
     final itemRadius = CardMetrics.inner(radius);
     final colorScheme = Theme.of(context).colorScheme;
     return Tooltip(
-      message: app.name,
+      message: '${app.name} (${app.app.latestVersion})',
       child: ScaleTouchWrapper(
         onTap: () => _openApp(context, app),
         onLongPress: () => _toggleSelect(context, app),
         hapticOnPressDown: true,
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(itemRadius),
-            color: colorScheme.surfaceContainerLow,
-            border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.50),
-              width: 1.5,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.12),
-                blurRadius: 8,
-                spreadRadius: -1,
-              ),
-            ],
-          ),
-          child: Builder(
-            builder: (ctx) {
-              if (app.icon == null && app.installedInfo != null) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (ctx.mounted && app.icon == null) {
-                    ctx.read<AppsProvider>().updateAppIcon(app.app.id);
-                  }
-                });
-              }
-              return Stack(
-                children: [
-                  if (app.icon != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(itemRadius - 2),
-                      child: Image.memory(
-                        app.icon!,
-                        fit: BoxFit.cover,
-                        width: 60,
-                        height: 60,
-                        filterQuality: FilterQuality.medium,
-                        cacheWidth:
-                            (60 * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
-                        cacheHeight:
-                            (60 * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
-                      ),
-                    )
-                  else
-                    Center(
-                      child: Icon(
-                        Icons.apps_rounded,
-                        color: Theme.of(context).colorScheme.primary.withValues(
-                          alpha: AppOpacity.half,
-                        ),
-                      ),
-                    ),
-                  Positioned(
-                    right: 4,
-                    top: 4,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.error,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.surface,
-                          width: 1.5,
-                        ),
-                      ),
+        child: SizedBox(
+          width: 64,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: ShapeDecoration(
+                  color: colorScheme.surfaceContainerLow,
+                  shape: CardMetrics.shape(
+                    itemRadius,
+                    expressive: isM3E,
+                    side: BorderSide(
+                      color: colorScheme.primary.withValues(alpha: 0.50),
+                      width: 1.5,
                     ),
                   ),
-                ],
-              );
-            },
+                  shadows: [
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.12),
+                      blurRadius: 8,
+                      spreadRadius: -1,
+                    ),
+                  ],
+                ),
+                child: Builder(
+                  builder: (ctx) {
+                    if (app.icon == null && app.installedInfo != null) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (ctx.mounted && app.icon == null) {
+                          ctx.read<AppsProvider>().updateAppIcon(app.app.id);
+                        }
+                      });
+                    }
+                    return Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(7.0),
+                          child: Center(
+                            child: app.icon != null
+                                ? Image.memory(
+                                    app.icon!,
+                                    fit: BoxFit.contain,
+                                    filterQuality: FilterQuality.medium,
+                                    cacheWidth:
+                                        (48 *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
+                                    cacheHeight:
+                                        (48 *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
+                                  )
+                                : Icon(
+                                    Icons.apps_rounded,
+                                    color: colorScheme.primary.withValues(
+                                      alpha: AppOpacity.half,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        Positioned(
+                          right: 3,
+                          top: 3,
+                          child: Container(
+                            width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: colorScheme.surface,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.arrow_upward_rounded,
+                              size: 9,
+                              color: colorScheme.onPrimary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                app.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
+                  height: 1.15,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -466,6 +694,9 @@ class _AppDashboardState extends State<AppDashboard>
     double radius,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableMaterialExpressive;
     final count = appsProvider.selectedAppIds.length;
     final itemRadius = CardMetrics.card(radius);
 
@@ -476,7 +707,7 @@ class _AppDashboardState extends State<AppDashboard>
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -485,11 +716,14 @@ class _AppDashboardState extends State<AppDashboard>
                 colorScheme.tertiaryContainer.withValues(alpha: 0.20),
               ],
             ),
-            borderRadius: BorderRadius.circular(itemRadius),
-            border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.25),
+            shape: CardMetrics.shape(
+              itemRadius,
+              expressive: isM3E,
+              side: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.25),
+              ),
             ),
-            boxShadow: AppShadows.smooth(
+            shadows: AppShadows.smooth(
               color: colorScheme.primary,
               opacity: 0.08,
               blurFactor: 0.6,

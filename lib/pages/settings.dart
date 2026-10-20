@@ -14,6 +14,7 @@ import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -233,10 +234,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     shape: WidgetStateProperty.resolveWith((states) {
                       final isFocused = states.contains(WidgetState.focused);
                       final isShifted = isFocused || _searchQuery.isNotEmpty;
-                      return RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          isShifted ? 18.0 : 28.0,
-                        ),
+                      return CardMetrics.shape(
+                        isShifted ? 18.0 : 28.0,
+                        expressive: plusSettings.plusEnableMaterialExpressive,
                         side: BorderSide(
                           color: isShifted
                               ? Theme.of(context).colorScheme.primary
@@ -258,7 +258,7 @@ class _SettingsPageState extends State<SettingsPage> {
           SliverPadding(
             padding: EdgeInsets.symmetric(
               horizontal: adaptiveMargin,
-              vertical: 8,
+              vertical: 4,
             ),
             sliver: SliverToBoxAdapter(
               child: PlusFeaturesSection(
@@ -312,76 +312,84 @@ class _SettingsPageState extends State<SettingsPage> {
                       ].asMap().entries.map((entry) {
                         final isSelected = _selectedSectionIndex == entry.key;
                         final tab = entry.value;
+                        final isM3E = plusSettings.plusEnableMaterialExpressive;
+                        final colorScheme = Theme.of(context).colorScheme;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8.0),
-                          child: ChoiceChip(
-                            key: _chipKeys[entry.key],
-                            materialTapTargetSize: MaterialTapTargetSize.padded,
-                            avatar: Icon(
-                              tab.icon,
-                              size: 16,
-                              color: isSelected
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                            ),
-                            label: Text(tr(tab.key)),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                AppHaptics.selectionClick();
-                                setState(() {
-                                  _previousSectionIndex = _selectedSectionIndex;
-                                  _selectedSectionIndex = entry.key;
-                                });
-                                _scrollController.animateTo(
-                                  0,
-                                  duration: const Duration(milliseconds: 300),
-                                  curve: Curves.easeOutCubic,
-                                );
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  final chipContext =
-                                      _chipKeys[entry.key].currentContext;
-                                  if (!mounted || chipContext == null) return;
-                                  Scrollable.ensureVisible(
-                                    chipContext,
-                                    alignment: 0.5,
-                                    duration: const Duration(milliseconds: 250),
+                          child: ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.95,
+                            child: ChoiceChip(
+                              key: _chipKeys[entry.key],
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.padded,
+                              avatar: Icon(
+                                tab.icon,
+                                size: 16,
+                                color: isSelected
+                                    ? colorScheme.onPrimaryContainer
+                                    : colorScheme.onSurfaceVariant,
+                              ),
+                              label: Text(tr(tab.key)),
+                              selected: isSelected,
+                              onSelected: (selected) {
+                                if (selected) {
+                                  AppHaptics.selectionClick();
+                                  setState(() {
+                                    _previousSectionIndex =
+                                        _selectedSectionIndex;
+                                    _selectedSectionIndex = entry.key;
+                                  });
+                                  _scrollController.animateTo(
+                                    0,
+                                    duration: const Duration(milliseconds: 300),
                                     curve: Curves.easeOutCubic,
                                   );
-                                });
-                              }
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                CardMetrics.pill(),
+                                  WidgetsBinding.instance.addPostFrameCallback((
+                                    _,
+                                  ) {
+                                    final chipContext =
+                                        _chipKeys[entry.key].currentContext;
+                                    if (!mounted || chipContext == null) return;
+                                    Scrollable.ensureVisible(
+                                      chipContext,
+                                      alignment: 0.5,
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
+                                      curve: Curves.easeOutCubic,
+                                    );
+                                  });
+                                }
+                              },
+                              shape: CardMetrics.shape(
+                                CardMetrics.pill(
+                                  plusSettings.plusGlobalCornerRadius,
+                                ),
+                                expressive: isM3E,
+                                side: BorderSide(
+                                  color: isSelected
+                                      ? colorScheme.primary.withValues(
+                                          alpha: 0.35,
+                                        )
+                                      : colorScheme.outlineVariant.withValues(
+                                          alpha: 0.22,
+                                        ),
+                                  width: isSelected ? 1.2 : 1.0,
+                                ),
                               ),
-                            ),
-                            side: BorderSide.none,
-                            showCheckmark: false,
-                            backgroundColor: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainer,
-                            selectedColor: Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer,
-                            labelStyle: TextStyle(
-                              color: isSelected
-                                  ? Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer
-                                  : Theme.of(
-                                      context,
-                                    ).colorScheme.onSurfaceVariant,
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              fontSize: 13,
+                              showCheckmark: false,
+                              backgroundColor: colorScheme.surfaceContainer,
+                              selectedColor: colorScheme.primaryContainer,
+                              labelStyle: TextStyle(
+                                color: isSelected
+                                    ? colorScheme.onPrimaryContainer
+                                    : colorScheme.onSurfaceVariant,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         );
@@ -662,75 +670,133 @@ class _SettingsHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = CardMetrics.card(
-      context.watch<PlusSettingsProvider>().plusGlobalCornerRadius,
-    );
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final radius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(radius);
+
+    return Material(
+      color: colorScheme.surfaceContainerLow,
+      shape: CardMetrics.shape(
+        radius,
+        expressive: isM3E,
+        side: BorderSide(
           color: colorScheme.outlineVariant.withValues(alpha: 0.18),
         ),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(CardMetrics.inner(radius)),
-            ),
-            child: Icon(
-              Icons.info_outline_rounded,
-              color: colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Obtainium+',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          AppHaptics.selectionClick();
+          showWhatsNewSheet(context);
+        },
+        customBorder: CardMetrics.shape(radius, expressive: isM3E),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: ShapeDecoration(
+                  color: colorScheme.primaryContainer,
+                  shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                 ),
-                FutureBuilder<dynamic>(
-                  future: versionFuture,
-                  builder: (context, snap) {
-                    final String? v = snap.data?.versionName as String?;
-                    if (v == null || v.isEmpty) return const SizedBox.shrink();
-                    return Text(
-                      v,
+                child: Icon(
+                  Icons.info_outline_rounded,
+                  size: 18,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Obtainium+',
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        const SizedBox(width: 6),
+                        FutureBuilder<dynamic>(
+                          future: versionFuture,
+                          builder: (context, snap) {
+                            final String? v = snap.data?.versionName as String?;
+                            if (v == null || v.isEmpty) {
+                              return const SizedBox.shrink();
+                            }
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 1.5,
+                              ),
+                              decoration: ShapeDecoration(
+                                color: colorScheme.primaryContainer.withValues(
+                                  alpha: 0.7,
+                                ),
+                                shape: CardMetrics.shape(
+                                  CardMetrics.pill(baseRadius),
+                                  expressive: isM3E,
+                                ),
+                              ),
+                              child: Text(
+                                v,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      color: colorScheme.onPrimaryContainer,
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 1),
+                    Text(
+                      tr('viewChangelog'),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          ...links.map(
-            (l) => ScaleTouchWrapper(
-              hapticOnPressDown: true,
-              scaleDownFactor: 0.90,
-              child: IconButton.filledTonal(
-                tooltip: l.label,
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                icon: Icon(l.icon),
-                onPressed: () {
-                  AppHaptics.selectionClick();
-                  _openSettingsUrl(l.url);
-                },
               ),
-            ),
+              ...links.map(
+                (l) => ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.90,
+                  child: IconButton.filledTonal(
+                    tooltip: l.label,
+                    constraints: const BoxConstraints(
+                      minWidth: 38,
+                      minHeight: 38,
+                    ),
+                    padding: EdgeInsets.zero,
+                    style: IconButton.styleFrom(
+                      shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                    ),
+                    icon: Icon(l.icon, size: 18),
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      _openSettingsUrl(l.url);
+                    },
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -819,39 +885,47 @@ class _SettingsTabBanner extends StatelessWidget {
     final tab = _tabs[tabIndex];
     final plusSettings = context.watch<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = CardMetrics.card(plusSettings.plusGlobalCornerRadius);
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final radius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(radius);
     final isCompact = plusSettings.plusUseCompactSettings;
 
     return Padding(
       padding: EdgeInsets.only(bottom: isCompact ? 6.0 : 8.0),
       child: Container(
         padding: EdgeInsets.symmetric(
-          horizontal: 14,
+          horizontal: 16,
           vertical: isCompact ? 10 : 12,
         ),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: colorScheme.primaryContainer.withValues(alpha: 0.18),
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.12),
+          shape: CardMetrics.shape(
+            radius,
+            expressive: isM3E,
+            side: BorderSide(
+              color: colorScheme.primary.withValues(alpha: 0.14),
+            ),
           ),
         ),
         child: Row(
           children: [
             Container(
-              width: isCompact ? 32 : 36,
-              height: isCompact ? 32 : 36,
-              decoration: BoxDecoration(
+              width: 36,
+              height: 36,
+              decoration: ShapeDecoration(
                 color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(CardMetrics.inner(radius)),
+                shape: CardMetrics.shape(innerRadius, expressive: isM3E),
               ),
               child: Icon(
                 tab.icon,
-                size: isCompact ? 16 : 18,
+                size: 18,
                 color: colorScheme.onPrimaryContainer,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -914,38 +988,45 @@ class _FooterIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableMaterialExpressive;
     final color = accentColor ?? colorScheme.primary;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        AppHaptics.selectionClick();
-        _openSettingsUrl(url);
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+    return ScaleTouchWrapper(
+      hapticOnPressDown: true,
+      scaleDownFactor: 0.92,
+      child: InkWell(
+        customBorder: CardMetrics.shape(16, expressive: isM3E),
+        onTap: () {
+          AppHaptics.selectionClick();
+          _openSettingsUrl(url);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: ShapeDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  shape: CardMetrics.shape(14, expressive: isM3E),
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w500,
+              const SizedBox(height: 6),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

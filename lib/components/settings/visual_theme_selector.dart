@@ -54,68 +54,98 @@ class VisualThemeSelector extends StatelessWidget {
       ),
     ];
 
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.palette_outlined,
-                  size: 20,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  tr('theme'),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-              ],
-            ),
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Material(
+        color: colorScheme.surfaceContainerLow,
+        shape: CardMetrics.shape(
+          cardRadius,
+          expressive: isM3E,
+          side: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.22),
           ),
-          Row(
-            children: options.map((opt) {
-              final isSelected = opt.mode == currentMode;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: _ThemeThumbnailCard(
-                    mode: opt.mode,
-                    label: opt.label,
-                    isSelected: isSelected,
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      switch (opt.mode) {
-                        case _VisualThemeMode.system:
-                          themeSettings.theme = ThemeSettings.system;
-                          themeSettings.useBlackTheme = false;
-                          break;
-                        case _VisualThemeMode.light:
-                          themeSettings.theme = ThemeSettings.light;
-                          themeSettings.useBlackTheme = false;
-                          break;
-                        case _VisualThemeMode.dark:
-                          themeSettings.theme = ThemeSettings.dark;
-                          themeSettings.useBlackTheme = false;
-                          break;
-                        case _VisualThemeMode.amoled:
-                          themeSettings.theme = ThemeSettings.dark;
-                          themeSettings.useBlackTheme = true;
-                          break;
-                      }
-                    },
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: ShapeDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.14),
+                      shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                    ),
+                    child: Icon(
+                      Icons.palette_outlined,
+                      size: 18,
+                      color: colorScheme.primary,
+                    ),
                   ),
-                ),
-              );
-            }).toList(),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Text(
+                      tr('theme'),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: options.map((opt) {
+                  final isSelected = opt.mode == currentMode;
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: _ThemeThumbnailCard(
+                        mode: opt.mode,
+                        label: opt.label,
+                        isSelected: isSelected,
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          switch (opt.mode) {
+                            case _VisualThemeMode.system:
+                              themeSettings.theme = ThemeSettings.system;
+                              themeSettings.useBlackTheme = false;
+                              break;
+                            case _VisualThemeMode.light:
+                              themeSettings.theme = ThemeSettings.light;
+                              themeSettings.useBlackTheme = false;
+                              break;
+                            case _VisualThemeMode.dark:
+                              themeSettings.theme = ThemeSettings.dark;
+                              themeSettings.useBlackTheme = false;
+                              break;
+                            case _VisualThemeMode.amoled:
+                              themeSettings.theme = ThemeSettings.dark;
+                              themeSettings.useBlackTheme = true;
+                              break;
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -140,36 +170,41 @@ class _ThemeThumbnailCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(baseRadius);
+    final cardRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
     final innerRadius = CardMetrics.inner(cardRadius);
 
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(cardRadius),
+          customBorder: CardMetrics.shape(cardRadius, expressive: isM3E),
           child: AnimatedContainer(
             duration: Duration(milliseconds: animsEnabled ? 220 : 0),
             curve: AppConstants.expressiveDecelerate,
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: isSelected
                   ? colorScheme.primaryContainer.withValues(alpha: 0.35)
                   : colorScheme.surfaceContainerHighest.withValues(alpha: 0.25),
-              borderRadius: BorderRadius.circular(cardRadius),
-              border: Border.all(
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.outlineVariant.withValues(
-                        alpha: theme.brightness == Brightness.dark
-                            ? 0.35
-                            : 0.65,
-                      ),
-                width: isSelected ? 2.0 : 1.0,
+              shape: CardMetrics.shape(
+                cardRadius,
+                expressive: isM3E,
+                side: BorderSide(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.outlineVariant.withValues(
+                          alpha: theme.brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                  width: isSelected ? 2.0 : 1.0,
+                ),
               ),
             ),
             child: Column(
@@ -178,13 +213,16 @@ class _ThemeThumbnailCard extends StatelessWidget {
                 // Mockup Window
                 Container(
                   height: 58,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(innerRadius),
-                    border: Border.all(
-                      color: isSelected
-                          ? colorScheme.primary.withValues(alpha: 0.5)
-                          : colorScheme.outlineVariant.withValues(alpha: 0.2),
-                      width: 0.8,
+                  decoration: ShapeDecoration(
+                    shape: CardMetrics.shape(
+                      innerRadius,
+                      expressive: isM3E,
+                      side: BorderSide(
+                        color: isSelected
+                            ? colorScheme.primary.withValues(alpha: 0.5)
+                            : colorScheme.outlineVariant.withValues(alpha: 0.2),
+                        width: 0.8,
+                      ),
                     ),
                   ),
                   clipBehavior: Clip.antiAlias,

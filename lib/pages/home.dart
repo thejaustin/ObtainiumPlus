@@ -32,6 +32,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -693,11 +694,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
 
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final navBar = NavigationBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
       indicatorColor: colorScheme.primaryContainer,
-      indicatorShape: const StadiumBorder(),
+      indicatorShape: CardMetrics.shape(
+        CardMetrics.pill(plusSettings.plusGlobalCornerRadius),
+        expressive: isM3E,
+      ),
       labelBehavior: labelBehavior,
       animationDuration: Duration(
         milliseconds: plusSettings.plusEnableEnhancedAnimations ? 400 : 250,
@@ -770,17 +775,20 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   enabled: enableGlass,
                   sigma: 20,
                   child: Container(
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: colorScheme.surfaceContainerHigh.withValues(
                         alpha: enableGlass ? 0.72 : 1.0,
                       ),
-                      borderRadius: BorderRadius.circular(32),
-                      border: Border.all(
-                        color: enableGlass
-                            ? colorScheme.primary.withValues(alpha: 0.18)
-                            : colorScheme.outlineVariant.withValues(
-                                alpha: 0.18,
-                              ),
+                      shape: CardMetrics.shape(
+                        32,
+                        expressive: isM3E,
+                        side: BorderSide(
+                          color: enableGlass
+                              ? colorScheme.primary.withValues(alpha: 0.18)
+                              : colorScheme.outlineVariant.withValues(
+                                  alpha: 0.18,
+                                ),
+                        ),
                       ),
                     ),
                     child: Stack(
