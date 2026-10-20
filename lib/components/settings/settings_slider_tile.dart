@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -58,16 +59,38 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
     final bool isModifiedFromDefault =
         widget.defaultValue != null &&
         (widget.value - widget.defaultValue!).abs() > 0.001;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, isCompact ? 2 : 4, 16, 0),
+      padding: EdgeInsets.fromLTRB(16, isCompact ? 6 : 8, 16, 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(widget.icon, size: 22, color: colorScheme.onSurfaceVariant),
-              const SizedBox(width: 16),
+              AnimatedContainer(
+                duration: Duration(milliseconds: animsEnabled ? 220 : 0),
+                curve: Curves.easeOutCubic,
+                width: 36,
+                height: 36,
+                decoration: ShapeDecoration(
+                  color: _isDragging
+                      ? colorScheme.primary.withValues(alpha: 0.18)
+                      : colorScheme.surfaceContainerHighest.withValues(
+                          alpha: isM3E ? 0.50 : 0.30,
+                        ),
+                  shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                ),
+                child: Icon(
+                  widget.icon,
+                  size: 19,
+                  color: _isDragging
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   widget.title,

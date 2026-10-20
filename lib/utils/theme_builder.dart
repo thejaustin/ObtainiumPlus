@@ -78,7 +78,13 @@ class ThemeBuilder {
         cornerRadius,
       ),
       switchTheme: _buildSwitchTheme(colorScheme, tvFocus),
-      sliderTheme: _buildSliderTheme(colorScheme),
+      sliderTheme: _buildSliderTheme(colorScheme, plusEnableMaterialExpressive),
+      expansionTileTheme: ExpansionTileThemeData(
+        shape: const Border(),
+        collapsedShape: const Border(),
+        iconColor: colorScheme.primary,
+        collapsedIconColor: colorScheme.onSurfaceVariant,
+      ),
       floatingActionButtonTheme: _buildFabTheme(
         colorScheme,
         plusEnableMaterialExpressive,
@@ -92,9 +98,12 @@ class ThemeBuilder {
       radioTheme: tvFocus.enabled
           ? RadioThemeData(overlayColor: tvFocus.overlay(0.5))
           : null,
-      segmentedButtonTheme: tvFocus.enabled
-          ? SegmentedButtonThemeData(style: tvFocus.buttonStyle(0.45))
-          : null,
+      segmentedButtonTheme: _buildSegmentedButtonTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        cornerRadius,
+        tvFocus,
+      ),
       menuButtonTheme: tvFocus.enabled
           ? MenuButtonThemeData(style: tvFocus.buttonStyle(0.35))
           : null,
@@ -108,13 +117,35 @@ class ThemeBuilder {
         plusEnableMaterialExpressive,
         cornerRadius,
       ),
-      navigationBarTheme: _buildNavigationBarTheme(colorScheme),
-      appBarTheme: _buildAppBarTheme(colorScheme),
-      searchBarTheme: _buildSearchBarTheme(colorScheme),
-      elevatedButtonTheme: _buildElevatedButtonTheme(cornerRadius, tvFocus),
-      filledButtonTheme: _buildFilledButtonTheme(cornerRadius, tvFocus),
-      textButtonTheme: _buildTextButtonTheme(cornerRadius, tvFocus),
-      outlinedButtonTheme: _buildOutlinedButtonTheme(cornerRadius, tvFocus),
+      navigationBarTheme: _buildNavigationBarTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+      ),
+      appBarTheme: _buildAppBarTheme(colorScheme, plusEnableMaterialExpressive),
+      searchBarTheme: _buildSearchBarTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+      ),
+      elevatedButtonTheme: _buildElevatedButtonTheme(
+        cornerRadius,
+        plusEnableMaterialExpressive,
+        tvFocus,
+      ),
+      filledButtonTheme: _buildFilledButtonTheme(
+        cornerRadius,
+        plusEnableMaterialExpressive,
+        tvFocus,
+      ),
+      textButtonTheme: _buildTextButtonTheme(
+        cornerRadius,
+        plusEnableMaterialExpressive,
+        tvFocus,
+      ),
+      outlinedButtonTheme: _buildOutlinedButtonTheme(
+        cornerRadius,
+        plusEnableMaterialExpressive,
+        tvFocus,
+      ),
       chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(
@@ -402,13 +433,16 @@ class ThemeBuilder {
   }
 
   /// Builds SliderThemeData with M3 tonal track and thumb
-  static SliderThemeData _buildSliderTheme(ColorScheme colorScheme) {
+  static SliderThemeData _buildSliderTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
     return SliderThemeData(
-      // Opts into the M3 Expressive slider: 16dp track, bar handle with a gap
-      // either side, and stop indicators. Deprecated flag with no replacement
-      // until this look becomes the framework default (flutter#162186).
+      // Opts into the M3 Expressive slider (16dp track, bar handle with gap)
+      // when Material 3 Expressive is active; uses sleek classic track in
+      // Obtainium+ Theme mode.
       // ignore: deprecated_member_use
-      year2023: false,
+      year2023: !expressive,
       showValueIndicator: ShowValueIndicator.onDrag,
       activeTrackColor: colorScheme.primary,
       inactiveTrackColor: colorScheme.surfaceContainerHighest,
@@ -416,6 +450,55 @@ class ThemeBuilder {
       overlayColor: colorScheme.primary.withValues(alpha: AppOpacity.hint),
       valueIndicatorColor: colorScheme.primaryContainer,
       valueIndicatorTextStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+    );
+  }
+
+  /// Builds SegmentedButtonThemeData with expressive squircles or classic pills
+  static SegmentedButtonThemeData _buildSegmentedButtonTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+    double? cornerRadius,
+    _TvFocus tvFocus,
+  ) {
+    final radius = (cornerRadius ?? (expressive ? 16.0 : 12.0)).clamp(
+      10.0,
+      20.0,
+    );
+    return SegmentedButtonThemeData(
+      style: ButtonStyle(
+        overlayColor: tvFocus.overlay(0.45),
+        shape: WidgetStateProperty.all(
+          _shape(
+            expressive,
+            radius,
+            BorderSide(
+              color: colorScheme.outlineVariant.withValues(
+                alpha: colorScheme.brightness == Brightness.dark ? 0.45 : 0.7,
+              ),
+            ),
+          ),
+        ),
+        backgroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.primaryContainer;
+          }
+          return colorScheme.surfaceContainerLow;
+        }),
+        foregroundColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return colorScheme.onPrimaryContainer;
+          }
+          return colorScheme.onSurfaceVariant;
+        }),
+        textStyle: WidgetStateProperty.resolveWith((states) {
+          return TextStyle(
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+            fontSize: 13,
+          );
+        }),
+      ),
     );
   }
 
@@ -472,13 +555,16 @@ class ThemeBuilder {
   /// Builds NavigationBarThemeData with proper M3 icon/label theming
   static NavigationBarThemeData _buildNavigationBarTheme(
     ColorScheme colorScheme,
+    bool expressive,
   ) {
     return NavigationBarThemeData(
       backgroundColor: colorScheme.surfaceContainer,
       surfaceTintColor: Colors.transparent,
       elevation: 3,
       indicatorColor: colorScheme.primaryContainer,
-      indicatorShape: const StadiumBorder(),
+      indicatorShape: expressive
+          ? RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(16))
+          : const StadiumBorder(),
       iconTheme: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return IconThemeData(color: colorScheme.onPrimaryContainer);
@@ -490,7 +576,7 @@ class ThemeBuilder {
           return TextStyle(
             color: colorScheme.onSurface,
             fontSize: 12,
-            fontWeight: FontWeight.w500,
+            fontWeight: expressive ? FontWeight.w700 : FontWeight.w500,
           );
         }
         return TextStyle(
@@ -503,7 +589,10 @@ class ThemeBuilder {
   }
 
   /// Builds AppBarTheme for consistent app bar styling
-  static AppBarTheme _buildAppBarTheme(ColorScheme colorScheme) {
+  static AppBarTheme _buildAppBarTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
     return AppBarTheme(
       backgroundColor: colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
@@ -514,14 +603,17 @@ class ThemeBuilder {
       titleTextStyle: TextStyle(
         color: colorScheme.onSurface,
         fontSize: 22,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.15,
+        fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
+        letterSpacing: expressive ? -0.2 : 0.15,
       ),
     );
   }
 
   /// Builds SearchBarThemeData with proper elevation and shape
-  static SearchBarThemeData _buildSearchBarTheme(ColorScheme colorScheme) {
+  static SearchBarThemeData _buildSearchBarTheme(
+    ColorScheme colorScheme,
+    bool expressive,
+  ) {
     return SearchBarThemeData(
       elevation: WidgetStateProperty.all(0),
       backgroundColor: WidgetStateProperty.all(
@@ -529,9 +621,10 @@ class ThemeBuilder {
       ),
       shape: WidgetStateProperty.resolveWith((states) {
         final isFocused = states.contains(WidgetState.focused);
-        return RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(isFocused ? 18.0 : 28.0),
-          side: BorderSide(
+        return _shape(
+          expressive,
+          isFocused ? 18.0 : 28.0,
+          BorderSide(
             color: isFocused
                 ? colorScheme.primary
                 : colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -594,17 +687,14 @@ class ThemeBuilder {
 
   static ElevatedButtonThemeData _buildElevatedButtonTheme(
     double? cornerRadius,
+    bool expressive,
     _TvFocus tvFocus,
   ) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
-            ? RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  cornerRadius.clamp(0.0, 24.0),
-                ),
-              )
+            ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
       ),
     );
@@ -612,17 +702,14 @@ class ThemeBuilder {
 
   static FilledButtonThemeData _buildFilledButtonTheme(
     double? cornerRadius,
+    bool expressive,
     _TvFocus tvFocus,
   ) {
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
-            ? RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  cornerRadius.clamp(0.0, 24.0),
-                ),
-              )
+            ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
       ),
     );
@@ -630,17 +717,14 @@ class ThemeBuilder {
 
   static TextButtonThemeData _buildTextButtonTheme(
     double? cornerRadius,
+    bool expressive,
     _TvFocus tvFocus,
   ) {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
-            ? RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  cornerRadius.clamp(0.0, 24.0),
-                ),
-              )
+            ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
       ),
     );
@@ -648,17 +732,14 @@ class ThemeBuilder {
 
   static OutlinedButtonThemeData _buildOutlinedButtonTheme(
     double? cornerRadius,
+    bool expressive,
     _TvFocus tvFocus,
   ) {
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         shape: cornerRadius != null
-            ? RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(
-                  cornerRadius.clamp(0.0, 24.0),
-                ),
-              )
+            ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
       ),
     );

@@ -195,17 +195,20 @@ class _AppGridTileState extends State<AppGridTile>
             }
 
             // Border styling with M3E stroke hierarchy
-            Border cardBorder;
+            BorderSide cardBorderSide;
             if (widget.isSelected) {
-              cardBorder = Border.all(color: colorScheme.primary, width: 2.0);
+              cardBorderSide = BorderSide(
+                color: colorScheme.primary,
+                width: 2.0,
+              );
             } else if (widget.appInMemory.app.pinned &&
                 plusSettings.plusPinnedBorderAccent) {
-              cardBorder = Border.all(
+              cardBorderSide = BorderSide(
                 color: colorScheme.primary.withValues(alpha: 0.65),
                 width: 1.5,
               );
             } else if (widget.hasUpdate) {
-              cardBorder = Border.all(
+              cardBorderSide = BorderSide(
                 color:
                     (widget.isAmbiguous
                             ? colorScheme.tertiary
@@ -214,14 +217,14 @@ class _AppGridTileState extends State<AppGridTile>
                 width: 1.2,
               );
             } else if (plusSettings.plusEnableGlassmorphism) {
-              cardBorder = Border.all(
+              cardBorderSide = BorderSide(
                 color: colorScheme.onSurface.withValues(
                   alpha: AppConstants.glassBorderAlpha,
                 ),
                 width: 0.8,
               );
             } else {
-              cardBorder = Border.all(
+              cardBorderSide = BorderSide(
                 color: colorScheme.outlineVariant.withValues(
                   alpha: isDark ? 0.35 : 0.65,
                 ),
@@ -267,14 +270,22 @@ class _AppGridTileState extends State<AppGridTile>
                       : 200,
                 ),
                 curve: curve,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(cardBorderRadius),
+                decoration: ShapeDecoration(
+                  shape: CardMetrics.shape(
+                    cardBorderRadius,
+                    expressive: plusSettings.plusEnableMaterialExpressive,
+                    side: cardBorderSide,
+                  ),
                   color: cardColor,
-                  border: cardBorder,
-                  boxShadow: cardShadow,
+                  shadows: cardShadow,
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(cardBorderRadius),
+                child: ClipPath(
+                  clipper: ShapeBorderClipper(
+                    shape: CardMetrics.shape(
+                      cardBorderRadius,
+                      expressive: plusSettings.plusEnableMaterialExpressive,
+                    ),
+                  ),
                   child: Stack(
                     children: [
                       // 1. Backdrop blur (clipped inside card)
@@ -389,8 +400,10 @@ class _AppGridTileState extends State<AppGridTile>
                                 onHighlightChanged: (highlighted) {
                                   setState(() => _isPressed = highlighted);
                                 },
-                                borderRadius: BorderRadius.circular(
+                                customBorder: CardMetrics.shape(
                                   cardBorderRadius,
+                                  expressive:
+                                      plusSettings.plusEnableMaterialExpressive,
                                 ),
                                 splashColor: colorScheme.primary.withValues(
                                   alpha: 0.12,
@@ -640,15 +653,20 @@ class _AppGridTileState extends State<AppGridTile>
           child: Container(
             width: iconSize,
             height: iconSize,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(iconBorderRadius),
-              border: plusSettings.plusIconRimBorder
-                  ? Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                      width: 1.0,
-                    )
-                  : null,
-              boxShadow: AppShadows.smooth(
+            decoration: ShapeDecoration(
+              shape: CardMetrics.shape(
+                iconBorderRadius,
+                expressive: plusSettings.plusEnableMaterialExpressive,
+                side: plusSettings.plusIconRimBorder
+                    ? BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.4,
+                        ),
+                        width: 1.0,
+                      )
+                    : BorderSide.none,
+              ),
+              shadows: AppShadows.smooth(
                 color: Colors.black,
                 opacity: 0.10,
                 blurFactor: 0.7,
@@ -673,9 +691,14 @@ class _AppGridTileState extends State<AppGridTile>
                 ),
               ),
               child: widget.appInMemory.icon != null
-                  ? ClipRRect(
+                  ? ClipPath(
                       key: ValueKey('icon_${widget.appInMemory.app.id}'),
-                      borderRadius: BorderRadius.circular(iconBorderRadius),
+                      clipper: ShapeBorderClipper(
+                        shape: CardMetrics.shape(
+                          iconBorderRadius,
+                          expressive: plusSettings.plusEnableMaterialExpressive,
+                        ),
+                      ),
                       child: Image.memory(
                         widget.appInMemory.icon!,
                         fit: BoxFit.contain,

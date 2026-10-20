@@ -103,6 +103,7 @@ class AppearanceHub extends StatelessWidget {
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -117,44 +118,54 @@ class AppearanceHub extends StatelessWidget {
               color: plusSettings.plusEnableGlassmorphism
                   ? colorScheme.surfaceContainerLow.withValues(alpha: 0.7)
                   : colorScheme.surfaceContainerLow,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(cardRadius),
+              shape: CardMetrics.shape(
+                cardRadius,
+                expressive: isM3E,
                 side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(
-                              CardMetrics.inner(cardRadius),
+                          width: 44,
+                          height: 44,
+                          decoration: ShapeDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            shape: CardMetrics.shape(
+                              innerRadius,
+                              expressive: isM3E,
                             ),
                           ),
                           child: Icon(
                             isM3E
                                 ? Icons.brush_rounded
                                 : Icons.auto_awesome_rounded,
-                            size: 18,
+                            size: 22,
                             color: colorScheme.primary,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 14),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 tr('designSystemThemeStyle'),
-                                style: Theme.of(context).textTheme.titleSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700),
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
                               ),
                               const SizedBox(height: 2),
                               Text(
@@ -164,7 +175,6 @@ class AppearanceHub extends StatelessWidget {
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
-                                      fontSize: 11.5,
                                     ),
                               ),
                             ],
@@ -376,32 +386,36 @@ class _HubCard extends StatelessWidget {
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
 
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final cardShape = CardMetrics.shape(
+      cardRadius,
+      expressive: isM3E,
+      side: BorderSide(
+        color: colorScheme.outlineVariant.withValues(
+          alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
+        ),
+        width: 1.0,
+      ),
+    );
+
     return ScaleTouchWrapper(
       child: Material(
-        color: Colors.transparent,
+        color: colorScheme.surfaceContainerLow,
+        shape: cardShape,
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(cardRadius),
-          child: Container(
+          customBorder: cardShape,
+          child: Padding(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(cardRadius),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(
-                  alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
-                ),
-                width: 1.0,
-              ),
-            ),
             child: Row(
               children: [
                 Container(
                   width: 44,
                   height: 44,
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: accentColor.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(innerRadius),
+                    shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                   ),
                   child: Icon(icon, color: accentColor, size: 22),
                 ),

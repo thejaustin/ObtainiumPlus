@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -25,16 +26,47 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
 }) {
   return Consumer<T>(
     builder: (context, settings, child) {
+      final plusSettings = context.watch<PlusSettingsProvider>();
       final plusGatedOff =
           settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
       if (plusGatedOff) {
         return const SizedBox.shrink();
       }
+      final isEnabled = value(settings);
+      final colorScheme = Theme.of(context).colorScheme;
+      final isM3E = plusSettings.plusEnableMaterialExpressive;
+      final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+          ? plusSettings.plusSettingsCornerRadius
+          : plusSettings.plusGlobalCornerRadius;
+      final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
+
       return SwitchListTile.adaptive(
-        secondary: Icon(icon),
+        secondary: AnimatedContainer(
+          duration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 220 : 0,
+          ),
+          curve: Curves.easeOutCubic,
+          width: 36,
+          height: 36,
+          decoration: ShapeDecoration(
+            color: isEnabled
+                ? colorScheme.primary.withValues(alpha: isM3E ? 0.16 : 0.10)
+                : colorScheme.surfaceContainerHighest.withValues(
+                    alpha: isM3E ? 0.50 : 0.30,
+                  ),
+            shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+          ),
+          child: Icon(
+            icon,
+            size: 19,
+            color: isEnabled
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+          ),
+        ),
         title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
         subtitle: Text(subtitle),
-        value: value(settings),
+        value: isEnabled,
         onChanged: (v) {
           v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
           onChanged(settings, v);

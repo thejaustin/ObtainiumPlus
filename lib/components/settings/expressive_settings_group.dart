@@ -115,7 +115,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             if (index < visibleChildren.length - 1)
               Divider(
                 height: 1,
-                indent: isCompact ? 16 : 56,
+                indent: isCompact ? 16 : 66,
                 endIndent: 16,
                 color: colorScheme.outlineVariant.withValues(
                   alpha: AppOpacity.low,
@@ -141,11 +141,14 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             curve: Curves.easeOutCubic,
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: colorScheme.primary.withValues(
                 alpha: _isExpanded ? 0.22 : 0.12,
               ),
-              borderRadius: BorderRadius.circular(innerRadius),
+              shape: CardMetrics.shape(
+                innerRadius,
+                expressive: plusSettings.plusEnableMaterialExpressive,
+              ),
             ),
             child: Icon(
               widget.icon,
@@ -190,11 +193,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Non-expandable: section title shown above the card
+        // Non-expandable: section title shown above the card with identical 36x36 icon axis
         if (widget.title != null && !widget.isExpandable)
           Padding(
             padding: EdgeInsets.fromLTRB(
-              20,
+              16,
               isCompact ? 10 : 16,
               16,
               isCompact ? 4 : 8,
@@ -207,19 +210,23 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                     children: [
                       if (widget.icon != null) ...[
                         Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
+                          width: 36,
+                          height: 36,
+                          decoration: ShapeDecoration(
                             color: colorScheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(innerRadius),
+                            shape: CardMetrics.shape(
+                              innerRadius,
+                              expressive:
+                                  plusSettings.plusEnableMaterialExpressive,
+                            ),
                           ),
                           child: Icon(
                             widget.icon,
                             color: colorScheme.primary,
-                            size: 17,
+                            size: isCompact ? 18 : 20,
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 14),
                       ],
                       Expanded(
                         child: Column(
@@ -276,8 +283,9 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
               color: colorScheme.surfaceContainerLow.withValues(
                 alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(radius),
+              shape: CardMetrics.shape(
+                radius,
+                expressive: plusSettings.plusEnableMaterialExpressive,
                 side: BorderSide(
                   color: _isExpanded
                       ? colorScheme.primary.withValues(alpha: 0.5)
@@ -289,8 +297,13 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                   width: _isExpanded ? 1.2 : 1.0,
                 ),
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(radius),
+              child: ClipPath(
+                clipper: ShapeBorderClipper(
+                  shape: CardMetrics.shape(
+                    radius,
+                    expressive: plusSettings.plusEnableMaterialExpressive,
+                  ),
+                ),
                 child: ConditionalBlur(
                   enabled: plusSettings.plusEnableGlassmorphism,
                   sigma: AppConstants.glassBlurSigmaSoft,

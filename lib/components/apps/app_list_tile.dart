@@ -214,30 +214,34 @@ class _AppListTileState extends State<AppListTile>
             : plusSettings.plusGlobalCornerRadius,
       );
 
+      final iconShape = CardMetrics.shape(
+        itemRadius,
+        expressive: plusSettings.plusEnableMaterialExpressive,
+        side: plusSettings.plusIconRimBorder
+            ? BorderSide(
+                color: Theme.of(
+                  context,
+                ).colorScheme.outlineVariant.withValues(alpha: 0.45),
+                width: 1.0,
+              )
+            : BorderSide.none,
+      );
+
       final iconWidget = Hero(
         tag: 'app_icon_${appInMemory.app.id}',
         child: Container(
           width: 44,
           height: 44,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(itemRadius),
+          decoration: ShapeDecoration(
+            shape: iconShape,
             color: Theme.of(
               context,
             ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            boxShadow: AppShadows.smooth(
+            shadows: AppShadows.smooth(
               color: Colors.black,
               opacity: 0.08,
               blurFactor: 0.5,
             ),
-            // Rim border: gives transparent/white icons contrast against the card.
-            border: plusSettings.plusIconRimBorder
-                ? Border.all(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.outlineVariant.withValues(alpha: 0.45),
-                    width: 1.0,
-                  )
-                : null,
           ),
           child: AnimatedSwitcher(
             duration: Duration(
@@ -265,9 +269,14 @@ class _AppListTileState extends State<AppListTile>
                   )
                 : FadeTransition(opacity: animation, child: child),
             child: appInMemory.icon != null
-                ? ClipRRect(
+                ? ClipPath(
                     key: ValueKey('icon_${appInMemory.app.id}'),
-                    borderRadius: BorderRadius.circular(itemRadius),
+                    clipper: ShapeBorderClipper(
+                      shape: CardMetrics.shape(
+                        itemRadius,
+                        expressive: plusSettings.plusEnableMaterialExpressive,
+                      ),
+                    ),
                     child: Image.memory(
                       appInMemory.icon!,
                       fit: BoxFit.cover,
@@ -526,8 +535,44 @@ class _AppListTileState extends State<AppListTile>
                         : 0,
                   ),
                   curve: AppConstants.expressiveStandard,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(radius),
+                  decoration: ShapeDecoration(
+                    shape: CardMetrics.shape(
+                      radius,
+                      expressive: plusSettings.plusEnableMaterialExpressive,
+                      side: BorderSide(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primary
+                            : hasUpdate
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.42)
+                            : appInMemory.app.pinned &&
+                                  plusSettings.plusPinnedBorderAccent
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.55)
+                            : appInMemory.app.pinned
+                            ? Theme.of(context).colorScheme.outlineVariant
+                            : plusSettings.plusEnableGlassmorphism
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(
+                                alpha: AppConstants.glassBorderAlpha,
+                              )
+                            : Theme.of(context).brightness == Brightness.light
+                            ? Theme.of(context).colorScheme.outlineVariant
+                                  .withValues(alpha: 0.65)
+                            : Theme.of(context).colorScheme.outlineVariant
+                                  .withValues(alpha: 0.35),
+                        width:
+                            isSelected ||
+                                (appInMemory.app.pinned &&
+                                    plusSettings.plusPinnedBorderAccent) ||
+                                (hasUpdate && !isCompact)
+                            ? 1.5
+                            : 1.0,
+                      ),
+                    ),
                     color: isSelected
                         ? Theme.of(
                             context,
@@ -553,40 +598,7 @@ class _AppListTileState extends State<AppListTile>
                             alpha: AppConstants.glassSurfaceAlpha,
                           )
                         : Theme.of(context).colorScheme.surfaceContainerLow,
-                    border: Border.all(
-                      color: isSelected
-                          ? Theme.of(context).colorScheme.primary
-                          : hasUpdate
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.42)
-                          : appInMemory.app.pinned &&
-                                plusSettings.plusPinnedBorderAccent
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primary.withValues(alpha: 0.55)
-                          : appInMemory.app.pinned
-                          ? Theme.of(context).colorScheme.outlineVariant
-                          : plusSettings.plusEnableGlassmorphism
-                          ? Theme.of(context).colorScheme.onSurface.withValues(
-                              alpha: AppConstants.glassBorderAlpha,
-                            )
-                          : Theme.of(context).brightness == Brightness.light
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant.withValues(alpha: 0.65)
-                          : Theme.of(context).colorScheme.outlineVariant
-                                .withValues(alpha: 0.35),
-                      width:
-                          isSelected ||
-                              (appInMemory.app.pinned &&
-                                  plusSettings.plusPinnedBorderAccent) ||
-                              (hasUpdate && !isCompact)
-                          ? 1.5
-                          : 1.0,
-                    ),
-                    boxShadow:
-                        isSelected && plusSettings.plusEnableGlassmorphism
+                    shadows: isSelected && plusSettings.plusEnableGlassmorphism
                         ? AppShadows.glow(
                             color: Theme.of(context).colorScheme.primary,
                             intensity: 0.7,
@@ -600,14 +612,22 @@ class _AppListTileState extends State<AppListTile>
                           )
                         : null,
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(radius),
+                  child: ClipPath(
+                    clipper: ShapeBorderClipper(
+                      shape: CardMetrics.shape(
+                        radius,
+                        expressive: plusSettings.plusEnableMaterialExpressive,
+                      ),
+                    ),
                     child: Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onLongPress: onLongPress,
                         onTap: onTap,
-                        borderRadius: BorderRadius.circular(radius),
+                        customBorder: CardMetrics.shape(
+                          radius,
+                          expressive: plusSettings.plusEnableMaterialExpressive,
+                        ),
                         splashColor: Theme.of(
                           context,
                         ).colorScheme.primary.withValues(alpha: 0.12),

@@ -31,6 +31,20 @@ class CardMetrics {
   /// proportional to the card so tight layouts stay card-shaped.
   static double cardFor(double base, double extent) =>
       min(card(base), extent * 0.25);
+
+  /// Returns a continuous-curvature squircle ([RoundedSuperellipseBorder]) when
+  /// [expressive] (Material 3 Expressive) is enabled, or a classic circular-arc
+  /// [RoundedRectangleBorder] when Obtainium+ Theme is active.
+  static OutlinedBorder shape(
+    double radius, {
+    bool expressive = true,
+    BorderSide side = BorderSide.none,
+  }) {
+    final borderRadius = BorderRadius.circular(radius);
+    return expressive
+        ? RoundedSuperellipseBorder(borderRadius: borderRadius, side: side)
+        : RoundedRectangleBorder(borderRadius: borderRadius, side: side);
+  }
 }
 
 /// Standardized Material 3 Expressive layout calculations for app grids.
