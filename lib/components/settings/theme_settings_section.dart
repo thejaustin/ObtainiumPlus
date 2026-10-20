@@ -71,15 +71,6 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnablePopupSlider,
           onChanged: (s, v) => s.plusEnablePopupSlider = v,
         ),
-      if (_matches(tr('plusMaterialExpressive')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.brush_outlined,
-          title: tr('plusMaterialExpressive'),
-          subtitle: tr('plusMaterialExpressiveDescription'),
-          value: (s) => s.plusEnableMaterialExpressive,
-          onChanged: (s, v) => s.plusEnableMaterialExpressive = v,
-        ),
       if (_matches(tr('plusExpressiveProgress')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
@@ -119,6 +110,11 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> themeWidgets = [
+      if (_matches(tr('designSystemThemeStyle')) ||
+          _matches(tr('obtainiumPlusTheme')) ||
+          _matches(tr('materialExpressiveTheme')) ||
+          _matches(tr('plusMaterialExpressive')))
+        _buildDesignSystemSelector(context),
       if (_matches(tr('theme')))
         plusSettings.plusSettingsUseVisualThemePicker
             ? const VisualThemeSelector()
@@ -549,6 +545,66 @@ class ThemeSettingsSection extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDesignSystemSelector(BuildContext context) {
+    return Consumer<PlusSettingsProvider>(
+      builder: (context, plusSettings, child) {
+        final isM3E = plusSettings.plusEnableMaterialExpressive;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: Icon(
+                isM3E ? Icons.brush_rounded : Icons.auto_awesome_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(
+                tr('designSystemThemeStyle'),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(
+                isM3E
+                    ? tr('materialExpressiveThemeDescription')
+                    : tr('obtainiumPlusThemeDescription'),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<bool>(
+                  segments: [
+                    ButtonSegment<bool>(
+                      value: false,
+                      label: Text(tr('obtainiumPlusTheme')),
+                      icon: const Icon(Icons.auto_awesome_rounded),
+                    ),
+                    ButtonSegment<bool>(
+                      value: true,
+                      label: Text(tr('materialExpressiveTheme')),
+                      icon: const Icon(Icons.brush_rounded),
+                    ),
+                  ],
+                  selected: {isM3E},
+                  onSelectionChanged: (Set<bool> newSelection) {
+                    final next = newSelection.first;
+                    if (next) {
+                      AppHaptics.toggleOn();
+                    } else {
+                      AppHaptics.toggleOff();
+                    }
+                    plusSettings.plusEnableMaterialExpressive = next;
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

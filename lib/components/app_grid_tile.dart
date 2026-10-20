@@ -546,7 +546,8 @@ class _AppGridTileState extends State<AppGridTile>
             if (widget.hasUpdate) ...[
               _buildUpdateVersionPill(colorScheme),
             ] else if (viewSettings.displayShowVersion ||
-                viewSettings.displayShowAuthor) ...[
+                viewSettings.displayShowAuthor ||
+                viewSettings.displayShowDate) ...[
               _buildUpToDatePill(colorScheme, viewSettings),
             ],
             // Tag chips
@@ -604,7 +605,8 @@ class _AppGridTileState extends State<AppGridTile>
                 const SizedBox(height: 4),
                 _buildUpdateVersionPill(colorScheme),
               ] else if (viewSettings.displayShowVersion ||
-                  viewSettings.displayShowAuthor) ...[
+                  viewSettings.displayShowAuthor ||
+                  viewSettings.displayShowDate) ...[
                 const SizedBox(height: 3),
                 _buildUpToDatePill(colorScheme, viewSettings),
               ],
@@ -721,12 +723,27 @@ class _AppGridTileState extends State<AppGridTile>
 
   String _getVersionText() {
     final app = widget.appInMemory.app;
+    if (app.disabled) return tr('disabled');
+    final isTrackOnly = app.additionalSettings['trackOnly'] == true;
     final inst = app.installedVersion;
     final latest = app.latestVersion;
     if (widget.hasUpdate) {
       return latest.isNotEmpty ? latest : (inst ?? '');
     }
-    return inst ?? tr('notInstalled');
+    if (inst == null) {
+      if (latest.isNotEmpty) {
+        return isTrackOnly ? latest : '${tr('notInstalled')} ($latest)';
+      }
+      return tr('notInstalled');
+    }
+    return inst;
+  }
+
+  String? _getDateText() {
+    final app = widget.appInMemory.app;
+    final date = app.releaseDate ?? app.lastUpdateCheck;
+    if (date == null) return null;
+    return DateFormat('yyyy-MM-dd').format(date.toLocal());
   }
 
   /// Passive label showing the update target; the action lives on the icon badge
@@ -765,6 +782,24 @@ class _AppGridTileState extends State<AppGridTile>
     ColorScheme colorScheme,
     ViewSettingsProvider viewSettings,
   ) {
+    final parts = <String>[];
+    if (viewSettings.displayShowVersion) {
+      parts.add(_getVersionText());
+    }
+    if (viewSettings.displayShowAuthor &&
+        widget.appInMemory.author.isNotEmpty) {
+      parts.add(
+        parts.isEmpty
+            ? tr('byX', args: [widget.appInMemory.author])
+            : widget.appInMemory.author,
+      );
+    }
+    if (viewSettings.displayShowDate) {
+      final d = _getDateText();
+      if (d != null) parts.add(d);
+    }
+    final summaryText = parts.join(' • ');
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -776,33 +811,19 @@ class _AppGridTileState extends State<AppGridTile>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _buildSourceBadge(context),
-          if (viewSettings.displayShowVersion &&
-              (widget.appInMemory.app.installedVersion != null ||
-                  widget.appInMemory.installedInfo != null)) ...[
+          if (summaryText.isNotEmpty) ...[
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-                _getVersionText(),
+                summaryText,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 9.5,
                   color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ),
-          ] else if (viewSettings.displayShowAuthor) ...[
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                tr('byX', args: [widget.appInMemory.author]),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 9.5,
-                  letterSpacing: 0.1,
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+                  fontFamily: viewSettings.displayShowVersion
+                      ? 'monospace'
+                      : null,
                 ),
               ),
             ),

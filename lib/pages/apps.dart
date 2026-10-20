@@ -700,6 +700,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                     hasExtraDetails:
                         viewSettings.displayShowVersion ||
                         viewSettings.displayShowAuthor ||
+                        viewSettings.displayShowDate ||
                         plusSettings.plusShowTagsInList,
                   ),
                 ),
@@ -1897,6 +1898,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         final bool showDetails =
             viewSettings.displayShowVersion ||
             viewSettings.displayShowAuthor ||
+            viewSettings.displayShowDate ||
             plusSettings.plusShowTagsInList;
         final double aspectRatio = GridMetrics.childAspectRatio(
           columnCount: columnCount,

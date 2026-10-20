@@ -8,6 +8,7 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/version_constant.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -320,7 +321,10 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
           return ChoiceChip(
             label: Text(release.tag),
             selected: isSelected,
-            onSelected: (_) => setState(() => _selectedIndex = i),
+            onSelected: (_) {
+              AppHaptics.selectionClick();
+              setState(() => _selectedIndex = i);
+            },
             avatar: release.isNew
                 ? Icon(Icons.new_releases_rounded, size: 14, color: cs.primary)
                 : null,
@@ -476,7 +480,10 @@ class _ReleaseListState extends State<_ReleaseList> {
                     return ChoiceChip(
                       label: Text(release.tag),
                       selected: isSelected,
-                      onSelected: (_) => setState(() => _selectedIndex = i),
+                      onSelected: (_) {
+                        AppHaptics.selectionClick();
+                        setState(() => _selectedIndex = i);
+                      },
                     );
                   },
                 ),

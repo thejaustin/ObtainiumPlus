@@ -162,6 +162,7 @@ class CategorySections extends StatelessWidget {
     final bool showDetails =
         settingsProvider.displayShowVersion ||
         settingsProvider.displayShowAuthor ||
+        settingsProvider.displayShowDate ||
         plusSettings.plusShowTagsInList;
     final double aspectRatio = GridMetrics.childAspectRatio(
       columnCount: columnCount,

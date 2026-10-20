@@ -79,6 +79,10 @@ $logs''';
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
     final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -144,9 +148,9 @@ $logs''';
           SliverFillRemaining(
             child: Padding(
               padding: EdgeInsets.fromLTRB(
+                adaptiveMargin,
                 16.0,
-                16.0,
-                16.0,
+                adaptiveMargin,
                 16.0 + MediaQuery.of(context).padding.bottom,
               ),
               child: FutureBuilder<List<Log>>(

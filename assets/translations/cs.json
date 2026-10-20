@@ -1476,5 +1476,10 @@
     "scanningXApps": "Scanning {} apps…",
     "systemUpdates": "System updates",
     "plusEnableModernAppListTile": "Expressive app list",
-    "plusEnableModernAppListTileDescription": "Expressive app rows with swipe actions and drag-to-reorder pinned apps. Off uses the classic compact list."
+    "plusEnableModernAppListTileDescription": "Expressive app rows with swipe actions and drag-to-reorder pinned apps. Off uses the classic compact list.",
+    "designSystemThemeStyle": "Design System Style",
+    "obtainiumPlusTheme": "Obtainium+ Theme",
+    "obtainiumPlusThemeDescription": "Signature Obtainium+ design with classic shapes and refined accents",
+    "materialExpressiveTheme": "Material 3 Expressive",
+    "materialExpressiveThemeDescription": "Dynamic M3E superellipse squircles, expressive ripples, 16dp slider tracks, and emphasized motion"
 }

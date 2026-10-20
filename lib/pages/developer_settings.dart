@@ -27,6 +27,8 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
@@ -133,18 +135,21 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .playStoreVerifiedOnly,
-              onChanged: (val) =>
-                  context.read<PlusSettingsProvider>().playStoreVerifiedOnly =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context.read<PlusSettingsProvider>().playStoreVerifiedOnly =
+                    val;
+              },
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.block_outlined),
               title: Text(tr('noAdsFilter')),
               subtitle: Text(tr('excludeAppsContainAds')),
               value: context.watch<PlusSettingsProvider>().playStoreNoAdsFilter,
-              onChanged: (val) =>
-                  context.read<PlusSettingsProvider>().playStoreNoAdsFilter =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context.read<PlusSettingsProvider>().playStoreNoAdsFilter = val;
+              },
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(
@@ -155,11 +160,13 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .playStoreExcludeSystemApps,
-              onChanged: (val) =>
-                  context
-                          .read<PlusSettingsProvider>()
-                          .playStoreExcludeSystemApps =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context
+                        .read<PlusSettingsProvider>()
+                        .playStoreExcludeSystemApps =
+                    val;
+              },
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.vpn_lock_outlined),
@@ -168,17 +175,21 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .requireVPNForPlayStore,
-              onChanged: (val) =>
-                  context.read<PlusSettingsProvider>().requireVPNForPlayStore =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context.read<PlusSettingsProvider>().requireVPNForPlayStore =
+                    val;
+              },
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.auto_delete_outlined),
               title: Text(tr('autoDiscardTokens')),
               subtitle: Text(tr('immediatelyClearAuthTokens')),
               value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
-              onChanged: (val) =>
-                  context.read<PlusSettingsProvider>().autoDiscardTokens = val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context.read<PlusSettingsProvider>().autoDiscardTokens = val;
+              },
             ),
             const Divider(),
             ListTile(
@@ -320,11 +331,13 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusEnableExpressiveProgress,
-              onChanged: (val) =>
-                  context
-                          .read<PlusSettingsProvider>()
-                          .plusEnableExpressiveProgress =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context
+                        .read<PlusSettingsProvider>()
+                        .plusEnableExpressiveProgress =
+                    val;
+              },
             ),
             const Divider(),
             ListTile(
@@ -361,11 +374,13 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusOverrideIndividualCornerRadius,
-              onChanged: (val) =>
-                  context
-                          .read<PlusSettingsProvider>()
-                          .plusOverrideIndividualCornerRadius =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context
+                        .read<PlusSettingsProvider>()
+                        .plusOverrideIndividualCornerRadius =
+                    val;
+              },
             ),
             if (context
                 .watch<PlusSettingsProvider>()
@@ -436,11 +451,13 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusShowLegacyUIComparison,
-              onChanged: (val) =>
-                  context
-                          .read<PlusSettingsProvider>()
-                          .plusShowLegacyUIComparison =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context
+                        .read<PlusSettingsProvider>()
+                        .plusShowLegacyUIComparison =
+                    val;
+              },
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.science_outlined),
@@ -449,11 +466,13 @@ class DeveloperSettingsPage extends StatelessWidget {
               value: context
                   .watch<PlusSettingsProvider>()
                   .plusEnableExperimentalCustomization,
-              onChanged: (val) =>
-                  context
-                          .read<PlusSettingsProvider>()
-                          .plusEnableExperimentalCustomization =
-                      val,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context
+                        .read<PlusSettingsProvider>()
+                        .plusEnableExperimentalCustomization =
+                    val;
+              },
             ),
           ]),
           _buildSection(context, tr('testing'), [
@@ -513,23 +532,47 @@ class DeveloperSettingsPage extends StatelessWidget {
     String title,
     List<Widget> children,
   ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Text(
-            title,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+            child: Text(
+              title,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
           ),
-        ),
-        ...children,
-        const Divider(),
-      ],
+          Card(
+            elevation: 0,
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(cardRadius),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                  alpha: Theme.of(context).brightness == Brightness.dark
+                      ? 0.35
+                      : 0.65,
+                ),
+                width: 1.0,
+              ),
+            ),
+            child: Column(children: children),
+          ),
+        ],
+      ),
     );
   }
 
@@ -811,11 +854,17 @@ class DeveloperSettingsPage extends StatelessWidget {
         ? 'safetyExcellent'
         : (score > 50 ? 'safetyModerate' : 'safetyLow');
 
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+    final innerRadius = CardMetrics.inner(cardRadius);
+
     return Card(
       elevation: 0,
       color: color.withValues(alpha: AppOpacity.subtle),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(innerRadius),
         side: BorderSide(color: color.withValues(alpha: AppOpacity.medium)),
       ),
       child: Padding(

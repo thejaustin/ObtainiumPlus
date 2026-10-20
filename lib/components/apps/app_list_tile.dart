@@ -184,10 +184,27 @@ class _AppListTileState extends State<AppListTile>
 
     String getVersionText() {
       if (appInMemory.app.disabled) return tr('disabled');
-      if (appInMemory.app.installedVersion == null) return tr('notInstalled');
-      if (hasUpdate)
-        return '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}';
-      return appInMemory.app.installedVersion!;
+      final isTrackOnly =
+          appInMemory.app.additionalSettings['trackOnly'] == true;
+      final installed = appInMemory.app.installedVersion;
+      final latest = appInMemory.app.latestVersion;
+      if (installed == null) {
+        if (latest.isNotEmpty) {
+          return isTrackOnly ? latest : '${tr('notInstalled')} ($latest)';
+        }
+        return tr('notInstalled');
+      }
+      if (hasUpdate) {
+        return '$installed → $latest';
+      }
+      return installed;
+    }
+
+    String? getDateText() {
+      final date =
+          appInMemory.app.releaseDate ?? appInMemory.app.lastUpdateCheck;
+      if (date == null) return null;
+      return DateFormat('yyyy-MM-dd').format(date.toLocal());
     }
 
     Widget getAppIcon() {
@@ -361,14 +378,25 @@ class _AppListTileState extends State<AppListTile>
     final trailingRow = Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (onShowChanges != null && hasUpdate)
+        if (onShowChanges != null)
           ScaleTouchWrapper(
             hapticOnPressDown: true,
             scaleDownFactor: 0.88,
             child: IconButton(
-              icon: const Icon(Icons.history_rounded),
+              visualDensity: isCompact
+                  ? VisualDensity.compact
+                  : VisualDensity.standard,
+              icon: Icon(
+                Icons.history_rounded,
+                size: 20,
+                color: hasUpdate
+                    ? Theme.of(context).colorScheme.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
               onPressed: onShowChanges,
-              tooltip: tr('viewChanges'),
+              tooltip: tr('changes'),
             ),
           ),
         ScaleTouchWrapper(
@@ -701,6 +729,16 @@ class _AppListTileState extends State<AppListTile>
                               ),
                               title: Row(
                                 children: [
+                                  if (appInMemory.app.pinned) ...[
+                                    Icon(
+                                      Icons.push_pin_rounded,
+                                      size: 14,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
                                   Expanded(
                                     child: Text(
                                       appInMemory.name,
@@ -719,158 +757,342 @@ class _AppListTileState extends State<AppListTile>
                                           ),
                                     ),
                                   ),
+                                  if (appInMemory
+                                          .app
+                                          .additionalSettings['trackOnly'] ==
+                                      true) ...[
+                                    const SizedBox(width: 6),
+                                    Tooltip(
+                                      message: tr('trackOnly'),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 5,
+                                          vertical: 1.5,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .tertiaryContainer
+                                              .withValues(alpha: 0.6),
+                                          borderRadius: BorderRadius.circular(
+                                            CardMetrics.pillRadius,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.visibility_outlined,
+                                          size: 11,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onTertiaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                   const SizedBox(width: 6),
                                   getSourceBadge(),
                                 ],
                               ),
-                              subtitle: Row(
-                                children: [
-                                  if (appInMemory.app.hasPendingRepoRename)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 6),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.info_outline_rounded,
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.primary,
-                                            size: 13,
-                                          ),
-                                          const SizedBox(width: 3),
-                                          Text(
-                                            tr('repoRenamed'),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall
-                                                ?.copyWith(
-                                                  color: Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary,
-                                                  fontWeight: FontWeight.w600,
-                                                  fontSize: 10,
+                              subtitle: Builder(
+                                builder: (context) {
+                                  final colorScheme = Theme.of(
+                                    context,
+                                  ).colorScheme;
+                                  final showAuthor =
+                                      viewSettings.displayShowAuthor &&
+                                      appInMemory.author.isNotEmpty;
+                                  final showVersion =
+                                      viewSettings.displayShowVersion;
+                                  final dateText = viewSettings.displayShowDate
+                                      ? getDateText()
+                                      : null;
+                                  final showDate =
+                                      dateText != null && dateText.isNotEmpty;
+
+                                  final hasSecondaryPills =
+                                      appInMemory.app.hasPendingRepoRename ||
+                                      appInMemory.app.categories.isNotEmpty ||
+                                      (plusSettings.plusShowTagsInList &&
+                                          appInMemory.app.tags.isNotEmpty);
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (showAuthor ||
+                                          showVersion ||
+                                          showDate) ...[
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            if (showAuthor)
+                                              Flexible(
+                                                child: Text(
+                                                  appInMemory.author,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        color: colorScheme
+                                                            .onSurfaceVariant
+                                                            .withValues(
+                                                              alpha: 0.85,
+                                                            ),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
                                                 ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  if (plusSettings.plusShowTagsInList &&
-                                      appInMemory.app.tags.isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(right: 8),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: appInMemory.app.tags
-                                            .take(2)
-                                            .map(
-                                              (tag) => Container(
-                                                margin: const EdgeInsets.only(
-                                                  right: 4,
-                                                ),
+                                              ),
+                                            if (showAuthor &&
+                                                showVersion &&
+                                                !hasUpdate)
+                                              Text(
+                                                ' • ',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: colorScheme
+                                                          .onSurfaceVariant
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
+                                                    ),
+                                              ),
+                                            if (showVersion)
+                                              Flexible(
+                                                child: hasUpdate
+                                                    ? _buildVersionUpdatePill(
+                                                        context,
+                                                        appInMemory
+                                                                .app
+                                                                .installedVersion ??
+                                                            '?',
+                                                        appInMemory
+                                                                .app
+                                                                .latestVersion
+                                                                .isNotEmpty
+                                                            ? appInMemory
+                                                                  .app
+                                                                  .latestVersion
+                                                            : '?',
+                                                      )
+                                                    : Text(
+                                                        getVersionText(),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall
+                                                            ?.copyWith(
+                                                              color: colorScheme
+                                                                  .onSurfaceVariant,
+                                                              fontStyle:
+                                                                  SourceUtils.isVersionPseudo(
+                                                                    appInMemory
+                                                                        .app,
+                                                                  )
+                                                                  ? FontStyle
+                                                                        .italic
+                                                                  : null,
+                                                            ),
+                                                      ),
+                                              ),
+                                            if (showDate &&
+                                                (showAuthor || showVersion))
+                                              Text(
+                                                ' • ',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      color: colorScheme
+                                                          .onSurfaceVariant
+                                                          .withValues(
+                                                            alpha: 0.6,
+                                                          ),
+                                                    ),
+                                              ),
+                                            if (showDate)
+                                              Text(
+                                                dateText,
+                                                maxLines: 1,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .bodySmall
+                                                    ?.copyWith(
+                                                      fontSize: 11,
+                                                      color: colorScheme
+                                                          .onSurfaceVariant
+                                                          .withValues(
+                                                            alpha: 0.75,
+                                                          ),
+                                                    ),
+                                              ),
+                                          ],
+                                        ),
+                                      ],
+                                      if (hasSecondaryPills && !isCompact) ...[
+                                        const SizedBox(height: 4),
+                                        Wrap(
+                                          spacing: 4,
+                                          runSpacing: 4,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: [
+                                            if (appInMemory
+                                                .app
+                                                .hasPendingRepoRename)
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.info_outline_rounded,
+                                                    color: colorScheme.primary,
+                                                    size: 13,
+                                                  ),
+                                                  const SizedBox(width: 3),
+                                                  Text(
+                                                    tr('repoRenamed'),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                          color: colorScheme
+                                                              .primary,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: 10,
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ...appInMemory.app.categories.take(2).map((
+                                              cat,
+                                            ) {
+                                              final catColorVal =
+                                                  viewSettings.categories[cat];
+                                              final catColor =
+                                                  catColorVal != null
+                                                  ? Color(catColorVal)
+                                                  : colorScheme.primary;
+                                              return Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                       horizontal: 6,
-                                                      vertical: 2,
+                                                      vertical: 1.5,
                                                     ),
                                                 decoration: BoxDecoration(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .secondaryContainer
-                                                      .withValues(alpha: 0.35),
+                                                  color: catColor.withValues(
+                                                    alpha: 0.14,
+                                                  ),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                         CardMetrics.pillRadius,
                                                       ),
                                                   border: Border.all(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .secondary
-                                                        .withValues(
-                                                          alpha: 0.18,
-                                                        ),
+                                                    color: catColor.withValues(
+                                                      alpha: 0.3,
+                                                    ),
                                                     width: 0.5,
                                                   ),
                                                 ),
-                                                child: Text(
-                                                  tag,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .labelSmall
-                                                      ?.copyWith(
-                                                        fontSize: 9.5,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        letterSpacing: 0.1,
-                                                        color: Theme.of(context)
-                                                            .colorScheme
-                                                            .onSecondaryContainer
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Container(
+                                                      width: 5,
+                                                      height: 5,
+                                                      decoration: BoxDecoration(
+                                                        color: catColor,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      cat,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .labelSmall
+                                                          ?.copyWith(
+                                                            fontSize: 9.5,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: colorScheme
+                                                                .onSurface
+                                                                .withValues(
+                                                                  alpha: 0.85,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            }),
+                                            if (plusSettings
+                                                    .plusShowTagsInList &&
+                                                appInMemory.app.tags.isNotEmpty)
+                                              ...appInMemory.app.tags
+                                                  .take(2)
+                                                  .map(
+                                                    (tag) => Container(
+                                                      padding:
+                                                          const EdgeInsets.symmetric(
+                                                            horizontal: 6,
+                                                            vertical: 1.5,
+                                                          ),
+                                                      decoration: BoxDecoration(
+                                                        color: colorScheme
+                                                            .secondaryContainer
                                                             .withValues(
-                                                              alpha: 0.85,
+                                                              alpha: 0.35,
+                                                            ),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              CardMetrics
+                                                                  .pillRadius,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: colorScheme
+                                                              .secondary
+                                                              .withValues(
+                                                                alpha: 0.18,
+                                                              ),
+                                                          width: 0.5,
+                                                        ),
+                                                      ),
+                                                      child: Text(
+                                                        tag,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .labelSmall
+                                                            ?.copyWith(
+                                                              fontSize: 9.5,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              letterSpacing:
+                                                                  0.1,
+                                                              color: colorScheme
+                                                                  .onSecondaryContainer
+                                                                  .withValues(
+                                                                    alpha: 0.85,
+                                                                  ),
                                                             ),
                                                       ),
-                                                ),
-                                              ),
-                                            )
-                                            .toList(),
-                                      ),
-                                    ),
-                                  if (viewSettings.displayShowAuthor)
-                                    Flexible(
-                                      child: Text(
-                                        appInMemory.author,
-                                        maxLines: 1,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              overflow: TextOverflow.ellipsis,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurfaceVariant
-                                                  .withValues(alpha: 0.8),
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                      ),
-                                    ),
-                                  if (viewSettings.displayShowVersion &&
-                                      !isCompact)
-                                    Flexible(
-                                      child: hasUpdate
-                                          ? _buildVersionUpdatePill(
-                                              context,
-                                              appInMemory
-                                                      .app
-                                                      .installedVersion ??
-                                                  '?',
-                                              appInMemory
-                                                      .app
-                                                      .latestVersion
-                                                      .isNotEmpty
-                                                  ? appInMemory
-                                                        .app
-                                                        .latestVersion
-                                                  : '?',
-                                            )
-                                          : Text(
-                                              ' • ${getVersionText()}',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: null,
-                                                    fontStyle:
-                                                        SourceUtils.isVersionPseudo(
-                                                          appInMemory.app,
-                                                        )
-                                                        ? FontStyle.italic
-                                                        : null,
+                                                    ),
                                                   ),
-                                            ),
-                                    ),
-                                ],
+                                          ],
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                },
                               ),
                               trailing: ValueListenableBuilder<double?>(
                                 valueListenable:

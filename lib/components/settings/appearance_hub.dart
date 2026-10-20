@@ -37,13 +37,9 @@ class AppearanceHub extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Summaries
-    String themeSummary = themeSettings.theme == ThemeSettings.system
-        ? tr('followSystem')
-        : (themeSettings.useBlackTheme
-              ? 'AMOLED'
-              : (themeSettings.theme == ThemeSettings.light
-                    ? tr('light')
-                    : tr('dark')));
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    String themeSummary =
+        '${isM3E ? 'M3E' : 'Obtainium+'} · ${themeSettings.theme == ThemeSettings.system ? tr('followSystem') : (themeSettings.useBlackTheme ? 'AMOLED' : (themeSettings.theme == ThemeSettings.light ? tr('light') : tr('dark')))}';
     if (themeSettings.useMaterialYou) {
       themeSummary += ' · Monet';
     }
@@ -103,32 +99,135 @@ class AppearanceHub extends StatelessWidget {
       ),
     ];
 
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: hubCards.map((card) {
-          return Padding(
+        children: [
+          Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: _HubCard(
-              icon: card.icon,
-              title: card.title,
-              desc: card.desc,
-              summary: card.summary,
-              accentColor: card.color,
-              onTap: () {
-                AppHaptics.selectionClick();
-                _showAppearanceSubmenuSheet(
-                  context,
-                  title: card.title,
-                  icon: card.icon,
-                  accentColor: card.color,
-                  child: card.content,
-                );
-              },
+            child: Card(
+              elevation: 0,
+              margin: EdgeInsets.zero,
+              color: plusSettings.plusEnableGlassmorphism
+                  ? colorScheme.surfaceContainerLow.withValues(alpha: 0.7)
+                  : colorScheme.surfaceContainerLow,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(cardRadius),
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(
+                              CardMetrics.inner(cardRadius),
+                            ),
+                          ),
+                          child: Icon(
+                            isM3E
+                                ? Icons.brush_rounded
+                                : Icons.auto_awesome_rounded,
+                            size: 18,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tr('designSystemThemeStyle'),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isM3E
+                                    ? tr('materialExpressiveThemeDescription')
+                                    : tr('obtainiumPlusThemeDescription'),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontSize: 11.5,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<bool>(
+                        segments: [
+                          ButtonSegment<bool>(
+                            value: false,
+                            label: Text(tr('obtainiumPlusTheme')),
+                            icon: const Icon(Icons.auto_awesome_rounded),
+                          ),
+                          ButtonSegment<bool>(
+                            value: true,
+                            label: Text(tr('materialExpressiveTheme')),
+                            icon: const Icon(Icons.brush_rounded),
+                          ),
+                        ],
+                        selected: {isM3E},
+                        onSelectionChanged: (Set<bool> newSelection) {
+                          final next = newSelection.first;
+                          if (next) {
+                            AppHaptics.toggleOn();
+                          } else {
+                            AppHaptics.toggleOff();
+                          }
+                          plusSettings.plusEnableMaterialExpressive = next;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          );
-        }).toList(),
+          ),
+          ...hubCards.map((card) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _HubCard(
+                icon: card.icon,
+                title: card.title,
+                desc: card.desc,
+                summary: card.summary,
+                accentColor: card.color,
+                onTap: () {
+                  AppHaptics.selectionClick();
+                  _showAppearanceSubmenuSheet(
+                    context,
+                    title: card.title,
+                    icon: card.icon,
+                    accentColor: card.color,
+                    child: card.content,
+                  );
+                },
+              ),
+            );
+          }),
+        ],
       ),
     );
   }

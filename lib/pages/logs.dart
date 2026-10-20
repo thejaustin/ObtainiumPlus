@@ -128,8 +128,13 @@ class _LogsPageState extends State<LogsPage> {
 
   Widget _logTile(LogEntry log) {
     final color = _levelColor(context, log.level);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -182,7 +187,12 @@ class _LogsPageState extends State<LogsPage> {
               hapticOnPressDown: hasLogs,
               scaleDownFactor: 0.88,
               child: IconButton(
-                onPressed: hasLogs ? _scrollToTop : null,
+                onPressed: hasLogs
+                    ? () {
+                        AppHaptics.selectionClick();
+                        _scrollToTop();
+                      }
+                    : null,
                 icon: const Icon(Icons.keyboard_arrow_up_rounded),
               ),
             ),
@@ -190,7 +200,12 @@ class _LogsPageState extends State<LogsPage> {
               hapticOnPressDown: hasLogs,
               scaleDownFactor: 0.88,
               child: IconButton(
-                onPressed: hasLogs ? _scrollToBottom : null,
+                onPressed: hasLogs
+                    ? () {
+                        AppHaptics.selectionClick();
+                        _scrollToBottom();
+                      }
+                    : null,
                 icon: const Icon(Icons.keyboard_arrow_down_rounded),
               ),
             ),
@@ -202,7 +217,10 @@ class _LogsPageState extends State<LogsPage> {
                 icon: const Icon(Icons.filter_list_rounded),
                 tooltip: tr('filter'),
                 initialValue: _days,
-                onSelected: _loadLogs,
+                onSelected: (days) {
+                  AppHaptics.selectionClick();
+                  _loadLogs(days);
+                },
                 itemBuilder: (context) => _dayOptions
                     .map(
                       (e) => CheckedPopupMenuItem<int>(
