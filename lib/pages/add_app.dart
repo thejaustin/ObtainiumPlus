@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -568,24 +569,36 @@ class AddAppPageState extends State<AddAppPage> {
                   ],
                 ],
               )
-            : FilledButton.icon(
-                onPressed:
-                    doingSomething ||
+            : ScaleTouchWrapper(
+                hapticOnPressDown:
+                    !(doingSomething ||
                         pickedSource == null ||
                         (pickedSource!
                                 .combinedAppSpecificSettingFormItems
                                 .isNotEmpty &&
-                            !additionalSettingsValid)
-                    ? null
-                    : () {
-                        AppHaptics.selectionClick();
-                        addApp();
-                      },
-                icon: Icon(
-                  widget.appId != null ? Icons.save_rounded : Icons.add_rounded,
-                  size: 18,
+                            !additionalSettingsValid)),
+                scaleDownFactor: 0.94,
+                child: FilledButton.icon(
+                  onPressed:
+                      doingSomething ||
+                          pickedSource == null ||
+                          (pickedSource!
+                                  .combinedAppSpecificSettingFormItems
+                                  .isNotEmpty &&
+                              !additionalSettingsValid)
+                      ? null
+                      : () {
+                          AppHaptics.selectionClick();
+                          addApp();
+                        },
+                  icon: Icon(
+                    widget.appId != null
+                        ? Icons.save_rounded
+                        : Icons.add_rounded,
+                    size: 18,
+                  ),
+                  label: Text(widget.appId != null ? tr('save') : tr('add')),
                 ),
-                label: Text(widget.appId != null ? tr('save') : tr('add')),
               ),
       ],
     );
@@ -850,150 +863,197 @@ class AddAppPageState extends State<AddAppPage> {
       ],
     );
 
-    Widget getAdditionalOptsCol() => Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        const SizedBox(height: 16),
-        CategoryEditorSelector(
-          alignment: WrapAlignment.start,
-          onSelected: (categories) {
-            pickedCategories = categories;
-          },
-        ),
-        const SizedBox(height: 24),
-        Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            key: const PageStorageKey<String>('add_app_advanced'),
-            leading: const Icon(Icons.tune_rounded),
-            title: Text(
-              tr('advancedOptions'),
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
+    Widget getAdditionalOptsCol() {
+      final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+          ? plusSettings.plusHomeCornerRadius
+          : plusSettings.plusGlobalCornerRadius;
+      final cardRadius = CardMetrics.card(baseRadius);
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 16),
+          CategoryEditorSelector(
+            alignment: WrapAlignment.start,
+            onSelected: (categories) {
+              pickedCategories = categories;
+            },
+          ),
+          const SizedBox(height: 24),
+          Card(
+            elevation: 0,
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(cardRadius),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant.withValues(
+                  alpha: Theme.of(context).brightness == Brightness.dark
+                      ? 0.35
+                      : 0.65,
+                ),
+                width: 1.0,
               ),
             ),
-            subtitle: Text(
-              tr(
-                'additionalOptsFor',
-                args: [pickedSource?.name ?? tr('source')],
-              ),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Column(
-                  children: [
-                    () {
-                      var formItems =
-                          pickedSource!.combinedAppSpecificSettingFormItems;
-                      if (settingsProvider.includePrereleasesByDefault ||
-                          settingsProvider.shizukuPretendToBeGooglePlay) {
-                        for (var row in formItems) {
-                          for (var item in row) {
-                            if (item.key == 'includePrereleases' &&
-                                settingsProvider.includePrereleasesByDefault) {
-                              item.value = true;
-                            }
-                            if (item.key == 'shizukuPretendToBeGooglePlay' &&
-                                settingsProvider.shizukuPretendToBeGooglePlay) {
-                              item.value = true;
+            child: Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                key: const PageStorageKey<String>('add_app_advanced'),
+                onExpansionChanged: (expanded) {
+                  AppHaptics.selectionClick();
+                },
+                expansionAnimationStyle: AnimationStyle(
+                  curve: Easing.emphasizedDecelerate,
+                  reverseCurve: Easing.emphasizedAccelerate,
+                  duration: const Duration(milliseconds: 320),
+                ),
+                shape: const Border(),
+                collapsedShape: const Border(),
+                leading: Icon(
+                  Icons.tune_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(
+                  tr('advancedOptions'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  tr(
+                    'additionalOptsFor',
+                    args: [pickedSource?.name ?? tr('source')],
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                children: [
+                  Column(
+                    children: [
+                      () {
+                        var formItems =
+                            pickedSource!.combinedAppSpecificSettingFormItems;
+                        if (settingsProvider.includePrereleasesByDefault ||
+                            settingsProvider.shizukuPretendToBeGooglePlay) {
+                          for (var row in formItems) {
+                            for (var item in row) {
+                              if (item.key == 'includePrereleases' &&
+                                  settingsProvider
+                                      .includePrereleasesByDefault) {
+                                item.value = true;
+                              }
+                              if (item.key == 'shizukuPretendToBeGooglePlay' &&
+                                  settingsProvider
+                                      .shizukuPretendToBeGooglePlay) {
+                                item.value = true;
+                              }
                             }
                           }
                         }
-                      }
-                      return GeneratedForm(
-                        key: Key(
-                          '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
-                        ),
-                        items: [
-                          ...formItems,
-                          ...(pickedSourceOverride != null
-                              ? pickedSource!.sourceConfigSettingFormItems.map(
-                                  (e) => [e],
-                                )
-                              : []),
-                        ],
-                        onValueChanges: (values, valid, isBuilding) {
-                          if (!isBuilding) {
-                            setState(() {
+                        return GeneratedForm(
+                          tileMode: true,
+                          key: Key(
+                            '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}',
+                          ),
+                          items: [
+                            ...formItems,
+                            ...(pickedSourceOverride != null
+                                ? pickedSource!.sourceConfigSettingFormItems
+                                      .map((e) => [e])
+                                : []),
+                          ],
+                          onValueChanges: (values, valid, isBuilding) {
+                            if (!isBuilding) {
+                              setState(() {
+                                additionalSettings = values;
+                                additionalSettingsValid = valid;
+                              });
+                            } else {
                               additionalSettings = values;
                               additionalSettingsValid = valid;
-                            });
-                          } else {
-                            additionalSettings = values;
-                            additionalSettingsValid = valid;
-                          }
-                        },
-                      );
-                    }(),
-                    if (pickedSource != null &&
-                        pickedSource!.appIdInferIsOptional)
-                      GeneratedForm(
-                        key: const Key('inferAppIdIfOptional'),
-                        items: [
-                          [
-                            GeneratedFormSwitch(
-                              'inferAppIdIfOptional',
-                              label: tr('tryInferAppIdFromCode'),
-                              value: inferAppIdIfOptional,
-                            ),
+                            }
+                          },
+                        );
+                      }(),
+                      if (pickedSource != null &&
+                          pickedSource!.appIdInferIsOptional) ...[
+                        const SizedBox(height: 8),
+                        GeneratedForm(
+                          tileMode: true,
+                          key: const Key('inferAppIdIfOptional'),
+                          items: [
+                            [
+                              GeneratedFormSwitch(
+                                'inferAppIdIfOptional',
+                                label: tr('tryInferAppIdFromCode'),
+                                value: inferAppIdIfOptional,
+                              ),
+                            ],
                           ],
-                        ],
-                        onValueChanges: (values, valid, isBuilding) {
-                          if (!isBuilding) {
-                            setState(() {
-                              inferAppIdIfOptional =
-                                  values['inferAppIdIfOptional'];
-                            });
-                          }
-                        },
-                      ),
-                    if (pickedSource != null && pickedSource!.enforceTrackOnly)
-                      GeneratedForm(
-                        key: Key(
-                          '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}-appId',
+                          onValueChanges: (values, valid, isBuilding) {
+                            if (!isBuilding) {
+                              setState(() {
+                                inferAppIdIfOptional =
+                                    values['inferAppIdIfOptional'];
+                              });
+                            }
+                          },
                         ),
-                        items: [
-                          [
-                            GeneratedFormTextField(
-                              'appId',
-                              label: '${tr('appId')} - ${tr('custom')}',
-                              required: false,
-                              additionalValidators: [
-                                (value) {
-                                  if (value == null || value.isEmpty) {
+                      ],
+                      if (pickedSource != null &&
+                          pickedSource!.enforceTrackOnly) ...[
+                        const SizedBox(height: 8),
+                        GeneratedForm(
+                          tileMode: true,
+                          key: Key(
+                            '${pickedSource.runtimeType.toString()}-${pickedSource?.hostChanged.toString()}-${pickedSource?.hostIdenticalDespiteAnyChange.toString()}-appId',
+                          ),
+                          items: [
+                            [
+                              GeneratedFormTextField(
+                                'appId',
+                                label: '${tr('appId')} - ${tr('custom')}',
+                                required: false,
+                                additionalValidators: [
+                                  (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return null;
+                                    }
+                                    final isValid = RegExp(
+                                      r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$',
+                                    ).hasMatch(value);
+                                    if (!isValid) {
+                                      return tr('invalidInput');
+                                    }
                                     return null;
-                                  }
-                                  final isValid = RegExp(
-                                    r'^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$',
-                                  ).hasMatch(value);
-                                  if (!isValid) {
-                                    return tr('invalidInput');
-                                  }
-                                  return null;
-                                },
-                              ],
-                            ),
+                                  },
+                                ],
+                              ),
+                            ],
                           ],
-                        ],
-                        onValueChanges: (values, valid, isBuilding) {
-                          if (!isBuilding) {
-                            setState(() {
-                              additionalSettings['appId'] = values['appId'];
-                            });
-                          }
-                        },
-                      ),
-                  ],
-                ),
+                          onValueChanges: (values, valid, isBuilding) {
+                            if (!isBuilding) {
+                              setState(() {
+                                additionalSettings['appId'] = values['appId'];
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    }
 
     Widget getSourcesListWidget() {
       final colorScheme = Theme.of(context).colorScheme;

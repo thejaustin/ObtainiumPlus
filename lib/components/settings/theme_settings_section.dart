@@ -162,6 +162,12 @@ class ThemeSettingsSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
             key: const PageStorageKey<String>('settings_advanced_theming'),
+            onExpansionChanged: (_) => AppHaptics.selectionClick(),
+            expansionAnimationStyle: AnimationStyle(
+              curve: Easing.emphasizedDecelerate,
+              reverseCurve: Easing.emphasizedAccelerate,
+              duration: const Duration(milliseconds: 280),
+            ),
             leading: const Icon(Icons.science_outlined),
             title: Text(
               tr('advancedTheming'),

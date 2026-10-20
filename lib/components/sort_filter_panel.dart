@@ -643,6 +643,12 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         key: const PageStorageKey<String>('sort_filter_advanced'),
         tilePadding: EdgeInsets.zero,
         initiallyExpanded: hasAdvancedFilters,
+        onExpansionChanged: (_) => AppHaptics.selectionClick(),
+        expansionAnimationStyle: AnimationStyle(
+          curve: Easing.emphasizedDecelerate,
+          reverseCurve: Easing.emphasizedAccelerate,
+          duration: const Duration(milliseconds: 280),
+        ),
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(

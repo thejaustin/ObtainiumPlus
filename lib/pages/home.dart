@@ -379,6 +379,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         key: const PageStorageKey<String>(
                           'home_deep_link_raw_json',
                         ),
+                        onExpansionChanged: (_) => AppHaptics.selectionClick(),
+                        expansionAnimationStyle: AnimationStyle(
+                          curve: Easing.emphasizedDecelerate,
+                          reverseCurve: Easing.emphasizedAccelerate,
+                          duration: const Duration(milliseconds: 260),
+                        ),
                         title: Text(tr('rawJson')),
                         children: [
                           Text(

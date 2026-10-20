@@ -1167,13 +1167,34 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         key: PageStorageKey<String>(
           'category_tile:${listedCategories[index] ?? '__uncategorized__'}',
         ),
+        onExpansionChanged: (_) => AppHaptics.selectionClick(),
+        expansionAnimationStyle: AnimationStyle(
+          curve: Easing.emphasizedDecelerate,
+          reverseCurve: Easing.emphasizedAccelerate,
+          duration: const Duration(milliseconds: 260),
+        ),
         initiallyExpanded: true,
         title: Text(
           capFirstChar(listedCategories[index] ?? tr('noCategory')),
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         controlAffinity: ListTileControlAffinity.leading,
-        trailing: Text(tiles.length.toString()),
+        trailing: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.primaryContainer.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+          ),
+          child: Text(
+            tiles.length.toString(),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ),
         children: tiles,
       );
     }

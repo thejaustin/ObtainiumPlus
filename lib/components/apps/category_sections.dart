@@ -493,6 +493,12 @@ class CategorySections extends StatelessWidget {
         key: PageStorageKey<String>(
           'category_tile:${categoryName ?? '__uncategorized__'}',
         ),
+        onExpansionChanged: (_) => AppHaptics.selectionClick(),
+        expansionAnimationStyle: AnimationStyle(
+          curve: Easing.emphasizedDecelerate,
+          reverseCurve: Easing.emphasizedAccelerate,
+          duration: const Duration(milliseconds: 260),
+        ),
         initiallyExpanded: !settingsProvider.categoriesCollapsedByDefault,
         title: categoryTitle,
         trailing: Row(

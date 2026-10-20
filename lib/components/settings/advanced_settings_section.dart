@@ -612,6 +612,12 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               key: const PageStorageKey<String>('settings_oauth_device_flow'),
+              onExpansionChanged: (_) => AppHaptics.selectionClick(),
+              expansionAnimationStyle: AnimationStyle(
+                curve: Easing.emphasizedDecelerate,
+                reverseCurve: Easing.emphasizedAccelerate,
+                duration: const Duration(milliseconds: 280),
+              ),
               tilePadding: EdgeInsets.zero,
               leading: const Icon(Icons.login_rounded, size: 20),
               title: Text(

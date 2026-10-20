@@ -878,41 +878,147 @@ class _AppPageState extends State<AppPage> {
 
           /* Certificate Hashes */
           if (app != null && app.certificateHashes.isNotEmpty)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 16),
-                Text(
-                  "${plural('certificateHash', app.certificateHashes.length)}"
-                  "${app.hasMultipleSigners ? " (${tr('multipleSigners')})" : ""}",
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Card(
+                elevation: 0,
+                color: Theme.of(context).colorScheme.surfaceContainerLow,
+                clipBehavior: Clip.antiAlias,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant
+                        .withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                    width: 1.0,
+                  ),
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: app.certificateHashes.map((hash) {
-                    return GestureDetector(
-                      onLongPress: () {
-                        Clipboard.setData(ClipboardData(text: hash));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(tr('copiedToClipboard'))),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25,
-                          vertical: 0,
-                        ),
-                        child: Text(
-                          hash,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontSize: 12),
-                        ),
+                child: Theme(
+                  data: Theme.of(
+                    context,
+                  ).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    key: PageStorageKey<String>(
+                      'app_cert_hashes_${app.app.id}',
+                    ),
+                    onExpansionChanged: (_) => AppHaptics.selectionClick(),
+                    expansionAnimationStyle: AnimationStyle(
+                      curve: Easing.emphasizedDecelerate,
+                      reverseCurve: Easing.emphasizedAccelerate,
+                      duration: const Duration(milliseconds: 300),
+                    ),
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                    );
-                  }).toList(),
+                      child: Icon(
+                        Icons.verified_user_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                    title: Text(
+                      plural('certificateHash', app.certificateHashes.length),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    subtitle: Text(
+                      app.hasMultipleSigners
+                          ? tr('multipleSigners')
+                          : '${app.certificateHashes.length} ${plural('certificateHash', app.certificateHashes.length).toLowerCase()}',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                    children: [
+                      ...app.certificateHashes.map((hash) {
+                        final innerR = CardMetrics.inner(
+                          cardRadius,
+                        ).clamp(10.0, 16.0);
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.98,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(innerR),
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(text: hash));
+                                AppHaptics.selectionClick();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(tr('copiedToClipboard')),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest
+                                      .withValues(alpha: 0.5),
+                                  borderRadius: BorderRadius.circular(innerR),
+                                  border: Border.all(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .outlineVariant
+                                        .withValues(
+                                          alpha:
+                                              Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? 0.3
+                                              : 0.5,
+                                        ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: SelectableText(
+                                        hash,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              fontFamily: 'monospace',
+                                              fontSize: 11,
+                                              letterSpacing: 0.5,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.copy_rounded,
+                                      size: 16,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
 
           const SizedBox(height: 16),

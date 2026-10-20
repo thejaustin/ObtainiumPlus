@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:easy_localization/easy_localization.dart';
 
@@ -214,6 +215,13 @@ class _TalkerScreenState extends State<TalkerScreen> {
                         child: ExpansionTile(
                           key: PageStorageKey<String>(
                             'talker_log:${log.timestamp.millisecondsSinceEpoch}:$index',
+                          ),
+                          onExpansionChanged: (_) =>
+                              AppHaptics.selectionClick(),
+                          expansionAnimationStyle: AnimationStyle(
+                            curve: Easing.emphasizedDecelerate,
+                            reverseCurve: Easing.emphasizedAccelerate,
+                            duration: const Duration(milliseconds: 250),
                           ),
                           leading: Container(
                             padding: const EdgeInsets.symmetric(

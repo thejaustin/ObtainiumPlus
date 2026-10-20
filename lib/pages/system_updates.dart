@@ -168,6 +168,12 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       ),
       child: ExpansionTile(
         key: PageStorageKey<String>('system_update:${update.appId}'),
+        onExpansionChanged: (_) => AppHaptics.selectionClick(),
+        expansionAnimationStyle: AnimationStyle(
+          curve: Easing.emphasizedDecelerate,
+          reverseCurve: Easing.emphasizedAccelerate,
+          duration: const Duration(milliseconds: 280),
+        ),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           foregroundColor: Theme.of(context).colorScheme.onPrimaryContainer,

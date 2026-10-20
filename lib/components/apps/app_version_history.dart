@@ -3,6 +3,7 @@ import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/version_history_entry.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -49,6 +50,12 @@ class AppVersionHistoryWidget extends StatelessWidget {
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               key: PageStorageKey<String>('version_history:${app.id}'),
+              onExpansionChanged: (_) => AppHaptics.selectionClick(),
+              expansionAnimationStyle: AnimationStyle(
+                curve: Easing.emphasizedDecelerate,
+                reverseCurve: Easing.emphasizedAccelerate,
+                duration: const Duration(milliseconds: 300),
+              ),
               tilePadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 4,
