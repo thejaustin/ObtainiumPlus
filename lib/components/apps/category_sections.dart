@@ -16,7 +16,6 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:obtainium/services/app_update_service.dart';
 
 class CategorySections extends StatelessWidget {
   final List<AppInMemory> listedApps;
@@ -41,15 +40,6 @@ class CategorySections extends StatelessWidget {
     required this.getChangeLogFn,
     required this.getCachedCategoryColor,
   });
-
-  int _calculateAdaptiveColumns(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    if (width >= 1200) return 6;
-    if (width >= 900) return 5;
-    if (width >= 600) return 4;
-    if (width >= 400) return 3;
-    return 2;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,9 +154,10 @@ class CategorySections extends StatelessWidget {
         ? getCachedCategoryColor(categoryColorInt)
         : null;
 
-    final columnCount = settingsProvider.gridColumnCount == 0
-        ? _calculateAdaptiveColumns(context)
-        : settingsProvider.gridColumnCount;
+    final columnCount = GridMetrics.adaptiveColumns(
+      context,
+      preferred: settingsProvider.gridColumnCount,
+    );
 
     final bool showDetails =
         settingsProvider.displayShowVersion ||

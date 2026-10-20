@@ -18,6 +18,7 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 
 enum SystemAppSortMethod {
@@ -66,8 +67,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   Map<String, List<String>> _appLabels = {};
   Set<String> _selectedLabels = {};
 
-  // Grid column count
-  int _gridColumnCount = 3;
+  // Grid column count (0 = adaptive based on screen width)
+  int _gridColumnCount = 0;
 
   @override
   void initState() {
@@ -454,6 +455,15 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
 
+    final gridColumns = GridMetrics.adaptiveColumns(
+      context,
+      preferred: _gridColumnCount,
+    );
+    final gridRatio = GridMetrics.gridAspectRatio(
+      gridColumns,
+      hasExtraDetails: true,
+    );
+
     final viewWidget = _isLoading
         ? const Center(
             child: SizedBox(
@@ -481,10 +491,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             itemCount: filteredApps.length,
             padding: const EdgeInsets.all(8),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _gridColumnCount,
+              crossAxisCount: gridColumns,
               mainAxisSpacing: 8,
               crossAxisSpacing: 8,
-              childAspectRatio: 0.75,
+              childAspectRatio: gridRatio,
             ),
             itemBuilder: (_, index) =>
                 _buildGridAppTile(filteredApps[index], appsProvider),
@@ -1128,10 +1138,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       itemCount: filteredApps.length,
                       padding: const EdgeInsets.all(8),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: _gridColumnCount,
+                        crossAxisCount: gridColumns,
                         mainAxisSpacing: 8,
                         crossAxisSpacing: 8,
-                        childAspectRatio: 0.75,
+                        childAspectRatio: gridRatio,
                       ),
                       itemBuilder: (_, index) =>
                           _buildGridAppTile(filteredApps[index], appsProvider),
@@ -1255,7 +1265,19 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
                 alpha: AppOpacity.half,
               ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: pkg.isSelected
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
+                : Theme.of(context).colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
+            width: pkg.isSelected ? 1.5 : 1.0,
+          ),
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {
@@ -1357,7 +1379,19 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
                 alpha: AppOpacity.half,
               ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: pkg.isSelected
+                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
+                : Theme.of(context).colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
+            width: pkg.isSelected ? 1.5 : 1.0,
+          ),
+        ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
           onTap: () {

@@ -36,13 +36,19 @@ class CardMetrics {
 /// Standardized Material 3 Expressive layout calculations for app grids.
 class GridMetrics {
   /// Calculates responsive column counts adapting to screen width breakpoints.
+  ///
+  /// - Phones in portrait (< 500dp): 2 columns for optimal reading and comfort
+  /// - Large foldables / phablets (500–699dp): 3 columns
+  /// - Phone landscape / small tablets (700–899dp): 4 columns
+  /// - Medium tablets (900–1199dp): 5 columns
+  /// - Large tablets / desktops / TVs (>= 1200dp): 6 columns
   static int adaptiveColumns(BuildContext context, {int preferred = 0}) {
     if (preferred > 0) return preferred;
     final width = MediaQuery.of(context).size.width;
     if (width >= 1200) return 6;
     if (width >= 900) return 5;
-    if (width >= 600) return 4;
-    if (width >= 400) return 3;
+    if (width >= 700) return 4;
+    if (width >= 500) return 3;
     return 2;
   }
 
@@ -53,9 +59,18 @@ class GridMetrics {
     required bool hasExtraDetails,
   }) {
     if (columnCount <= 1) return 2.2;
-    if (columnCount == 2) return hasExtraDetails ? 0.80 : 0.92;
-    if (columnCount == 3) return hasExtraDetails ? 0.75 : 0.84;
-    if (columnCount == 4) return hasExtraDetails ? 0.72 : 0.80;
+    if (columnCount == 2) return hasExtraDetails ? 0.82 : 0.94;
+    if (columnCount == 3) return hasExtraDetails ? 0.76 : 0.86;
+    if (columnCount == 4) return hasExtraDetails ? 0.72 : 0.82;
     return hasExtraDetails ? 0.70 : 0.78;
   }
+
+  /// Convenience alias for [childAspectRatio].
+  static double gridAspectRatio(
+    int columnCount, {
+    bool hasExtraDetails = true,
+  }) => childAspectRatio(
+    columnCount: columnCount,
+    hasExtraDetails: hasExtraDetails,
+  );
 }

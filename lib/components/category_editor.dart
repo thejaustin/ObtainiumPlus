@@ -6,9 +6,9 @@ import 'package:obtainium/utils/color_utils.dart' show generateRandomLightColor;
 import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart'
+    hide lowerCaseUnlessLang;
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
@@ -145,7 +145,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
       if (changed.isNotEmpty) await appsProvider.saveApps(changed);
     }
     cats[name] = _color.toARGB32();
-    settingsProvider.setCategories(cats, appsProvider: appsProvider);
+    settingsProvider.setCategories(cats);
     final excluded = Set<String>.from(
       settingsProvider.categoriesExcludedFromChecks,
     );
@@ -170,7 +170,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
     if (!confirmed) return;
     final cats = Map<String, int>.from(settingsProvider.categories)
       ..remove(widget.existingName);
-    settingsProvider.setCategories(cats, appsProvider: appsProvider);
+    settingsProvider.setCategories(cats);
     if (mounted) {
       Navigator.of(
         context,
@@ -370,10 +370,10 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  ValueListenableBuilder<String>(
-                    valueListenable: _nameNotifier,
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _nameCtrl,
                     builder: (context, value, _) {
-                      final canSave = value.trim().isNotEmpty;
+                      final canSave = value.text.trim().isNotEmpty;
                       return ScaleTouchWrapper(
                         hapticOnPressDown: canSave,
                         child: FilledButton(

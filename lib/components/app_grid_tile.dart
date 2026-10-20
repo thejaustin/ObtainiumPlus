@@ -499,51 +499,62 @@ class _AppGridTileState extends State<AppGridTile>
     final colorScheme = Theme.of(context).colorScheme;
     return Column(
       mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const SizedBox(height: 2),
-        _buildIconStack(
-          iconSize,
-          iconBorderRadius,
-          badgeSize,
-          plusSettings,
-          cardColor,
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: 2),
+            _buildIconStack(
+              iconSize,
+              iconBorderRadius,
+              badgeSize,
+              plusSettings,
+              cardColor,
+            ),
+            const SizedBox(height: 6),
+            // App name: up to 2 lines, centered with expressive typography
+            Text(
+              widget.appInMemory.name,
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12.5,
+                fontWeight: (widget.appInMemory.app.pinned || widget.hasUpdate)
+                    ? FontWeight.w700
+                    : FontWeight.w600,
+                letterSpacing: -0.2,
+                height: 1.25,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 8),
-        // App name: up to 2 lines, centered with expressive typography
-        Text(
-          widget.appInMemory.name,
-          maxLines: 2,
-          textAlign: TextAlign.center,
-          overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 12.5,
-            fontWeight: (widget.appInMemory.app.pinned || widget.hasUpdate)
-                ? FontWeight.w700
-                : FontWeight.w600,
-            letterSpacing: -0.2,
-            height: 1.25,
-            color: colorScheme.onSurface,
-          ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Footer: Action Pill or Status Pill
+            if (widget.hasUpdate) ...[
+              _buildUpdateVersionPill(colorScheme),
+            ] else if (viewSettings.displayShowVersion ||
+                viewSettings.displayShowAuthor) ...[
+              _buildUpToDatePill(colorScheme, viewSettings),
+            ],
+            // Tag chips
+            if (plusSettings.plusShowTagsInList &&
+                widget.appInMemory.app.tags.isNotEmpty) ...[
+              const SizedBox(height: 3),
+              _buildTagChips(colorScheme),
+            ],
+            // Download / checking progress indicator
+            _buildProgressIndicator(),
+            const SizedBox(height: 2),
+          ],
         ),
-        const Spacer(),
-        // Footer: Action Pill or Status Pill
-        if (widget.hasUpdate) ...[
-          _buildUpdateVersionPill(colorScheme),
-        ] else if (viewSettings.displayShowVersion ||
-            viewSettings.displayShowAuthor) ...[
-          _buildUpToDatePill(colorScheme, viewSettings),
-        ],
-        // Tag chips
-        if (plusSettings.plusShowTagsInList &&
-            widget.appInMemory.app.tags.isNotEmpty) ...[
-          const SizedBox(height: 3),
-          _buildTagChips(colorScheme),
-        ],
-        // Download / checking progress indicator
-        _buildProgressIndicator(),
-        const SizedBox(height: 2),
       ],
     );
   }
