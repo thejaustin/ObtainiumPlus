@@ -141,7 +141,7 @@ extension AppsProviderImportExport on AppsProvider {
     }
     String? returnPath;
     if (!pickOnly) {
-      const encoder = JsonEncoder.withIndent('    ');
+      final encoder = safeJsonEncoderWithIndent('    ');
       final Map<String, dynamic> finalExport = generateExportJSON();
       // In auto mode a custom name gives a fixed file that's overwritten each
       // time, instead of a new timestamped file per change.

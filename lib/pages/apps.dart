@@ -1613,7 +1613,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                     onPressed: selectedAppIds.isEmpty
                         ? null
                         : () {
-                            var encoder = const JsonEncoder.withIndent("    ");
+                            var encoder = safeJsonEncoderWithIndent("    ");
                             var exportJSON = encoder.convert(
                               sanitizeJsonValue(
                                 appsProvider.generateExportJSON(

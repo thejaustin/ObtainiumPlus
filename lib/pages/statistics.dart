@@ -83,7 +83,7 @@ class _StatisticsPageState extends State<StatisticsPage>
       'logs': logs.map((l) => l.toMap()).toList(),
     };
 
-    final jsonStr = const JsonEncoder.withIndent(
+    final jsonStr = safeJsonEncoderWithIndent(
       '  ',
     ).convert(sanitizeJsonValue(stats));
 

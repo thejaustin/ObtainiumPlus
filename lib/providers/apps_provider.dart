@@ -2,7 +2,7 @@ import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/app_utils.dart'
-    show safeJsonEncode, sanitizeJsonValue;
+    show safeJsonEncode, safeJsonEncoderWithIndent, sanitizeJsonValue;
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -3024,7 +3024,7 @@ class AppsProvider with ChangeNotifier {
     }
     String? returnPath;
     if (!pickOnly) {
-      var encoder = const JsonEncoder.withIndent("    ");
+      var encoder = safeJsonEncoderWithIndent("    ");
       Map<String, dynamic> finalExport = generateExportJSON();
       var result = await saf.createFile(
         exportDir,

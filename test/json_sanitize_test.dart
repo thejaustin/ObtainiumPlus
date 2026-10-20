@@ -38,4 +38,15 @@ void main() {
     expect(sanitizeJsonValue(null), isNull);
     expect(sanitizeJsonValue(true), isTrue);
   });
+
+  test('unencodable objects and NaN gracefully convert to null', () {
+    final unencodable = Object();
+    final encoded = safeJsonEncode({'opaque': unencodable, 'nan': double.nan});
+    expect(jsonDecode(encoded), {'opaque': null, 'nan': null});
+
+    final indented = safeJsonEncoderWithIndent(
+      '  ',
+    ).convert(sanitizeJsonValue({'val': unencodable, 'num': 42}));
+    expect(jsonDecode(indented), {'val': null, 'num': 42});
+  });
 }

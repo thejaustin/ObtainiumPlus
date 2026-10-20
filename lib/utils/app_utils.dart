@@ -120,9 +120,17 @@ dynamic sanitizeJsonValue(dynamic value) {
   }
 }
 
-/// Safely encodes a value to JSON, ensuring no NaN or infinity values cause crashes.
+/// Safely encodes a value to JSON, ensuring no NaN, infinity, or unencodable values cause crashes.
 String safeJsonEncode(dynamic value) {
-  return jsonEncode(sanitizeJsonValue(value));
+  return jsonEncode(
+    sanitizeJsonValue(value),
+    toEncodable: (nonEncodable) => null,
+  );
+}
+
+/// Returns a JsonEncoder configured with indent that safely turns unencodable values into null.
+JsonEncoder safeJsonEncoderWithIndent([String indent = '    ']) {
+  return JsonEncoder.withIndent(indent, (nonEncodable) => null);
 }
 
 List<MapEntry<String, String>> getApkUrlsFromUrls(List<String> urls) =>
