@@ -106,9 +106,12 @@ class _SettingsPageState extends State<SettingsPage> {
     final plusSettings = context.watch<PlusSettingsProvider>();
     _scheduleEmptyCheck();
 
+    final useSettingsBottomBar = plusSettings.plusSettingsBottomNavBar &&
+        (!plusSettings.plusEnableBottomNavBar || plusSettings.plusTopUILayout);
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: plusSettings.plusSettingsBottomNavBar
+      bottomNavigationBar: useSettingsBottomBar
           ? ClipRect(
               child: AnimatedAlign(
                 duration: Duration(
@@ -259,7 +262,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-          if (!plusSettings.plusSettingsBottomNavBar && _searchQuery.isEmpty)
+          if (!useSettingsBottomBar && _searchQuery.isEmpty)
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 52,

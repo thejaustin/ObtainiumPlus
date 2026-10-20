@@ -768,10 +768,11 @@ class _ObtainiumState extends State<Obtainium> {
           if (lightDynamic != null &&
               darkDynamic != null &&
               themeSettings.useMaterialYou) {
-            // When matching the system style, keep the raw OS dynamic scheme untouched.
-            // Otherwise, generate an expressive Material 3 scheme using the system's dynamic
-            // primary color seeded with the selected M3 Expressive themeVariant.
-            if (matchSystemStyle) {
+            // When matching system style or using standard tonalSpot (the default Material You variant),
+            // keep the OS-provided dynamic tonal palettes directly so surfaces, containers, and accents
+            // harmonize naturally with Android without hue distortion.
+            if (matchSystemStyle ||
+                themeSettings.themeVariant == DynamicSchemeVariant.tonalSpot) {
               lightColorScheme = lightDynamic;
               darkColorScheme = darkDynamic;
             } else {
@@ -820,6 +821,13 @@ class _ObtainiumState extends State<Obtainium> {
             NativeFeatures.loadSystemFont();
           }
 
+          final ThemeMode themeMode =
+              themeSettings.theme == ThemeSettings.system
+                  ? ThemeMode.system
+                  : themeSettings.theme == ThemeSettings.dark
+                      ? ThemeMode.dark
+                      : ThemeMode.light;
+
           return MaterialApp(
             title: 'Obtainium',
             localizationsDelegates: appLocalizationsDelegates(
@@ -829,10 +837,9 @@ class _ObtainiumState extends State<Obtainium> {
             locale: context.locale,
             navigatorKey: appNavigatorKey,
             debugShowCheckedModeBanner: false,
+            themeMode: themeMode,
             theme: ThemeBuilder.buildTheme(
-              colorScheme: themeSettings.theme == ThemeSettings.dark
-                  ? darkColorScheme
-                  : lightColorScheme,
+              colorScheme: lightColorScheme,
               useSystemFont: themeSettings.useSystemFont,
               plusEnableMaterialExpressive:
                   plusSettings.plusEnableMaterialExpressive,
@@ -841,9 +848,7 @@ class _ObtainiumState extends State<Obtainium> {
               isTV: settingsProvider.isTV,
             ),
             darkTheme: ThemeBuilder.buildTheme(
-              colorScheme: themeSettings.theme == ThemeSettings.light
-                  ? lightColorScheme
-                  : darkColorScheme,
+              colorScheme: darkColorScheme,
               useSystemFont: themeSettings.useSystemFont,
               plusEnableMaterialExpressive:
                   plusSettings.plusEnableMaterialExpressive,

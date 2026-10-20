@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   path_provider: ^2.1.6
   flutter_fgbg: ^0.8.0

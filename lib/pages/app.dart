@@ -2266,27 +2266,6 @@ class _AppPageState extends State<AppPage> {
       ),
     );
 
-    if (widget.isModal) {
-      final radius = plusSettings.plusOverrideIndividualCornerRadius
-          ? plusSettings.plusHomeCornerRadius
-          : plusSettings.plusGlobalCornerRadius;
-
-      return ClipRRect(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(radius.clamp(20.0, 48.0)),
-        ),
-        child: ConditionalBlur(
-          enabled: plusSettings.plusEnableGlassmorphism,
-          sigma: 20,
-          child: Container(
-            color: plusSettings.plusEnableGlassmorphism
-                ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)
-                : Theme.of(context).colorScheme.surfaceContainerLow,
-            child: scaffold,
-          ),
-        ),
-      );
-    }
     return scaffold;
   }
 }

@@ -657,7 +657,7 @@ class SettingsProvider with ChangeNotifier {
   }
 
   bool get disableSwipeActions {
-    return _getBool('disableSwipeActions') ?? true;
+    return _getBool('disableSwipeActions') ?? false;
   }
 
   set disableSwipeActions(bool val) {

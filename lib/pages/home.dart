@@ -485,7 +485,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           plusSettings.plusEnableSystemUpdateScanner,
     );
     final isTopNav = plusSettings.plusTopUILayout && !settingsProvider.isTV;
-    final showNavBar = plusSettings.plusEnableBottomNavBar && !isTopNav;
+    final showNavBar =
+        plusSettings.plusEnableBottomNavBar && !isTopNav && !isSelecting;
     if (showNavBar && !settingsProvider.isTV) {
       _measureBottomNavBar();
     }
@@ -644,11 +645,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   const VerticalDivider(thickness: 1, width: 1),
                   Expanded(child: pageBody),
                 ],
-              )
-            : showNavBar
-            ? Padding(
-                padding: EdgeInsets.only(bottom: _bottomNavBarHeight),
-                child: pageBody,
               )
             : pageBody,
         bottomNavigationBar: settingsProvider.isTV || !showNavBar

@@ -2197,6 +2197,17 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                   ..._buildDiscoverResultsSlivers(context, plusSettings)
                 else
                   getDisplayedList(),
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: (plusSettings.plusEnableBottomNavBar &&
+                            !plusSettings.plusTopUILayout &&
+                            !settingsProvider.isTV)
+                        ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0)
+                        : (plusSettings.plusEnableFAB && !settingsProvider.isTV
+                            ? 80.0
+                            : 24.0),
+                  ),
+                ),
               ],
             ),
           ),

@@ -975,7 +975,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     ],
                   ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 96),
               ]),
             ),
           ),

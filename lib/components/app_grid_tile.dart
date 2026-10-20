@@ -187,9 +187,7 @@ class _AppGridTileState extends State<AppGridTile>
                 alpha: isDark ? 0.22 : 0.14,
               );
             } else if (widget.appInMemory.app.pinned) {
-              cardColor = colorScheme.surfaceContainerHighest.withValues(
-                alpha: isDark ? 0.40 : 0.50,
-              );
+              cardColor = colorScheme.surfaceContainerHighest;
             } else {
               cardColor = colorScheme.surfaceContainerLow;
             }
@@ -222,7 +220,9 @@ class _AppGridTileState extends State<AppGridTile>
               );
             } else {
               cardBorder = Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                color: isDark
+                    ? colorScheme.outlineVariant.withValues(alpha: 0.25)
+                    : colorScheme.outlineVariant.withValues(alpha: 0.60),
                 width: 0.8,
               );
             }

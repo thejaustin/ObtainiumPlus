@@ -114,7 +114,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       body = Scaffold(
         key: const ValueKey('results'),
         body: ListView.builder(
-          padding: const EdgeInsets.all(8),
+          padding: const EdgeInsets.fromLTRB(8, 8, 8, 96),
           itemCount: _updates.length,
           itemBuilder: (context, index) {
             final update = _updates[index];

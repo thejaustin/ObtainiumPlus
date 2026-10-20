@@ -493,7 +493,7 @@ class _AppListTileState extends State<AppListTile>
                           ).colorScheme.surfaceContainerHighest.withValues(
                             alpha: plusSettings.plusEnableGlassmorphism
                                 ? 0.45
-                                : AppOpacity.moderate,
+                                : 1.0,
                           )
                         : plusSettings.plusEnableGlassmorphism
                         ? Theme.of(context).colorScheme.surface.withValues(
@@ -518,6 +518,9 @@ class _AppListTileState extends State<AppListTile>
                           ? Theme.of(context).colorScheme.onSurface.withValues(
                               alpha: AppConstants.glassBorderAlpha,
                             )
+                          : Theme.of(context).brightness == Brightness.light
+                          ? Theme.of(context).colorScheme.outlineVariant
+                                .withValues(alpha: 0.65)
                           : Theme.of(context).colorScheme.outlineVariant
                                 .withValues(alpha: 0.35),
                       width:
