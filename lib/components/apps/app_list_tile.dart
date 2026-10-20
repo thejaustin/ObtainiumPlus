@@ -839,8 +839,14 @@ class _AppListTileState extends State<AppListTile>
                                                       .app
                                                       .installedVersion ??
                                                   '?',
-                                              appInMemory.app.latestVersion ??
-                                                  '?',
+                                              appInMemory
+                                                      .app
+                                                      .latestVersion
+                                                      .isNotEmpty
+                                                  ? appInMemory
+                                                        .app
+                                                        .latestVersion
+                                                  : '?',
                                             )
                                           : Text(
                                               ' • ${getVersionText()}',

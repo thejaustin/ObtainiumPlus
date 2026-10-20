@@ -437,10 +437,10 @@ class DiscoverPageState extends State<DiscoverPage> {
               ),
               borderRadius: BorderRadius.circular(cardRadius),
               border: Border.all(
-                color: theme.colorScheme.outline.withValues(
-                  alpha: plusSettings.plusEnableGlassmorphism ? 0.15 : 0.08,
+                color: theme.colorScheme.outlineVariant.withValues(
+                  alpha: isDark ? 0.35 : 0.65,
                 ),
-                width: 1.2,
+                width: 1.0,
               ),
             ),
             child: Stack(
@@ -825,10 +825,10 @@ class DiscoverPageState extends State<DiscoverPage> {
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 200,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.7,
+                          maxCrossAxisExtent: 220,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 0.68,
                         ),
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final url = suggestionResults.keys.elementAt(index);
@@ -901,10 +901,10 @@ class DiscoverPageState extends State<DiscoverPage> {
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 200,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.7,
+                          maxCrossAxisExtent: 220,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 0.68,
                         ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => const AppTileSkeleton(isGrid: true),
@@ -925,10 +925,10 @@ class DiscoverPageState extends State<DiscoverPage> {
                   sliver: SliverGrid(
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 200,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.7,
+                          maxCrossAxisExtent: 220,
+                          mainAxisSpacing: 14,
+                          crossAxisSpacing: 14,
+                          childAspectRatio: 0.68,
                         ),
                     delegate: SliverChildBuilderDelegate(
                       (context, index) => _buildAppGrid(

@@ -220,10 +220,10 @@ class _AppGridTileState extends State<AppGridTile>
               );
             } else {
               cardBorder = Border.all(
-                color: isDark
-                    ? colorScheme.outlineVariant.withValues(alpha: 0.25)
-                    : colorScheme.outlineVariant.withValues(alpha: 0.60),
-                width: 0.8,
+                color: colorScheme.outlineVariant.withValues(
+                  alpha: isDark ? 0.35 : 0.65,
+                ),
+                width: 1.0,
               );
             }
 
@@ -264,9 +264,7 @@ class _AppGridTileState extends State<AppGridTile>
                       ? AppConstants.shortAnimationMs
                       : 200,
                 ),
-                curve: plusSettings.plusEnableEnhancedAnimations
-                    ? Curves.easeOutCubic
-                    : Curves.easeInOut,
+                curve: curve,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(cardBorderRadius),
                   color: cardColor,
@@ -719,7 +717,7 @@ class _AppGridTileState extends State<AppGridTile>
     final inst = app.installedVersion;
     final latest = app.latestVersion;
     if (widget.hasUpdate) {
-      return latest ?? inst ?? '';
+      return latest.isNotEmpty ? latest : (inst ?? '');
     }
     return inst ?? tr('notInstalled');
   }
@@ -727,8 +725,8 @@ class _AppGridTileState extends State<AppGridTile>
   /// Passive label showing the update target; the action lives on the icon badge
   Widget _buildUpdateVersionPill(ColorScheme colorScheme) {
     final app = widget.appInMemory.app;
-    final version = app.latestVersion?.isNotEmpty == true
-        ? app.latestVersion!
+    final version = app.latestVersion.isNotEmpty
+        ? app.latestVersion
         : tr('update');
     final fg = widget.isAmbiguous
         ? colorScheme.onTertiaryContainer
@@ -1118,7 +1116,7 @@ class AppIconActionBadge extends StatelessWidget {
                 width: d - 6,
                 height: d - 6,
                 child: ExpressiveCircularProgressIndicator(
-                  value: ((progress ?? 0.0) / 100).clamp(0.0, 1.0).toDouble(),
+                  value: (progress / 100).clamp(0.0, 1.0),
                   strokeWidth: 2.5,
                   color: fg,
                   backgroundColor: fg.withValues(alpha: 0.2),

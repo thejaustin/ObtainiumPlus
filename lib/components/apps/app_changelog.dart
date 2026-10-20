@@ -90,7 +90,7 @@ void showChangeLogDialog(
 }
 
 Null Function()? getChangeLogFn(BuildContext context, App app) {
-  AppSource? appSource;
+  final AppSource appSource;
   try {
     appSource = SourceProvider().getSource(
       app.url,
@@ -99,7 +99,6 @@ Null Function()? getChangeLogFn(BuildContext context, App app) {
   } catch (_) {
     return null;
   }
-  if (appSource == null) return null;
   String? changesUrl = appSource.changeLogPageFromStandardUrl(app.url);
   String? changeLog = app.changeLog;
   if (changeLog?.split('\n').length == 1) {

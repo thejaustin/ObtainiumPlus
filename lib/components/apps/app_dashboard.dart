@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
-import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
 import 'dart:ui';

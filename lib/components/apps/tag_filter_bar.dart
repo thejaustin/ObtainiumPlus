@@ -19,7 +19,6 @@ class TagFilterBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tagProvider = context.watch<TagProvider>();
-    final plusSettings = context.watch<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final tags = tagProvider.allTags.toList()..sort();
 
