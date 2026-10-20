@@ -21,14 +21,16 @@ class SettingsLayoutSelector extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final currentMode = plusSettings.plusSettingsLayoutMode;
     final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final isCompact = plusSettings.plusUseCompactSettings;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
+    final badgeSize = isCompact ? 30.0 : 36.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: isCompact ? 3 : 6),
       child: Material(
         color: colorScheme.surfaceContainerLow,
         shape: CardMetrics.shape(
@@ -44,15 +46,20 @@ class SettingsLayoutSelector extends StatelessWidget {
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+              padding: EdgeInsets.fromLTRB(
+                isCompact ? 14 : 16,
+                isCompact ? 10 : 14,
+                isCompact ? 14 : 16,
+                isCompact ? 8 : 12,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Container(
-                        width: 36,
-                        height: 36,
+                        width: badgeSize,
+                        height: badgeSize,
                         decoration: ShapeDecoration(
                           color: colorScheme.primary.withValues(alpha: 0.14),
                           shape: CardMetrics.shape(
@@ -62,7 +69,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                         ),
                         child: Icon(
                           Icons.dashboard_customize_rounded,
-                          size: 18,
+                          size: isCompact ? 16 : 18,
                           color: colorScheme.primary,
                         ),
                       ),
@@ -78,18 +85,19 @@ class SettingsLayoutSelector extends StatelessWidget {
                                 color: colorScheme.onSurface,
                               ),
                             ),
-                            Text(
-                              tr('settingsLayoutModeDesc'),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
+                            if (!isCompact)
+                              Text(
+                                tr('settingsLayoutModeDesc'),
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: isCompact ? 8 : 12),
                   Row(
                     children: [
                       Expanded(
@@ -99,7 +107,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                           isSelected:
                               currentMode == SettingsLayoutMode.m3eCompactGrid,
                           onTap: () {
-                            AppHaptics.selectionClick();
+                            AppHaptics.segmentTick();
                             plusSettings.plusSettingsLayoutMode =
                                 SettingsLayoutMode.m3eCompactGrid;
                           },
@@ -113,7 +121,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                           isSelected:
                               currentMode == SettingsLayoutMode.classicGrouped,
                           onTap: () {
-                            AppHaptics.selectionClick();
+                            AppHaptics.segmentTick();
                             plusSettings.plusSettingsLayoutMode =
                                 SettingsLayoutMode.classicGrouped;
                           },
@@ -124,7 +132,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                 ],
               ),
             ),
-            // Granular controls accordion to fine-tune old/new UI elements
+            // Granular controls accordion to fine-tune old/new UI elements & compact density
             Theme(
               data: theme.copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
@@ -135,11 +143,18 @@ class SettingsLayoutSelector extends StatelessWidget {
                   reverseCurve: Easing.emphasizedAccelerate,
                   duration: const Duration(milliseconds: 280),
                 ),
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                tilePadding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 14 : 16,
+                ),
+                childrenPadding: EdgeInsets.fromLTRB(
+                  isCompact ? 14 : 16,
+                  0,
+                  isCompact ? 14 : 16,
+                  12,
+                ),
                 leading: Icon(
                   Icons.tune_rounded,
-                  size: 18,
+                  size: isCompact ? 16 : 18,
                   color: colorScheme.primary,
                 ),
                 title: Text(
@@ -149,13 +164,22 @@ class SettingsLayoutSelector extends StatelessWidget {
                     color: colorScheme.onSurface,
                   ),
                 ),
-                subtitle: Text(
-                  tr('settingsGranularOldUIDesc'),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                subtitle: isCompact
+                    ? null
+                    : Text(
+                        tr('settingsGranularOldUIDesc'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                 children: [
+                  _buildGranularSwitch(
+                    context,
+                    title: tr('plusUseCompactSettings'),
+                    subtitle: tr('plusUseCompactSettingsDescription'),
+                    value: plusSettings.plusUseCompactSettings,
+                    onChanged: (v) => plusSettings.plusUseCompactSettings = v,
+                  ),
                   _buildGranularSwitch(
                     context,
                     title: tr('settingsUseGridToggles'),

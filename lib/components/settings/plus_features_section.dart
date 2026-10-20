@@ -40,18 +40,20 @@ class PlusFeaturesSection extends StatelessWidget {
       builder: (context, settings, child) {
         final bool isEnabled = settings.enableAllPlusFeatures;
         final bool isM3E = settings.plusEnableMaterialExpressive;
+        final bool isCompact = settings.plusUseCompactSettings;
         final baseRadius = settings.plusOverrideIndividualCornerRadius
             ? settings.plusSettingsCornerRadius
             : settings.plusGlobalCornerRadius;
         final cardRadius = CardMetrics.card(baseRadius);
         final innerRadius = CardMetrics.inner(cardRadius);
+        final badgeSize = isCompact ? 30.0 : 36.0;
 
         return AnimatedContainer(
           duration: Duration(
             milliseconds: settings.plusEnableEnhancedAnimations ? 300 : 0,
           ),
           curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(vertical: 4),
+          margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
           decoration: ShapeDecoration(
             color: isEnabled
                 ? colorScheme.primaryContainer.withValues(alpha: 0.25)
@@ -72,7 +74,10 @@ class PlusFeaturesSection extends StatelessWidget {
             shape: CardMetrics.shape(cardRadius, expressive: isM3E),
             clipBehavior: Clip.antiAlias,
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 14 : 16,
+                vertical: isCompact ? 6 : 10,
+              ),
               child: Row(
                 children: [
                   ScaleTouchWrapper(
@@ -82,8 +87,8 @@ class PlusFeaturesSection extends StatelessWidget {
                       showPlusFeaturesSheet(context: context);
                     },
                     child: Container(
-                      width: 36,
-                      height: 36,
+                      width: badgeSize,
+                      height: badgeSize,
                       decoration: ShapeDecoration(
                         color: isEnabled
                             ? colorScheme.primary.withValues(alpha: 0.16)
@@ -111,7 +116,7 @@ class PlusFeaturesSection extends StatelessWidget {
                           color: isEnabled
                               ? colorScheme.primary
                               : colorScheme.onSurfaceVariant,
-                          size: 18,
+                          size: isCompact ? 16 : 18,
                         ),
                       ),
                     ),

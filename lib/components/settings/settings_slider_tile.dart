@@ -42,6 +42,15 @@ class SettingsSliderTile extends StatefulWidget {
 class _SettingsSliderTileState extends State<SettingsSliderTile> {
   bool _isDragging = false;
   double? _lastSnappedIndex;
+  int _rollDirection = 1;
+
+  @override
+  void didUpdateWidget(covariant SettingsSliderTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value != oldWidget.value) {
+      _rollDirection = widget.value >= oldWidget.value ? 1 : -1;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,9 +70,16 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
         (widget.value - widget.defaultValue!).abs() > 0.001;
     final isM3E = plusSettings.plusEnableMaterialExpressive;
     final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
+    final badgeSize = isCompact ? 30.0 : 36.0;
+    final labelText = widget.labelBuilder(widget.value);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, isCompact ? 6 : 8, 16, 2),
+      padding: EdgeInsets.fromLTRB(
+        isCompact ? 14 : 16,
+        isCompact ? 4 : 8,
+        isCompact ? 14 : 16,
+        isCompact ? 0 : 2,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -72,8 +88,8 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
               AnimatedContainer(
                 duration: Duration(milliseconds: animsEnabled ? 220 : 0),
                 curve: Curves.easeOutCubic,
-                width: 36,
-                height: 36,
+                width: badgeSize,
+                height: badgeSize,
                 decoration: ShapeDecoration(
                   color: _isDragging
                       ? colorScheme.primary.withValues(alpha: 0.18)
@@ -84,7 +100,7 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                 ),
                 child: Icon(
                   widget.icon,
-                  size: 19,
+                  size: isCompact ? 16 : 19,
                   color: _isDragging
                       ? colorScheme.primary
                       : colorScheme.onSurfaceVariant,
@@ -94,7 +110,11 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
               Expanded(
                 child: Text(
                   widget.title,
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: isCompact
+                      ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        )
+                      : Theme.of(context).textTheme.bodyLarge,
                 ),
               ),
               if (isModifiedFromDefault)
@@ -120,35 +140,66 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                 duration: Duration(milliseconds: animsEnabled ? 220 : 0),
                 curve: Curves.easeOutCubic,
                 padding: EdgeInsets.symmetric(
-                  horizontal: _isDragging ? 10 : 12,
-                  vertical: 4,
+                  horizontal: _isDragging
+                      ? (isCompact ? 8 : 10)
+                      : (isCompact ? 10 : 12),
+                  vertical: isCompact ? 2.5 : 4,
                 ),
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: _isDragging
                       ? colorScheme.primaryContainer
                       : colorScheme.surfaceContainerHigh,
-                  borderRadius: BorderRadius.circular(badgeRadius),
-                  border: Border.all(
-                    color: _isDragging
-                        ? colorScheme.primary.withValues(alpha: 0.5)
-                        : colorScheme.outlineVariant.withValues(
-                            alpha:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? 0.35
-                                : 0.65,
-                          ),
-                    width: _isDragging ? 1.5 : 1.0,
+                  shape: CardMetrics.shape(
+                    badgeRadius,
+                    expressive: isM3E,
+                    side: BorderSide(
+                      color: _isDragging
+                          ? colorScheme.primary.withValues(alpha: 0.5)
+                          : colorScheme.outlineVariant.withValues(
+                              alpha:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? 0.35
+                                  : 0.65,
+                            ),
+                      width: _isDragging ? 1.5 : 1.0,
+                    ),
                   ),
                 ),
-                child: AnimatedDefaultTextStyle(
-                  duration: Duration(milliseconds: animsEnabled ? 180 : 0),
-                  style: Theme.of(context).textTheme.labelMedium!.copyWith(
-                    fontWeight: _isDragging ? FontWeight.bold : FontWeight.w600,
-                    color: _isDragging
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurfaceVariant,
+                clipBehavior: Clip.hardEdge,
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: animsEnabled ? 150 : 0),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    final isEntering = child.key == ValueKey<String>(labelText);
+                    final dy = isEntering
+                        ? 0.38 * _rollDirection
+                        : -0.38 * _rollDirection;
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween<Offset>(
+                          begin: Offset(0, dy),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    labelText,
+                    key: ValueKey<String>(labelText),
+                    style: Theme.of(context).textTheme.labelMedium!.copyWith(
+                      fontSize: isCompact ? 11 : null,
+                      fontWeight: _isDragging
+                          ? FontWeight.bold
+                          : FontWeight.w600,
+                      color: _isDragging
+                          ? colorScheme.onPrimaryContainer
+                          : colorScheme.onSurfaceVariant,
+                    ),
                   ),
-                  child: Text(widget.labelBuilder(widget.value)),
                 ),
               ),
             ],
@@ -156,16 +207,18 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
           // The morphing badge above already shows the value; keep `label`
           // for semantics but suppress the theme's drag bubble.
           SliderTheme(
-            data: SliderTheme.of(
-              context,
-            ).copyWith(showValueIndicator: ShowValueIndicator.never),
+            data: SliderTheme.of(context).copyWith(
+              showValueIndicator: ShowValueIndicator.never,
+              trackHeight: isCompact ? 3.5 : 5.0,
+            ),
             child: Slider(
               value: widget.value,
               min: widget.min,
               max: widget.max,
               divisions: widget.divisions,
-              label: widget.labelBuilder(widget.value),
+              label: labelText,
               onChangeStart: (_) {
+                AppHaptics.tapDown();
                 setState(() {
                   _isDragging = true;
                   _lastSnappedIndex = null;
@@ -177,7 +230,7 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                   final idx = ((v - widget.min) / step).round().toDouble();
                   if (idx != _lastSnappedIndex) {
                     _lastSnappedIndex = idx;
-                    AppHaptics.selectionClick();
+                    AppHaptics.segmentTick();
                   }
                 }
                 widget.onChanged(v);

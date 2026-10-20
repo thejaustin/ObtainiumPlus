@@ -1,7 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -13,7 +12,8 @@ enum _VisualThemeMode { system, light, dark, amoled }
 
 /// Visual 4-column theme thumbnail picker for Material 3 Expressive settings
 class VisualThemeSelector extends StatelessWidget {
-  const VisualThemeSelector({super.key});
+  final bool embedded;
+  const VisualThemeSelector({super.key, this.embedded = false});
 
   @override
   Widget build(BuildContext context) {
@@ -56,96 +56,112 @@ class VisualThemeSelector extends StatelessWidget {
 
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final isCompact = plusSettings.plusUseCompactSettings;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
+    final badgeSize = isCompact ? 30.0 : 36.0;
+
+    final body = Padding(
+      padding: EdgeInsets.fromLTRB(
+        isCompact ? 14 : 16,
+        isCompact ? 10 : 14,
+        isCompact ? 14 : 16,
+        isCompact ? 10 : 14,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: badgeSize,
+                height: badgeSize,
+                decoration: ShapeDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.14),
+                  shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                ),
+                child: Icon(
+                  Icons.palette_outlined,
+                  size: isCompact ? 16 : 18,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  tr('theme'),
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: isCompact ? 8 : 12),
+          Row(
+            children: options.map((opt) {
+              final isSelected = opt.mode == currentMode;
+              return Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 3),
+                  child: _ThemeThumbnailCard(
+                    mode: opt.mode,
+                    label: opt.label,
+                    isSelected: isSelected,
+                    isCompact: isCompact,
+                    onTap: () {
+                      AppHaptics.segmentTick();
+                      switch (opt.mode) {
+                        case _VisualThemeMode.system:
+                          themeSettings.theme = ThemeSettings.system;
+                          themeSettings.useBlackTheme = false;
+                          break;
+                        case _VisualThemeMode.light:
+                          themeSettings.theme = ThemeSettings.light;
+                          themeSettings.useBlackTheme = false;
+                          break;
+                        case _VisualThemeMode.dark:
+                          themeSettings.theme = ThemeSettings.dark;
+                          themeSettings.useBlackTheme = false;
+                          break;
+                        case _VisualThemeMode.amoled:
+                          themeSettings.theme = ThemeSettings.dark;
+                          themeSettings.useBlackTheme = true;
+                          break;
+                      }
+                    },
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+
+    if (embedded) return body;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: EdgeInsets.symmetric(vertical: isCompact ? 3 : 6),
       child: Material(
         color: colorScheme.surfaceContainerLow,
         shape: CardMetrics.shape(
           cardRadius,
           expressive: isM3E,
           side: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.22),
+            color: colorScheme.outlineVariant.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark
+                  ? 0.35
+                  : 0.65,
+            ),
           ),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: ShapeDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.14),
-                      shape: CardMetrics.shape(innerRadius, expressive: isM3E),
-                    ),
-                    child: Icon(
-                      Icons.palette_outlined,
-                      size: 18,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(
-                      tr('theme'),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: options.map((opt) {
-                  final isSelected = opt.mode == currentMode;
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: _ThemeThumbnailCard(
-                        mode: opt.mode,
-                        label: opt.label,
-                        isSelected: isSelected,
-                        onTap: () {
-                          AppHaptics.selectionClick();
-                          switch (opt.mode) {
-                            case _VisualThemeMode.system:
-                              themeSettings.theme = ThemeSettings.system;
-                              themeSettings.useBlackTheme = false;
-                              break;
-                            case _VisualThemeMode.light:
-                              themeSettings.theme = ThemeSettings.light;
-                              themeSettings.useBlackTheme = false;
-                              break;
-                            case _VisualThemeMode.dark:
-                              themeSettings.theme = ThemeSettings.dark;
-                              themeSettings.useBlackTheme = false;
-                              break;
-                            case _VisualThemeMode.amoled:
-                              themeSettings.theme = ThemeSettings.dark;
-                              themeSettings.useBlackTheme = true;
-                              break;
-                          }
-                        },
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        ),
+        child: body,
       ),
     );
   }
@@ -155,12 +171,14 @@ class _ThemeThumbnailCard extends StatelessWidget {
   final _VisualThemeMode mode;
   final String label;
   final bool isSelected;
+  final bool isCompact;
   final VoidCallback onTap;
 
   const _ThemeThumbnailCard({
     required this.mode,
     required this.label,
     required this.isSelected,
+    this.isCompact = false,
     required this.onTap,
   });
 
@@ -178,7 +196,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
     final innerRadius = CardMetrics.inner(cardRadius);
 
     return ScaleTouchWrapper(
-      hapticOnPressDown: true,
+      hapticOnPressDown: false,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
@@ -187,7 +205,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
           child: AnimatedContainer(
             duration: Duration(milliseconds: animsEnabled ? 220 : 0),
             curve: AppConstants.expressiveDecelerate,
-            padding: const EdgeInsets.all(6),
+            padding: EdgeInsets.all(isCompact ? 4 : 6),
             decoration: ShapeDecoration(
               color: isSelected
                   ? colorScheme.primaryContainer.withValues(alpha: 0.35)
@@ -212,7 +230,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
               children: [
                 // Mockup Window
                 Container(
-                  height: 58,
+                  height: isCompact ? 42 : 58,
                   decoration: ShapeDecoration(
                     shape: CardMetrics.shape(
                       innerRadius,
@@ -228,7 +246,7 @@ class _ThemeThumbnailCard extends StatelessWidget {
                   clipBehavior: Clip.antiAlias,
                   child: _buildMockupPreview(context),
                 ),
-                const SizedBox(height: 6),
+                SizedBox(height: isCompact ? 4 : 6),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

@@ -115,8 +115,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             if (index < visibleChildren.length - 1)
               Divider(
                 height: 1,
-                indent: isCompact ? 16 : 66,
-                endIndent: 16,
+                indent: isCompact ? 58 : 66,
+                endIndent: isCompact ? 14 : 16,
                 color: colorScheme.outlineVariant.withValues(
                   alpha: AppOpacity.low,
                 ),
@@ -131,6 +131,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         : plusSettings.plusGlobalCornerRadius;
     final radius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(radius);
+    final badgeSize = isCompact ? 30.0 : 36.0;
 
     // Build the leading icon widget (tinted container style)
     Widget? leadingWidget = widget.icon != null
@@ -139,8 +140,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
               milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0,
             ),
             curve: Curves.easeOutCubic,
-            width: 36,
-            height: 36,
+            width: badgeSize,
+            height: badgeSize,
             decoration: ShapeDecoration(
               color: colorScheme.primary.withValues(
                 alpha: _isExpanded ? 0.22 : 0.12,
@@ -153,7 +154,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             child: Icon(
               widget.icon,
               color: colorScheme.primary,
-              size: isCompact ? 18 : 20,
+              size: isCompact ? 16 : 20,
             ),
           )
         : null;
@@ -193,14 +194,14 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Non-expandable: section title shown above the card with identical 36x36 icon axis
+        // Non-expandable: section title shown above the card with identical icon axis
         if (widget.title != null && !widget.isExpandable)
           Padding(
             padding: EdgeInsets.fromLTRB(
-              16,
-              isCompact ? 10 : 16,
-              16,
-              isCompact ? 4 : 8,
+              isCompact ? 14 : 16,
+              isCompact ? 8 : 14,
+              isCompact ? 14 : 16,
+              isCompact ? 4 : 6,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -210,8 +211,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                     children: [
                       if (widget.icon != null) ...[
                         Container(
-                          width: 36,
-                          height: 36,
+                          width: badgeSize,
+                          height: badgeSize,
                           decoration: ShapeDecoration(
                             color: colorScheme.primary.withValues(alpha: 0.12),
                             shape: CardMetrics.shape(
@@ -223,7 +224,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                           child: Icon(
                             widget.icon,
                             color: colorScheme.primary,
-                            size: isCompact ? 18 : 20,
+                            size: isCompact ? 16 : 20,
                           ),
                         ),
                         const SizedBox(width: 14),
@@ -241,11 +242,14 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                                     letterSpacing: 0.3,
                                   ),
                             ),
-                            if (widget.description != null ||
-                                widget.helpText != null) ...[
+                            if (!isCompact &&
+                                (widget.description != null ||
+                                    widget.helpText != null)) ...[
                               const SizedBox(height: 2),
                               Text(
                                 widget.description ?? widget.helpText!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: colorScheme.onSurfaceVariant,
@@ -359,8 +363,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         initiallyExpanded: widget.initiallyExpanded,
         onExpansionChanged: _handleExpansionChange,
         tilePadding: EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: isCompact ? 2 : 4,
+          horizontal: isCompact ? 14 : 16,
+          vertical: isCompact ? 0 : 4,
         ),
         childrenPadding: EdgeInsets.zero,
         leading: leadingWidget,
@@ -372,9 +376,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             color: _isExpanded ? colorScheme.primary : colorScheme.onSurface,
           ),
         ),
-        subtitle: widget.description != null
+        subtitle: (!isCompact && widget.description != null)
             ? Text(
                 widget.description!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),

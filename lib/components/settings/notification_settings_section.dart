@@ -4,6 +4,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -57,9 +58,10 @@ class NotificationSettingsSection extends StatelessWidget {
                 }
               },
               child: ListTile(
-                leading: Icon(
+                leading: buildSettingsIconBadge(
+                  context,
                   Icons.notifications_active_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+                  active: true,
                 ),
                 title: Text(
                   tr('notificationSettings'),
@@ -71,13 +73,12 @@ class NotificationSettingsSection extends StatelessWidget {
           if (settings.enableAllPlusFeatures) ...[
             if (_matches(tr('plusEnableNotificationEnhancements')))
               SwitchListTile.adaptive(
-                secondary: Icon(
+                secondary: buildSettingsIconBadge(
+                  context,
                   settings.plusEnableNotificationEnhancements
                       ? Icons.notifications_active_rounded
                       : Icons.notifications_active_outlined,
-                  color: settings.plusEnableNotificationEnhancements
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
+                  active: settings.plusEnableNotificationEnhancements,
                 ),
                 title: Text(
                   tr('plusEnableNotificationEnhancements'),
@@ -115,6 +116,7 @@ class NotificationSettingsSection extends StatelessWidget {
                             _matches(tr('enableQuietHours')))
                           GenericBooleanControlGrid<PlusSettingsProvider>(
                             title: tr('settingsTabNotifications'),
+                            embedded: true,
                             settings: [
                               if (_matches(tr('enableNotificationDigest')))
                                 (
@@ -155,11 +157,10 @@ class NotificationSettingsSection extends StatelessWidget {
                                   onTap: () =>
                                       _showQuietHoursDialog(context, settings),
                                   child: ListTile(
-                                    leading: Icon(
+                                    leading: buildSettingsIconBadge(
+                                      context,
                                       Icons.schedule_outlined,
-                                      color: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
+                                      active: true,
                                     ),
                                     title: Text(
                                       tr('quietHoursSchedule'),

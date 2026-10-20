@@ -56,8 +56,9 @@ class ActiveOperationsBanner extends StatelessWidget {
                 margin: EdgeInsets.zero,
                 elevation: 0,
                 clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(radius),
+                shape: CardMetrics.shape(
+                  CardMetrics.card(radius),
+                  expressive: plusSettings.plusEnableMaterialExpressive,
                   side: BorderSide(
                     color: glassEnabled
                         ? colorScheme.primary.withValues(alpha: 0.22)

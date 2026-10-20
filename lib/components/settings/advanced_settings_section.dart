@@ -6,6 +6,7 @@ import 'package:obtainium/components/backup_password_dialog.dart';
 import 'package:obtainium/utils/backup_crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
@@ -50,7 +51,11 @@ class AdvancedSettingsSection extends StatelessWidget {
         Consumer<PlusSettingsProvider>(
           builder: (context, plusSettings, child) {
             return SwitchListTile.adaptive(
-              secondary: const Icon(Icons.settings_suggest_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.settings_suggest_outlined,
+                active: plusSettings.plusShowAdvancedSettings,
+              ),
               title: Text(
                 tr('showAdvancedSettings'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -123,7 +128,11 @@ class AdvancedSettingsSection extends StatelessWidget {
         Consumer<PlusSettingsProvider>(
           builder: (context, plusSettings, child) {
             return SwitchListTile.adaptive(
-              secondary: const Icon(Icons.enhanced_encryption_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.enhanced_encryption_outlined,
+                active: plusSettings.backupEncryptionEnabled,
+              ),
               title: Text(
                 tr('backupEncryption'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -169,7 +178,11 @@ class AdvancedSettingsSection extends StatelessWidget {
       ),
       if (_matches(tr('importExport')))
         ListTile(
-          leading: const Icon(Icons.import_export_rounded),
+          leading: buildSettingsIconBadge(
+            context,
+            Icons.import_export_rounded,
+            active: true,
+          ),
           title: Text(
             tr('importExport'),
             style: Theme.of(context).textTheme.bodyLarge,
@@ -184,11 +197,12 @@ class AdvancedSettingsSection extends StatelessWidget {
           },
         ),
       if (_matches(tr('factoryReset'))) ...[
-        const Divider(),
         ListTile(
-          leading: Icon(
+          leading: buildSettingsIconBadge(
+            context,
             Icons.warning_amber_rounded,
-            color: Theme.of(context).colorScheme.error,
+            active: true,
+            accentColor: Theme.of(context).colorScheme.error,
           ),
           title: Text(
             tr('factoryReset'),
@@ -265,19 +279,13 @@ class AdvancedSettingsSection extends StatelessWidget {
     required bool Function(SettingsProvider) value,
     required void Function(SettingsProvider, bool) onChanged,
   }) {
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: Icon(icon),
-          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(subtitle),
-          value: value(settings),
-          onChanged: (v) {
-            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-            onChanged(settings, v);
-          },
-        );
-      },
+    return buildFeatureToggle<SettingsProvider>(
+      context,
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      value: value,
+      onChanged: onChanged,
     );
   }
 
@@ -296,10 +304,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         final token = settings.getSettingString(settingId);
         final isConfigured = token != null && token.isNotEmpty;
         return ListTile(
-          leading: Icon(
-            icon,
-            color: isConfigured ? Theme.of(context).colorScheme.primary : null,
-          ),
+          leading: buildSettingsIconBadge(context, icon, active: isConfigured),
           title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
           subtitle: Text(isConfigured ? tr('plusTokenConfigStatus') : subtitle),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),

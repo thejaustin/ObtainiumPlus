@@ -6,7 +6,6 @@ import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/shizuku_activity_log_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';

@@ -2,7 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -229,42 +231,51 @@ class AppBehaviorSection extends StatelessWidget {
         final plusSettings = context.watch<PlusSettingsProvider>();
         final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
         final isCompact = plusSettings.plusUseCompactSettings;
+        final isM3E = plusSettings.plusEnableMaterialExpressive;
+        final chipRadius = plusSettings.plusGlobalCornerRadius.clamp(8.0, 20.0);
 
         return Padding(
-          padding: EdgeInsets.fromLTRB(16, isCompact ? 4 : 8, 16, 0),
+          padding: EdgeInsets.fromLTRB(
+            isCompact ? 14 : 16,
+            isCompact ? 4 : 8,
+            isCompact ? 14 : 16,
+            6,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(
+                  buildSettingsIconBadge(
+                    context,
                     isRight
                         ? Icons.swipe_right_outlined
                         : Icons.swipe_left_outlined,
-                    size: 22,
-                    color: colorScheme.onSurfaceVariant,
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   Expanded(
-                    child: Text(
-                      isRight ? tr('swipeRightAction') : tr('swipeLeftAction'),
-                      style: Theme.of(context).textTheme.bodyLarge,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isRight
+                              ? tr('swipeRightAction')
+                              : tr('swipeLeftAction'),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        if (!isCompact)
+                          Text(
+                            isRight
+                                ? tr('swipeRightActionDescription')
+                                : tr('swipeLeftActionDescription'),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                          ),
+                      ],
                     ),
                   ),
                 ],
               ),
-              if (!isCompact)
-                Padding(
-                  padding: const EdgeInsets.only(left: 38, top: 2),
-                  child: Text(
-                    isRight
-                        ? tr('swipeRightActionDescription')
-                        : tr('swipeLeftActionDescription'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
               const SizedBox(height: 8),
               // 3-column chip grid
               Row(
@@ -283,6 +294,19 @@ class AppBehaviorSection extends StatelessWidget {
                                     return const SizedBox.shrink();
                                   final action = AppSwipeAction.values[idx];
                                   final isSelected = action == currentAction;
+                                  final chipShape = CardMetrics.shape(
+                                    chipRadius,
+                                    expressive: isM3E,
+                                    side: BorderSide(
+                                      color: isSelected
+                                          ? colorScheme.primary.withValues(
+                                              alpha: 0.5,
+                                            )
+                                          : colorScheme.outlineVariant
+                                                .withValues(alpha: 0.3),
+                                      width: isSelected ? 1.5 : 1.0,
+                                    ),
+                                  );
                                   return Padding(
                                     padding: EdgeInsets.only(
                                       bottom: row == 0 ? 6 : 0,
@@ -295,36 +319,24 @@ class AppBehaviorSection extends StatelessWidget {
                                           milliseconds: animsEnabled ? 180 : 0,
                                         ),
                                         curve: Curves.easeOutCubic,
-                                        height: isCompact ? 36 : 40,
-                                        decoration: BoxDecoration(
+                                        height: isCompact ? 34 : 38,
+                                        decoration: ShapeDecoration(
                                           color: isSelected
                                               ? colorScheme.primaryContainer
                                               : colorScheme.surfaceContainerHigh
                                                     .withValues(alpha: 0.5),
-                                          borderRadius: BorderRadius.circular(
-                                            plusSettings.plusGlobalCornerRadius
-                                                .clamp(8, 20),
-                                          ),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? colorScheme.primary
-                                                      .withValues(alpha: 0.5)
-                                                : colorScheme.outlineVariant
-                                                      .withValues(alpha: 0.3),
-                                            width: isSelected ? 1.5 : 1.0,
-                                          ),
+                                          shape: chipShape,
                                         ),
                                         child: Material(
                                           color: Colors.transparent,
-                                          borderRadius: BorderRadius.circular(
-                                            plusSettings.plusGlobalCornerRadius
-                                                .clamp(8, 20),
+                                          shape: CardMetrics.shape(
+                                            chipRadius,
+                                            expressive: isM3E,
                                           ),
                                           child: InkWell(
-                                            borderRadius: BorderRadius.circular(
-                                              plusSettings
-                                                  .plusGlobalCornerRadius
-                                                  .clamp(8, 20),
+                                            customBorder: CardMetrics.shape(
+                                              chipRadius,
+                                              expressive: isM3E,
                                             ),
                                             onTap: () {
                                               AppHaptics.selectionClick();
@@ -444,7 +456,12 @@ class AppBehaviorSection extends StatelessWidget {
                 initiallyExpanded: true,
                 children: [
                   SwitchListTile.adaptive(
-                    secondary: const Icon(Icons.warning_amber_rounded),
+                    secondary: buildSettingsIconBadge(
+                      context,
+                      Icons.warning_amber_rounded,
+                      active: settings.plusEnableBanWarnings,
+                      accentColor: Theme.of(context).colorScheme.tertiary,
+                    ),
                     title: Text(
                       tr('plusEnableBanWarnings'),
                       style: Theme.of(context).textTheme.bodyLarge,
@@ -535,19 +552,13 @@ class AppBehaviorSection extends StatelessWidget {
     required bool Function(BehaviorSettingsProvider) value,
     required void Function(BehaviorSettingsProvider, bool) onChanged,
   }) {
-    return Consumer<BehaviorSettingsProvider>(
-      builder: (context, settings, child) {
-        return SwitchListTile.adaptive(
-          secondary: Icon(icon),
-          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
-          subtitle: Text(subtitle),
-          value: value(settings),
-          onChanged: (v) {
-            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-            onChanged(settings, v);
-          },
-        );
-      },
+    return buildFeatureToggle<BehaviorSettingsProvider>(
+      context,
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      value: value,
+      onChanged: onChanged,
     );
   }
 }

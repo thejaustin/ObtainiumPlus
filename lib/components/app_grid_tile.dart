@@ -126,14 +126,18 @@ class _AppGridTileState extends State<AppGridTile>
             final bool isHorizontal =
                 constraints.maxWidth / constraints.maxHeight > 1.5;
 
-            final double availableWidth = constraints.maxWidth - 20;
+            final double availableWidth = constraints.maxWidth - 16;
+            final bool isCompactTile = constraints.maxHeight < 128;
 
-            // Adaptive icon sizing proportional to tile width and height
-            final double maxIconFromHeight = (constraints.maxHeight * 0.42)
-                .clamp(28.0, 80.0);
+            // Adaptive icon sizing proportional to a 1:1 square tile
+            final double maxIconFromHeight =
+                (constraints.maxHeight * (isCompactTile ? 0.35 : 0.38)).clamp(
+                  24.0,
+                  68.0,
+                );
             final double iconSize = isHorizontal
                 ? (constraints.maxHeight * 0.65).clamp(36.0, 80.0)
-                : (availableWidth * 0.50).clamp(28.0, maxIconFromHeight);
+                : (availableWidth * 0.42).clamp(24.0, maxIconFromHeight);
 
             final plusSettings = context.watch<PlusSettingsProvider>();
             final viewSettings = context.watch<ViewSettingsProvider>();
@@ -148,8 +152,8 @@ class _AppGridTileState extends State<AppGridTile>
               constraints.maxWidth,
             );
             final double iconBorderRadius = CardMetrics.inner(baseRadius);
-            final double padding = (availableWidth * 0.08).clamp(6.0, 12.0);
-            final double badgeSize = (iconSize * 0.28).clamp(14.0, 20.0);
+            final double padding = (availableWidth * 0.065).clamp(5.0, 10.0);
+            final double badgeSize = (iconSize * 0.28).clamp(13.0, 20.0);
 
             // Resolve category color for M3E accent ribbon
             final Color? resolvedCategoryColor =
@@ -441,7 +445,9 @@ class _AppGridTileState extends State<AppGridTile>
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: padding,
-                                    vertical: padding + 2,
+                                    vertical: isCompactTile
+                                        ? 5.0
+                                        : (padding + 1),
                                   ),
                                   child: isHorizontal
                                       ? _buildHorizontalContent(
@@ -459,6 +465,7 @@ class _AppGridTileState extends State<AppGridTile>
                                           plusSettings,
                                           viewSettings,
                                           cardColor,
+                                          constraints.maxHeight,
                                         ),
                                 ),
                               ),
@@ -535,8 +542,13 @@ class _AppGridTileState extends State<AppGridTile>
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
     Color cardColor,
+    double maxHeight,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bool isCompactTile = maxHeight < 128;
+    final bool isUltraCompactTile = maxHeight < 96;
+    final bool isDownloading = widget.appInMemory.downloadProgress != null;
+
     return Column(
       mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -547,7 +559,7 @@ class _AppGridTileState extends State<AppGridTile>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: 2),
+              SizedBox(height: isCompactTile ? 1 : 2),
               _buildIconStack(
                 iconSize,
                 iconBorderRadius,
@@ -555,22 +567,24 @@ class _AppGridTileState extends State<AppGridTile>
                 plusSettings,
                 cardColor,
               ),
-              const SizedBox(height: 5),
-              // App name: up to 2 lines, centered with expressive typography
+              SizedBox(height: isCompactTile ? 3 : 5),
+              // App name: 1 line on compact square tiles, up to 2 lines on standard square tiles
               Flexible(
                 child: Text(
                   widget.appInMemory.name,
-                  maxLines: 2,
+                  maxLines: (isCompactTile || isDownloading) ? 1 : 2,
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12.5,
+                    fontSize: isUltraCompactTile
+                        ? 10.5
+                        : (isCompactTile ? 11.5 : 12.2),
                     fontWeight:
                         (widget.appInMemory.app.pinned || widget.hasUpdate)
                         ? FontWeight.w700
                         : FontWeight.w600,
                     letterSpacing: -0.2,
-                    height: 1.25,
+                    height: 1.18,
                     color: colorScheme.onSurface,
                   ),
                 ),
@@ -583,22 +597,26 @@ class _AppGridTileState extends State<AppGridTile>
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Footer: Action Pill or Status Pill
-            if (widget.hasUpdate) ...[
-              _buildUpdateVersionPill(colorScheme),
-            ] else if (viewSettings.displayShowVersion ||
-                viewSettings.displayShowAuthor ||
-                viewSettings.displayShowDate) ...[
-              _buildUpToDatePill(colorScheme, viewSettings),
+            if (!isUltraCompactTile || widget.hasUpdate) ...[
+              if (widget.hasUpdate) ...[
+                _buildUpdateVersionPill(colorScheme),
+              ] else if (viewSettings.displayShowVersion ||
+                  viewSettings.displayShowAuthor ||
+                  viewSettings.displayShowDate) ...[
+                _buildUpToDatePill(colorScheme, viewSettings),
+              ],
             ],
-            // Tag chips
+            // Tag chips (shown on roomy square tiles when not actively downloading)
             if (plusSettings.plusShowTagsInList &&
-                widget.appInMemory.app.tags.isNotEmpty) ...[
-              const SizedBox(height: 3),
+                widget.appInMemory.app.tags.isNotEmpty &&
+                !isCompactTile &&
+                !isDownloading) ...[
+              const SizedBox(height: 2),
               _buildTagChips(colorScheme),
             ],
             // Download / checking progress indicator
             _buildProgressIndicator(),
-            const SizedBox(height: 2),
+            SizedBox(height: isCompactTile ? 0 : 1),
           ],
         ),
       ],

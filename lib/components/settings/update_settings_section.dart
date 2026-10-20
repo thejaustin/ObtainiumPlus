@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -56,21 +58,19 @@ class UpdateSettingsSection extends StatelessWidget {
           child: _RunBgUpdateCheckNowButton(),
         ),
       if (_matches(tr('updateHealth')))
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-          child: ListTile(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            tileColor: Theme.of(
-              context,
-            ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-            title: Text(tr('updateHealth')),
-            subtitle: Text(tr('updateHealthSubtitle')),
-            leading: const Icon(Icons.healing_outlined),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => NavHelper.pushUpdateHealthPage(context),
+        ListTile(
+          title: Text(
+            tr('updateHealth'),
+            style: Theme.of(context).textTheme.bodyLarge,
           ),
+          subtitle: Text(tr('updateHealthSubtitle')),
+          leading: buildSettingsIconBadge(
+            context,
+            Icons.healing_outlined,
+            active: true,
+          ),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () => NavHelper.pushUpdateHealthPage(context),
         ),
       if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
       if (_matches(tr('bgUpdateRequiresWifi')) ||
@@ -79,6 +79,7 @@ class UpdateSettingsSection extends StatelessWidget {
           _matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
         GenericBooleanControlGrid<UpdateSettingsProvider>(
           title: tr('updates'),
+          embedded: true,
           settings: [
             if (_matches(tr('bgUpdateRequiresWifi')))
               (
@@ -213,7 +214,11 @@ class UpdateSettingsSection extends StatelessWidget {
     return Consumer<UpdateSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.run_circle_outlined),
+          secondary: buildSettingsIconBadge(
+            context,
+            Icons.run_circle_outlined,
+            active: settings.useFGService,
+          ),
           title: Text(
             tr('foregroundServiceExplanation'),
             style: Theme.of(context).textTheme.bodyLarge,
@@ -245,9 +250,11 @@ class UpdateSettingsSection extends StatelessWidget {
           if (isXiaomi) {
             return ListTile(
               leading: Builder(
-                builder: (ctx) => Icon(
+                builder: (ctx) => buildSettingsIconBadge(
+                  ctx,
                   Icons.battery_alert_outlined,
-                  color: Theme.of(ctx).colorScheme.tertiary,
+                  active: true,
+                  accentColor: Theme.of(ctx).colorScheme.tertiary,
                 ),
               ),
               title: Text(
@@ -354,7 +361,11 @@ class UpdateSettingsSection extends StatelessWidget {
           children: [
             if (_matches(tr('checkUpdateOnDetailPage')))
               SwitchListTile.adaptive(
-                secondary: const Icon(Icons.description_outlined),
+                secondary: buildSettingsIconBadge(
+                  context,
+                  Icons.description_outlined,
+                  active: updateSettings.checkUpdateOnDetailPage,
+                ),
                 title: Text(
                   tr('checkUpdateOnDetailPage'),
                   style: Theme.of(context).textTheme.bodyLarge,
@@ -367,7 +378,11 @@ class UpdateSettingsSection extends StatelessWidget {
               ),
             if (_matches(tr('allowAddingAppsWithoutCheck')))
               SwitchListTile.adaptive(
-                secondary: const Icon(Icons.add_circle_outline),
+                secondary: buildSettingsIconBadge(
+                  context,
+                  Icons.add_circle_outline,
+                  active: updateSettings.allowAddingAppsWithoutCheck,
+                ),
                 title: Text(
                   tr('allowAddingAppsWithoutCheck'),
                   style: Theme.of(context).textTheme.bodyLarge,
@@ -385,7 +400,11 @@ class UpdateSettingsSection extends StatelessWidget {
             if (plusSettings.enableAllPlusFeatures &&
                 _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
               SwitchListTile.adaptive(
-                secondary: const Icon(Icons.system_update_alt_rounded),
+                secondary: buildSettingsIconBadge(
+                  context,
+                  Icons.system_update_alt_rounded,
+                  active: plusSettings.plusEnableSystemUpdateScanner,
+                ),
                 title: Row(
                   children: [
                     Expanded(
@@ -429,7 +448,11 @@ class UpdateSettingsSection extends StatelessWidget {
             if (plusSettings.enableAllPlusFeatures &&
                 _matches(tr('plusEnableUpdateSchedule')))
               SwitchListTile.adaptive(
-                secondary: const Icon(Icons.schedule_outlined),
+                secondary: buildSettingsIconBadge(
+                  context,
+                  Icons.schedule_outlined,
+                  active: plusSettings.plusEnableUpdateSchedule,
+                ),
                 title: Text(
                   tr('plusEnableUpdateSchedule'),
                   style: Theme.of(context).textTheme.bodyLarge,
@@ -445,7 +468,11 @@ class UpdateSettingsSection extends StatelessWidget {
                 _matches(tr('updateSchedule')) &&
                 plusSettings.plusEnableUpdateSchedule)
               ListTile(
-                leading: const Icon(Icons.schedule_outlined),
+                leading: buildSettingsIconBadge(
+                  context,
+                  Icons.schedule_outlined,
+                  active: updateSettings.useUpdateSchedule,
+                ),
                 title: Text(
                   tr('updateSchedule'),
                   style: Theme.of(context).textTheme.bodyLarge,
@@ -465,7 +492,10 @@ class UpdateSettingsSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ListTile(
-                    leading: const Icon(Icons.history_outlined),
+                    leading: buildSettingsIconBadge(
+                      context,
+                      Icons.history_outlined,
+                    ),
                     title: Text(
                       tr('releaseChannel'),
                       style: Theme.of(context).textTheme.bodyLarge,
@@ -541,7 +571,11 @@ class UpdateSettingsSection extends StatelessWidget {
                   if (plusSettings.enableAllPlusFeatures &&
                       _matches(tr('plusEnableAutoUpdateRules')))
                     SwitchListTile.adaptive(
-                      secondary: const Icon(Icons.rule_outlined),
+                      secondary: buildSettingsIconBadge(
+                        context,
+                        Icons.rule_outlined,
+                        active: plusSettings.plusEnableAutoUpdateRules,
+                      ),
                       title: Text(
                         tr('plusEnableAutoUpdateRules'),
                         style: Theme.of(context).textTheme.bodyLarge,
@@ -559,7 +593,11 @@ class UpdateSettingsSection extends StatelessWidget {
                       plusSettings.plusEnableAutoUpdateRules &&
                       _matches(tr('autoUpdateRules')))
                     ListTile(
-                      leading: const Icon(Icons.rule_outlined),
+                      leading: buildSettingsIconBadge(
+                        context,
+                        Icons.rule_outlined,
+                        active: true,
+                      ),
                       title: Text(
                         tr('autoUpdateRules'),
                         style: Theme.of(context).textTheme.bodyLarge,
@@ -593,20 +631,24 @@ class UpdateSettingsSection extends StatelessWidget {
     BehaviorSettingsProvider behaviorSettings,
   ) {
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
     final isCompact = plusSettings.plusUseCompactSettings;
     final radius = plusSettings.plusGlobalCornerRadius.clamp(8.0, 20.0);
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(16, isCompact ? 4 : 8, 16, 0),
+      padding: EdgeInsets.fromLTRB(
+        isCompact ? 14 : 16,
+        isCompact ? 4 : 8,
+        isCompact ? 14 : 16,
+        6,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.store_outlined, size: 22),
-              const SizedBox(width: 16),
+              buildSettingsIconBadge(context, Icons.store_outlined),
+              const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   tr('preferredUpdateSource'),
@@ -692,30 +734,37 @@ class UpdateSettingsSection extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableMaterialExpressive;
+    final chipShape = CardMetrics.shape(
+      radius,
+      expressive: isM3E,
+      side: BorderSide(
+        color: isSelected
+            ? colorScheme.primary.withValues(alpha: 0.5)
+            : colorScheme.outlineVariant.withValues(alpha: 0.3),
+        width: isSelected ? 1.5 : 1.0,
+      ),
+    );
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
       scaleDownFactor: 0.92,
       child: AnimatedContainer(
         duration: Duration(milliseconds: animsEnabled ? 180 : 0),
         curve: Curves.easeOutCubic,
-        height: isCompact ? 36 : 40,
-        decoration: BoxDecoration(
+        height: isCompact ? 34 : 38,
+        decoration: ShapeDecoration(
           color: isSelected
               ? colorScheme.primaryContainer
               : colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(
-            color: isSelected
-                ? colorScheme.primary.withValues(alpha: 0.5)
-                : colorScheme.outlineVariant.withValues(alpha: 0.3),
-            width: isSelected ? 1.5 : 1.0,
-          ),
+          shape: chipShape,
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(radius),
+          shape: CardMetrics.shape(radius, expressive: isM3E),
           child: InkWell(
-            borderRadius: BorderRadius.circular(radius),
+            customBorder: CardMetrics.shape(radius, expressive: isM3E),
             onTap: onTap,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -748,23 +797,6 @@ class UpdateSettingsSection extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _getSourceDisplayName(String source) {
-    switch (source) {
-      case 'direct':
-        return tr('direct');
-      case 'play_store':
-        return tr('playStore');
-      case 'aurora':
-        return tr('auroraStore');
-      case 'github':
-        return tr('github');
-      case 'apkpure':
-        return tr('apkpure');
-      default:
-        return tr('direct');
-    }
   }
 
   void _showScheduleDialog(

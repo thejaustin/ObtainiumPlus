@@ -3,8 +3,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/components/settings/visual_theme_selector.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -35,6 +33,7 @@ class AppearanceHub extends StatelessWidget {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final viewSettings = context.watch<ViewSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
+    final isCompact = plusSettings.plusUseCompactSettings;
 
     // Summaries
     final isM3E = plusSettings.plusEnableMaterialExpressive;
@@ -54,7 +53,7 @@ class AppearanceHub extends StatelessWidget {
         : tileDecor.take(2).join(' · ');
 
     final layoutSummary =
-        '${viewSettings.globalViewMode.name.toUpperCase()} · ${viewSettings.appListDensity.name}';
+        '${viewSettings.globalViewMode.name.toUpperCase()} · ${viewSettings.appListDensity.name}${isCompact ? ' · Compact' : ''}';
 
     final List<String> motionDecor = [];
     if (plusSettings.plusEnableGlassmorphism) motionDecor.add('Glass');
@@ -104,14 +103,15 @@ class AppearanceHub extends StatelessWidget {
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
+    final badgeSize = isCompact ? 30.0 : 36.0;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.only(bottom: 10),
+            padding: EdgeInsets.only(bottom: isCompact ? 6 : 10),
             child: Card(
               elevation: 0,
               margin: EdgeInsets.zero,
@@ -130,17 +130,22 @@ class AppearanceHub extends StatelessWidget {
                 ),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: EdgeInsets.fromLTRB(
+                  isCompact ? 14 : 16,
+                  isCompact ? 10 : 14,
+                  isCompact ? 14 : 16,
+                  isCompact ? 10 : 14,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Container(
-                          width: 44,
-                          height: 44,
+                          width: badgeSize,
+                          height: badgeSize,
                           decoration: ShapeDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            color: colorScheme.primary.withValues(alpha: 0.14),
                             shape: CardMetrics.shape(
                               innerRadius,
                               expressive: isM3E,
@@ -150,7 +155,7 @@ class AppearanceHub extends StatelessWidget {
                             isM3E
                                 ? Icons.brush_rounded
                                 : Icons.auto_awesome_rounded,
-                            size: 22,
+                            size: isCompact ? 16 : 18,
                             color: colorScheme.primary,
                           ),
                         ),
@@ -161,51 +166,59 @@ class AppearanceHub extends StatelessWidget {
                             children: [
                               Text(
                                 tr('designSystemThemeStyle'),
-                                style: Theme.of(context).textTheme.bodyLarge
+                                style: Theme.of(context).textTheme.titleSmall
                                     ?.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                      fontWeight: FontWeight.w700,
                                       color: colorScheme.onSurface,
                                     ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                isM3E
-                                    ? tr('materialExpressiveThemeDescription')
-                                    : tr('obtainiumPlusThemeDescription'),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: colorScheme.onSurfaceVariant,
-                                    ),
-                              ),
+                              if (!isCompact) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  isM3E
+                                      ? tr('materialExpressiveThemeDescription')
+                                      : tr('obtainiumPlusThemeDescription'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    SizedBox(height: isCompact ? 8 : 12),
                     SizedBox(
                       width: double.infinity,
                       child: SegmentedButton<bool>(
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: isCompact
+                              ? VisualDensity.compact
+                              : VisualDensity.standard,
+                        ),
                         segments: [
                           ButtonSegment<bool>(
                             value: false,
                             label: Text(tr('obtainiumPlusTheme')),
-                            icon: const Icon(Icons.auto_awesome_rounded),
+                            icon: const Icon(
+                              Icons.auto_awesome_rounded,
+                              size: 16,
+                            ),
                           ),
                           ButtonSegment<bool>(
                             value: true,
                             label: Text(tr('materialExpressiveTheme')),
-                            icon: const Icon(Icons.brush_rounded),
+                            icon: const Icon(Icons.brush_rounded, size: 16),
                           ),
                         ],
                         selected: {isM3E},
                         onSelectionChanged: (Set<bool> newSelection) {
                           final next = newSelection.first;
-                          if (next) {
-                            AppHaptics.toggleOn();
-                          } else {
-                            AppHaptics.toggleOff();
-                          }
+                          next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                           plusSettings.plusEnableMaterialExpressive = next;
                         },
                       ),
@@ -217,13 +230,14 @@ class AppearanceHub extends StatelessWidget {
           ),
           ...hubCards.map((card) {
             return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
+              padding: EdgeInsets.only(bottom: isCompact ? 6 : 10),
               child: _HubCard(
                 icon: card.icon,
                 title: card.title,
                 desc: card.desc,
                 summary: card.summary,
                 accentColor: card.color,
+                isCompact: isCompact,
                 onTap: () {
                   AppHaptics.selectionClick();
                   _showAppearanceSubmenuSheet(
@@ -364,6 +378,7 @@ class _HubCard extends StatelessWidget {
   final String desc;
   final String summary;
   final Color accentColor;
+  final bool isCompact;
   final VoidCallback onTap;
 
   const _HubCard({
@@ -372,6 +387,7 @@ class _HubCard extends StatelessWidget {
     required this.desc,
     required this.summary,
     required this.accentColor,
+    this.isCompact = false,
     required this.onTap,
   });
 
@@ -385,6 +401,7 @@ class _HubCard extends StatelessWidget {
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
+    final badgeSize = isCompact ? 30.0 : 36.0;
 
     final isM3E = plusSettings.plusEnableMaterialExpressive;
     final cardShape = CardMetrics.shape(
@@ -399,6 +416,7 @@ class _HubCard extends StatelessWidget {
     );
 
     return ScaleTouchWrapper(
+      hapticOnPressDown: true,
       child: Material(
         color: colorScheme.surfaceContainerLow,
         shape: cardShape,
@@ -407,17 +425,24 @@ class _HubCard extends StatelessWidget {
           onTap: onTap,
           customBorder: cardShape,
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 14 : 16,
+              vertical: isCompact ? 10 : 14,
+            ),
             child: Row(
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  width: badgeSize,
+                  height: badgeSize,
                   decoration: ShapeDecoration(
-                    color: accentColor.withValues(alpha: 0.12),
+                    color: accentColor.withValues(alpha: 0.14),
                     shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                   ),
-                  child: Icon(icon, color: accentColor, size: 22),
+                  child: Icon(
+                    icon,
+                    color: accentColor,
+                    size: isCompact ? 16 : 19,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -426,32 +451,39 @@ class _HubCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
+                        style:
+                            (isCompact
+                                    ? theme.textTheme.bodyMedium
+                                    : theme.textTheme.bodyLarge)
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        desc,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withValues(
-                            alpha: 0.4,
+                      if (!isCompact) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          desc,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
                           ),
-                          borderRadius: BorderRadius.circular(
-                            CardMetrics.pillRadius,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      SizedBox(height: isCompact ? 4 : 6),
+                      Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: isCompact ? 2 : 3,
+                        ),
+                        decoration: ShapeDecoration(
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.45,
+                          ),
+                          shape: CardMetrics.shape(
+                            CardMetrics.pill(baseRadius),
+                            expressive: isM3E,
                           ),
                         ),
                         child: Text(
@@ -471,7 +503,7 @@ class _HubCard extends StatelessWidget {
                 Icon(
                   Icons.chevron_right_rounded,
                   color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                  size: 22,
+                  size: isCompact ? 18 : 22,
                 ),
               ],
             ),

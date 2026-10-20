@@ -66,17 +66,14 @@ class GridMetrics {
     return 2;
   }
 
-  /// Calculates adaptive child aspect ratio guaranteeing zero vertical overflow
-  /// and optimal typography across phone and tablet screens.
+  /// Returns a 1:1 square aspect ratio for multi-column app grids
+  /// (and 2.2 for single-column horizontal banner tiles).
   static double childAspectRatio({
     required int columnCount,
     required bool hasExtraDetails,
   }) {
     if (columnCount <= 1) return 2.2;
-    if (columnCount == 2) return hasExtraDetails ? 0.82 : 0.94;
-    if (columnCount == 3) return hasExtraDetails ? 0.76 : 0.86;
-    if (columnCount == 4) return hasExtraDetails ? 0.72 : 0.82;
-    return hasExtraDetails ? 0.70 : 0.78;
+    return 1.0;
   }
 
   /// Convenience alias for [childAspectRatio].

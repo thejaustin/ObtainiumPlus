@@ -4,12 +4,12 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:provider/provider.dart';
-import 'dart:ui';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/apps/m3e_segmented_filter.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -693,16 +693,18 @@ class _AppDashboardState extends State<AppDashboard>
     double radius,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isM3E = context
-        .watch<PlusSettingsProvider>()
-        .plusEnableMaterialExpressive;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final count = appsProvider.selectedAppIds.length;
     final itemRadius = CardMetrics.card(radius);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(itemRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+    return ClipPath(
+      clipper: ShapeBorderClipper(
+        shape: CardMetrics.shape(itemRadius, expressive: isM3E),
+      ),
+      child: ConditionalBlur(
+        enabled: plusSettings.plusEnableGlassmorphism,
+        sigma: AppConstants.glassBlurSigmaSoft,
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),

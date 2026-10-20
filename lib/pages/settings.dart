@@ -44,7 +44,27 @@ class _SettingsPageState extends State<SettingsPage> {
   late final Future<dynamic> _versionFuture = getInstalledInfo(obtainiumId);
   final GlobalKey _resultsKey = GlobalKey();
   final List<GlobalKey> _chipKeys = List.generate(5, (_) => GlobalKey());
+  final Map<String, GlobalKey> _jumpTargetKeys = {
+    'theme': GlobalKey(),
+    'appsView': GlobalKey(),
+    'updates': GlobalKey(),
+    'install': GlobalKey(),
+    'advanced': GlobalKey(),
+    'troubleshooting': GlobalKey(),
+  };
   bool _noResults = false;
+
+  void _jumpToTarget(String keyName) {
+    final ctx = _jumpTargetKeys[keyName]?.currentContext;
+    if (ctx == null) return;
+    AppHaptics.segmentTick();
+    Scrollable.ensureVisible(
+      ctx,
+      alignment: 0.06,
+      duration: const Duration(milliseconds: 320),
+      curve: Easing.emphasizedDecelerate,
+    );
+  }
 
   static int _mapInitialTab(int t) {
     if (t <= 2) return 0;
@@ -182,6 +202,76 @@ class _SettingsPageState extends State<SettingsPage> {
         slivers: [
           CustomAppBar(
             title: tr('settings'),
+            actions: [
+              FutureBuilder<dynamic>(
+                future: _versionFuture,
+                builder: (context, snap) {
+                  final String? v = snap.data?.versionName as String?;
+                  final isM3E = plusSettings.plusEnableMaterialExpressive;
+                  final colorScheme = Theme.of(context).colorScheme;
+                  return ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.92,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: ActionChip(
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        avatar: Icon(
+                          Icons.history_edu_rounded,
+                          size: 15,
+                          color: colorScheme.primary,
+                        ),
+                        label: Text(
+                          (v != null && v.isNotEmpty) ? v : tr('viewChangelog'),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onSurface,
+                              ),
+                        ),
+                        shape: CardMetrics.shape(
+                          CardMetrics.pill(plusSettings.plusGlobalCornerRadius),
+                          expressive: isM3E,
+                          side: BorderSide(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.35,
+                            ),
+                          ),
+                        ),
+                        backgroundColor: colorScheme.surfaceContainerLow,
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          showWhatsNewSheet(context);
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              ScaleTouchWrapper(
+                hapticOnPressDown: false,
+                scaleDownFactor: 0.88,
+                child: IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: tr('plusUseCompactSettings'),
+                  icon: Icon(
+                    plusSettings.plusUseCompactSettings
+                        ? Icons.density_small_rounded
+                        : Icons.density_medium_rounded,
+                    size: 20,
+                    color: plusSettings.plusUseCompactSettings
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+                  onPressed: () {
+                    final next = !plusSettings.plusUseCompactSettings;
+                    next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                    plusSettings.plusUseCompactSettings = next;
+                  },
+                ),
+              ),
+            ],
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60),
               child: Padding(
@@ -255,7 +345,7 @@ class _SettingsPageState extends State<SettingsPage> {
           SliverPadding(
             padding: EdgeInsets.symmetric(
               horizontal: adaptiveMargin,
-              vertical: 4,
+              vertical: 2,
             ),
             sliver: SliverToBoxAdapter(
               child: PlusFeaturesSection(
@@ -264,23 +354,10 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           ),
-          if (_searchQuery.isEmpty)
-            SliverPadding(
-              padding: EdgeInsets.symmetric(
-                horizontal: adaptiveMargin,
-                vertical: 4,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: _SettingsHeaderCard(
-                  versionFuture: _versionFuture,
-                  links: _links(context),
-                ),
-              ),
-            ),
           if (!useSettingsBottomBar && _searchQuery.isEmpty)
             SliverToBoxAdapter(
               child: SizedBox(
-                height: 52,
+                height: plusSettings.plusUseCompactSettings ? 44 : 50,
                 child: ListView(
                   key: const PageStorageKey<String>('settings_tabs_scroll'),
                   controller: _tabsScrollController,
@@ -318,6 +395,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             scaleDownFactor: 0.95,
                             child: ChoiceChip(
                               key: _chipKeys[entry.key],
+                              visualDensity: plusSettings.plusUseCompactSettings
+                                  ? VisualDensity.compact
+                                  : null,
                               materialTapTargetSize:
                                   MaterialTapTargetSize.padded,
                               avatar: Icon(
@@ -397,7 +477,7 @@ class _SettingsPageState extends State<SettingsPage> {
           SliverPadding(
             padding: EdgeInsets.symmetric(
               horizontal: adaptiveMargin,
-              vertical: 8,
+              vertical: plusSettings.plusUseCompactSettings ? 4 : 8,
             ),
             sliver: SliverToBoxAdapter(
               child: AnimatedSwitcher(
@@ -453,13 +533,18 @@ class _SettingsPageState extends State<SettingsPage> {
                             _SettingsTabBanner(
                               key: ValueKey('banner_$_selectedSectionIndex'),
                               tabIndex: _selectedSectionIndex,
+                              jumpChips: _buildJumpChipsForTab(
+                                _selectedSectionIndex,
+                                plusSettings,
+                              ),
+                              onJump: _jumpToTarget,
                             ),
                           if (_searchQuery.isNotEmpty ||
                               _selectedSectionIndex == 0) ...[
                             if (_searchQuery.isEmpty &&
                                 plusSettings.plusSettingsUseSubmenuHub) ...[
-                              const VisualThemeSelector(),
-                              const SizedBox(height: 4),
+                              if (plusSettings.plusSettingsUseVisualThemePicker)
+                                const VisualThemeSelector(),
                               AppearanceHub(
                                 androidInfoFuture: _androidInfoFuture,
                                 themeContent: ThemeSettingsSection(
@@ -495,41 +580,60 @@ class _SettingsPageState extends State<SettingsPage> {
                                   subCategory: 'motion',
                                 ),
                               ),
-                              const SizedBox(height: 8),
                               const SettingsLayoutSelector(),
                             ] else ...[
-                              ThemeSettingsSection(
-                                searchQuery: _searchQuery,
-                                androidInfoFuture: _androidInfoFuture,
-                                colorsNameMap:
-                                    const <ColorSwatch<Object>, String>{},
-                                showAdvancedSettings:
-                                    plusSettings.plusShowAdvancedSettings,
+                              KeyedSubtree(
+                                key: _searchQuery.isEmpty
+                                    ? _jumpTargetKeys['theme']
+                                    : null,
+                                child: ThemeSettingsSection(
+                                  searchQuery: _searchQuery,
+                                  androidInfoFuture: _androidInfoFuture,
+                                  colorsNameMap:
+                                      const <ColorSwatch<Object>, String>{},
+                                  showAdvancedSettings:
+                                      plusSettings.plusShowAdvancedSettings,
+                                ),
                               ),
-                              AppsViewSettingsSection(
-                                searchQuery: _searchQuery,
-                                onSetState: (fn) => setState(fn),
-                                showAdvancedSettings:
-                                    plusSettings.plusShowAdvancedSettings,
+                              KeyedSubtree(
+                                key: _searchQuery.isEmpty
+                                    ? _jumpTargetKeys['appsView']
+                                    : null,
+                                child: AppsViewSettingsSection(
+                                  searchQuery: _searchQuery,
+                                  onSetState: (fn) => setState(fn),
+                                  showAdvancedSettings:
+                                      plusSettings.plusShowAdvancedSettings,
+                                ),
                               ),
                             ],
                           ],
                           if (_searchQuery.isNotEmpty ||
                               _selectedSectionIndex == 1) ...[
-                            UpdateSettingsSection(
-                              searchQuery: _searchQuery,
-                              showIntervalLabel: _showIntervalLabel,
-                              onIntervalLabelChange: (val) =>
-                                  setState(() => _showIntervalLabel = val),
-                              androidInfoFuture: _androidInfoFuture,
-                              showAdvancedSettings:
-                                  plusSettings.plusShowAdvancedSettings,
+                            KeyedSubtree(
+                              key: _searchQuery.isEmpty
+                                  ? _jumpTargetKeys['updates']
+                                  : null,
+                              child: UpdateSettingsSection(
+                                searchQuery: _searchQuery,
+                                showIntervalLabel: _showIntervalLabel,
+                                onIntervalLabelChange: (val) =>
+                                    setState(() => _showIntervalLabel = val),
+                                androidInfoFuture: _androidInfoFuture,
+                                showAdvancedSettings:
+                                    plusSettings.plusShowAdvancedSettings,
+                              ),
                             ),
                             if (_searchQuery.isEmpty) const _SectionConnector(),
-                            InstallationSection(
-                              searchQuery: _searchQuery,
-                              showAdvancedSettings:
-                                  plusSettings.plusShowAdvancedSettings,
+                            KeyedSubtree(
+                              key: _searchQuery.isEmpty
+                                  ? _jumpTargetKeys['install']
+                                  : null,
+                              child: InstallationSection(
+                                searchQuery: _searchQuery,
+                                showAdvancedSettings:
+                                    plusSettings.plusShowAdvancedSettings,
+                              ),
                             ),
                           ],
                           if (_searchQuery.isNotEmpty ||
@@ -548,16 +652,26 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           if (_searchQuery.isNotEmpty ||
                               _selectedSectionIndex == 4) ...[
-                            AdvancedSettingsSection(
-                              searchQuery: _searchQuery,
-                              showAdvancedSettings:
-                                  plusSettings.plusShowAdvancedSettings,
+                            KeyedSubtree(
+                              key: _searchQuery.isEmpty
+                                  ? _jumpTargetKeys['advanced']
+                                  : null,
+                              child: AdvancedSettingsSection(
+                                searchQuery: _searchQuery,
+                                showAdvancedSettings:
+                                    plusSettings.plusShowAdvancedSettings,
+                              ),
                             ),
                             if (_searchQuery.isEmpty) const _SectionConnector(),
-                            TroubleshootingSection(
-                              searchQuery: _searchQuery,
-                              showAdvancedSettings:
-                                  plusSettings.plusShowAdvancedSettings,
+                            KeyedSubtree(
+                              key: _searchQuery.isEmpty
+                                  ? _jumpTargetKeys['troubleshooting']
+                                  : null,
+                              child: TroubleshootingSection(
+                                searchQuery: _searchQuery,
+                                showAdvancedSettings:
+                                    plusSettings.plusShowAdvancedSettings,
+                              ),
                             ),
                           ],
                         ],
@@ -583,6 +697,51 @@ class _SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  List<({String keyName, String label, IconData icon})> _buildJumpChipsForTab(
+    int tabIndex,
+    PlusSettingsProvider plusSettings,
+  ) {
+    if (tabIndex == 0 && !plusSettings.plusSettingsUseSubmenuHub) {
+      return [
+        (
+          keyName: 'theme',
+          label: tr('appearance'),
+          icon: Icons.palette_rounded,
+        ),
+        (
+          keyName: 'appsView',
+          label: tr('appsString'),
+          icon: Icons.grid_view_rounded,
+        ),
+      ];
+    }
+    if (tabIndex == 1) {
+      return [
+        (keyName: 'updates', label: tr('updates'), icon: Icons.update_rounded),
+        (
+          keyName: 'install',
+          label: tr('install'),
+          icon: Icons.install_mobile_rounded,
+        ),
+      ];
+    }
+    if (tabIndex == 4) {
+      return [
+        (
+          keyName: 'advanced',
+          label: tr('advanced'),
+          icon: Icons.settings_applications_rounded,
+        ),
+        (
+          keyName: 'troubleshooting',
+          label: tr('troubleshootingAndSystem'),
+          icon: Icons.bug_report_rounded,
+        ),
+      ];
+    }
+    return const [];
   }
 
   List<_SettingsLink> _links(BuildContext context) {
@@ -659,182 +818,58 @@ Future<void> _openSettingsUrl(String url) async {
   } catch (_) {}
 }
 
-class _SettingsHeaderCard extends StatelessWidget {
-  final Future<dynamic> versionFuture;
-  final List<_SettingsLink> links;
-  const _SettingsHeaderCard({required this.versionFuture, required this.links});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final isM3E = plusSettings.plusEnableMaterialExpressive;
-    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusSettingsCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final radius = CardMetrics.card(baseRadius);
-    final innerRadius = CardMetrics.inner(radius);
-
-    return Material(
-      color: colorScheme.surfaceContainerLow,
-      shape: CardMetrics.shape(
-        radius,
-        expressive: isM3E,
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.18),
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          AppHaptics.selectionClick();
-          showWhatsNewSheet(context);
-        },
-        customBorder: CardMetrics.shape(radius, expressive: isM3E),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 10, 10),
-          child: Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: ShapeDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: CardMetrics.shape(innerRadius, expressive: isM3E),
-                ),
-                child: Icon(
-                  Icons.info_outline_rounded,
-                  size: 18,
-                  color: colorScheme.onPrimaryContainer,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'Obtainium+',
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(width: 6),
-                        FutureBuilder<dynamic>(
-                          future: versionFuture,
-                          builder: (context, snap) {
-                            final String? v = snap.data?.versionName as String?;
-                            if (v == null || v.isEmpty) {
-                              return const SizedBox.shrink();
-                            }
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 1.5,
-                              ),
-                              decoration: ShapeDecoration(
-                                color: colorScheme.primaryContainer.withValues(
-                                  alpha: 0.7,
-                                ),
-                                shape: CardMetrics.shape(
-                                  CardMetrics.pill(baseRadius),
-                                  expressive: isM3E,
-                                ),
-                              ),
-                              child: Text(
-                                v,
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      color: colorScheme.onPrimaryContainer,
-                                    ),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      tr('viewChangelog'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ...links.map(
-                (l) => ScaleTouchWrapper(
-                  hapticOnPressDown: true,
-                  scaleDownFactor: 0.90,
-                  child: IconButton.filledTonal(
-                    tooltip: l.label,
-                    constraints: const BoxConstraints(
-                      minWidth: 38,
-                      minHeight: 38,
-                    ),
-                    padding: EdgeInsets.zero,
-                    style: IconButton.styleFrom(
-                      shape: CardMetrics.shape(innerRadius, expressive: isM3E),
-                    ),
-                    icon: Icon(l.icon, size: 18),
-                    onPressed: () {
-                      AppHaptics.selectionClick();
-                      _openSettingsUrl(l.url);
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _SettingsEmptyState extends StatelessWidget {
   final VoidCallback onClear;
+
   const _SettingsEmptyState({required this.onClear});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 48),
+      padding: const EdgeInsets.symmetric(vertical: 64.0, horizontal: 24.0),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 72,
-            height: 72,
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHighest,
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.search_off_rounded,
-              size: 32,
-              color: colorScheme.onSurfaceVariant,
+              size: 64,
+              color: colorScheme.primary.withValues(alpha: 0.8),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
-            tr('noResultsFound'),
-            style: Theme.of(context).textTheme.titleMedium,
+            tr('noResults'),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          Text(
+            tr('tryDifferentSearch'),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
           ScaleTouchWrapper(
             hapticOnPressDown: true,
             scaleDownFactor: 0.94,
-            child: FilledButton.tonal(
-              onPressed: onClear,
-              child: Text(tr('clear')),
+            child: FilledButton.tonalIcon(
+              onPressed: () {
+                AppHaptics.selectionClick();
+                onClear();
+              },
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(tr('clearSearch')),
             ),
           ),
         ],
@@ -845,7 +880,15 @@ class _SettingsEmptyState extends StatelessWidget {
 
 class _SettingsTabBanner extends StatelessWidget {
   final int tabIndex;
-  const _SettingsTabBanner({super.key, required this.tabIndex});
+  final List<({String keyName, String label, IconData icon})> jumpChips;
+  final void Function(String keyName)? onJump;
+
+  const _SettingsTabBanner({
+    super.key,
+    required this.tabIndex,
+    this.jumpChips = const [],
+    this.onJump,
+  });
 
   static const _tabs = [
     (
@@ -889,63 +932,107 @@ class _SettingsTabBanner extends StatelessWidget {
     final radius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(radius);
     final isCompact = plusSettings.plusUseCompactSettings;
+    final badgeSize = isCompact ? 30.0 : 36.0;
 
     return Padding(
-      padding: EdgeInsets.only(bottom: isCompact ? 6.0 : 8.0),
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: isCompact ? 10 : 12,
-        ),
-        decoration: ShapeDecoration(
-          color: colorScheme.primaryContainer.withValues(alpha: 0.18),
-          shape: CardMetrics.shape(
-            radius,
-            expressive: isM3E,
-            side: BorderSide(
-              color: colorScheme.primary.withValues(alpha: 0.14),
-            ),
+      padding: EdgeInsets.fromLTRB(
+        isCompact ? 4 : 6,
+        isCompact ? 2 : 4,
+        isCompact ? 4 : 6,
+        isCompact ? 4 : 8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: badgeSize,
+                height: badgeSize,
+                decoration: ShapeDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.14),
+                  shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                ),
+                child: Icon(
+                  tab.icon,
+                  size: isCompact ? 16 : 18,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      tr(tab.titleKey),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    if (!isCompact)
+                      Text(
+                        tr(tab.descKey),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: ShapeDecoration(
-                color: colorScheme.primaryContainer,
-                shape: CardMetrics.shape(innerRadius, expressive: isM3E),
-              ),
-              child: Icon(
-                tab.icon,
-                size: 18,
-                color: colorScheme.onPrimaryContainer,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    tr(tab.titleKey),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.onSurface,
+          if (jumpChips.length > 1 && onJump != null) ...[
+            SizedBox(height: isCompact ? 6 : 8),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: jumpChips.map((chip) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 6.0),
+                    child: ScaleTouchWrapper(
+                      hapticOnPressDown: false,
+                      scaleDownFactor: 0.94,
+                      child: ActionChip(
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        avatar: Icon(
+                          chip.icon,
+                          size: 14,
+                          color: colorScheme.primary,
+                        ),
+                        label: Text(
+                          chip.label,
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurface,
+                              ),
+                        ),
+                        backgroundColor: colorScheme.surfaceContainerLow,
+                        shape: CardMetrics.shape(
+                          CardMetrics.pill(baseRadius),
+                          expressive: isM3E,
+                          side: BorderSide(
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.35,
+                            ),
+                          ),
+                        ),
+                        onPressed: () => onJump!(chip.keyName),
+                      ),
                     ),
-                  ),
-                  Text(
-                    tr(tab.descKey),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+                  );
+                }).toList(),
               ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -10,7 +10,25 @@ class AppHaptics {
 
   static bool enabled = true;
 
+  /// Timestamp (microseconds) of the most recent [tapDown] event.
+  /// Used to suppress duplicate [selectionClick] calls when a widget wrapped in
+  /// [ScaleTouchWrapper] (`hapticOnPressDown: true`) also calls
+  /// `AppHaptics.selectionClick()` in its `onTap`/`onPressed` callback.
+  static int _lastTapDownUs = 0;
+  static const int _tapDownDedupeWindowUs = 220 * 1000;
+
   static void selectionClick() {
+    if (!enabled) return;
+    final nowUs = DateTime.now().microsecondsSinceEpoch;
+    if (nowUs - _lastTapDownUs < _tapDownDedupeWindowUs) {
+      return;
+    }
+    HapticFeedback.selectionClick();
+  }
+
+  /// Crisp discrete tick for slider divisions, segmented buttons, and scrubbers.
+  /// Bypasses tap-down deduplication so rapid scrubbing always ticks cleanly.
+  static void segmentTick() {
     if (enabled) HapticFeedback.selectionClick();
   }
 
@@ -44,10 +62,14 @@ class AppHaptics {
 
   /// Fires on pointer contact — more physical than waiting for pointer-up.
   /// Use with [ScaleTouchWrapper]'s hapticOnPressDown for responsive feel.
-  static void tapDown() => selectionClick();
+  static void tapDown() {
+    if (!enabled) return;
+    _lastTapDownUs = DateTime.now().microsecondsSinceEpoch;
+    HapticFeedback.selectionClick();
+  }
 
   /// Subtle cue fired when a UI element begins a shape morph transition.
-  static void morphCue() => selectionClick();
+  static void morphCue() => segmentTick();
 
   /// Two successive impulses — for warnings or "double confirm" feel.
   /// Medium immediately, then light 60ms later so both beats are felt.

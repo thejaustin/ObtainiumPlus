@@ -1,10 +1,9 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
-import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/settings/logs_dialog.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -75,10 +74,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
-            leading: Icon(
-              Icons.bug_report_outlined,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            leading: buildSettingsIconBadge(context, Icons.bug_report_outlined),
             title: Text(
               tr('appLogs'),
               style: Theme.of(context).textTheme.bodyLarge,
@@ -97,10 +93,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
-            leading: Icon(
-              Icons.bar_chart_rounded,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            leading: buildSettingsIconBadge(context, Icons.bar_chart_rounded),
             title: Text(
               tr('statistics'),
               style: Theme.of(context).textTheme.bodyLarge,
@@ -116,10 +109,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
-            leading: Icon(
-              Icons.history_edu_rounded,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+            leading: buildSettingsIconBadge(context, Icons.history_edu_rounded),
             title: Text(
               tr('viewChangelog'),
               style: Theme.of(context).textTheme.bodyLarge,
@@ -133,9 +123,10 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         ),
       if (_matches(tr('plusShowChangelogAfterUpdate')))
         SwitchListTile.adaptive(
-          secondary: Icon(
+          secondary: buildSettingsIconBadge(
+            context,
             Icons.new_releases_outlined,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            active: plusSettings.plusShowChangelogAfterUpdate,
           ),
           title: Text(
             tr('plusShowChangelogAfterUpdate'),
@@ -152,9 +143,10 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
-            leading: Icon(
+            leading: buildSettingsIconBadge(
+              context,
               Icons.help_outline,
-              color: Theme.of(context).colorScheme.primary,
+              active: true,
             ),
             title: Text(
               tr('lookingForDevOptions'),
@@ -190,9 +182,10 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
-            leading: Icon(
+            leading: buildSettingsIconBadge(
+              context,
               Icons.developer_mode_rounded,
-              color: Theme.of(context).colorScheme.primary,
+              active: true,
             ),
             title: Text(
               tr('developerAndDiagnostics'),
@@ -208,7 +201,6 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      const Divider(),
       _buildCleanupTile(
         context,
         icon: Icons.cleaning_services_rounded,
@@ -249,10 +241,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
       hapticOnPressDown: true,
       onTap: onTap,
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        leading: buildSettingsIconBadge(context, icon),
         title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
         subtitle: Text(subtitle),
       ),
@@ -297,10 +286,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
         }
       },
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
-        ),
+        leading: buildSettingsIconBadge(context, icon),
         title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
         trailing: const Icon(Icons.open_in_new, size: 18),
       ),

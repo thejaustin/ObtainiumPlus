@@ -137,17 +137,10 @@ class _InstallationSectionState extends State<InstallationSection>
               _matches('freeze') ||
               !isSearching)
             ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.tune_rounded,
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  size: 20,
-                ),
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.tune_rounded,
+                active: true,
               ),
               title: Text(
                 tr('devicePerformanceAndCompatibility'),
@@ -205,7 +198,11 @@ class _InstallationSectionState extends State<InstallationSection>
           // Parallel Downloads
           if (_matches(tr('parallelDownloads'), isAdvanced: true))
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.file_download_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.file_download_outlined,
+                active: behaviorSettings.parallelDownloads,
+              ),
               title: Text(
                 tr('parallelDownloads'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -221,7 +218,11 @@ class _InstallationSectionState extends State<InstallationSection>
           // App Verifier
           if (_matches(tr('beforeNewInstallsShareToAppVerifier')))
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.verified_user_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.verified_user_outlined,
+                active: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+              ),
               title: Text(
                 tr('beforeNewInstallsShareToAppVerifier'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -239,7 +240,11 @@ class _InstallationSectionState extends State<InstallationSection>
           // Use Play Store App Links
           if (_matches(tr('usePlayStoreAppLinks')))
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.storefront_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.storefront_outlined,
+                active: behaviorSettings.usePlayStoreAppLinks,
+              ),
               title: Text(
                 tr('usePlayStoreAppLinks'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -255,7 +260,11 @@ class _InstallationSectionState extends State<InstallationSection>
           // Allow Third-Party Sources
           if (_matches(tr('allowThirdPartySources')))
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.source_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.source_outlined,
+                active: behaviorSettings.allowThirdPartySources,
+              ),
               title: Text(
                 tr('allowThirdPartySources'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -271,9 +280,9 @@ class _InstallationSectionState extends State<InstallationSection>
           // Install Unknown Apps (system settings shortcut)
           if (_matches(tr('installUnknownApps')))
             ListTile(
-              leading: Icon(
+              leading: buildSettingsIconBadge(
+                context,
                 Icons.install_mobile_outlined,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
               title: Text(
                 tr('installUnknownApps'),
@@ -298,7 +307,11 @@ class _InstallationSectionState extends State<InstallationSection>
           // Import Installed Apps
           if (_matches(tr('importInstalledApps')))
             ListTile(
-              leading: const Icon(Icons.install_mobile_rounded),
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.install_mobile_rounded,
+                active: true,
+              ),
               title: Text(
                 tr('importInstalledApps'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -369,7 +382,11 @@ class _InstallationSectionState extends State<InstallationSection>
           // Remove on External Uninstall
           if (_matches(tr('removeOnExternalUninstall')))
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.delete_sweep_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.delete_sweep_outlined,
+                active: behaviorSettings.removeOnExternalUninstall,
+              ),
               title: Text(
                 tr('removeOnExternalUninstall'),
                 style: Theme.of(context).textTheme.bodyLarge,

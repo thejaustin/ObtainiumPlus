@@ -20,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/components/settings/settings_layout_selector.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 
 /// Theme & Colors settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -110,14 +111,15 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> themeWidgets = [
-      if (_matches(tr('designSystemThemeStyle')) ||
-          _matches(tr('obtainiumPlusTheme')) ||
-          _matches(tr('materialExpressiveTheme')) ||
-          _matches(tr('plusMaterialExpressive')))
+      if ((subCategory != 'theme' || isSearching) &&
+          (_matches(tr('designSystemThemeStyle')) ||
+              _matches(tr('obtainiumPlusTheme')) ||
+              _matches(tr('materialExpressiveTheme')) ||
+              _matches(tr('plusMaterialExpressive'))))
         _buildDesignSystemSelector(context),
       if (_matches(tr('theme')))
         plusSettings.plusSettingsUseVisualThemePicker
-            ? const VisualThemeSelector()
+            ? const VisualThemeSelector(embedded: true)
             : _buildThemeSegmented(context),
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
@@ -164,7 +166,7 @@ class ThemeSettingsSection extends StatelessWidget {
               reverseCurve: Easing.emphasizedAccelerate,
               duration: const Duration(milliseconds: 280),
             ),
-            leading: const Icon(Icons.science_outlined),
+            leading: buildSettingsIconBadge(context, Icons.science_outlined),
             title: Text(
               tr('advancedTheming'),
               style: Theme.of(context).textTheme.bodyLarge,
@@ -276,7 +278,11 @@ class ThemeSettingsSection extends StatelessWidget {
           plusSettings.plusDeveloperMode &&
           _matches('third party loading indicator'))
         SwitchListTile.adaptive(
-          secondary: const Icon(Icons.refresh_rounded),
+          secondary: buildSettingsIconBadge(
+            context,
+            Icons.refresh_rounded,
+            active: plusSettings.plusDevUseThirdPartyLoadingIndicator,
+          ),
           title: Text(
             'Use Wavy Loading Spinner',
             style: Theme.of(context).textTheme.bodyLarge,
@@ -400,6 +406,7 @@ class ThemeSettingsSection extends StatelessWidget {
       return const SizedBox.shrink();
 
     final radius = settings.plusGlobalCornerRadius;
+    final isM3E = settings.plusEnableMaterialExpressive;
     final colorScheme = Theme.of(context).colorScheme;
 
     final animsEnabled = settings.plusEnableEnhancedAnimations;
@@ -420,7 +427,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 curve: curve,
                 width: 76,
                 height: 76,
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -429,10 +436,13 @@ class ThemeSettingsSection extends StatelessWidget {
                       colorScheme.primary.withValues(alpha: 0.15),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(radius),
-                  border: Border.all(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1.5,
+                  shape: CardMetrics.shape(
+                    radius,
+                    expressive: isM3E,
+                    side: BorderSide(
+                      color: colorScheme.primary.withValues(alpha: 0.3),
+                      width: 1.5,
+                    ),
                   ),
                 ),
                 child: Center(
@@ -453,12 +463,15 @@ class ThemeSettingsSection extends StatelessWidget {
                     curve: curve,
                     width: 160,
                     height: 52,
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(radius),
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.3,
+                      shape: CardMetrics.shape(
+                        radius,
+                        expressive: isM3E,
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
                         ),
                       ),
                     ),
@@ -471,10 +484,11 @@ class ThemeSettingsSection extends StatelessWidget {
                             curve: curve,
                             width: 28,
                             height: 28,
-                            decoration: BoxDecoration(
+                            decoration: ShapeDecoration(
                               color: colorScheme.secondaryContainer,
-                              borderRadius: BorderRadius.circular(
+                              shape: CardMetrics.shape(
                                 (radius * 0.6).clamp(4, 20),
+                                expressive: isM3E,
                               ),
                             ),
                             child: Icon(
@@ -512,13 +526,16 @@ class ThemeSettingsSection extends StatelessWidget {
                     curve: curve,
                     height: 28,
                     padding: const EdgeInsets.symmetric(horizontal: 14),
-                    decoration: BoxDecoration(
+                    decoration: ShapeDecoration(
                       color: colorScheme.primaryContainer.withValues(
                         alpha: 0.5,
                       ),
-                      borderRadius: BorderRadius.circular(radius.clamp(0, 20)),
-                      border: Border.all(
-                        color: colorScheme.primary.withValues(alpha: 0.2),
+                      shape: CardMetrics.shape(
+                        radius.clamp(0, 20),
+                        expressive: isM3E,
+                        side: BorderSide(
+                          color: colorScheme.primary.withValues(alpha: 0.2),
+                        ),
                       ),
                     ),
                     child: Center(
@@ -556,9 +573,10 @@ class ThemeSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: Icon(
+              leading: buildSettingsIconBadge(
+                context,
                 isM3E ? Icons.brush_rounded : Icons.auto_awesome_rounded,
-                color: Theme.of(context).colorScheme.primary,
+                active: true,
               ),
               title: Text(
                 tr('designSystemThemeStyle'),
@@ -615,7 +633,7 @@ class ThemeSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.palette_outlined),
+              leading: buildSettingsIconBadge(context, Icons.palette_outlined),
               title: Text(
                 tr('theme'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -681,7 +699,10 @@ class ThemeSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.color_lens_outlined),
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.color_lens_outlined,
+              ),
               title: Text(
                 tr('themePresets'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -734,7 +755,10 @@ class ThemeSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.label_important_outlined),
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.label_important_outlined,
+              ),
               title: Text(
                 tr('navigationLabels'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -810,7 +834,11 @@ class ThemeSettingsSection extends StatelessWidget {
         return Consumer<ThemeSettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile.adaptive(
-              secondary: const Icon(Icons.auto_awesome_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.auto_awesome_outlined,
+                active: settings.useMaterialYou,
+              ),
               title: Text(
                 tr('useMaterialYou'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -834,7 +862,11 @@ class ThemeSettingsSection extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return SwitchListTile.adaptive(
-          secondary: const Icon(Icons.settings_suggest_outlined),
+          secondary: buildSettingsIconBadge(
+            context,
+            Icons.settings_suggest_outlined,
+            active: settings.matchSystemMaterialStyle,
+          ),
           title: Text(
             tr('matchSystemMaterialStyle'),
             style: Theme.of(context).textTheme.bodyLarge,
@@ -860,7 +892,7 @@ class ThemeSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.style_outlined),
+              leading: buildSettingsIconBadge(context, Icons.style_outlined),
               title: Text(
                 tr('themeStyle'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -928,7 +960,10 @@ class ThemeSettingsSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.color_lens_outlined),
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.color_lens_outlined,
+              ),
               title: Text(
                 tr('selectX', args: [tr('colour').toLowerCase()]),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -1047,7 +1082,11 @@ class ThemeSettingsSection extends StatelessWidget {
         return Consumer<ThemeSettingsProvider>(
           builder: (context, settings, child) {
             return SwitchListTile.adaptive(
-              secondary: const Icon(Icons.font_download_outlined),
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.font_download_outlined,
+                active: settings.useSystemFont,
+              ),
               title: Text(
                 tr('useSystemFont'),
                 style: Theme.of(context).textTheme.bodyLarge,
@@ -1084,7 +1123,7 @@ class ThemeSettingsSection extends StatelessWidget {
           orElse: () => supportedLocales.first,
         );
         return ListTile(
-          leading: const Icon(Icons.language_outlined),
+          leading: buildSettingsIconBadge(context, Icons.language_outlined),
           title: Text(
             tr('language'),
             style: Theme.of(context).textTheme.bodyLarge,

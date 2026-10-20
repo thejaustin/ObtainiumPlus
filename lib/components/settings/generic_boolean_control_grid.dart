@@ -1,8 +1,9 @@
-import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -11,6 +12,7 @@ import 'package:provider/provider.dart';
 class GenericBooleanControlGrid<T extends ChangeNotifier>
     extends StatelessWidget {
   final String title;
+  final bool embedded;
   final List<
     ({
       IconData icon,
@@ -26,6 +28,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
     super.key,
     required this.title,
     required this.settings,
+    this.embedded = false,
   });
 
   @override
@@ -35,20 +38,184 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
       builder: (context, provider, plusSettings, child) {
         final colorScheme = Theme.of(context).colorScheme;
         final isCompact = plusSettings.plusUseCompactSettings;
+        final isM3E = plusSettings.plusEnableMaterialExpressive;
         final screenWidth = MediaQuery.of(context).size.width;
         final crossAxisCount = screenWidth >= 1100
             ? 5
             : (screenWidth >= 800
                   ? 4
                   : (screenWidth > 550 ? 3 : (isCompact ? 3 : 2)));
-        final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
+        final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
             ? plusSettings.plusSettingsCornerRadius
             : plusSettings.plusGlobalCornerRadius;
+        final cardRadius = CardMetrics.card(baseRadius);
+
+        if (!plusSettings.plusSettingsUseGridToggles) {
+          final listColumn = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!embedded)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    isCompact ? 14 : 16,
+                    isCompact ? 8 : 12,
+                    isCompact ? 14 : 16,
+                    4,
+                  ),
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: colorScheme.primary,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ),
+              ...settings.asMap().entries.map((entry) {
+                final idx = entry.key;
+                final s = entry.value;
+                final val = s.getValue(provider);
+                return Column(
+                  children: [
+                    SwitchListTile.adaptive(
+                      dense: isCompact,
+                      visualDensity: isCompact ? VisualDensity.compact : null,
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: isCompact ? 14 : 16,
+                        vertical: isCompact ? 0 : 2,
+                      ),
+                      secondary: buildSettingsIconBadge(
+                        context,
+                        s.icon,
+                        active: val,
+                      ),
+                      title: Text(
+                        s.label,
+                        style: isCompact
+                            ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              )
+                            : Theme.of(context).textTheme.bodyLarge,
+                      ),
+                      subtitle:
+                          (s.description != null && s.description!.isNotEmpty)
+                          ? Text(
+                              s.description!,
+                              maxLines: isCompact ? 1 : 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontSize: isCompact ? 11.5 : null,
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                            )
+                          : null,
+                      value: val,
+                      onChanged: (v) {
+                        v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                        s.setValue(provider, v);
+                      },
+                    ),
+                    if (idx < settings.length - 1)
+                      Divider(
+                        height: 1,
+                        indent: isCompact ? 58 : 66,
+                        endIndent: isCompact ? 14 : 16,
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.2,
+                        ),
+                      ),
+                  ],
+                );
+              }),
+            ],
+          );
+
+          if (embedded) return listColumn;
+          return Padding(
+            padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
+            child: Material(
+              color: colorScheme.surfaceContainerLow.withValues(
+                alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
+              ),
+              shape: CardMetrics.shape(
+                cardRadius,
+                expressive: isM3E,
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: listColumn,
+            ),
+          );
+        }
+
+        final gridBody = Padding(
+          padding: EdgeInsets.fromLTRB(
+            isCompact ? 12 : 16,
+            isCompact ? 8 : 12,
+            isCompact ? 12 : 16,
+            isCompact ? 10 : 14,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!embedded || title.isNotEmpty) ...[
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.primary,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+                SizedBox(height: isCompact ? 6 : 10),
+              ],
+              Column(
+                children: [
+                  for (int i = 0; i < settings.length; i += crossAxisCount) ...[
+                    if (i > 0) SizedBox(height: isCompact ? 6 : 8),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (int j = 0; j < crossAxisCount; j++) ...[
+                            if (j > 0) SizedBox(width: isCompact ? 6 : 8),
+                            Expanded(
+                              child: (i + j < settings.length)
+                                  ? _GridToggleItem<T>(
+                                      setting: settings[i + j],
+                                      provider: provider,
+                                      isCompact: isCompact,
+                                      cardRadius: cardRadius,
+                                      isM3E: isM3E,
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        );
+
+        if (embedded) return gridBody;
 
         return Padding(
-          padding: EdgeInsets.symmetric(vertical: isCompact ? 4.0 : 6.0),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(cardRadius),
+          padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
+          child: ClipPath(
+            clipper: ShapeBorderClipper(
+              shape: CardMetrics.shape(cardRadius, expressive: isM3E),
+            ),
             child: ConditionalBlur(
               sigma: 10,
               enabled: plusSettings.plusEnableGlassmorphism,
@@ -56,8 +223,9 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                 color: colorScheme.surfaceContainerLow.withValues(
                   alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(cardRadius),
+                shape: CardMetrics.shape(
+                  cardRadius,
+                  expressive: isM3E,
                   side: BorderSide(
                     color: colorScheme.outlineVariant.withValues(
                       alpha: Theme.of(context).brightness == Brightness.dark
@@ -67,108 +235,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                   ),
                 ),
                 clipBehavior: Clip.antiAlias,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    16,
-                    isCompact ? 10 : 14,
-                    16,
-                    isCompact ? 12 : 16,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.primary,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      // Non-scrolling card grid implemented via Column and Rows
-                      // Using GridView.builder(shrinkWrap: true) inside ExpansionTiles causes
-                      if (!plusSettings.plusSettingsUseGridToggles)
-                        Column(
-                          children: settings.map((s) {
-                            final val = s.getValue(provider);
-                            return SwitchListTile.adaptive(
-                              dense: isCompact,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: isCompact ? 0 : 2,
-                              ),
-                              secondary: Icon(
-                                s.icon,
-                                size: isCompact ? 20 : 24,
-                              ),
-                              title: Text(
-                                s.label,
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.w500),
-                              ),
-                              subtitle: s.description != null
-                                  ? Text(
-                                      s.description!,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
-                                          ),
-                                    )
-                                  : null,
-                              value: val,
-                              onChanged: (v) {
-                                v
-                                    ? AppHaptics.toggleOn()
-                                    : AppHaptics.toggleOff();
-                                s.setValue(provider, v);
-                              },
-                            );
-                          }).toList(),
-                        )
-                      else
-                        Column(
-                          children: [
-                            for (
-                              int i = 0;
-                              i < settings.length;
-                              i += crossAxisCount
-                            ) ...[
-                              if (i > 0) const SizedBox(height: 8),
-                              IntrinsicHeight(
-                                child: Row(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    for (
-                                      int j = 0;
-                                      j < crossAxisCount;
-                                      j++
-                                    ) ...[
-                                      if (j > 0) const SizedBox(width: 8),
-                                      Expanded(
-                                        child: (i + j < settings.length)
-                                            ? _GridToggleItem<T>(
-                                                setting: settings[i + j],
-                                                provider: provider,
-                                                isCompact: isCompact,
-                                                cardRadius: cardRadius,
-                                              )
-                                            : const SizedBox.shrink(),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
+                child: gridBody,
               ),
             ),
           ),
@@ -191,12 +258,14 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
   final T provider;
   final bool isCompact;
   final double cardRadius;
+  final bool isM3E;
 
   const _GridToggleItem({
     required this.setting,
     required this.provider,
     this.isCompact = false,
     this.cardRadius = 20,
+    this.isM3E = true,
   });
 
   @override
@@ -207,14 +276,28 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
     final animsEnabled = context
         .watch<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
-    final tileRadius = (cardRadius * 0.6).clamp(8.0, 16.0);
+    final tileRadius = CardMetrics.inner(cardRadius);
+    final tileShape = CardMetrics.shape(
+      tileRadius,
+      expressive: isM3E,
+      side: BorderSide(
+        color: value
+            ? colorScheme.primary.withValues(alpha: 0.55)
+            : colorScheme.outlineVariant.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? 0.35
+                    : 0.65,
+              ),
+        width: value ? 1.5 : 1.0,
+      ),
+    );
 
     return ScaleTouchWrapper(
-      hapticOnPressDown: true,
+      hapticOnPressDown: false,
       child: AnimatedContainer(
         duration: Duration(milliseconds: animsEnabled ? 200 : 0),
         curve: Curves.easeOutCubic,
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           gradient: value
               ? LinearGradient(
                   begin: Alignment.topLeft,
@@ -232,23 +315,14 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                     colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
                   ],
                 ),
-          borderRadius: BorderRadius.circular(tileRadius),
-          border: Border.all(
-            color: value
-                ? colorScheme.primary.withValues(alpha: 0.55)
-                : colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
-            width: value ? 1.5 : 1.0,
-          ),
+          shape: tileShape,
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(tileRadius),
+          shape: CardMetrics.shape(tileRadius, expressive: isM3E),
+          clipBehavior: Clip.antiAlias,
           child: InkWell(
-            borderRadius: BorderRadius.circular(tileRadius),
+            customBorder: CardMetrics.shape(tileRadius, expressive: isM3E),
             onTap: () {
               value ? AppHaptics.toggleOff() : AppHaptics.toggleOn();
               setting.setValue(provider, !value);
