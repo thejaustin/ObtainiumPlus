@@ -212,7 +212,10 @@ class _InstallationSectionState extends State<InstallationSection>
               ),
               subtitle: Text(tr('parallelDownloadsDescription')),
               value: behaviorSettings.parallelDownloads,
-              onChanged: (v) => behaviorSettings.parallelDownloads = v,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.parallelDownloads = v;
+              },
             ),
 
           // App Verifier
@@ -227,8 +230,10 @@ class _InstallationSectionState extends State<InstallationSection>
                 tr('beforeNewInstallsShareToAppVerifierDescription'),
               ),
               value: behaviorSettings.beforeNewInstallsShareToAppVerifier,
-              onChanged: (v) =>
-                  behaviorSettings.beforeNewInstallsShareToAppVerifier = v,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.beforeNewInstallsShareToAppVerifier = v;
+              },
             ),
 
           // Use Play Store App Links
@@ -241,7 +246,10 @@ class _InstallationSectionState extends State<InstallationSection>
               ),
               subtitle: Text(tr('usePlayStoreAppLinksDescription')),
               value: behaviorSettings.usePlayStoreAppLinks,
-              onChanged: (v) => behaviorSettings.usePlayStoreAppLinks = v,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.usePlayStoreAppLinks = v;
+              },
             ),
 
           // Allow Third-Party Sources
@@ -254,7 +262,10 @@ class _InstallationSectionState extends State<InstallationSection>
               ),
               subtitle: Text(tr('allowThirdPartySourcesDescription')),
               value: behaviorSettings.allowThirdPartySources,
-              onChanged: (v) => behaviorSettings.allowThirdPartySources = v,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.allowThirdPartySources = v;
+              },
             ),
 
           // Install Unknown Apps (system settings shortcut)
@@ -365,7 +376,10 @@ class _InstallationSectionState extends State<InstallationSection>
               ),
               subtitle: Text(tr('removeOnExternalUninstallDescription')),
               value: behaviorSettings.removeOnExternalUninstall,
-              onChanged: (v) => behaviorSettings.removeOnExternalUninstall = v,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.removeOnExternalUninstall = v;
+              },
             ),
 
           // Installer method selector — unified radio picker replacing the old
@@ -723,7 +737,9 @@ class _InstallationSectionState extends State<InstallationSection>
                             value:
                                 behaviorSettings.shizukuPretendToBeGooglePlay,
                             onChanged: (v) {
-                              AppHaptics.selectionClick();
+                              v
+                                  ? AppHaptics.toggleOn()
+                                  : AppHaptics.toggleOff();
                               behaviorSettings.shizukuPretendToBeGooglePlay = v;
                             },
                           ),
@@ -745,7 +761,9 @@ class _InstallationSectionState extends State<InstallationSection>
                             ),
                             value: behaviorSettings.shizukuFallbackToSystem,
                             onChanged: (v) {
-                              AppHaptics.selectionClick();
+                              v
+                                  ? AppHaptics.toggleOn()
+                                  : AppHaptics.toggleOff();
                               behaviorSettings.shizukuFallbackToSystem = v;
                             },
                           ),

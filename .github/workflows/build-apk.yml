@@ -16,6 +16,10 @@ on:
         description: Produce an official full release (no -p suffix)?
         default: false
 
+concurrency:
+  group: build-apk-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   quality:
     name: Lint and Test

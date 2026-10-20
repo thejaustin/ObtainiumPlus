@@ -107,6 +107,11 @@ class _SettingsPageState extends State<SettingsPage> {
     final settingsProvider = context.watch<SettingsProvider>();
     _scheduleEmptyCheck();
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? ((screenWidth - 840) / 2).clamp(16.0, double.infinity)
+        : 16.0;
+
     final useSettingsBottomBar =
         plusSettings.plusSettingsBottomNavBar &&
         (!plusSettings.plusEnableBottomNavBar || plusSettings.plusTopUILayout);
@@ -182,7 +187,12 @@ class _SettingsPageState extends State<SettingsPage> {
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                padding: EdgeInsets.fromLTRB(
+                  adaptiveMargin,
+                  0,
+                  adaptiveMargin,
+                  12,
+                ),
                 child: AnimatedContainer(
                   duration: Duration(
                     milliseconds: plusSettings.plusEnableEnhancedAnimations
@@ -246,7 +256,10 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 8,
+            ),
             sliver: SliverToBoxAdapter(
               child: PlusFeaturesSection(
                 searchQuery: _searchQuery,
@@ -256,7 +269,10 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           if (_searchQuery.isEmpty)
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              padding: EdgeInsets.symmetric(
+                horizontal: adaptiveMargin,
+                vertical: 4,
+              ),
               sliver: SliverToBoxAdapter(
                 child: _SettingsHeaderCard(
                   versionFuture: _versionFuture,
@@ -273,7 +289,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   controller: _tabsScrollController,
                   scrollDirection: Axis.horizontal,
                   physics: plusSettings.scrollPhysics,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
                   children:
                       [
                         (
@@ -374,7 +390,10 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
             ),
           SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 8,
+            ),
             sliver: SliverToBoxAdapter(
               child: AnimatedSwitcher(
                 duration: Duration(

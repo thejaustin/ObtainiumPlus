@@ -256,6 +256,7 @@ class ThemeSettingsSection extends StatelessWidget {
             icon: Icons.speed_outlined,
             title: tr('animationSpeed'),
             value: settings.animationSpeedMultiplier.clamp(0.25, 2.0),
+            defaultValue: 1.0,
             min: 0.25,
             max: 2.0,
             divisions: 7,
@@ -283,7 +284,7 @@ class ThemeSettingsSection extends StatelessWidget {
           ),
           value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
           onChanged: (val) {
-            AppHaptics.selectionClick();
+            val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             plusSettings.plusDevUseThirdPartyLoadingIndicator = val;
           },
         ),
@@ -296,6 +297,7 @@ class ThemeSettingsSection extends StatelessWidget {
           icon: Icons.rounded_corner_rounded,
           title: tr('plusGlobalCornerRadius'),
           value: plusSettings.plusGlobalCornerRadius,
+          defaultValue: 28.0,
           min: 0,
           max: 40,
           divisions: 40,
@@ -317,6 +319,7 @@ class ThemeSettingsSection extends StatelessWidget {
             icon: Icons.home_max_rounded,
             title: tr('plusHomeCornerRadius'),
             value: plusSettings.plusHomeCornerRadius,
+            defaultValue: 20.0,
             min: 0,
             max: 40,
             divisions: 40,
@@ -328,6 +331,7 @@ class ThemeSettingsSection extends StatelessWidget {
             icon: Icons.settings_suggest_rounded,
             title: tr('plusSettingsCornerRadius'),
             value: plusSettings.plusSettingsCornerRadius,
+            defaultValue: 20.0,
             min: 0,
             max: 40,
             divisions: 40,
@@ -751,7 +755,7 @@ class ThemeSettingsSection extends StatelessWidget {
               ),
               value: settings.useMaterialYou,
               onChanged: (value) {
-                AppHaptics.selectionClick();
+                value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                 settings.useMaterialYou = value;
               },
             );
@@ -776,7 +780,7 @@ class ThemeSettingsSection extends StatelessWidget {
           subtitle: Text(tr('matchSystemMaterialStyleSubtitle')),
           value: settings.matchSystemMaterialStyle,
           onChanged: (value) {
-            AppHaptics.selectionClick();
+            value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             settings.matchSystemMaterialStyle = value;
           },
         );
@@ -988,7 +992,7 @@ class ThemeSettingsSection extends StatelessWidget {
               ),
               value: settings.useSystemFont,
               onChanged: (useSystemFont) {
-                AppHaptics.selectionClick();
+                useSystemFont ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                 if (useSystemFont) {
                   NativeFeatures.loadSystemFont().then(
                     (val) {

@@ -88,7 +88,7 @@ class NotificationSettingsSection extends StatelessWidget {
                 ),
                 value: settings.plusEnableNotificationEnhancements,
                 onChanged: (val) {
-                  AppHaptics.selectionClick();
+                  val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                   settings.plusEnableNotificationEnhancements = val;
                 },
               ),

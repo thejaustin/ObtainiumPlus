@@ -279,7 +279,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   value: behaviorSettings.shizukuFallbackToSystem,
                   onChanged: (v) {
-                    AppHaptics.selectionClick();
+                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     behaviorSettings.shizukuFallbackToSystem = v;
                   },
                 ),
@@ -314,7 +314,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   value: plusSettings.plusEnableEnhancedAnimations,
                   onChanged: (v) {
-                    AppHaptics.selectionClick();
+                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     plusSettings.plusEnableEnhancedAnimations = v;
                   },
                 ),
@@ -332,7 +332,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   value: plusSettings.plusEnableMaterialExpressive,
                   onChanged: (v) {
-                    AppHaptics.selectionClick();
+                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     plusSettings.plusEnableMaterialExpressive = v;
                   },
                 ),
@@ -350,7 +350,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   value: plusSettings.plusEnableGlassmorphism,
                   onChanged: (v) {
-                    AppHaptics.selectionClick();
+                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     plusSettings.plusEnableGlassmorphism = v;
                   },
                 ),
@@ -434,7 +434,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   value: plusSettings.plusEnableSmartRetries,
                   onChanged: (v) {
-                    AppHaptics.selectionClick();
+                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     plusSettings.plusEnableSmartRetries = v;
                   },
                 ),
@@ -452,7 +452,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   value: plusSettings.plusEnableUpdateOwnership,
                   onChanged: (v) {
-                    AppHaptics.selectionClick();
+                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     plusSettings.plusEnableUpdateOwnership = v;
                   },
                 ),

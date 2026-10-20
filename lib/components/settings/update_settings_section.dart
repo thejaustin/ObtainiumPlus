@@ -142,6 +142,7 @@ class UpdateSettingsSection extends StatelessWidget {
                   icon: Icons.speed_outlined,
                   title: tr('plusUpdateCheckConcurrency'),
                   value: sliderVal,
+                  defaultValue: 2.0,
                   min: 0,
                   max: 4,
                   divisions: 4,
@@ -176,6 +177,7 @@ class UpdateSettingsSection extends StatelessWidget {
                 value: (settings.updateDownloadConcurrencyLimit - 1)
                     .toDouble()
                     .clamp(0, 4),
+                defaultValue: 0.0,
                 min: 0,
                 max: 4,
                 divisions: 4,
@@ -217,7 +219,10 @@ class UpdateSettingsSection extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           value: settings.useFGService,
-          onChanged: (value) => settings.useFGService = value,
+          onChanged: (value) {
+            value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+            settings.useFGService = value;
+          },
         );
       },
     );
@@ -355,8 +360,10 @@ class UpdateSettingsSection extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
                 value: updateSettings.checkUpdateOnDetailPage,
-                onChanged: (value) =>
-                    updateSettings.checkUpdateOnDetailPage = value,
+                onChanged: (value) {
+                  value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                  updateSettings.checkUpdateOnDetailPage = value;
+                },
               ),
             if (_matches(tr('allowAddingAppsWithoutCheck')))
               SwitchListTile.adaptive(
@@ -370,8 +377,10 @@ class UpdateSettingsSection extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 value: updateSettings.allowAddingAppsWithoutCheck,
-                onChanged: (value) =>
-                    updateSettings.allowAddingAppsWithoutCheck = value,
+                onChanged: (value) {
+                  value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                  updateSettings.allowAddingAppsWithoutCheck = value;
+                },
               ),
             if (plusSettings.enableAllPlusFeatures &&
                 _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
@@ -412,8 +421,10 @@ class UpdateSettingsSection extends StatelessWidget {
                 ),
                 subtitle: Text(tr('plusSystemUpdateScannerDescription')),
                 value: plusSettings.plusEnableSystemUpdateScanner,
-                onChanged: (v) =>
-                    plusSettings.plusEnableSystemUpdateScanner = v,
+                onChanged: (v) {
+                  v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                  plusSettings.plusEnableSystemUpdateScanner = v;
+                },
               ),
             if (plusSettings.enableAllPlusFeatures &&
                 _matches(tr('plusEnableUpdateSchedule')))
@@ -425,7 +436,10 @@ class UpdateSettingsSection extends StatelessWidget {
                 ),
                 subtitle: Text(tr('plusEnableUpdateScheduleDescription')),
                 value: plusSettings.plusEnableUpdateSchedule,
-                onChanged: (v) => plusSettings.plusEnableUpdateSchedule = v,
+                onChanged: (v) {
+                  v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                  plusSettings.plusEnableUpdateSchedule = v;
+                },
               ),
             if (plusSettings.enableAllPlusFeatures &&
                 _matches(tr('updateSchedule')) &&
@@ -440,7 +454,7 @@ class UpdateSettingsSection extends StatelessWidget {
                 trailing: Switch(
                   value: updateSettings.useUpdateSchedule,
                   onChanged: (value) {
-                    AppHaptics.selectionClick();
+                    value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                     updateSettings.useUpdateSchedule = value;
                   },
                 ),
@@ -536,8 +550,10 @@ class UpdateSettingsSection extends StatelessWidget {
                         tr('plusEnableAutoUpdateRulesDescription'),
                       ),
                       value: plusSettings.plusEnableAutoUpdateRules,
-                      onChanged: (v) =>
-                          plusSettings.plusEnableAutoUpdateRules = v,
+                      onChanged: (v) {
+                        v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                        plusSettings.plusEnableAutoUpdateRules = v;
+                      },
                     ),
                   if (plusSettings.enableAllPlusFeatures &&
                       plusSettings.plusEnableAutoUpdateRules &&

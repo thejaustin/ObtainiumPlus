@@ -123,7 +123,7 @@ class PlusFeaturesSection extends StatelessWidget {
               ),
               value: isEnabled,
               onChanged: (value) {
-                AppHaptics.selectionClick();
+                value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                 settings.enableAllPlusFeatures = value;
               },
             ),

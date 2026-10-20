@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -5,6 +6,8 @@ import 'package:provider/provider.dart';
 
 /// Expressive slider tile: icon + title + animated value badge + slider.
 /// Shape of the value badge morphs from rounded rect to squircle while dragging.
+/// If [defaultValue] is provided and the slider is moved, an undo button appears
+/// to quickly reset the slider back to its default value with tactile haptic feedback.
 class SettingsSliderTile extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -12,6 +15,7 @@ class SettingsSliderTile extends StatefulWidget {
   final double min;
   final double max;
   final int? divisions;
+  final double? defaultValue;
   final String Function(double) labelBuilder;
   final ValueChanged<double> onChanged;
   final ValueChanged<double>? onChangeEnd;
@@ -24,6 +28,7 @@ class SettingsSliderTile extends StatefulWidget {
     required this.min,
     required this.max,
     this.divisions,
+    this.defaultValue,
     required this.labelBuilder,
     required this.onChanged,
     this.onChangeEnd,
@@ -50,6 +55,10 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
         ? (baseRadius * 0.5).clamp(6.0, 14.0)
         : (baseRadius * 0.7).clamp(10.0, 20.0);
 
+    final bool isModifiedFromDefault =
+        widget.defaultValue != null &&
+        (widget.value - widget.defaultValue!).abs() > 0.001;
+
     return Padding(
       padding: EdgeInsets.fromLTRB(16, isCompact ? 2 : 4, 16, 0),
       child: Column(
@@ -65,6 +74,25 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
               ),
+              if (isModifiedFromDefault)
+                Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Tooltip(
+                    message:
+                        '${tr('resetToDefault')} (${widget.labelBuilder(widget.defaultValue!)})',
+                    child: IconButton(
+                      icon: const Icon(Icons.undo_rounded, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        AppHaptics.mediumImpact();
+                        widget.onChanged(widget.defaultValue!);
+                        widget.onChangeEnd?.call(widget.defaultValue!);
+                      },
+                    ),
+                  ),
+                ),
               AnimatedContainer(
                 duration: Duration(milliseconds: animsEnabled ? 220 : 0),
                 curve: Curves.easeOutCubic,

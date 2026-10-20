@@ -99,165 +99,6 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
       if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
-      if (_matches(tr('plusModernAppPage')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.pages_outlined,
-          title: tr('plusModernAppPage'),
-          subtitle: tr('plusModernAppPageDescription'),
-          value: (s) => s.plusEnableModernAppPage,
-          onChanged: (s, v) => onSetState(() => s.plusEnableModernAppPage = v),
-        ),
-      if (_matches(tr('plusModernAddAppPage')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.add_box_outlined,
-          title: tr('plusModernAddAppPage'),
-          subtitle: tr('plusModernAddAppPageDescription'),
-          value: (s) => s.plusEnableModernAddAppPage,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusEnableModernAddAppPage = v),
-        ),
-      if (_matches(tr('plusHomeDashboard')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.dashboard_customize_outlined,
-          title: tr('plusHomeDashboard'),
-          subtitle: tr('plusHomeDashboardDescription'),
-          value: (s) => s.plusEnableHomeDashboard,
-          onChanged: (s, v) => onSetState(() => s.plusEnableHomeDashboard = v),
-        ),
-      if (_matches(tr('plusDeduplicateRecents')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.auto_awesome_mosaic_outlined,
-          title: tr('plusDeduplicateRecents'),
-          subtitle: tr('plusDeduplicateRecentsDescription'),
-          value: (s) => s.plusDeduplicateRecents,
-          onChanged: (s, v) => onSetState(() => s.plusDeduplicateRecents = v),
-        ),
-      if (_matches(tr('plusResponsiveLayout'), isAdvanced: true))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.tablet_android_rounded,
-          title: tr('plusResponsiveLayout'),
-          subtitle: tr('plusResponsiveLayoutDescription'),
-          value: (s) => s.plusEnableResponsiveAppLayout,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusEnableResponsiveAppLayout = v),
-        ),
-      if (_matches(tr('plusCategoryReorder'), isAdvanced: true))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.drag_indicator_rounded,
-          title: tr('plusCategoryReorder'),
-          subtitle: tr('plusCategoryReorderDescription'),
-          value: (s) => s.plusEnableCategoryReorder,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusEnableCategoryReorder = v),
-        ),
-      if (_matches(tr('plusShowStatusHub')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.info_outline_rounded,
-          title: tr('plusShowStatusHub'),
-          subtitle: tr('plusShowStatusHubDescription'),
-          value: (s) => s.plusShowStatusHub,
-          onChanged: (s, v) => onSetState(() => s.plusShowStatusHub = v),
-        ),
-      if (_matches(tr('plusSettingsBottomNavBar')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.dock_rounded,
-          title: tr('plusSettingsBottomNavBar'),
-          subtitle: tr('plusSettingsBottomNavBarDescription'),
-          value: (s) => s.plusSettingsBottomNavBar,
-          onChanged: (s, v) => onSetState(() => s.plusSettingsBottomNavBar = v),
-        ),
-      if (_matches(tr('plusEnableBottomNavBar')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.navigation_rounded,
-          title: tr('plusEnableBottomNavBar'),
-          subtitle: tr('plusEnableBottomNavBarDescription'),
-          value: (s) => s.plusEnableBottomNavBar,
-          onChanged: (s, v) => onSetState(() => s.plusEnableBottomNavBar = v),
-        ),
-      if (_matches(tr('plusEnableFAB')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.add_circle_outline_rounded,
-          title: tr('plusEnableFAB'),
-          subtitle: tr('plusEnableFABDescription'),
-          value: (s) => s.plusEnableFAB,
-          onChanged: (s, v) => onSetState(() => s.plusEnableFAB = v),
-        ),
-      if (_matches(tr('plusFloatingNavBar')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.dock_rounded,
-          title: tr('plusFloatingNavBar'),
-          subtitle: tr('plusFloatingNavBarDescription'),
-          value: (s) => s.plusFloatingNavBar,
-          onChanged: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
-        ),
-      if (_matches(tr('plusNavBarAlwaysShowLabels')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.label_important_rounded,
-          title: tr('plusNavBarAlwaysShowLabels'),
-          subtitle: tr('plusNavBarAlwaysShowLabelsDescription'),
-          value: (s) => s.plusNavBarAlwaysShowLabels,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusNavBarAlwaysShowLabels = v),
-        ),
-      if (_matches(tr('plusHeaderContextSubtitle')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.subtitles_rounded,
-          title: tr('plusHeaderContextSubtitle'),
-          subtitle: tr('plusHeaderContextSubtitleDescription'),
-          value: (s) => s.plusHeaderContextSubtitle,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusHeaderContextSubtitle = v),
-        ),
-      if (_matches(tr('plusFloatingActionBar')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.smart_button_rounded,
-          title: tr('plusFloatingActionBar'),
-          subtitle: tr('plusFloatingActionBarDescription'),
-          value: (s) => s.plusFloatingActionBar,
-          onChanged: (s, v) => onSetState(() => s.plusFloatingActionBar = v),
-        ),
-      if (_matches(tr('plusExpressiveFilterChips')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.filter_alt_rounded,
-          title: tr('plusExpressiveFilterChips'),
-          subtitle: tr('plusExpressiveFilterChipsDescription'),
-          value: (s) => s.plusExpressiveFilterChips,
-          onChanged: (s, v) =>
-              onSetState(() => s.plusExpressiveFilterChips = v),
-        ),
-      if (_matches(tr('showFilterChips')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.filter_list_outlined,
-          title: tr('showFilterChips'),
-          subtitle: tr('showFilterChipsDescription'),
-          value: (s) => s.displayShowFilterChips,
-          onChanged: (s, v) => onSetState(() => s.displayShowFilterChips = v),
-        ),
-      if (_matches(tr('showAppCount')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.summarize_outlined,
-          title: tr('showAppCount'),
-          subtitle: tr('showAppCountDescription'),
-          value: (s) => s.displayShowAppCount,
-          onChanged: (s, v) => onSetState(() => s.displayShowAppCount = v),
-        ),
       _buildGridSettings(context),
     ];
 
@@ -349,6 +190,191 @@ class AppsViewSettingsSection extends StatelessWidget {
           isExpandable: subCategory == null,
           initiallyExpanded: true,
           children: viewWidgets,
+        ),
+      if (showLayout &&
+          plusFeaturesEnabled &&
+          (_matches(tr('plusEnableBottomNavBar')) ||
+              _matches(tr('plusFloatingNavBar')) ||
+              _matches(tr('plusNavBarAlwaysShowLabels')) ||
+              _matches(tr('plusSettingsBottomNavBar')) ||
+              _matches(tr('plusEnableFAB')) ||
+              _matches(tr('plusFloatingActionBar')) ||
+              _matches(tr('plusShowStatusHub'))))
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('settingsAppearanceLayoutNav'),
+          settings: [
+            if (_matches(tr('plusEnableBottomNavBar')))
+              (
+                icon: Icons.navigation_rounded,
+                label: tr('plusEnableBottomNavBar'),
+                description: tr('plusEnableBottomNavBarDescription'),
+                getValue: (s) => s.plusEnableBottomNavBar,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableBottomNavBar = v),
+              ),
+            if (_matches(tr('plusFloatingNavBar')))
+              (
+                icon: Icons.dock_rounded,
+                label: tr('plusFloatingNavBar'),
+                description: tr('plusFloatingNavBarDescription'),
+                getValue: (s) => s.plusFloatingNavBar,
+                setValue: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
+              ),
+            if (_matches(tr('plusNavBarAlwaysShowLabels')))
+              (
+                icon: Icons.label_important_rounded,
+                label: tr('plusNavBarAlwaysShowLabels'),
+                description: tr('plusNavBarAlwaysShowLabelsDescription'),
+                getValue: (s) => s.plusNavBarAlwaysShowLabels,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusNavBarAlwaysShowLabels = v),
+              ),
+            if (_matches(tr('plusSettingsBottomNavBar')))
+              (
+                icon: Icons.table_rows_rounded,
+                label: tr('plusSettingsBottomNavBar'),
+                description: tr('plusSettingsBottomNavBarDescription'),
+                getValue: (s) => s.plusSettingsBottomNavBar,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusSettingsBottomNavBar = v),
+              ),
+            if (_matches(tr('plusEnableFAB')))
+              (
+                icon: Icons.add_circle_outline_rounded,
+                label: tr('plusEnableFAB'),
+                description: tr('plusEnableFABDescription'),
+                getValue: (s) => s.plusEnableFAB,
+                setValue: (s, v) => onSetState(() => s.plusEnableFAB = v),
+              ),
+            if (_matches(tr('plusFloatingActionBar')))
+              (
+                icon: Icons.smart_button_rounded,
+                label: tr('plusFloatingActionBar'),
+                description: tr('plusFloatingActionBarDescription'),
+                getValue: (s) => s.plusFloatingActionBar,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusFloatingActionBar = v),
+              ),
+            if (_matches(tr('plusShowStatusHub')))
+              (
+                icon: Icons.info_outline_rounded,
+                label: tr('plusShowStatusHub'),
+                description: tr('plusShowStatusHubDescription'),
+                getValue: (s) => s.plusShowStatusHub,
+                setValue: (s, v) => onSetState(() => s.plusShowStatusHub = v),
+              ),
+          ],
+        ),
+      if (showLayout &&
+          plusFeaturesEnabled &&
+          (_matches(tr('plusModernAppPage')) ||
+              _matches(tr('plusModernAddAppPage')) ||
+              _matches(tr('plusHomeDashboard')) ||
+              _matches(tr('plusDeduplicateRecents')) ||
+              _matches(tr('plusHeaderContextSubtitle')) ||
+              _matches(tr('plusExpressiveFilterChips')) ||
+              _matches(tr('plusResponsiveLayout'), isAdvanced: true) ||
+              _matches(tr('plusCategoryReorder'), isAdvanced: true)))
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('settingsLayoutMode'),
+          settings: [
+            if (_matches(tr('plusModernAppPage')))
+              (
+                icon: Icons.pages_outlined,
+                label: tr('plusModernAppPage'),
+                description: tr('plusModernAppPageDescription'),
+                getValue: (s) => s.plusEnableModernAppPage,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableModernAppPage = v),
+              ),
+            if (_matches(tr('plusModernAddAppPage')))
+              (
+                icon: Icons.add_box_outlined,
+                label: tr('plusModernAddAppPage'),
+                description: tr('plusModernAddAppPageDescription'),
+                getValue: (s) => s.plusEnableModernAddAppPage,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableModernAddAppPage = v),
+              ),
+            if (_matches(tr('plusHomeDashboard')))
+              (
+                icon: Icons.dashboard_customize_outlined,
+                label: tr('plusHomeDashboard'),
+                description: tr('plusHomeDashboardDescription'),
+                getValue: (s) => s.plusEnableHomeDashboard,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableHomeDashboard = v),
+              ),
+            if (_matches(tr('plusDeduplicateRecents')))
+              (
+                icon: Icons.auto_awesome_mosaic_outlined,
+                label: tr('plusDeduplicateRecents'),
+                description: tr('plusDeduplicateRecentsDescription'),
+                getValue: (s) => s.plusDeduplicateRecents,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusDeduplicateRecents = v),
+              ),
+            if (_matches(tr('plusHeaderContextSubtitle')))
+              (
+                icon: Icons.subtitles_rounded,
+                label: tr('plusHeaderContextSubtitle'),
+                description: tr('plusHeaderContextSubtitleDescription'),
+                getValue: (s) => s.plusHeaderContextSubtitle,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusHeaderContextSubtitle = v),
+              ),
+            if (_matches(tr('plusExpressiveFilterChips')))
+              (
+                icon: Icons.filter_alt_rounded,
+                label: tr('plusExpressiveFilterChips'),
+                description: tr('plusExpressiveFilterChipsDescription'),
+                getValue: (s) => s.plusExpressiveFilterChips,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusExpressiveFilterChips = v),
+              ),
+            if (_matches(tr('plusResponsiveLayout'), isAdvanced: true))
+              (
+                icon: Icons.tablet_android_rounded,
+                label: tr('plusResponsiveLayout'),
+                description: tr('plusResponsiveLayoutDescription'),
+                getValue: (s) => s.plusEnableResponsiveAppLayout,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableResponsiveAppLayout = v),
+              ),
+            if (_matches(tr('plusCategoryReorder'), isAdvanced: true))
+              (
+                icon: Icons.drag_indicator_rounded,
+                label: tr('plusCategoryReorder'),
+                description: tr('plusCategoryReorderDescription'),
+                getValue: (s) => s.plusEnableCategoryReorder,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusEnableCategoryReorder = v),
+              ),
+          ],
+        ),
+      if (showLayout &&
+          (_matches(tr('showFilterChips')) || _matches(tr('showAppCount'))))
+        GenericBooleanControlGrid<ViewSettingsProvider>(
+          title: tr('filterChips'),
+          settings: [
+            if (_matches(tr('showFilterChips')))
+              (
+                icon: Icons.filter_list_outlined,
+                label: tr('showFilterChips'),
+                description: tr('showFilterChipsDescription'),
+                getValue: (s) => s.displayShowFilterChips,
+                setValue: (s, v) =>
+                    onSetState(() => s.displayShowFilterChips = v),
+              ),
+            if (_matches(tr('showAppCount')))
+              (
+                icon: Icons.summarize_outlined,
+                label: tr('showAppCount'),
+                description: tr('showAppCountDescription'),
+                getValue: (s) => s.displayShowAppCount,
+                setValue: (s, v) => onSetState(() => s.displayShowAppCount = v),
+              ),
+          ],
         ),
       if (showLayout && showFabMenuGrid)
         GenericBooleanControlGrid<PlusSettingsProvider>(
@@ -602,6 +628,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 icon: Icons.view_column_outlined,
                 title: tr('gridColumns'),
                 value: settings.gridColumnCount.toDouble(),
+                defaultValue: 0.0,
                 min: 0,
                 max: 6,
                 divisions: 6,
@@ -683,6 +710,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               icon: Icons.numbers_outlined,
               title: tr('iconCount'),
               value: settings.categoryIconCount.toDouble(),
+              defaultValue: 0.0,
               min: 0,
               max: 20,
               divisions: 20,

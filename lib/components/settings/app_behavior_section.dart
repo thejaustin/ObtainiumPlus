@@ -146,6 +146,7 @@ class AppBehaviorSection extends StatelessWidget {
                         0.25,
                         2.0,
                       ),
+                      defaultValue: 1.0,
                       min: 0.25,
                       max: 2.0,
                       divisions: 7,
@@ -451,7 +452,7 @@ class AppBehaviorSection extends StatelessWidget {
                     subtitle: Text(tr('plusEnableBanWarningsDescription')),
                     value: settings.plusEnableBanWarnings,
                     onChanged: (val) async {
-                      AppHaptics.selectionClick();
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                       if (val) {
                         final confirm = await showDialog<bool>(
                           context: context,
@@ -507,6 +508,7 @@ class AppBehaviorSection extends StatelessWidget {
                             icon: Icons.warning_amber_outlined,
                             title: tr('plusBanWarningThreshold'),
                             value: settings.plusBanWarningThreshold.toDouble(),
+                            defaultValue: 10.0,
                             min: 1,
                             max: 50,
                             divisions: 49,
@@ -541,7 +543,7 @@ class AppBehaviorSection extends StatelessWidget {
           subtitle: Text(subtitle),
           value: value(settings),
           onChanged: (v) {
-            AppHaptics.selectionClick();
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             onChanged(settings, v);
           },
         );

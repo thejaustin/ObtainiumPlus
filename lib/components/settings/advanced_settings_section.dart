@@ -58,7 +58,7 @@ class AdvancedSettingsSection extends StatelessWidget {
               subtitle: Text(tr('showAdvancedSettingsDescription')),
               value: plusSettings.plusShowAdvancedSettings,
               onChanged: (v) {
-                AppHaptics.selectionClick();
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                 plusSettings.plusShowAdvancedSettings = v;
               },
             );
@@ -273,7 +273,7 @@ class AdvancedSettingsSection extends StatelessWidget {
           subtitle: Text(subtitle),
           value: value(settings),
           onChanged: (v) {
-            AppHaptics.selectionClick();
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             onChanged(settings, v);
           },
         );
