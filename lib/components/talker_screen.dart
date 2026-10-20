@@ -193,6 +193,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                     ),
                   )
                 : ListView.builder(
+                    padding: const EdgeInsets.only(bottom: 24.0),
                     itemCount: filteredLogs.length,
                     itemBuilder: (context, index) {
                       final log = filteredLogs[index];

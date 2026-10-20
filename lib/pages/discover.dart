@@ -573,6 +573,7 @@ class DiscoverPageState extends State<DiscoverPage> {
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
     final isGridView = viewSettings.discoverViewMode == ViewMode.grid;
     final suggestionsEnabled = plusSettings.plusDiscoverSuggestions;
     final showSuggestions =
@@ -989,6 +990,16 @@ class DiscoverPageState extends State<DiscoverPage> {
               ),
             ),
           ),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height:
+                (plusSettings.plusEnableBottomNavBar &&
+                    !plusSettings.plusTopUILayout &&
+                    !settingsProvider.isTV)
+                ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0)
+                : (MediaQuery.of(context).padding.bottom + 24.0),
+          ),
+        ),
       ],
     );
 

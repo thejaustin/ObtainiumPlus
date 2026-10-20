@@ -104,6 +104,7 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final settingsProvider = context.watch<SettingsProvider>();
     _scheduleEmptyCheck();
 
     final useSettingsBottomBar =
@@ -540,7 +541,14 @@ class _SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 24),
                       _buildFooter(context),
                       SizedBox(
-                        height: 24 + MediaQuery.paddingOf(context).bottom,
+                        height:
+                            (plusSettings.plusEnableBottomNavBar &&
+                                !plusSettings.plusTopUILayout &&
+                                !settingsProvider.isTV)
+                            ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0)
+                            : (useSettingsBottomBar
+                                  ? 92.0
+                                  : 24 + MediaQuery.paddingOf(context).bottom),
                       ),
                     ],
                   ),

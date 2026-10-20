@@ -83,7 +83,7 @@ class UpdateHealthPage extends StatelessWidget {
               ),
           ],
           SliverToBoxAdapter(
-            child: SizedBox(height: MediaQuery.of(context).padding.bottom),
+            child: SizedBox(height: MediaQuery.of(context).padding.bottom + 24),
           ),
         ],
       ),

@@ -253,7 +253,7 @@ class _AdditionalOptionsPageState extends State<_AdditionalOptionsPage> {
                 16,
                 0,
                 16,
-                MediaQuery.of(context).padding.bottom,
+                MediaQuery.of(context).padding.bottom + 24,
               ),
               child: TvInitialFocus(
                 child: GeneratedForm(
