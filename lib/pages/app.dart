@@ -1081,52 +1081,55 @@ class _AppPageState extends State<AppPage> {
       required Color color,
     }) {
       final actionRadius = CardMetrics.inner(cardRadius).clamp(14.0, 20.0);
-      return ScaleTouchWrapper(
-        hapticOnPressDown: true,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                color.withValues(alpha: 0.16),
-                color.withValues(alpha: 0.06),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(actionRadius),
-            border: Border.all(
-              color: color.withValues(alpha: 0.22),
-              width: 0.8,
-            ),
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(actionRadius),
-            child: InkWell(
-              onTap: onTap,
+      return ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 76),
+        child: ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.16),
+                  color.withValues(alpha: 0.06),
+                ],
+              ),
               borderRadius: BorderRadius.circular(actionRadius),
-              splashColor: color.withValues(alpha: 0.18),
-              highlightColor: color.withValues(alpha: 0.08),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 8,
-                ),
-                child: Column(
-                  children: [
-                    Icon(icon, color: color, size: 20),
-                    const SizedBox(height: 4),
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.bold,
+              border: Border.all(
+                color: color.withValues(alpha: 0.22),
+                width: 0.8,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(actionRadius),
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: BorderRadius.circular(actionRadius),
+                splashColor: color.withValues(alpha: 0.18),
+                highlightColor: color.withValues(alpha: 0.08),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 10,
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(icon, color: color, size: 20),
+                      const SizedBox(height: 4),
+                      Text(
+                        label,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -1152,24 +1155,23 @@ class _AppPageState extends State<AppPage> {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionCard(
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              physics: plusSettings.scrollPhysics,
+              child: Row(
+                children: [
+                  _buildActionCard(
                     icon: Icons.settings_applications_outlined,
                     label: tr('appInfo'),
                     onTap: () => AppInstallService.openAppSettings(app!.app.id),
                     color: colorScheme.secondary,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionCard(
+                  const SizedBox(width: 8),
+                  _buildActionCard(
                     icon: Icons.block_flipped,
                     label: tr('forceStop'),
                     onTap: () async {
                       try {
-                        // await pm.forceStopApp(app!.app.id); // TODO: Implement
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tr('forceStopSuccess'))),
@@ -1181,10 +1183,8 @@ class _AppPageState extends State<AppPage> {
                     },
                     color: colorScheme.error,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionCard(
+                  const SizedBox(width: 8),
+                  _buildActionCard(
                     icon: Icons.public_rounded,
                     label: tr('website'),
                     onTap: () async {
@@ -1197,10 +1197,8 @@ class _AppPageState extends State<AppPage> {
                     },
                     color: colorScheme.primary,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionCard(
+                  const SizedBox(width: 8),
+                  _buildActionCard(
                     icon: Icons.security_rounded,
                     label: tr('safetyScan'),
                     onTap: () async {
@@ -1215,18 +1213,12 @@ class _AppPageState extends State<AppPage> {
                     },
                     color: colorScheme.secondary,
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _buildActionCard(
+                  const SizedBox(width: 8),
+                  _buildActionCard(
                     icon: Icons.delete_sweep_outlined,
                     label: tr('clearCache'),
                     onTap: () async {
-                      // Note: Clearing cache typically requires Shizuku/Root
                       try {
-                        // await pm.deleteApplicationCacheFiles(
-                        //   packageName: app!.app.id,
-                        // ); // TODO: Implement
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(tr('clearCacheSuccess'))),
@@ -1238,8 +1230,8 @@ class _AppPageState extends State<AppPage> {
                     },
                     color: colorScheme.tertiary,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),

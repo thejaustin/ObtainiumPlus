@@ -2229,7 +2229,6 @@ class AppsProvider with ChangeNotifier {
     final sp = SourceProvider();
     final appsDir = await getAppsDir();
     final List<List<String>> errors = [];
-    await _restoreQuarantinedApps(appsDir, sp);
     final entities = await appsDir.list().toList();
 
     // Map existing cached icon files to avoid repeated per-app disk lookups
@@ -2295,9 +2294,12 @@ class AppsProvider with ChangeNotifier {
             errors.add([app.id, app.finalName, e.toString()]);
             return;
           }
-          // Read cached icon bytes directly during Phase 1 if not yet loaded in memory
+          // Read cached icon bytes directly during Phase 1 for initial viewport apps,
+          // while Phase 2 and tile on-demand loading lazily populate remaining icons off the critical path.
           Uint8List? iconBytes = apps[app.id]?.icon;
-          if (iconBytes == null && cachedIconFiles.containsKey(app.id)) {
+          if (iconBytes == null &&
+              cachedIconFiles.containsKey(app.id) &&
+              (singleId != null || apps.length < 12)) {
             try {
               iconBytes = await cachedIconFiles[app.id]!.readAsBytes();
             } catch (_) {}
@@ -2441,12 +2443,19 @@ class AppsProvider with ChangeNotifier {
         behaviorSettings.removeOnExternalUninstall) {
       await removeApps(removedAppIds);
     }
+    // Restore quarantined apps in the background off the critical launch path
+    try {
+      final sp = SourceProvider();
+      final appsDir = await getAppsDir();
+      await _restoreQuarantinedApps(appsDir, sp);
+    } catch (_) {}
+
     // Proactively fetch any missing icons in the background without UI blocking.
     // Use a concurrency limit so icon fetches don't all compete at once and
     // cause rapid-fire notifyListeners calls that saturate the UI thread.
     final missingIconIds = [
       for (final id in apps.keys)
-        if (apps[id]?.icon == null && apps[id]?.installedInfo != null) id,
+        if (apps[id]?.icon == null) id,
     ];
     if (missingIconIds.isNotEmpty) {
       unawaited(

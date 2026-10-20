@@ -355,32 +355,40 @@ Future<void> _runObtainium() async {
 }
 
 Future<void> _startObtainium() async {
-  try {
-    ByteData data = await PlatformAssetBundle().load(
-      'assets/ca/lets-encrypt-r3.pem',
-    );
-    SecurityContext.defaultContext.setTrustedCertificatesBytes(
-      data.buffer.asUint8List(),
-    );
-  } catch (e) {
-    // Already added, do nothing (see #375)
-  }
-  await initializeDateFormatting();
-  await EasyLocalization.ensureInitialized();
-  if ((await DeviceInfoPlugin().androidInfo).version.sdkInt >= 29) {
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        systemNavigationBarColor: Colors.transparent,
-        statusBarColor: Colors.transparent,
-        systemStatusBarContrastEnforced: false,
-      ),
-    );
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-  }
-  final np = NotificationsProvider();
-  await np.initialize();
+  final caCertFuture = () async {
+    try {
+      ByteData data = await PlatformAssetBundle().load(
+        'assets/ca/lets-encrypt-r3.pem',
+      );
+      SecurityContext.defaultContext.setTrustedCertificatesBytes(
+        data.buffer.asUint8List(),
+      );
+    } catch (_) {}
+  }();
 
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  final prefsFuture = SharedPreferences.getInstance();
+  final dateFormattingFuture = initializeDateFormatting();
+  final easyLocalizationFuture = EasyLocalization.ensureInitialized();
+  final np = NotificationsProvider();
+  final npInitFuture = np.initialize();
+  final systemUiFuture = () async {
+    try {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt >= 29) {
+        SystemChrome.setSystemUIOverlayStyle(
+          const SystemUiOverlayStyle(
+            systemNavigationBarColor: Colors.transparent,
+            statusBarColor: Colors.transparent,
+            systemStatusBarContrastEnforced: false,
+          ),
+        );
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      }
+    } catch (_) {}
+  }();
+
+  final SharedPreferences prefs = await prefsFuture;
+
   final sp = SettingsProvider();
   final plusSettings = PlusSettingsProvider();
   final themeSettings = ThemeSettingsProvider();
@@ -392,6 +400,11 @@ Future<void> _startObtainium() async {
   final authProvider = AuthProvider();
 
   await Future.wait([
+    caCertFuture,
+    dateFormattingFuture,
+    easyLocalizationFuture,
+    npInitFuture,
+    systemUiFuture,
     sp.initializeSettings(),
     plusSettings.initializeSettings(prefs),
     themeSettings.initializeSettings(prefs),

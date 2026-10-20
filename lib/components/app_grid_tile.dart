@@ -523,7 +523,7 @@ class _AppGridTileState extends State<AppGridTile>
                 ? FontWeight.w700
                 : FontWeight.w600,
             letterSpacing: -0.2,
-            height: 1.18,
+            height: 1.25,
             color: colorScheme.onSurface,
           ),
         ),

@@ -56,6 +56,7 @@ class _AppListTileState extends State<AppListTile>
   @override
   void initState() {
     super.initState();
+    _scheduleIconLoadIfNeeded();
     _entranceController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -87,6 +88,26 @@ class _AppListTileState extends State<AppListTile>
         });
       }
     });
+  }
+
+  @override
+  void didUpdateWidget(AppListTile oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.appInMemory.icon == null &&
+        (oldWidget.appInMemory.icon != null ||
+            oldWidget.appInMemory.app.id != widget.appInMemory.app.id)) {
+      _scheduleIconLoadIfNeeded();
+    }
+  }
+
+  void _scheduleIconLoadIfNeeded() {
+    if (widget.appInMemory.icon == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.appInMemory.icon == null) {
+          context.read<AppsProvider>().updateAppIcon(widget.appInMemory.app.id);
+        }
+      });
+    }
   }
 
   @override
@@ -810,29 +831,35 @@ class _AppListTileState extends State<AppListTile>
                                     ),
                                   if (viewSettings.displayShowVersion &&
                                       !isCompact)
-                                    hasUpdate
-                                        ? _buildVersionUpdatePill(
-                                            context,
-                                            appInMemory.app.installedVersion ??
-                                                '?',
-                                            appInMemory.app.latestVersion ??
-                                                '?',
-                                          )
-                                        : Text(
-                                            ' • ${getVersionText()}',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color: null,
-                                                  fontStyle:
-                                                      SourceUtils.isVersionPseudo(
-                                                        appInMemory.app,
-                                                      )
-                                                      ? FontStyle.italic
-                                                      : null,
-                                                ),
-                                          ),
+                                    Flexible(
+                                      child: hasUpdate
+                                          ? _buildVersionUpdatePill(
+                                              context,
+                                              appInMemory
+                                                      .app
+                                                      .installedVersion ??
+                                                  '?',
+                                              appInMemory.app.latestVersion ??
+                                                  '?',
+                                            )
+                                          : Text(
+                                              ' • ${getVersionText()}',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: null,
+                                                    fontStyle:
+                                                        SourceUtils.isVersionPseudo(
+                                                          appInMemory.app,
+                                                        )
+                                                        ? FontStyle.italic
+                                                        : null,
+                                                  ),
+                                            ),
+                                    ),
                                 ],
                               ),
                               trailing: ValueListenableBuilder<double?>(
@@ -1053,14 +1080,18 @@ class _AppListTileState extends State<AppListTile>
               color: colorScheme.primary,
             ),
             const SizedBox(width: 3),
-            Text(
-              '$inst → $latest',
-              style: TextStyle(
-                fontSize: 9.5,
-                fontWeight: FontWeight.w700,
-                color: colorScheme.primary,
-                fontFamily: 'monospace',
-                letterSpacing: 0.1,
+            Flexible(
+              child: Text(
+                '$inst → $latest',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.primary,
+                  fontFamily: 'monospace',
+                  letterSpacing: 0.1,
+                ),
               ),
             ),
           ],

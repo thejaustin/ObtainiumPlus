@@ -50,7 +50,7 @@ class ThemeBuilder {
         color: colorScheme.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
       ),
-      fontFamily: useSystemFont ? 'SystemFont' : 'Roboto',
+      fontFamily: useSystemFont ? 'SystemFont' : 'Montserrat',
       // M3 sparkle ripple is the expressive touch feedback; shader-based, so
       // it also avoids the clipped-ripple artifacts of the legacy ink splash
       splashFactory: plusEnableMaterialExpressive
@@ -212,7 +212,7 @@ class ThemeBuilder {
     final baseTextTheme = colorScheme.brightness == Brightness.dark
         ? Typography.material2021().white
         : Typography.material2021().black;
-    final fontFamily = useSystemFont ? 'SystemFont' : 'Roboto';
+    final fontFamily = useSystemFont ? 'SystemFont' : 'Montserrat';
 
     if (!expressive) {
       return baseTextTheme.copyWith(
@@ -315,20 +315,27 @@ class ThemeBuilder {
     );
   }
 
-  /// CardThemeData with M3 tonal elevation and configurable radius
+  /// CardThemeData with M3 tonal elevation, subtle border contrast, and configurable radius
   static CardThemeData _buildCardTheme(
     ColorScheme colorScheme,
     bool expressive,
     double? cornerRadius,
   ) {
+    final borderSide = BorderSide(
+      color: colorScheme.outlineVariant.withValues(
+        alpha: colorScheme.brightness == Brightness.dark ? 0.35 : 0.65,
+      ),
+      width: 0.8,
+    );
     return CardThemeData(
       color: colorScheme.surfaceContainerLow,
       surfaceTintColor: Colors.transparent,
-      // M3 tonal elevation: hierarchy comes from the surface container
-      // colour, not shadows (heavy shadows also read muddy on the pure-black
-      // AMOLED theme)
-      elevation: 1,
-      shape: _shape(expressive, cornerRadius ?? (expressive ? 24 : 12)),
+      elevation: 0,
+      shape: _shape(
+        expressive,
+        cornerRadius ?? (expressive ? 24 : 12),
+        borderSide,
+      ),
       clipBehavior: Clip.antiAlias,
     );
   }
@@ -673,11 +680,15 @@ class ThemeBuilder {
   }
 
   /// Squircle corners in expressive mode, plain rounded corners otherwise.
-  static OutlinedBorder _shape(bool expressive, double radius) {
+  static OutlinedBorder _shape(
+    bool expressive,
+    double radius, [
+    BorderSide side = BorderSide.none,
+  ]) {
     final borderRadius = BorderRadius.circular(radius);
     return expressive
-        ? RoundedSuperellipseBorder(borderRadius: borderRadius)
-        : RoundedRectangleBorder(borderRadius: borderRadius);
+        ? RoundedSuperellipseBorder(borderRadius: borderRadius, side: side)
+        : RoundedRectangleBorder(borderRadius: borderRadius, side: side);
   }
 }
 

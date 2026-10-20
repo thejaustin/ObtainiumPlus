@@ -261,7 +261,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                               child: SelectableText(
                                 log.message,
                                 style: const TextStyle(
-                                  fontFamily: 'Courier',
+                                  fontFamily: 'monospace',
                                   fontSize: 12,
                                 ),
                               ),
