@@ -4,7 +4,6 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -780,9 +779,11 @@ class _AppDashboardState extends State<AppDashboard>
                             .whereType<String>()
                             .join('\n');
                         if (urls.isNotEmpty) {
-                          Share.share(
-                            urls,
-                            subject: 'Obtainium - ${tr('appsString')}',
+                          SharePlus.instance.share(
+                            ShareParams(
+                              text: urls,
+                              subject: 'Obtainium - ${tr('appsString')}',
+                            ),
                           );
                         }
                         appsProvider.clearSelection();

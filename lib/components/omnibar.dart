@@ -6,8 +6,6 @@ import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/utils/app_utils.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
@@ -17,11 +15,8 @@ import 'package:obtainium/components/unsupported_source_dialog.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/app_sources/githubpersonalrepos.dart';
 import 'package:obtainium/app_sources/githubstars.dart';
-import 'package:obtainium/models/app_source.dart';
-import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/components/system_app_selector_sheet.dart';
-import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -231,6 +226,7 @@ class _OmnibarState extends State<Omnibar> {
     final colorScheme = Theme.of(context).colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -249,7 +245,7 @@ class _OmnibarState extends State<Omnibar> {
       child: AnimatedContainer(
         duration: Duration(milliseconds: animsEnabled ? 280 : 0),
         curve: Easing.emphasizedDecelerate,
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: isFocusedOrHasText
               ? colorScheme.surfaceContainerHighest.withValues(
                   alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 0.95,
@@ -257,24 +253,27 @@ class _OmnibarState extends State<Omnibar> {
               : colorScheme.surfaceContainerHigh.withValues(
                   alpha: plusSettings.plusEnableGlassmorphism ? 0.45 : 0.7,
                 ),
-          borderRadius: BorderRadius.circular(currentRadius),
-          border: Border.all(
-            color: _isValidUrl
-                ? colorScheme.primary
-                : _urlError != null
-                ? colorScheme.error
-                : isFocusedOrHasText
-                ? colorScheme.primary.withValues(alpha: 0.8)
-                : colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
-            width: isFocusedOrHasText || _isValidUrl || _urlError != null
-                ? 1.8
-                : 1.0,
+          shape: CardMetrics.shape(
+            currentRadius,
+            expressive: isM3E,
+            side: BorderSide(
+              color: _isValidUrl
+                  ? colorScheme.primary
+                  : _urlError != null
+                  ? colorScheme.error
+                  : isFocusedOrHasText
+                  ? colorScheme.primary.withValues(alpha: 0.8)
+                  : colorScheme.outlineVariant.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.35
+                          : 0.65,
+                    ),
+              width: isFocusedOrHasText || _isValidUrl || _urlError != null
+                  ? 1.8
+                  : 1.0,
+            ),
           ),
-          boxShadow: isFocusedOrHasText
+          shadows: isFocusedOrHasText
               ? [
                   BoxShadow(
                     color:
@@ -496,7 +495,10 @@ class _OmnibarState extends State<Omnibar> {
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                     ),
-                                    shape: const StadiumBorder(),
+                                    shape: CardMetrics.shape(
+                                      pillRadius,
+                                      expressive: isM3E,
+                                    ),
                                   ),
                                   child: Text(
                                     _isValidUrl ? tr('add') : tr('sources'),
@@ -512,31 +514,39 @@ class _OmnibarState extends State<Omnibar> {
                                     top: 6,
                                     bottom: 6,
                                   ),
-                                  child: Semantics(
-                                    label: tr('search'),
-                                    button: true,
-                                    child: FilledButton.tonalIcon(
-                                      onPressed: () {
-                                        final query = _controller.text.trim();
-                                        if (widget.onDiscoverSearch != null) {
-                                          widget.onDiscoverSearch!(query);
-                                        } else {
-                                          CommandCenter.show(
-                                            context,
-                                            initialQuery: query,
-                                          );
-                                        }
-                                      },
-                                      icon: const Icon(
-                                        Icons.travel_explore_rounded,
-                                        size: 16,
-                                      ),
-                                      label: Text(tr('search')),
-                                      style: FilledButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
+                                  child: ScaleTouchWrapper(
+                                    hapticOnPressDown: true,
+                                    scaleDownFactor: 0.93,
+                                    child: Semantics(
+                                      label: tr('search'),
+                                      button: true,
+                                      child: FilledButton.tonalIcon(
+                                        onPressed: () {
+                                          AppHaptics.selectionClick();
+                                          final query = _controller.text.trim();
+                                          if (widget.onDiscoverSearch != null) {
+                                            widget.onDiscoverSearch!(query);
+                                          } else {
+                                            CommandCenter.show(
+                                              context,
+                                              initialQuery: query,
+                                            );
+                                          }
+                                        },
+                                        icon: const Icon(
+                                          Icons.travel_explore_rounded,
+                                          size: 16,
                                         ),
-                                        shape: const StadiumBorder(),
+                                        label: Text(tr('search')),
+                                        style: FilledButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                          ),
+                                          shape: CardMetrics.shape(
+                                            pillRadius,
+                                            expressive: isM3E,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -796,10 +806,11 @@ class AppActionsFAB extends StatelessWidget {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final plusSettings = context.read<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final itemRadius = (radius * 0.5).clamp(8.0, 16.0);
+    final itemRadius = CardMetrics.inner(CardMetrics.card(radius));
 
     void handleTap() {
       AppHaptics.selectionClick();
@@ -809,17 +820,24 @@ class AppActionsFAB extends StatelessWidget {
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
       child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
         leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
+          width: 40,
+          height: 40,
+          decoration: ShapeDecoration(
             color:
                 containerColor ??
                 colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
-            borderRadius: BorderRadius.circular(itemRadius),
+            shape: CardMetrics.shape(itemRadius, expressive: isM3E),
           ),
-          child: Icon(icon, color: iconColor ?? colorScheme.primary),
+          child: Icon(icon, size: 20, color: iconColor ?? colorScheme.primary),
         ),
-        title: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        title: Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+        ),
         subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
         trailing: Icon(
           Icons.chevron_right_rounded,
@@ -827,9 +845,7 @@ class AppActionsFAB extends StatelessWidget {
           color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
         ),
         onTap: handleTap,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(itemRadius),
-        ),
+        shape: CardMetrics.shape(itemRadius, expressive: isM3E),
       ),
     );
   }
@@ -837,6 +853,7 @@ class AppActionsFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final fabRadius = CardMetrics.pill(plusSettings.plusGlobalCornerRadius);
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final colorScheme = Theme.of(context).colorScheme;
@@ -857,18 +874,21 @@ class AppActionsFAB extends StatelessWidget {
         scaleDownFactor: 0.95,
         hapticOnPressDown: true,
         child: Container(
-          decoration: BoxDecoration(
+          decoration: ShapeDecoration(
             gradient: LinearGradient(
               colors: [colorScheme.primary, colorScheme.tertiary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(fabRadius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.25),
-              width: 1,
+            shape: CardMetrics.shape(
+              fabRadius,
+              expressive: isM3E,
+              side: BorderSide(
+                color: Colors.white.withValues(alpha: 0.25),
+                width: 1,
+              ),
             ),
-            boxShadow: [
+            shadows: [
               BoxShadow(
                 color: colorScheme.primary.withValues(alpha: 0.38),
                 blurRadius: 16,

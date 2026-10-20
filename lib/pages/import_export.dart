@@ -24,7 +24,6 @@ import 'package:obtainium/providers/document_tree_bridge.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/nav_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -256,12 +255,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
       AppHaptics.selectionClick();
       FilePicker.pickFiles()
           .then((result) async {
-            if (result == null) {
+            if (result.isEmpty) {
               if (!context.mounted) return;
               showMessage(tr('cancelled'), context);
-              return;
-            }
-            if (result.isEmpty) {
               return;
             }
             if (!mounted) return;
@@ -377,7 +373,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
       AppHaptics.selectionClick();
       FilePicker.pickFiles()
           .then((result) async {
-            if (result != null && result.isNotEmpty) {
+            if (result.isNotEmpty) {
               var path = result.first.path;
               if (path == null) return;
               var data = await File(path).readAsString();
@@ -591,6 +587,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     });
 
     final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
 
     Widget _sectionCard({
       required IconData icon,
@@ -602,24 +599,27 @@ class _ImportExportPageState extends State<ImportExportPage> {
       final enableGlass = plusSettings.plusEnableGlassmorphism;
       return Container(
         margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: enableGlass
               ? colorScheme.surface.withValues(
                   alpha: AppConstants.glassSurfaceAlpha,
                 )
               : colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(cardRadius),
-          border: Border.all(
-            color: enableGlass
-                ? colorScheme.onSurface.withValues(
-                    alpha: AppConstants.glassBorderAlpha,
-                  )
-                : colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
-            width: 1.0,
+          shape: CardMetrics.shape(
+            cardRadius,
+            expressive: isM3E,
+            side: BorderSide(
+              color: enableGlass
+                  ? colorScheme.onSurface.withValues(
+                      alpha: AppConstants.glassBorderAlpha,
+                    )
+                  : colorScheme.outlineVariant.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.35
+                          : 0.65,
+                    ),
+              width: 1.0,
+            ),
           ),
         ),
         clipBehavior: Clip.antiAlias,
@@ -627,24 +627,28 @@ class _ImportExportPageState extends State<ImportExportPage> {
           enabled: enableGlass,
           sigma: AppConstants.glassBlurSigma,
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
+                      width: 36,
+                      height: 36,
+                      decoration: ShapeDecoration(
                         color: (iconColor ?? colorScheme.primary).withValues(
-                          alpha: 0.12,
+                          alpha: 0.14,
                         ),
-                        borderRadius: BorderRadius.circular(innerRadius),
+                        shape: CardMetrics.shape(
+                          innerRadius,
+                          expressive: isM3E,
+                        ),
                       ),
                       child: Icon(
                         icon,
                         color: iconColor ?? colorScheme.primary,
-                        size: 22,
+                        size: 18,
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -654,8 +658,8 @@ class _ImportExportPageState extends State<ImportExportPage> {
                         children: [
                           Text(
                             title,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.w700),
                           ),
                           if (subtitle.isNotEmpty) ...[
                             const SizedBox(height: 2),
@@ -672,7 +676,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 Wrap(spacing: 8, runSpacing: 8, children: actions),
               ],
             ),
@@ -774,26 +778,29 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     final enableGlass = plusSettings.plusEnableGlassmorphism;
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
+                      decoration: ShapeDecoration(
                         color: enableGlass
                             ? colorScheme.surface.withValues(
                                 alpha: AppConstants.glassSurfaceAlpha,
                               )
                             : colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(cardRadius),
-                        border: Border.all(
-                          color: enableGlass
-                              ? colorScheme.onSurface.withValues(
-                                  alpha: AppConstants.glassBorderAlpha,
-                                )
-                              : colorScheme.outlineVariant.withValues(
-                                  alpha:
-                                      Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? 0.35
-                                      : 0.65,
-                                ),
-                          width: 1.0,
+                        shape: CardMetrics.shape(
+                          cardRadius,
+                          expressive: isM3E,
+                          side: BorderSide(
+                            color: enableGlass
+                                ? colorScheme.onSurface.withValues(
+                                    alpha: AppConstants.glassBorderAlpha,
+                                  )
+                                : colorScheme.outlineVariant.withValues(
+                                    alpha:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? 0.35
+                                        : 0.65,
+                                  ),
+                            width: 1.0,
+                          ),
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,

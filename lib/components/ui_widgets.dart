@@ -11,6 +11,7 @@ import 'package:obtainium/theme.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
@@ -254,39 +255,45 @@ class AppIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = context.select<PlusSettingsProvider?, bool>(
+      (p) => p?.plusEnableMaterialExpressive ?? true,
+    );
     final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     final cacheDim = (size * devicePixelRatio).round();
-    return ClipRSuperellipse(
-      borderRadius: BorderRadius.circular(radius),
-      child: SizedBox(
-        width: size,
-        height: size,
-        child: bytes != null
-            ? Image.memory(
-                bytes!,
-                fit: BoxFit.cover,
-                gaplessPlayback: true,
-                excludeFromSemantics: true,
-                cacheWidth: cacheDim,
-                cacheHeight: cacheDim,
-                opacity: dimmed ? const AlwaysStoppedAnimation(0.6) : null,
-              )
-            : ColoredBox(
-                color: colorScheme.surfaceContainerHighest,
-                child: Center(
-                  child: Image(
-                    image: const AssetImage('assets/graphics/icon_small.png'),
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                    colorBlendMode: BlendMode.modulate,
-                    gaplessPlayback: true,
-                    excludeFromSemantics: true,
-                    width: glyphSize,
-                    height: glyphSize,
-                  ),
+    final inner = SizedBox(
+      width: size,
+      height: size,
+      child: bytes != null
+          ? Image.memory(
+              bytes!,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              excludeFromSemantics: true,
+              cacheWidth: cacheDim,
+              cacheHeight: cacheDim,
+              opacity: dimmed ? const AlwaysStoppedAnimation(0.6) : null,
+            )
+          : ColoredBox(
+              color: colorScheme.surfaceContainerHighest,
+              child: Center(
+                child: Image(
+                  image: const AssetImage('assets/graphics/icon_small.png'),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                  colorBlendMode: BlendMode.modulate,
+                  gaplessPlayback: true,
+                  excludeFromSemantics: true,
+                  width: glyphSize,
+                  height: glyphSize,
                 ),
               ),
-      ),
+            ),
     );
+    return isM3E
+        ? ClipRSuperellipse(
+            borderRadius: BorderRadius.circular(radius),
+            child: inner,
+          )
+        : ClipRRect(borderRadius: BorderRadius.circular(radius), child: inner);
   }
 }
 
@@ -599,15 +606,14 @@ class ActionListTile extends StatelessWidget {
 }
 
 class _TileClipper extends CustomClipper<Path> {
-  final RoundedSuperellipseBorder shape;
+  final ShapeBorder shape;
   const _TileClipper(this.shape);
 
   @override
   Path getClip(Size size) => shape.getOuterPath(Offset.zero & size);
 
   @override
-  bool shouldReclip(_TileClipper oldClipper) =>
-      oldClipper.shape.borderRadius != shape.borderRadius;
+  bool shouldReclip(_TileClipper oldClipper) => oldClipper.shape != shape;
 }
 
 Future<void> showHelpDialog(
@@ -715,9 +721,14 @@ class CardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isM3E = context.select<PlusSettingsProvider?, bool>(
+      (p) => p?.plusEnableMaterialExpressive ?? true,
+    );
     final effectiveRadius =
         borderRadius ?? BorderRadius.circular(connectedTileBigRadius);
-    final shape = RoundedSuperellipseBorder(borderRadius: effectiveRadius);
+    final ShapeBorder shape = isM3E
+        ? RoundedSuperellipseBorder(borderRadius: effectiveRadius)
+        : RoundedRectangleBorder(borderRadius: effectiveRadius);
     return ClipPath(
       clipper: _TileClipper(shape),
       child: Material(

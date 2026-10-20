@@ -13,7 +13,6 @@ import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
-import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
 import 'package:obtainium/utils/card_metrics.dart';
@@ -21,8 +20,6 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/components/ui_widgets.dart';
-import 'package:obtainium/utils/locale_constants.dart';
 import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -1029,77 +1026,6 @@ class _FooterIcon extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _LocaleDropdown extends StatelessWidget {
-  const _LocaleDropdown();
-
-  @override
-  Widget build(BuildContext context) {
-    final settingsProvider = context.read<SettingsProvider>();
-    final forcedLocale = context.select<SettingsProvider, Locale?>(
-      (p) => p.forcedLocale,
-    );
-    return TvDropdownMenu<Locale?>(
-      expandedInsets: EdgeInsets.zero,
-      label: Text(tr('language')),
-      initialSelection: forcedLocale,
-      dropdownMenuEntries: [
-        DropdownMenuEntry<Locale?>(value: null, label: tr('followSystem')),
-        ...supportedLocales.map(
-          (e) => DropdownMenuEntry<Locale?>(value: e.key, label: e.value),
-        ),
-      ],
-      onSelected: (value) {
-        settingsProvider.forcedLocale = value;
-        if (value != null) {
-          context.setLocale(value);
-        } else {
-          settingsProvider.resetLocaleSafe(context);
-        }
-      },
-    );
-  }
-}
-
-class _ColourSchemeDropdown extends StatelessWidget {
-  const _ColourSchemeDropdown();
-
-  @override
-  Widget build(BuildContext context) {
-    final colourSchemeMode = context.select<SettingsProvider, ColourSchemeMode>(
-      (p) => p.colourSchemeMode,
-    );
-    final settingsProvider = context.read<SettingsProvider>();
-    return TvDropdownMenu<ColourSchemeMode>(
-      expandedInsets: EdgeInsets.zero,
-      label: Text(tr('colourScheme')),
-      initialSelection: colourSchemeMode,
-      dropdownMenuEntries: [
-        DropdownMenuEntry(
-          value: ColourSchemeMode.standard,
-          label: tr('standard'),
-        ),
-        DropdownMenuEntry(
-          value: ColourSchemeMode.vibrant,
-          label: tr('vibrant'),
-        ),
-        DropdownMenuEntry(
-          value: ColourSchemeMode.expressive,
-          label: tr('expressive'),
-        ),
-        DropdownMenuEntry(
-          value: ColourSchemeMode.materialYou,
-          label: tr('useMaterialYou'),
-        ),
-      ],
-      onSelected: (value) {
-        if (value != null) {
-          settingsProvider.colourSchemeMode = value;
-        }
-      },
     );
   }
 }
