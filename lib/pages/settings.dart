@@ -106,7 +106,8 @@ class _SettingsPageState extends State<SettingsPage> {
     final plusSettings = context.watch<PlusSettingsProvider>();
     _scheduleEmptyCheck();
 
-    final useSettingsBottomBar = plusSettings.plusSettingsBottomNavBar &&
+    final useSettingsBottomBar =
+        plusSettings.plusSettingsBottomNavBar &&
         (!plusSettings.plusEnableBottomNavBar || plusSettings.plusTopUILayout);
 
     return Scaffold(

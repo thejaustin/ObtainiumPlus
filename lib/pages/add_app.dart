@@ -1318,6 +1318,7 @@ class AddAppPageState extends State<AddAppPage> {
         userInput.isEmpty;
 
     final formScrollView = CustomScrollView(
+      key: const PageStorageKey<String>('add_app_form_scroll'),
       controller: widget.scrollController,
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       physics: widget.isModal

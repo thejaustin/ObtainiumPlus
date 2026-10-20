@@ -31,6 +31,7 @@ class UpdateHealthPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
+        key: const PageStorageKey<String>('update_health_page_scroll'),
         slivers: [
           CustomAppBar(title: tr('updateHealth')),
           SliverPadding(

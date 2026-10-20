@@ -672,6 +672,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
+        key: const PageStorageKey<String>('import_export_page_scroll'),
         physics: plusSettings.scrollPhysics,
         slivers: <Widget>[
           CustomAppBar(title: tr('importExport')),

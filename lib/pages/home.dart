@@ -376,6 +376,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           ),
                         ),
                       ExpansionTile(
+                        key: const PageStorageKey<String>(
+                          'home_deep_link_raw_json',
+                        ),
                         title: Text(tr('rawJson')),
                         children: [
                           Text(

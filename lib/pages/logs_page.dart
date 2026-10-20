@@ -87,6 +87,7 @@ $logs''';
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
+        key: const PageStorageKey<String>('logs_page_scroll'),
         physics: plusSettings.scrollPhysics,
         slivers: [
           SliverAppBar(

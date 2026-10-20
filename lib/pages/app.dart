@@ -2213,6 +2213,7 @@ class _AppPageState extends State<AppPage> {
               child: getAppWebView(),
             )
           : CustomScrollView(
+              key: PageStorageKey<String>('app_page_scroll_${widget.appId}'),
               controller: widget.scrollController,
               physics: widget.isModal
                   ? const BouncingScrollPhysics()

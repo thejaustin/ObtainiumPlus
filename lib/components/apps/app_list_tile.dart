@@ -519,8 +519,9 @@ class _AppListTileState extends State<AppListTile>
                               alpha: AppConstants.glassBorderAlpha,
                             )
                           : Theme.of(context).brightness == Brightness.light
-                          ? Theme.of(context).colorScheme.outlineVariant
-                                .withValues(alpha: 0.65)
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.outlineVariant.withValues(alpha: 0.65)
                           : Theme.of(context).colorScheme.outlineVariant
                                 .withValues(alpha: 0.35),
                       width:

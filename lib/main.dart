@@ -823,10 +823,10 @@ class _ObtainiumState extends State<Obtainium> {
 
           final ThemeMode themeMode =
               themeSettings.theme == ThemeSettings.system
-                  ? ThemeMode.system
-                  : themeSettings.theme == ThemeSettings.dark
-                      ? ThemeMode.dark
-                      : ThemeMode.light;
+              ? ThemeMode.system
+              : themeSettings.theme == ThemeSettings.dark
+              ? ThemeMode.dark
+              : ThemeMode.light;
 
           return MaterialApp(
             title: 'Obtainium',

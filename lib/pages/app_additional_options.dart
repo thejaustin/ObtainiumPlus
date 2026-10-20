@@ -242,6 +242,9 @@ class _AdditionalOptionsPageState extends State<_AdditionalOptionsPage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
+        key: PageStorageKey<String>(
+          'app_additional_options_scroll_${widget.title}',
+        ),
         slivers: [
           CustomAppBar(title: widget.title),
           SliverToBoxAdapter(

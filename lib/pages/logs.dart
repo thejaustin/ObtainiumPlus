@@ -269,6 +269,7 @@ class _LogsPageState extends State<LogsPage> {
   Widget build(BuildContext context) {
     final isTV = context.select<SettingsProvider, bool>((p) => p.isTV);
     final logList = CustomScrollView(
+      key: const PageStorageKey<String>('logs_scroll'),
       controller: _scrollController,
       slivers: [
         SliverAppBar(

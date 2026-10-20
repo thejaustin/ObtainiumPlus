@@ -517,99 +517,89 @@ class CategorySections extends StatelessWidget {
             ],
           ],
         ),
-        children: appsInCategory
-            .asMap()
-            .entries
-            .map((entry) {
-              final app = entry.value;
-              final hasUpdate = app.app.installedVersion == null
-                  ? app.app.additionalSettings['trackOnly'] != true
-                  : pendingUpdates.contains(app.app.id);
+        children: appsInCategory.asMap().entries.map((entry) {
+          final app = entry.value;
+          final hasUpdate = app.app.installedVersion == null
+              ? app.app.additionalSettings['trackOnly'] != true
+              : pendingUpdates.contains(app.app.id);
 
-              final tile = AppListTile(
-                appInMemory: app,
-                hasUpdate: hasUpdate,
-                selected: selectedAppIds.contains(app.app.id),
-                entranceDelay: plusSettings.plusEnableEnhancedAnimations
-                    ? Duration(
-                        milliseconds: entry.key < 8 ? entry.key * 25 : 0,
-                      )
-                    : Duration.zero,
-                onTap: () {
-                  if (selectedAppIds.isNotEmpty) {
-                    toggleAppSelected(app.app);
-                  } else {
-                    onAppTap(app.app);
-                  }
-                },
-                onLongPress: () => toggleAppSelected(app.app),
-                onShowChanges: getChangeLogFn(context, app.app),
-              );
-
-              if (!swipeEnabled) {
-                return RepaintBoundary(key: ValueKey(app.app.id), child: tile);
+          final tile = AppListTile(
+            appInMemory: app,
+            hasUpdate: hasUpdate,
+            selected: selectedAppIds.contains(app.app.id),
+            entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                ? Duration(milliseconds: entry.key < 8 ? entry.key * 25 : 0)
+                : Duration.zero,
+            onTap: () {
+              if (selectedAppIds.isNotEmpty) {
+                toggleAppSelected(app.app);
+              } else {
+                onAppTap(app.app);
               }
+            },
+            onLongPress: () => toggleAppSelected(app.app),
+            onShowChanges: getChangeLogFn(context, app.app),
+          );
 
-              return Dismissible(
-                key: Key('cat_dismiss_${app.app.id}'),
-                direction:
-                    behaviorSettings.swipeRightAction == AppSwipeAction.none
-                    ? DismissDirection.endToStart
-                    : (behaviorSettings.swipeLeftAction == AppSwipeAction.none
-                          ? DismissDirection.startToEnd
-                          : DismissDirection.horizontal),
-                background: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isCompact ? 4 : 8,
-                    vertical: isCompact ? 2 : 6,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: getActionColor(behaviorSettings.swipeRightAction),
-                      borderRadius: BorderRadius.circular(radius),
-                    ),
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 20.0),
-                    child: getActionIcon(
-                      behaviorSettings.swipeRightAction,
-                      app,
-                    ),
-                  ),
+          if (!swipeEnabled) {
+            return RepaintBoundary(key: ValueKey(app.app.id), child: tile);
+          }
+
+          return Dismissible(
+            key: Key('cat_dismiss_${app.app.id}'),
+            direction: behaviorSettings.swipeRightAction == AppSwipeAction.none
+                ? DismissDirection.endToStart
+                : (behaviorSettings.swipeLeftAction == AppSwipeAction.none
+                      ? DismissDirection.startToEnd
+                      : DismissDirection.horizontal),
+            background: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 4 : 8,
+                vertical: isCompact ? 2 : 6,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: getActionColor(behaviorSettings.swipeRightAction),
+                  borderRadius: BorderRadius.circular(radius),
                 ),
-                secondaryBackground: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isCompact ? 4 : 8,
-                    vertical: isCompact ? 2 : 6,
-                  ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: getActionColor(behaviorSettings.swipeLeftAction),
-                      borderRadius: BorderRadius.circular(radius),
-                    ),
-                    alignment: Alignment.centerRight,
-                    padding: const EdgeInsets.only(right: 20.0),
-                    child: getActionIcon(behaviorSettings.swipeLeftAction, app),
-                  ),
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 20.0),
+                child: getActionIcon(behaviorSettings.swipeRightAction, app),
+              ),
+            ),
+            secondaryBackground: Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 4 : 8,
+                vertical: isCompact ? 2 : 6,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: getActionColor(behaviorSettings.swipeLeftAction),
+                  borderRadius: BorderRadius.circular(radius),
                 ),
-                confirmDismiss: (direction) {
-                  if (direction == DismissDirection.startToEnd) {
-                    return handleSwipe(
-                      app,
-                      behaviorSettings.swipeRightAction,
-                      hasUpdate,
-                    );
-                  } else {
-                    return handleSwipe(
-                      app,
-                      behaviorSettings.swipeLeftAction,
-                      hasUpdate,
-                    );
-                  }
-                },
-                child: RepaintBoundary(key: ValueKey(app.app.id), child: tile),
-              );
-            })
-            .toList(),
+                alignment: Alignment.centerRight,
+                padding: const EdgeInsets.only(right: 20.0),
+                child: getActionIcon(behaviorSettings.swipeLeftAction, app),
+              ),
+            ),
+            confirmDismiss: (direction) {
+              if (direction == DismissDirection.startToEnd) {
+                return handleSwipe(
+                  app,
+                  behaviorSettings.swipeRightAction,
+                  hasUpdate,
+                );
+              } else {
+                return handleSwipe(
+                  app,
+                  behaviorSettings.swipeLeftAction,
+                  hasUpdate,
+                );
+              }
+            },
+            child: RepaintBoundary(key: ValueKey(app.app.id), child: tile),
+          );
+        }).toList(),
       ),
     );
   }
