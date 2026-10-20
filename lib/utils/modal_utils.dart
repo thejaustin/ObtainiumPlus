@@ -15,6 +15,11 @@ Future<T?> showDraggableModalBottomSheet<T>({
 }) {
   final plusSettings = context.read<PlusSettingsProvider>();
   final enableGlass = plusSettings.plusEnableGlassmorphism;
+  final radius = plusSettings.plusOverrideIndividualCornerRadius
+      ? plusSettings.plusHomeCornerRadius
+      : plusSettings.plusGlobalCornerRadius;
+  final sheetRadius = Radius.circular(radius.clamp(20.0, 36.0));
+
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: true,
@@ -31,7 +36,7 @@ Future<T?> showDraggableModalBottomSheet<T>({
         expand: false,
         builder: (context, scrollController) {
           return ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: sheetRadius),
             child: ConditionalBlur(
               enabled: enableGlass,
               sigma: AppConstants.glassBlurSigmaSoft,
@@ -42,14 +47,16 @@ Future<T?> showDraggableModalBottomSheet<T>({
                           alpha: AppConstants.glassSurfaceAlphaStrong,
                         )
                       : Theme.of(context).colorScheme.surfaceContainerLow,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(28),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: sheetRadius),
                   border: Border(
                     top: BorderSide(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outline.withValues(alpha: 0.15),
+                      color: Theme.of(context).colorScheme.outlineVariant
+                          .withValues(
+                            alpha:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? 0.35
+                                : 0.65,
+                          ),
                       width: 1,
                     ),
                   ),

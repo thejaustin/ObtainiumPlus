@@ -81,9 +81,20 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
     AppLogger.info(e.toString());
   }
   if (e is String || (e is ObtainiumError && !e.unexpected)) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(e.toString())));
+    final cs = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          e.toString(),
+          style: TextStyle(
+            color: isError ? cs.onErrorContainer : cs.onInverseSurface,
+            fontWeight: isError ? FontWeight.w600 : FontWeight.normal,
+          ),
+        ),
+        backgroundColor: isError ? cs.errorContainer : cs.inverseSurface,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   } else {
     showDialog(
       context: context,

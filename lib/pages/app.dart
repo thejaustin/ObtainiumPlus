@@ -31,6 +31,7 @@ import 'package:obtainium/components/apps/app_version_history.dart';
 import 'package:obtainium/components/apps/app_changelog.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:android_intent_plus/android_intent.dart';
@@ -1097,8 +1098,8 @@ class _AppPageState extends State<AppPage> {
               ),
               borderRadius: BorderRadius.circular(actionRadius),
               border: Border.all(
-                color: color.withValues(alpha: 0.22),
-                width: 0.8,
+                color: color.withValues(alpha: 0.28),
+                width: 1.0,
               ),
             ),
             child: Material(
@@ -1163,25 +1164,23 @@ class _AppPageState extends State<AppPage> {
                   _buildActionCard(
                     icon: Icons.settings_applications_outlined,
                     label: tr('appInfo'),
-                    onTap: () => AppInstallService.openAppSettings(app!.app.id),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      AppInstallService.openAppSettings(app!.app.id);
+                    },
                     color: colorScheme.secondary,
                   ),
                   const SizedBox(width: 8),
                   _buildActionCard(
-                    icon: Icons.block_flipped,
-                    label: tr('forceStop'),
-                    onTap: () async {
-                      try {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('forceStopSuccess'))),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) showError(e, context);
+                    icon: Icons.share_rounded,
+                    label: tr('share'),
+                    onTap: () {
+                      if (app?.app.url != null) {
+                        AppHaptics.selectionClick();
+                        Share.share(app!.app.url);
                       }
                     },
-                    color: colorScheme.error,
+                    color: colorScheme.tertiary,
                   ),
                   const SizedBox(width: 8),
                   _buildActionCard(
@@ -1189,6 +1188,7 @@ class _AppPageState extends State<AppPage> {
                     label: tr('website'),
                     onTap: () async {
                       if (app?.app.url != null) {
+                        AppHaptics.selectionClick();
                         launchUrlString(
                           app!.app.url,
                           mode: LaunchMode.externalApplication,
@@ -1203,6 +1203,7 @@ class _AppPageState extends State<AppPage> {
                     label: tr('safetyScan'),
                     onTap: () async {
                       if (app?.app.url != null) {
+                        AppHaptics.selectionClick();
                         final vtUrl =
                             'https://www.virustotal.com/gui/search/${Uri.encodeComponent(app!.app.url)}';
                         launchUrlString(
@@ -1215,20 +1216,17 @@ class _AppPageState extends State<AppPage> {
                   ),
                   const SizedBox(width: 8),
                   _buildActionCard(
-                    icon: Icons.delete_sweep_outlined,
-                    label: tr('clearCache'),
+                    icon: Icons.block_flipped,
+                    label: tr('forceStop'),
                     onTap: () async {
                       try {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('clearCacheSuccess'))),
-                          );
-                        }
+                        AppHaptics.selectionClick();
+                        AppInstallService.openAppSettings(app!.app.id);
                       } catch (e) {
                         if (mounted) showError(e, context);
                       }
                     },
-                    color: colorScheme.tertiary,
+                    color: colorScheme.error,
                   ),
                 ],
               ),
@@ -1313,6 +1311,10 @@ class _AppPageState extends State<AppPage> {
         iconData = Icons.download_rounded;
         color = const Color(0xFF00C853);
         sourceName = 'Uptodown';
+      } else if (url.contains('rustore.ru')) {
+        iconData = Icons.shopping_bag_rounded;
+        color = const Color(0xFF0077FF);
+        sourceName = 'RuStore';
       }
 
       return Container(
@@ -1437,20 +1439,64 @@ class _AppPageState extends State<AppPage> {
         ),
         const SizedBox(height: 12),
         Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          child: ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            child: InkWell(
               borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-            ),
-            child: Text(
-              app?.app.id ?? '',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontFamily: 'monospace',
-                letterSpacing: 0,
+              onTap: () {
+                final id = app?.app.id;
+                if (id != null && id.isNotEmpty) {
+                  Clipboard.setData(ClipboardData(text: id));
+                  AppHaptics.selectionClick();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr('copiedToClipboard')),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant
+                        .withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                    width: 1.0,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      app?.app.id ?? '',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontFamily: 'monospace',
+                        letterSpacing: 0,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.copy_rounded,
+                      size: 12,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

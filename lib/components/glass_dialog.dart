@@ -50,9 +50,11 @@ class GlassDialog extends StatelessWidget {
                 ? Theme.of(context).colorScheme.onSurface.withValues(
                     alpha: AppConstants.glassBorderAlpha,
                   )
-                : Theme.of(
-                    context,
-                  ).colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+                : Theme.of(context).colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
             width: 1,
           ),
           boxShadow: AppShadows.smooth(
@@ -71,7 +73,6 @@ class GlassDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildHeader(context, enableGlass),
-                  const Divider(height: 1),
                   Flexible(
                     child: scrollable
                         ? SingleChildScrollView(
@@ -123,8 +124,8 @@ class GlassDialog extends StatelessWidget {
         ),
         border: Border(
           bottom: BorderSide(
-            color: theme.colorScheme.outline.withValues(
-              alpha: AppOpacity.subtle,
+            color: theme.colorScheme.outlineVariant.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
             ),
             width: 1,
           ),
@@ -189,8 +190,8 @@ class GlassDialog extends StatelessWidget {
         ),
         border: Border(
           top: BorderSide(
-            color: theme.colorScheme.outline.withValues(
-              alpha: AppOpacity.subtle,
+            color: theme.colorScheme.outlineVariant.withValues(
+              alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
             ),
             width: 1,
           ),

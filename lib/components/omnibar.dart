@@ -266,7 +266,9 @@ class _OmnibarState extends State<Omnibar> {
                 : isFocusedOrHasText
                 ? colorScheme.primary.withValues(alpha: 0.8)
                 : colorScheme.outlineVariant.withValues(
-                    alpha: plusSettings.plusEnableGlassmorphism ? 0.3 : 0.25,
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
                   ),
             width: isFocusedOrHasText || _isValidUrl || _urlError != null
                 ? 1.8

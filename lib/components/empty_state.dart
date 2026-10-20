@@ -75,104 +75,112 @@ class _EmptyStateWidgetState extends State<EmptyStateWidget>
       child: ScaleTransition(
         scale: _scale,
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(28),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        colorScheme.primaryContainer.withValues(alpha: 0.55),
-                        colorScheme.secondaryContainer.withValues(alpha: 0.35),
-                        colorScheme.tertiaryContainer.withValues(alpha: 0.28),
-                      ],
-                      stops: [0.0, 0.5, 1.0],
-                    ),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.38),
-                      width: 2,
-                    ),
-                    boxShadow: AppShadows.glow(
-                      color: colorScheme.primary,
-                      intensity: 0.5,
-                    ),
-                  ),
-                  child: Icon(
-                    widget.icon,
-                    size: 80,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 32),
-                Text(
-                  widget.title,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colorScheme.onSurface,
-                    letterSpacing: -1,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  widget.subtitle,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                if (widget.onActionPressed != null &&
-                    widget.actionLabel != null) ...[
-                  const SizedBox(height: 48),
-                  ScaleTouchWrapper(
-                    hapticOnPressDown: true,
-                    scaleDownFactor: 0.95,
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        AppHaptics.selectionClick();
-                        widget.onActionPressed?.call();
-                      },
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size(220, 56),
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 32.0,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(28),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          colorScheme.primaryContainer.withValues(alpha: 0.55),
+                          colorScheme.secondaryContainer.withValues(
+                            alpha: 0.35,
+                          ),
+                          colorScheme.tertiaryContainer.withValues(alpha: 0.28),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
                       ),
-                      icon: const Icon(Icons.add_rounded),
-                      label: Text(
-                        widget.actionLabel!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.38),
+                        width: 2,
+                      ),
+                      boxShadow: AppShadows.glow(
+                        color: colorScheme.primary,
+                        intensity: 0.5,
+                      ),
+                    ),
+                    child: Icon(
+                      widget.icon,
+                      size: 80,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  Text(
+                    widget.title,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                      letterSpacing: -1,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    widget.subtitle,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (widget.onActionPressed != null &&
+                      widget.actionLabel != null) ...[
+                    const SizedBox(height: 48),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.95,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          widget.onActionPressed?.call();
+                        },
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size(220, 56),
+                        ),
+                        icon: const Icon(Icons.add_rounded),
+                        label: Text(
+                          widget.actionLabel!,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-                if (widget.onSecondaryActionPressed != null &&
-                    widget.secondaryActionLabel != null) ...[
-                  const SizedBox(height: 12),
-                  ScaleTouchWrapper(
-                    hapticOnPressDown: true,
-                    scaleDownFactor: 0.95,
-                    child: TextButton.icon(
-                      onPressed: () {
-                        AppHaptics.selectionClick();
-                        widget.onSecondaryActionPressed?.call();
-                      },
-                      style: TextButton.styleFrom(
-                        minimumSize: const Size(220, 48),
+                  ],
+                  if (widget.onSecondaryActionPressed != null &&
+                      widget.secondaryActionLabel != null) ...[
+                    const SizedBox(height: 12),
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.95,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          widget.onSecondaryActionPressed?.call();
+                        },
+                        style: TextButton.styleFrom(
+                          minimumSize: const Size(220, 48),
+                        ),
+                        icon: const Icon(Icons.explore_rounded),
+                        label: Text(widget.secondaryActionLabel!),
                       ),
-                      icon: const Icon(Icons.explore_rounded),
-                      label: Text(widget.secondaryActionLabel!),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
