@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 
 class PluginManagerPage extends StatefulWidget {
   const PluginManagerPage({super.key});
@@ -27,13 +29,22 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     final pluginProvider = context.watch<PluginProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
     final cs = Theme.of(context).colorScheme;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Plugin Manager')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 16),
         children: [
-          _buildInstallCard(cs, pluginProvider, plusSettings),
+          _buildInstallCard(cs, pluginProvider, plusSettings, cardRadius),
           const SizedBox(height: 32),
           Padding(
             padding: const EdgeInsets.only(left: 8.0, bottom: 16),
@@ -51,7 +62,8 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
             _buildEmptyState(cs)
           else
             ...pluginProvider.plugins.map(
-              (plugin) => _buildPluginTile(cs, plugin, pluginProvider),
+              (plugin) =>
+                  _buildPluginTile(cs, plugin, pluginProvider, cardRadius),
             ),
         ],
       ),
@@ -62,12 +74,13 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     ColorScheme cs,
     PluginProvider pluginProvider,
     PlusSettingsProvider plusSettings,
+    double cardRadius,
   ) {
     return Card(
       elevation: 0,
       color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(cardRadius),
         side: BorderSide(color: cs.outline.withValues(alpha: 0.1)),
       ),
       child: Padding(
@@ -168,17 +181,22 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                             ),
                           Padding(
                             padding: const EdgeInsets.only(right: 8.0),
-                            child: IconButton.filledTonal(
-                              icon: const Icon(Icons.download_rounded),
-                              onPressed: () {
-                                if (_urlController.text.isNotEmpty) {
-                                  pluginProvider.installFromUrl(
-                                    _urlController.text,
-                                  );
-                                  _urlController.clear();
-                                  FocusScope.of(context).unfocus();
-                                }
-                              },
+                            child: ScaleTouchWrapper(
+                              hapticOnPressDown: true,
+                              scaleDownFactor: 0.90,
+                              child: IconButton.filledTonal(
+                                icon: const Icon(Icons.download_rounded),
+                                onPressed: () {
+                                  if (_urlController.text.isNotEmpty) {
+                                    AppHaptics.selectionClick();
+                                    pluginProvider.installFromUrl(
+                                      _urlController.text,
+                                    );
+                                    _urlController.clear();
+                                    FocusScope.of(context).unfocus();
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ],
@@ -223,12 +241,15 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     ColorScheme cs,
     dynamic plugin,
     PluginProvider pluginProvider,
+    double cardRadius,
   ) {
+    final innerRadius = CardMetrics.inner(cardRadius);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(cardRadius),
         border: Border.all(color: cs.outline.withValues(alpha: 0.05)),
       ),
       child: ListTile(
@@ -237,7 +258,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: cs.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(innerRadius),
           ),
           child: Icon(Icons.extension_rounded, color: cs.primary),
         ),
@@ -257,13 +278,18 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
           scaleDownFactor: 0.88,
           child: IconButton.filledTonal(
             icon: Icon(Icons.delete_outline_rounded, color: cs.error),
-            onPressed: () => pluginProvider.removePlugin(plugin.id),
+            onPressed: () {
+              AppHaptics.heavyImpact();
+              pluginProvider.removePlugin(plugin.id);
+            },
             style: IconButton.styleFrom(
               backgroundColor: cs.errorContainer.withValues(alpha: 0.3),
             ),
           ),
         ),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+        ),
       ),
     );
   }

@@ -63,6 +63,7 @@ class _SelectionModalState extends State<SelectionModal> {
   }
 
   void selectAll({bool deselect = false}) {
+    AppHaptics.selectionClick();
     for (var e in entrySelections.keys) {
       entrySelections[e] = !deselect;
     }
@@ -316,8 +317,9 @@ class _SelectionModalState extends State<SelectionModal> {
         const SizedBox(height: 20),
         ...filteredEntrySelections.keys.map((entry) {
           selectThis(bool? value) {
+            value ??= false;
+            value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             setState(() {
-              value ??= false;
               if (value! && widget.onlyOneSelectionAllowed) {
                 selectOnlyOne(entry.key);
               } else {

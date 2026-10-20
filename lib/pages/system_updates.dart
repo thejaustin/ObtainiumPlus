@@ -8,6 +8,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/play_store_mirror_service.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
 
 class SystemUpdatesPage extends StatefulWidget {
@@ -65,12 +66,16 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final animsEnabled = context
-        .watch<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
     final stateKey = _isScanning
         ? 'scanning'
         : (_updates.isEmpty ? 'empty' : 'results');
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 8.0;
 
     Widget body;
     if (!_isScanning && _updates.isEmpty) {
@@ -80,7 +85,10 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
         title: tr('scanForUpdates'),
         subtitle: tr('plusSystemUpdateScannerDescription'),
         actionLabel: tr('scanForUpdates'),
-        onActionPressed: _startScan,
+        onActionPressed: () {
+          AppHaptics.selectionClick();
+          _startScan();
+        },
       );
     } else if (_isScanning) {
       body = Center(
@@ -114,7 +122,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       body = Scaffold(
         key: const ValueKey('results'),
         body: ListView.builder(
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 96),
+          padding: EdgeInsets.fromLTRB(adaptiveMargin, 8, adaptiveMargin, 96),
           itemCount: _updates.length,
           itemBuilder: (context, index) {
             final update = _updates[index];
@@ -145,11 +153,19 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
   }
 
   Widget _buildUpdateCard(ExternalAppUpdate update) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+
     return Card(
       elevation: 0,
       color: Theme.of(context).colorScheme.surfaceContainerLow,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cardRadius),
+      ),
       child: ExpansionTile(
         key: PageStorageKey<String>('system_update:${update.appId}'),
         leading: CircleAvatar(
@@ -272,26 +288,31 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
                       ],
                     ),
                     const Divider(height: 32),
-                    ListTile(
-                      leading: const Icon(Icons.add_circle_outline),
-                      title: Text(tr('addToObtainium')),
-                      subtitle: Text(tr('trackFromGooglePlay')),
-                      onTap: () async {
-                        final appsProvider = context.read<AppsProvider>();
-                        final url =
-                            'https://play.google.com/store/apps/details?id=${update.appId}';
-                        await appsProvider.addAppsByURL([url]);
-                        if (mounted && context.mounted) {
-                          setState(
-                            () => _updates.removeWhere(
-                              (u) => u.appId == update.appId,
-                            ),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(tr('appAlreadyAdded'))),
-                          );
-                        }
-                      },
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      child: ListTile(
+                        leading: const Icon(Icons.add_circle_outline),
+                        title: Text(tr('addToObtainium')),
+                        subtitle: Text(tr('trackFromGooglePlay')),
+                        onTap: () async {
+                          AppHaptics.selectionClick();
+                          final appsProvider = context.read<AppsProvider>();
+                          final url =
+                              'https://play.google.com/store/apps/details?id=${update.appId}';
+                          await appsProvider.addAppsByURL([url]);
+                          if (mounted && context.mounted) {
+                            AppHaptics.success();
+                            setState(
+                              () => _updates.removeWhere(
+                                (u) => u.appId == update.appId,
+                              ),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(tr('appAlreadyAdded'))),
+                            );
+                          }
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -311,7 +332,17 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton.filledTonal(onPressed: onPressed, icon: Icon(icon)),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.90,
+          child: IconButton.filledTonal(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              onPressed();
+            },
+            icon: Icon(icon),
+          ),
+        ),
         const SizedBox(height: 4),
         Text(
           label,

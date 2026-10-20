@@ -10,6 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 
 class MicroGHubPage extends StatefulWidget {
   const MicroGHubPage({super.key});
@@ -167,21 +169,32 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
       }
     }
 
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.card(baseRadius);
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
+
     return Scaffold(
       appBar: AppBar(title: Text(tr('microGHub'))),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 16),
         children: [
-          _buildInfoCard(cs),
+          _buildInfoCard(cs, cardRadius),
           const SizedBox(height: 24),
-          _buildProviderSection(cs, context, animsEnabled),
+          _buildProviderSection(cs, context, animsEnabled, cardRadius),
           const SizedBox(height: 24),
-          _buildComponentsSection(cs),
+          _buildComponentsSection(cs, cardRadius),
           const SizedBox(height: 24),
-          _buildOptionsSection(cs),
+          _buildOptionsSection(cs, cardRadius),
           const SizedBox(height: 32),
           if (_isDownloading)
-            _buildProgressSection(cs, overallProgress, trackedCount)
+            _buildProgressSection(cs, overallProgress, trackedCount, cardRadius)
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -189,13 +202,16 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                 hapticOnPressDown: true,
                 scaleDownFactor: 0.97,
                 child: FilledButton.icon(
-                  onPressed: _startDeployment,
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    _startDeployment();
+                  },
                   icon: const Icon(Icons.download_for_offline_outlined),
                   label: Text(tr('startDeployment')),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(60),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(cardRadius),
                     ),
                     elevation: 4,
                   ),
@@ -212,11 +228,14 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     ColorScheme cs,
     double overallProgress,
     int trackedCount,
+    double cardRadius,
   ) {
     return Card(
       elevation: 0,
       color: cs.primaryContainer.withValues(alpha: 0.3),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(cardRadius),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -239,7 +258,10 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                   hapticOnPressDown: true,
                   scaleDownFactor: 0.96,
                   child: FilledButton(
-                    onPressed: () => setState(() => _isDownloading = false),
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      setState(() => _isDownloading = false);
+                    },
                     child: Text(tr('done')),
                   ),
                 ),
@@ -250,12 +272,12 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildInfoCard(ColorScheme cs) {
+  Widget _buildInfoCard(ColorScheme cs, double cardRadius) {
     return Card(
       elevation: 0,
       color: cs.primaryContainer.withValues(alpha: AppOpacity.medium),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(cardRadius),
         side: BorderSide(color: cs.primary.withValues(alpha: 0.22)),
       ),
       child: Padding(
@@ -297,6 +319,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     ColorScheme cs,
     BuildContext context,
     bool animsEnabled,
+    double cardRadius,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -322,7 +345,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
               color: isSelected
                   ? cs.primaryContainer.withValues(alpha: 0.5)
                   : cs.surfaceContainerHighest.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(cardRadius),
               border: Border.all(
                 color: isSelected
                     ? cs.primary
@@ -363,12 +386,15 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
               value: value,
               groupValue: _selectedProvider,
               onChanged: (val) {
-                if (val != null) setState(() => _selectedProvider = val);
+                if (val != null) {
+                  AppHaptics.selectionClick();
+                  setState(() => _selectedProvider = val);
+                }
               },
               controlAffinity: ListTileControlAffinity.trailing,
               activeColor: cs.primary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(cardRadius),
               ),
             ),
           );
@@ -377,7 +403,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildComponentsSection(ColorScheme cs) {
+  Widget _buildComponentsSection(ColorScheme cs, double cardRadius) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -399,6 +425,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           tr('gmsCoreDescription'),
           _installGmsCore,
           (v) => setState(() => _installGmsCore = v!),
+          cardRadius,
         ),
         _buildComponentTile(
           cs,
@@ -406,6 +433,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           tr('gsfProxyDescription'),
           _installGsfProxy,
           (v) => setState(() => _installGsfProxy = v!),
+          cardRadius,
         ),
         _buildComponentTile(
           cs,
@@ -413,6 +441,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           tr('fakeStoreDescription'),
           _installFakeStore,
           (v) => setState(() => _installFakeStore = v!),
+          cardRadius,
         ),
       ],
     );
@@ -424,20 +453,28 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     String subtitle,
     bool value,
     ValueChanged<bool?> onChanged,
+    double cardRadius,
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(cardRadius),
       ),
       child: CheckboxListTile(
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
         value: value,
-        onChanged: onChanged,
+        onChanged: (v) {
+          if (v != null) {
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+            onChanged(v);
+          }
+        },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+        ),
         checkboxShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),
         ),
@@ -445,7 +482,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildOptionsSection(ColorScheme cs) {
+  Widget _buildOptionsSection(ColorScheme cs, double cardRadius) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -464,9 +501,9 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         Container(
           decoration: BoxDecoration(
             color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(cardRadius),
           ),
-          child: SwitchListTile(
+          child: SwitchListTile.adaptive(
             title: Text(
               tr('officialMicroGRoot'),
               style: const TextStyle(fontWeight: FontWeight.bold),

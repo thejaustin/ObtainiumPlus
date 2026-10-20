@@ -21,6 +21,8 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 
 class OnboardingPage extends StatefulWidget {
   final VoidCallback onDone;
@@ -356,7 +358,10 @@ class _OnboardingPageState extends State<OnboardingPage>
         ),
       ),
       value: value,
-      onChanged: onChanged,
+      onChanged: (v) {
+        v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+        onChanged(v);
+      },
       dense: true,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
@@ -814,7 +819,10 @@ class _OnboardingPageState extends State<OnboardingPage>
                       ),
                     ),
                     value: settings.updateInterval > 0,
-                    onChanged: (val) => settings.updateInterval = val ? 360 : 0,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      settings.updateInterval = val ? 360 : 0;
+                    },
                     dense: true,
                   ),
                   if (settings.updateInterval > 0) ...[
@@ -1022,6 +1030,7 @@ class _OnboardingPageState extends State<OnboardingPage>
         ),
       ],
 
+      onChange: (index) => AppHaptics.selectionClick(),
       onDone: _finishOnboarding,
       onSkip: _finishOnboarding,
       showSkipButton: true,
@@ -1029,9 +1038,27 @@ class _OnboardingPageState extends State<OnboardingPage>
       nextFlex: 0,
       showBackButton: false,
       back: const Icon(Icons.arrow_back),
-      skip: const Text('Skip', style: TextStyle(fontWeight: FontWeight.w600)),
-      next: const Icon(Icons.arrow_forward),
-      done: const Text('Done', style: TextStyle(fontWeight: FontWeight.w600)),
+      skip: ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.92,
+        child: const Text(
+          'Skip',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
+      next: ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.90,
+        child: const Icon(Icons.arrow_forward),
+      ),
+      done: ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.92,
+        child: const Text(
+          'Done',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       curve: Curves.fastLinearToSlowEaseIn,
       controlsMargin: const EdgeInsets.all(16),
       controlsPadding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),

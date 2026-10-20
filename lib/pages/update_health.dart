@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/app_list_tile.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/models/app.dart';
@@ -10,6 +11,8 @@ import 'package:obtainium/pages/app_additional_options.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/theme.dart';
+import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/update_health.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +31,15 @@ class UpdateHealthPage extends StatelessWidget {
           ..sort(_byName);
     final ignored = apps.where(isUpdateHealthIgnored).toList()..sort(_byName);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
+    final contentPadding = EdgeInsets.symmetric(
+      horizontal: adaptiveMargin,
+      vertical: 8.0,
+    );
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
@@ -35,7 +47,7 @@ class UpdateHealthPage extends StatelessWidget {
         slivers: [
           CustomAppBar(title: tr('updateHealth')),
           SliverPadding(
-            padding: AppPaddings.page,
+            padding: contentPadding,
             sliver: SliverToBoxAdapter(
               child: TvInitialFocus(
                 child: _buildDetectionSettings(settingsProvider),
@@ -44,7 +56,7 @@ class UpdateHealthPage extends StatelessWidget {
           ),
           if (flagged.isEmpty && ignored.isEmpty)
             SliverPadding(
-              padding: AppPaddings.page,
+              padding: contentPadding,
               sliver: SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(top: AppSpacings.sectionGap),
@@ -54,30 +66,36 @@ class UpdateHealthPage extends StatelessWidget {
             )
           else ...[
             if (flagged.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: AppSpacings.sectionGap),
-                  child: _buildAppSection(
-                    context,
-                    appsProvider,
-                    settingsProvider,
-                    title: tr('updateHealthDetectedApps'),
-                    apps: flagged,
-                    ignoredSection: false,
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
+                sliver: SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppSpacings.sectionGap),
+                    child: _buildAppSection(
+                      context,
+                      appsProvider,
+                      settingsProvider,
+                      title: tr('updateHealthDetectedApps'),
+                      apps: flagged,
+                      ignoredSection: false,
+                    ),
                   ),
                 ),
               ),
             if (ignored.isNotEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: AppSpacings.sectionGap),
-                  child: _buildAppSection(
-                    context,
-                    appsProvider,
-                    settingsProvider,
-                    title: tr('updateHealthIgnoredApps'),
-                    apps: ignored,
-                    ignoredSection: true,
+              SliverPadding(
+                padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
+                sliver: SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: AppSpacings.sectionGap),
+                    child: _buildAppSection(
+                      context,
+                      appsProvider,
+                      settingsProvider,
+                      title: tr('updateHealthIgnoredApps'),
+                      apps: ignored,
+                      ignoredSection: true,
+                    ),
                   ),
                 ),
               ),
@@ -215,54 +233,64 @@ class UpdateHealthPage extends StatelessWidget {
     );
     final reasons = evaluateUpdateHealthReasons(app, config);
     final metrics = AppTileMetrics(settingsProvider.appListDensity);
-    return AppListRowCard(
-      child: ListTile(
-        visualDensity: metrics.visualDensity,
-        minVerticalPadding: metrics.minVerticalPadding,
-        dense: metrics.isDense,
-        leading: metrics.isDense
-            ? null
-            : AppIconWidget(
-                appId: app.id,
-                installed: app.installedVersion != null,
-                appsProvider: appsProvider,
-                size: metrics.iconSize,
+    return ScaleTouchWrapper(
+      hapticOnPressDown: true,
+      scaleDownFactor: 0.98,
+      child: AppListRowCard(
+        child: ListTile(
+          visualDensity: metrics.visualDensity,
+          minVerticalPadding: metrics.minVerticalPadding,
+          dense: metrics.isDense,
+          leading: metrics.isDense
+              ? null
+              : AppIconWidget(
+                  appId: app.id,
+                  installed: app.installedVersion != null,
+                  appsProvider: appsProvider,
+                  size: metrics.iconSize,
+                ),
+          title: Text(
+            app.finalName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Text(
+            reasons
+                .map((r) => updateHealthReasonLabel(r, app, config))
+                .join('\n'),
+          ),
+          isThreeLine: reasons.length > 1,
+          trailing: PopupMenuButton<_IgnoreAction>(
+            tooltip: tr('more'),
+            onSelected: (action) {
+              AppHaptics.selectionClick();
+              _ignoreApp(
+                appsProvider,
+                app,
+                action == _IgnoreAction.permanently,
+              );
+            },
+            itemBuilder: (ctx) => [
+              PopupMenuItem(
+                value: _IgnoreAction.currentVersion,
+                child: Text(tr('ignoreForThisVersion')),
               ),
-        title: Text(
-          app.finalName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          reasons
-              .map((r) => updateHealthReasonLabel(r, app, config))
-              .join('\n'),
-        ),
-        isThreeLine: reasons.length > 1,
-        trailing: PopupMenuButton<_IgnoreAction>(
-          tooltip: tr('more'),
-          onSelected: (action) => _ignoreApp(
-            appsProvider,
-            app,
-            action == _IgnoreAction.permanently,
+              PopupMenuItem(
+                value: _IgnoreAction.permanently,
+                child: Text(tr('ignorePermanently')),
+              ),
+            ],
           ),
-          itemBuilder: (ctx) => [
-            PopupMenuItem(
-              value: _IgnoreAction.currentVersion,
-              child: Text(tr('ignoreForThisVersion')),
-            ),
-            PopupMenuItem(
-              value: _IgnoreAction.permanently,
-              child: Text(tr('ignorePermanently')),
-            ),
-          ],
-        ),
-        onTap: () => unawaited(
-          showAppAdditionalOptions(
-            context,
-            app.id,
-            scrollToSection: updateHealthSectionId,
-          ),
+          onTap: () {
+            AppHaptics.selectionClick();
+            unawaited(
+              showAppAdditionalOptions(
+                context,
+                app.id,
+                scrollToSection: updateHealthSectionId,
+              ),
+            );
+          },
         ),
       ),
     );
@@ -275,45 +303,59 @@ class UpdateHealthPage extends StatelessWidget {
     App app,
   ) {
     final metrics = AppTileMetrics(settingsProvider.appListDensity);
-    return AppListRowCard(
-      child: ListTile(
-        visualDensity: metrics.visualDensity,
-        minVerticalPadding: metrics.minVerticalPadding,
-        dense: metrics.isDense,
-        leading: metrics.isDense
-            ? null
-            : AppIconWidget(
-                appId: app.id,
-                installed: app.installedVersion != null,
-                appsProvider: appsProvider,
-                size: metrics.iconSize,
-              ),
-        title: Text(
-          app.finalName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        subtitle: Text(
-          app.updateHealthEnabled
-              ? tr('updateHealthIgnoredForVersion')
-              : tr('updateHealthIgnoredPermanently'),
-        ),
-        trailing: IconButton(
-          tooltip: tr('restore'),
-          icon: const Icon(Icons.settings_backup_restore),
-          onPressed: () => appsProvider.saveApps([
-            app.copyWith(
-              updateHealthEnabled: true,
-              updateHealthDismissedVersion: null,
-            ),
-          ]),
-        ),
-        onTap: () => unawaited(
-          showAppAdditionalOptions(
-            context,
-            app.id,
-            scrollToSection: updateHealthSectionId,
+    return ScaleTouchWrapper(
+      hapticOnPressDown: true,
+      scaleDownFactor: 0.98,
+      child: AppListRowCard(
+        child: ListTile(
+          visualDensity: metrics.visualDensity,
+          minVerticalPadding: metrics.minVerticalPadding,
+          dense: metrics.isDense,
+          leading: metrics.isDense
+              ? null
+              : AppIconWidget(
+                  appId: app.id,
+                  installed: app.installedVersion != null,
+                  appsProvider: appsProvider,
+                  size: metrics.iconSize,
+                ),
+          title: Text(
+            app.finalName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+          subtitle: Text(
+            app.updateHealthEnabled
+                ? tr('updateHealthIgnoredForVersion')
+                : tr('updateHealthIgnoredPermanently'),
+          ),
+          trailing: ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              tooltip: tr('restore'),
+              icon: const Icon(Icons.settings_backup_restore),
+              onPressed: () {
+                AppHaptics.selectionClick();
+                appsProvider.saveApps([
+                  app.copyWith(
+                    updateHealthEnabled: true,
+                    updateHealthDismissedVersion: null,
+                  ),
+                ]);
+              },
+            ),
+          ),
+          onTap: () {
+            AppHaptics.selectionClick();
+            unawaited(
+              showAppAdditionalOptions(
+                context,
+                app.id,
+                scrollToSection: updateHealthSectionId,
+              ),
+            );
+          },
         ),
       ),
     );

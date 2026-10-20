@@ -11,6 +11,7 @@ import 'package:obtainium/providers/settings_provider.dart'
     hide lowerCaseUnlessLang;
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 /// A small curated palette of pleasant category colours for quick picking.
@@ -64,9 +65,14 @@ Future<CategoryEditResult?> showCategoryEditor(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (ctx) => _CategoryEditorSheet(
-      existingName: existingName,
-      initialColor: initialColor,
+    builder: (ctx) => Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 640),
+        child: _CategoryEditorSheet(
+          existingName: existingName,
+          initialColor: initialColor,
+        ),
+      ),
     ),
   );
 }
@@ -224,7 +230,10 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
         child: TvFocusRing(
           borderRadius: 24,
           child: InkWell(
-            onTap: onTap,
+            onTap: () {
+              AppHaptics.selectionClick();
+              onTap();
+            },
             customBorder: const CircleBorder(),
             child: Container(
               width: 40,

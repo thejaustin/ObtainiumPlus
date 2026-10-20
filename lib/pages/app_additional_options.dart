@@ -239,6 +239,11 @@ class _AdditionalOptionsPageState extends State<_AdditionalOptionsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final double adaptiveMargin = screenWidth > 840
+        ? (screenWidth - 840) / 2
+        : 16.0;
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       body: CustomScrollView(
@@ -250,9 +255,9 @@ class _AdditionalOptionsPageState extends State<_AdditionalOptionsPage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.fromLTRB(
-                16,
+                adaptiveMargin,
                 0,
-                16,
+                adaptiveMargin,
                 MediaQuery.of(context).padding.bottom + 24,
               ),
               child: TvInitialFocus(

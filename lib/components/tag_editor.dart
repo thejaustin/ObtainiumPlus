@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -246,6 +247,7 @@ Future<List<String>?> showTagEditor({
                                       label: Text(tag),
                                       selected: isSelected,
                                       onSelected: (selected) {
+                                        AppHaptics.selectionClick();
                                         setSheetState(() {
                                           if (selected) {
                                             selectedTags.add(tag);
@@ -280,6 +282,7 @@ Future<List<String>?> showTagEditor({
                                         size: 18,
                                       ),
                                       onDeleted: () {
+                                        AppHaptics.lightImpact();
                                         setSheetState(() {
                                           selectedTags.remove(tag);
                                         });
@@ -367,14 +370,25 @@ Widget _buildActions(BuildContext context, List<String> selectedTags) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(tr('cancel')),
+          ),
         ),
         const SizedBox(width: 8),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, selectedTags),
-          child: Text(tr('save')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              Navigator.pop(context, selectedTags);
+            },
+            child: Text(tr('save')),
+          ),
         ),
       ],
     ),

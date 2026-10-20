@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 
 /// Asks for a backup password. With [confirm], the password is entered twice
 /// (used when turning encryption on). Returns null when cancelled.
@@ -84,11 +86,25 @@ class _BackupPasswordDialogState extends State<_BackupPasswordDialog> {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(tr('cancel')),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(tr('cancel')),
+          ),
         ),
-        FilledButton(onPressed: _submit, child: Text(tr('ok'))),
+        ScaleTouchWrapper(
+          hapticOnPressDown: true,
+          scaleDownFactor: 0.94,
+          child: FilledButton(
+            onPressed: () {
+              AppHaptics.selectionClick();
+              _submit();
+            },
+            child: Text(tr('ok')),
+          ),
+        ),
       ],
     );
   }
