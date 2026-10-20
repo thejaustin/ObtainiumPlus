@@ -354,6 +354,33 @@ class _AppGridTileState extends State<AppGridTile>
                           ),
                         ),
 
+                      // 3.5 Smart Launcher 6-inspired ambient radial icon halo (M3E)
+                      if (plusSettings.plusEnableMaterialExpressive)
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: RadialGradient(
+                                  center: isHorizontal
+                                      ? const Alignment(-0.65, 0.0)
+                                      : const Alignment(0.0, -0.35),
+                                  radius: isHorizontal ? 0.65 : 0.72,
+                                  colors: [
+                                    (resolvedCategoryColor ??
+                                            (widget.hasUpdate
+                                                ? colorScheme.primary
+                                                : colorScheme.primary))
+                                        .withValues(
+                                          alpha: isDark ? 0.14 : 0.09,
+                                        ),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+
                       // 4. Category Accent Ribbon (M3E)
                       if (plusSettings.plusCategoryAccentRibbon &&
                           resolvedCategoryColor != null)

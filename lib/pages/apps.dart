@@ -3,6 +3,8 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/sideloading_notice.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
+import 'package:obtainium/components/apps/category_filter_bar.dart';
+import 'package:obtainium/components/apps/niagara_alphabet_scrubber.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/pages/add_app.dart';
@@ -2019,222 +2021,251 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       },
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
-        body: RefreshIndicator(
-          key: _refreshIndicatorKey,
-          onRefresh: refresh,
-          child: Scrollbar(
-            interactive: true,
-            controller: scrollController,
-            child: CustomScrollView(
-              key: const PageStorageKey<String>('apps_custom_scroll_view'),
-              physics: plusSettings.scrollPhysics,
-              controller: scrollController,
-              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-              slivers: <Widget>[
-                CustomAppBar(
-                  title: tr('appsString'),
-                  subtitle: plusSettings.plusHeaderContextSubtitle
-                      ? '${plural('apps', listedApps.length)}' +
-                            (existingUpdates.isNotEmpty
-                                ? ' · ${plural('updatesCount', existingUpdates.length)}'
-                                : '')
-                      : null,
-                  forceOneHanded:
-                      settingsProvider.getAppBarStyleForPage('apps') ==
-                          AppBarStyle.large
-                      ? true
-                      : null,
+        body: Stack(
+          children: [
+            RefreshIndicator(
+              key: _refreshIndicatorKey,
+              onRefresh: refresh,
+              child: Scrollbar(
+                interactive: true,
+                controller: scrollController,
+                child: CustomScrollView(
+                  key: const PageStorageKey<String>('apps_custom_scroll_view'),
+                  physics: plusSettings.scrollPhysics,
+                  controller: scrollController,
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  slivers: <Widget>[
+                    CustomAppBar(
+                      title: tr('appsString'),
+                      subtitle: plusSettings.plusHeaderContextSubtitle
+                          ? '${plural('apps', listedApps.length)}' +
+                                (existingUpdates.isNotEmpty
+                                    ? ' · ${plural('updatesCount', existingUpdates.length)}'
+                                    : '')
+                          : null,
+                      forceOneHanded:
+                          settingsProvider.getAppBarStyleForPage('apps') ==
+                              AppBarStyle.large
+                          ? true
+                          : null,
 
-                  actions: [
-                    if (plusSettings.plusShowAppBarSearch &&
-                        !plusSettings.plusEnableHomeDashboard)
-                      ScaleTouchWrapper(
-                        hapticOnPressDown: true,
-                        scaleDownFactor: 0.88,
-                        child: IconButton(
-                          icon: const Icon(Icons.search_rounded),
-                          tooltip: tr('search'),
-                          onPressed: () {
-                            AppHaptics.selectionClick();
-                            CommandCenter.show(context);
-                          },
-                        ),
-                      ),
-                    if (!plusSettings.plusEnableFAB)
-                      // A single InkWell handles tap+long-press on
-                      // one recognizer — nesting IconButton's own
-                      // tap recognizer inside an outer
-                      // GestureDetector(onLongPress:) put two
-                      // recognizers in the same arena and could
-                      // delay/suppress the plain tap.
-                      Tooltip(
-                        message: tr('moreAddOptionsHint'),
-                        child: InkResponse(
-                          radius: 24,
-                          onTap: () {
-                            AppHaptics.selectionClick();
-                            CommandCenter.show(context);
-                          },
-                          onLongPress: () {
-                            AppHaptics.heavyImpact();
-                            AppActionsFAB.showAddAppMenu(context);
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Icon(Icons.add_rounded),
+                      actions: [
+                        if (plusSettings.plusShowAppBarSearch &&
+                            !plusSettings.plusEnableHomeDashboard)
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              icon: const Icon(Icons.search_rounded),
+                              tooltip: tr('search'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                CommandCenter.show(context);
+                              },
+                            ),
+                          ),
+                        if (!plusSettings.plusEnableFAB)
+                          // A single InkWell handles tap+long-press on
+                          // one recognizer — nesting IconButton's own
+                          // tap recognizer inside an outer
+                          // GestureDetector(onLongPress:) put two
+                          // recognizers in the same arena and could
+                          // delay/suppress the plain tap.
+                          Tooltip(
+                            message: tr('moreAddOptionsHint'),
+                            child: InkResponse(
+                              radius: 24,
+                              onTap: () {
+                                AppHaptics.selectionClick();
+                                CommandCenter.show(context);
+                              },
+                              onLongPress: () {
+                                AppHaptics.heavyImpact();
+                                AppActionsFAB.showAddAppMenu(context);
+                              },
+                              child: const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: Icon(Icons.add_rounded),
+                              ),
+                            ),
+                          ),
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.88,
+                          child: IconButton(
+                            icon: Icon(
+                              viewSettings.globalViewMode == ViewMode.grid
+                                  ? Icons.view_list_rounded
+                                  : Icons.grid_view_rounded,
+                            ),
+                            tooltip:
+                                viewSettings.globalViewMode == ViewMode.grid
+                                ? tr('listView')
+                                : tr('gridView'),
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              setState(() {
+                                viewSettings.globalViewMode =
+                                    viewSettings.globalViewMode == ViewMode.grid
+                                    ? ViewMode.list
+                                    : ViewMode.grid;
+                              });
+                            },
                           ),
                         ),
-                      ),
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.88,
-                      child: IconButton(
-                        icon: Icon(
-                          viewSettings.globalViewMode == ViewMode.grid
-                              ? Icons.view_list_rounded
-                              : Icons.grid_view_rounded,
+                        ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.88,
+                          child: IconButton(
+                            icon: Icon(
+                              filter.isIdenticalTo(
+                                    neutralFilter,
+                                    settingsProvider,
+                                  )
+                                  ? Icons.filter_list_rounded
+                                  : Icons.filter_list_off_rounded,
+                              color:
+                                  filter.isIdenticalTo(
+                                    neutralFilter,
+                                    settingsProvider,
+                                  )
+                                  ? null
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                            tooltip:
+                                filter.isIdenticalTo(
+                                  neutralFilter,
+                                  settingsProvider,
+                                )
+                                ? tr('filterApps')
+                                : '${tr('filter')} - ${tr('remove')}',
+                            onPressed: () {
+                              AppHaptics.selectionClick();
+                              if (filter.isIdenticalTo(
+                                neutralFilter,
+                                settingsProvider,
+                              )) {
+                                showFilterDialog();
+                              } else {
+                                setState(() {
+                                  filter = AppsFilter();
+                                });
+                              }
+                            },
+                          ),
                         ),
-                        tooltip: viewSettings.globalViewMode == ViewMode.grid
-                            ? tr('listView')
-                            : tr('gridView'),
-                        onPressed: () {
-                          AppHaptics.selectionClick();
+                        if (!hasExternalSettingsEntry)
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.88,
+                            child: IconButton(
+                              icon: const Icon(Icons.settings_rounded),
+                              tooltip: tr('settings'),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                pushRoute(context, const SettingsPage());
+                              },
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SliverToBoxAdapter(child: SideloadingNotice()),
+                    if (plusSettings.plusEnableHomeDashboard)
+                      SliverToBoxAdapter(
+                        child: AppDashboard(
+                          currentFilterMode: filter.statusFilter.isEmpty
+                              ? 'all'
+                              : filter.statusFilter.first,
+                          onFilterChanged: (newFilter) {
+                            setState(() {
+                              if (newFilter == 'all') {
+                                filter.statusFilter = {};
+                              } else {
+                                filter.statusFilter = {newFilter};
+                              }
+                            });
+                          },
+                          onSearchQuery: (query) {
+                            setState(() {
+                              filter.nameFilter = query;
+                              if (query.isEmpty) _clearDiscoverResults();
+                            });
+                          },
+                          onUrlInput: (url) {
+                            context
+                                .read<AppsProvider>()
+                                .addAppsByURL([url])
+                                .then((errors) {
+                                  if (!context.mounted) return;
+                                  if (errors.isNotEmpty) {
+                                    showError(errors[0][1], context);
+                                  } else {
+                                    showMessage(tr('appAdded'), context);
+                                  }
+                                })
+                                .catchError((Object e) {
+                                  if (context.mounted) showError(e, context);
+                                });
+                          },
+                          onDiscoverSearch: _runDiscoverSearch,
+                          onCheckUpdates: refresh,
+                        ),
+                      ),
+                    const SliverToBoxAdapter(child: ActiveOperationsBanner()),
+                    if (viewSettings.displayShowFilterChips &&
+                        !viewSettings.groupByCategory)
+                      CategoryFilterBar(
+                        selectedCategories: filter.categoryFilter,
+                        onCategoriesChanged: (newCats) {
                           setState(() {
-                            viewSettings.globalViewMode =
-                                viewSettings.globalViewMode == ViewMode.grid
-                                ? ViewMode.list
-                                : ViewMode.grid;
+                            filter.categoryFilter = newCats;
                           });
                         },
                       ),
-                    ),
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.88,
-                      child: IconButton(
-                        icon: Icon(
-                          filter.isIdenticalTo(neutralFilter, settingsProvider)
-                              ? Icons.filter_list_rounded
-                              : Icons.filter_list_off_rounded,
-                          color:
-                              filter.isIdenticalTo(
-                                neutralFilter,
-                                settingsProvider,
-                              )
-                              ? null
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                        tooltip:
-                            filter.isIdenticalTo(
-                              neutralFilter,
-                              settingsProvider,
-                            )
-                            ? tr('filterApps')
-                            : '${tr('filter')} - ${tr('remove')}',
-                        onPressed: () {
+                    if (plusSettings.plusEnableTags &&
+                        viewSettings.displayShowFilterChips)
+                      TagFilterBar(
+                        activeTag: activeTag,
+                        onTagSelected: (tag) {
                           AppHaptics.selectionClick();
-                          if (filter.isIdenticalTo(
-                            neutralFilter,
-                            settingsProvider,
-                          )) {
-                            showFilterDialog();
-                          } else {
-                            setState(() {
-                              filter = AppsFilter();
-                            });
-                          }
+                          setState(() {
+                            activeTag = tag;
+                          });
                         },
                       ),
-                    ),
-                    if (!hasExternalSettingsEntry)
-                      ScaleTouchWrapper(
-                        hapticOnPressDown: true,
-                        scaleDownFactor: 0.88,
-                        child: IconButton(
-                          icon: const Icon(Icons.settings_rounded),
-                          tooltip: tr('settings'),
-                          onPressed: () {
-                            AppHaptics.selectionClick();
-                            pushRoute(context, const SettingsPage());
-                          },
-                        ),
+                    ...getLoadingWidgets(),
+                    if (_activeDiscoverQuery != null)
+                      ..._buildDiscoverResultsSlivers(context, plusSettings)
+                    else
+                      getDisplayedList(),
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height:
+                            (plusSettings.plusEnableBottomNavBar &&
+                                !plusSettings.plusTopUILayout &&
+                                !settingsProvider.isTV)
+                            ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0)
+                            : (plusSettings.plusEnableFAB &&
+                                      !settingsProvider.isTV
+                                  ? 80.0
+                                  : 24.0),
                       ),
+                    ),
                   ],
                 ),
-                const SliverToBoxAdapter(child: SideloadingNotice()),
-                if (plusSettings.plusEnableHomeDashboard)
-                  SliverToBoxAdapter(
-                    child: AppDashboard(
-                      currentFilterMode: filter.statusFilter.isEmpty
-                          ? 'all'
-                          : filter.statusFilter.first,
-                      onFilterChanged: (newFilter) {
-                        setState(() {
-                          if (newFilter == 'all') {
-                            filter.statusFilter = {};
-                          } else {
-                            filter.statusFilter = {newFilter};
-                          }
-                        });
-                      },
-                      onSearchQuery: (query) {
-                        setState(() {
-                          filter.nameFilter = query;
-                          if (query.isEmpty) _clearDiscoverResults();
-                        });
-                      },
-                      onUrlInput: (url) {
-                        context
-                            .read<AppsProvider>()
-                            .addAppsByURL([url])
-                            .then((errors) {
-                              if (!context.mounted) return;
-                              if (errors.isNotEmpty) {
-                                showError(errors[0][1], context);
-                              } else {
-                                showMessage(tr('appAdded'), context);
-                              }
-                            })
-                            .catchError((Object e) {
-                              if (context.mounted) showError(e, context);
-                            });
-                      },
-                      onDiscoverSearch: _runDiscoverSearch,
-                      onCheckUpdates: refresh,
-                    ),
-                  ),
-                const SliverToBoxAdapter(child: ActiveOperationsBanner()),
-                if (plusSettings.plusEnableTags &&
-                    viewSettings.displayShowFilterChips)
-                  TagFilterBar(
-                    activeTag: activeTag,
-                    onTagSelected: (tag) {
-                      AppHaptics.selectionClick();
-                      setState(() {
-                        activeTag = tag;
-                      });
-                    },
-                  ),
-                ...getLoadingWidgets(),
-                if (_activeDiscoverQuery != null)
-                  ..._buildDiscoverResultsSlivers(context, plusSettings)
-                else
-                  getDisplayedList(),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    height:
-                        (plusSettings.plusEnableBottomNavBar &&
-                            !plusSettings.plusTopUILayout &&
-                            !settingsProvider.isTV)
-                        ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0)
-                        : (plusSettings.plusEnableFAB && !settingsProvider.isTV
-                              ? 80.0
-                              : 24.0),
-                  ),
-                ),
-              ],
+              ),
             ),
-          ),
+            if (!settingsProvider.isTV &&
+                _activeDiscoverQuery == null &&
+                !viewSettings.groupByCategory)
+              Positioned.fill(
+                child: NiagaraAlphabetScrubber(
+                  apps: listedApps,
+                  scrollController: scrollController,
+                ),
+              ),
+          ],
         ),
         persistentFooterButtons:
             appsProvider.apps.isEmpty ||

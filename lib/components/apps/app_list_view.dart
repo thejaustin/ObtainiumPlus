@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/apps/app_list_tile.dart';
@@ -9,6 +10,7 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -145,6 +147,90 @@ class AppListView extends StatelessWidget {
         return false; // Don't dismiss the row
       }
 
+      String getActionLabel(AppSwipeAction action) {
+        switch (action) {
+          case AppSwipeAction.update:
+            return tr('update');
+          case AppSwipeAction.togglePin:
+            return app.app.pinned ? tr('unpin') : tr('pin');
+          case AppSwipeAction.share:
+            return tr('share');
+          case AppSwipeAction.launch:
+            return tr('open');
+          case AppSwipeAction.delete:
+            return tr('remove');
+          default:
+            return '';
+        }
+      }
+
+      Color getActionForegroundColor(AppSwipeAction action) {
+        switch (action) {
+          case AppSwipeAction.update:
+            return colorScheme.onPrimary;
+          case AppSwipeAction.togglePin:
+            return colorScheme.onTertiary;
+          case AppSwipeAction.share:
+            return colorScheme.onSecondary;
+          case AppSwipeAction.launch:
+            return colorScheme.onPrimaryContainer;
+          case AppSwipeAction.delete:
+            return colorScheme.onError;
+          default:
+            return colorScheme.onSurface;
+        }
+      }
+
+      Widget buildSwipePill(AppSwipeAction action, {required bool alignRight}) {
+        final fg = getActionForegroundColor(action);
+        final label = getActionLabel(action);
+        return Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: isCompact ? 4 : 8,
+            vertical: isCompact ? 2 : 6,
+          ),
+          child: Container(
+            decoration: ShapeDecoration(
+              color: getActionColor(action),
+              shape: CardMetrics.shape(
+                radius,
+                expressive: plusSettings.plusEnableMaterialExpressive,
+              ),
+            ),
+            alignment: alignRight
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (alignRight && label.isNotEmpty) ...[
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                getActionIcon(action),
+                if (!alignRight && label.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: fg,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      }
+
       final swipeEnabled =
           plusEnableSwipeActions &&
           behaviorSettings.enableSwipeGestures &&
@@ -160,35 +246,13 @@ class AppListView extends StatelessWidget {
                   : (behaviorSettings.swipeLeftAction == AppSwipeAction.none
                         ? DismissDirection.startToEnd
                         : DismissDirection.horizontal)),
-        background: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 4 : 8,
-            vertical: isCompact ? 2 : 6,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: getActionColor(behaviorSettings.swipeRightAction),
-              borderRadius: BorderRadius.circular(radius),
-            ),
-            alignment: Alignment.centerLeft,
-            padding: const EdgeInsets.only(left: 20.0),
-            child: getActionIcon(behaviorSettings.swipeRightAction),
-          ),
+        background: buildSwipePill(
+          behaviorSettings.swipeRightAction,
+          alignRight: false,
         ),
-        secondaryBackground: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 4 : 8,
-            vertical: isCompact ? 2 : 6,
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              color: getActionColor(behaviorSettings.swipeLeftAction),
-              borderRadius: BorderRadius.circular(radius),
-            ),
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20.0),
-            child: getActionIcon(behaviorSettings.swipeLeftAction),
-          ),
+        secondaryBackground: buildSwipePill(
+          behaviorSettings.swipeLeftAction,
+          alignRight: true,
         ),
         confirmDismiss: (direction) {
           if (direction == DismissDirection.startToEnd) {
@@ -244,6 +308,70 @@ class AppListView extends StatelessWidget {
       return child;
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
+
+    Widget buildSectionHeader({
+      required IconData icon,
+      required String title,
+      required int count,
+      IconData? trailingHintIcon,
+    }) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 6, 14, 4),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: ShapeDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.14),
+                shape: CardMetrics.shape(innerRadius * 0.75, expressive: isM3E),
+              ),
+              child: Icon(icon, size: 14, color: colorScheme.primary),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.65,
+                ),
+                borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+              ),
+              child: Text(
+                '$count',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            const Spacer(),
+            if (trailingHintIcon != null)
+              Icon(
+                trailingHintIcon,
+                size: 16,
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.45),
+              ),
+          ],
+        ),
+      );
+    }
+
     return SliverPadding(
       padding: EdgeInsets.symmetric(
         horizontal: horizontalPadding,
@@ -251,7 +379,17 @@ class AppListView extends StatelessWidget {
       ),
       sliver: SliverMainAxisGroup(
         slivers: [
-          if (pinnedApps.isNotEmpty)
+          if (pinnedApps.isNotEmpty) ...[
+            SliverToBoxAdapter(
+              child: buildSectionHeader(
+                icon: Icons.star_rounded,
+                title: tr('pin'),
+                count: pinnedApps.length,
+                trailingHintIcon: pinnedApps.length > 1
+                    ? Icons.drag_indicator_rounded
+                    : null,
+              ),
+            ),
             SliverReorderableList(
               itemCount: pinnedApps.length,
               itemBuilder: (context, index) =>
@@ -269,9 +407,17 @@ class AppListView extends StatelessWidget {
                     .toList();
               },
             ),
+          ],
           if (pinnedApps.isNotEmpty && unpinnedApps.isNotEmpty)
-            const SliverToBoxAdapter(
-              child: Divider(height: 32, indent: 16, endIndent: 16),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: buildSectionHeader(
+                  icon: Icons.apps_rounded,
+                  title: tr('appsString'),
+                  count: unpinnedApps.length,
+                ),
+              ),
             ),
           if (unpinnedApps.isNotEmpty)
             SliverList(
