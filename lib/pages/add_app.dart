@@ -1372,34 +1372,39 @@ class AddAppPageState extends State<AddAppPage> {
             ],
           ),
         SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                getUrlInputRow(),
-                const SizedBox(height: 16),
-                if (pickedSource != null) getHTMLSourceOverrideDropdown(),
-                _buildLiveResults(),
-                _buildAppPreview(),
-                if (shouldShowSearchBar()) getSearchBarRow(),
-                if (pickedSource != null)
-                  FutureBuilder(
-                    builder: (ctx, val) {
-                      return val.data != null && val.data!.isNotEmpty
-                          ? Text(
-                              val.data!,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            )
-                          : const SizedBox();
-                    },
-                    future: pickedSource?.getSourceNote(),
-                  ),
-                if (pickedSource != null) getAdditionalOptsCol(),
-                if (pickedSource == null && !showDiscover)
-                  getSourcesListWidget(),
-              ],
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 840),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    getUrlInputRow(),
+                    const SizedBox(height: 16),
+                    if (pickedSource != null) getHTMLSourceOverrideDropdown(),
+                    _buildLiveResults(),
+                    _buildAppPreview(),
+                    if (shouldShowSearchBar()) getSearchBarRow(),
+                    if (pickedSource != null)
+                      FutureBuilder(
+                        builder: (ctx, val) {
+                          return val.data != null && val.data!.isNotEmpty
+                              ? Text(
+                                  val.data!,
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                )
+                              : const SizedBox();
+                        },
+                        future: pickedSource?.getSourceNote(),
+                      ),
+                    if (pickedSource != null) getAdditionalOptsCol(),
+                    if (pickedSource == null && !showDiscover)
+                      getSourcesListWidget(),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

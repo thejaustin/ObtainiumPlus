@@ -128,10 +128,12 @@ class _AppGridTileState extends State<AppGridTile>
 
             final double availableWidth = constraints.maxWidth - 20;
 
-            // Adaptive icon sizing proportional to tile width
+            // Adaptive icon sizing proportional to tile width and height
+            final double maxIconFromHeight = (constraints.maxHeight * 0.42)
+                .clamp(28.0, 80.0);
             final double iconSize = isHorizontal
-                ? (constraints.maxHeight * 0.65).clamp(38.0, 80.0)
-                : (availableWidth * 0.50).clamp(42.0, 74.0);
+                ? (constraints.maxHeight * 0.65).clamp(36.0, 80.0)
+                : (availableWidth * 0.50).clamp(28.0, maxIconFromHeight);
 
             final plusSettings = context.watch<PlusSettingsProvider>();
             final viewSettings = context.watch<ViewSettingsProvider>();
@@ -500,36 +502,41 @@ class _AppGridTileState extends State<AppGridTile>
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: 2),
-            _buildIconStack(
-              iconSize,
-              iconBorderRadius,
-              badgeSize,
-              plusSettings,
-              cardColor,
-            ),
-            const SizedBox(height: 6),
-            // App name: up to 2 lines, centered with expressive typography
-            Text(
-              widget.appInMemory.name,
-              maxLines: 2,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12.5,
-                fontWeight: (widget.appInMemory.app.pinned || widget.hasUpdate)
-                    ? FontWeight.w700
-                    : FontWeight.w600,
-                letterSpacing: -0.2,
-                height: 1.25,
-                color: colorScheme.onSurface,
+        Flexible(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(height: 2),
+              _buildIconStack(
+                iconSize,
+                iconBorderRadius,
+                badgeSize,
+                plusSettings,
+                cardColor,
               ),
-            ),
-          ],
+              const SizedBox(height: 5),
+              // App name: up to 2 lines, centered with expressive typography
+              Flexible(
+                child: Text(
+                  widget.appInMemory.name,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    fontWeight:
+                        (widget.appInMemory.app.pinned || widget.hasUpdate)
+                        ? FontWeight.w700
+                        : FontWeight.w600,
+                    letterSpacing: -0.2,
+                    height: 1.25,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         Column(
           mainAxisSize: MainAxisSize.min,

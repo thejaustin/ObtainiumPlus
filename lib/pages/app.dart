@@ -2177,28 +2177,35 @@ class _AppPageState extends State<AppPage> {
 
       if (isFloating) {
         return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: ConditionalBlur(
-                enabled: enableGlass,
-                sigma: AppConstants.glassBlurSigma,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHigh.withValues(
-                      alpha: enableGlass ? 0.85 : 0.95,
-                    ),
-                    borderRadius: BorderRadius.circular(28),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-                    ),
-                    boxShadow: AppShadows.smooth(
-                      color: Colors.black,
-                      opacity: 0.12,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 840),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(28),
+                  child: ConditionalBlur(
+                    enabled: enableGlass,
+                    sigma: AppConstants.glassBlurSigma,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHigh.withValues(
+                          alpha: enableGlass ? 0.85 : 0.95,
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.35,
+                          ),
+                        ),
+                        boxShadow: AppShadows.smooth(
+                          color: Colors.black,
+                          opacity: 0.12,
+                        ),
+                      ),
+                      child: menuContent,
                     ),
                   ),
-                  child: menuContent,
                 ),
               ),
             ),
@@ -2233,7 +2240,12 @@ class _AppPageState extends State<AppPage> {
             0,
             MediaQuery.of(context).padding.bottom,
           ),
-          child: menuContent,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 840),
+              child: menuContent,
+            ),
+          ),
         ),
       );
     }
@@ -2266,7 +2278,12 @@ class _AppPageState extends State<AppPage> {
                   : plusSettings.scrollPhysics,
               slivers: [
                 SliverToBoxAdapter(
-                  child: Column(children: [getFullInfoColumn()]),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 840),
+                      child: Column(children: [getFullInfoColumn()]),
+                    ),
+                  ),
                 ),
                 const SliverPadding(padding: EdgeInsets.only(bottom: 88)),
               ],

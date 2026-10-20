@@ -395,8 +395,12 @@ class _AppListTileState extends State<AppListTile>
                   break;
                 case 'copyUrl':
                   Clipboard.setData(ClipboardData(text: appInMemory.app.url));
+                  AppHaptics.lightImpact();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(tr('copiedToClipboard'))),
+                    SnackBar(
+                      content: Text(tr('copiedToClipboard')),
+                      behavior: SnackBarBehavior.floating,
+                    ),
                   );
                   break;
                 case 'share':
@@ -812,7 +816,7 @@ class _AppListTileState extends State<AppListTile>
                                       ),
                                     ),
                                   if (viewSettings.displayShowAuthor)
-                                    Expanded(
+                                    Flexible(
                                       child: Text(
                                         appInMemory.author,
                                         maxLines: 1,
