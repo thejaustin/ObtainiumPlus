@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +71,48 @@ void main() {
       expect(provider.plusEnableEnhancedAnimations, false);
       expect(provider.plusEnableBouncyPhysics, false);
       expect(provider.plusGlobalCornerRadius, 16.0);
+    },
+  );
+
+  test(
+    'Launcher & App Grid style toggles and GridMetrics aspect ratio',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final provider = PlusSettingsProvider();
+      await provider.initializeSettings(prefs);
+
+      expect(provider.plusGridSquareTiles, true);
+      expect(provider.plusGridCardlessStyle, false);
+      expect(provider.plusGridAmbientIconHalo, true);
+      expect(provider.plusGridShowSourceBadge, true);
+
+      expect(
+        GridMetrics.childAspectRatio(
+          columnCount: 4,
+          hasExtraDetails: true,
+          squareTiles: provider.plusGridSquareTiles,
+        ),
+        1.0,
+      );
+
+      provider.plusGridSquareTiles = false;
+      provider.plusGridCardlessStyle = true;
+      provider.plusGridAmbientIconHalo = false;
+      provider.plusGridShowSourceBadge = false;
+
+      expect(provider.plusGridSquareTiles, false);
+      expect(provider.plusGridCardlessStyle, true);
+      expect(provider.plusGridAmbientIconHalo, false);
+      expect(provider.plusGridShowSourceBadge, false);
+      expect(
+        GridMetrics.childAspectRatio(
+          columnCount: 4,
+          hasExtraDetails: true,
+          squareTiles: provider.plusGridSquareTiles,
+        ),
+        lessThan(1.0),
+      );
     },
   );
 }

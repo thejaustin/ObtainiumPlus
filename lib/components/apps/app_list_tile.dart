@@ -207,6 +207,21 @@ class _AppListTileState extends State<AppListTile>
       return DateFormat('yyyy-MM-dd').format(date.toLocal());
     }
 
+    final Color? displayCategoryColor =
+        categoryColor ??
+        (appInMemory.app.categories.isNotEmpty &&
+                viewSettings.categoryIconPosition !=
+                    CategoryIconPosition.disabled
+            ? viewSettings.categories[appInMemory.app.categories.first] != null
+                  ? Color(
+                      viewSettings.categories[appInMemory
+                          .app
+                          .categories
+                          .first]!,
+                    )
+                  : null
+            : null);
+
     Widget getAppIcon() {
       final itemRadius = CardMetrics.inner(
         plusSettings.plusOverrideIndividualCornerRadius
@@ -298,6 +313,14 @@ class _AppListTileState extends State<AppListTile>
         ),
       );
 
+      final haloColor =
+          displayCategoryColor ?? Theme.of(context).colorScheme.primary;
+      final useExpressivePillAction =
+          plusSettings.plusUpdateExpressiveBadge &&
+          hasUpdate &&
+          !needsInstall &&
+          viewSettings.displayShowVersion;
+
       return SizedBox(
         width: 48,
         height: 48,
@@ -305,24 +328,50 @@ class _AppListTileState extends State<AppListTile>
           clipBehavior: Clip.none,
           alignment: Alignment.center,
           children: [
-            iconWidget,
-            Positioned(
-              right: -8,
-              bottom: -8,
-              child: AppIconActionBadge(
-                appInMemory: appInMemory,
-                hasUpdate: hasUpdate,
-                needsInstall: needsInstall,
-                isAmbiguous: isAmbiguous,
-                iconSize: 44,
-                onPressed: () {
-                  appsProvider.downloadAndInstallLatestApps([
-                    appInMemory.app.id,
-                  ], context);
-                },
-                onAmbiguous: showAmbiguousDialog,
+            if (plusSettings.plusGridAmbientIconHalo)
+              Positioned(
+                width: 60,
+                height: 60,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          haloColor.withValues(
+                            alpha:
+                                Theme.of(context).brightness == Brightness.dark
+                                ? 0.24
+                                : 0.16,
+                          ),
+                          haloColor.withValues(alpha: 0.0),
+                        ],
+                        stops: const [0.15, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
+            iconWidget,
+            if (!useExpressivePillAction ||
+                appInMemory.downloadProgress != null)
+              Positioned(
+                right: -8,
+                bottom: -8,
+                child: AppIconActionBadge(
+                  appInMemory: appInMemory,
+                  hasUpdate: hasUpdate,
+                  needsInstall: needsInstall,
+                  isAmbiguous: isAmbiguous,
+                  iconSize: 44,
+                  onPressed: () {
+                    appsProvider.downloadAndInstallLatestApps([
+                      appInMemory.app.id,
+                    ], context);
+                  },
+                  onAmbiguous: showAmbiguousDialog,
+                ),
+              ),
           ],
         ),
       );
@@ -364,21 +413,6 @@ class _AppListTileState extends State<AppListTile>
         child: Icon(iconData, size: 10, color: color),
       );
     }
-
-    final Color? displayCategoryColor =
-        categoryColor ??
-        (appInMemory.app.categories.isNotEmpty &&
-                viewSettings.categoryIconPosition !=
-                    CategoryIconPosition.disabled
-            ? viewSettings.categories[appInMemory.app.categories.first] != null
-                  ? Color(
-                      viewSettings.categories[appInMemory
-                          .app
-                          .categories
-                          .first]!,
-                    )
-                  : null
-            : null);
 
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
@@ -808,8 +842,10 @@ class _AppListTileState extends State<AppListTile>
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(width: 6),
-                                  getSourceBadge(),
+                                  if (plusSettings.plusGridShowSourceBadge) ...[
+                                    const SizedBox(width: 6),
+                                    getSourceBadge(),
+                                  ],
                                 ],
                               ),
                               subtitle: Builder(
@@ -899,6 +935,27 @@ class _AppListTileState extends State<AppListTile>
                                                                   .app
                                                                   .latestVersion
                                                             : '?',
+                                                        expressiveAction:
+                                                            plusSettings
+                                                                .plusUpdateExpressiveBadge &&
+                                                            !needsInstall,
+                                                        isAmbiguous:
+                                                            isAmbiguous,
+                                                        onTriggerUpdate: () {
+                                                          if (isAmbiguous) {
+                                                            showAmbiguousDialog();
+                                                          } else {
+                                                            appsProvider
+                                                                .downloadAndInstallLatestApps(
+                                                                  [
+                                                                    appInMemory
+                                                                        .app
+                                                                        .id,
+                                                                  ],
+                                                                  context,
+                                                                );
+                                                          }
+                                                        },
                                                       )
                                                     : Text(
                                                         getVersionText(),
@@ -1308,47 +1365,87 @@ class _AppListTileState extends State<AppListTile>
   Widget _buildVersionUpdatePill(
     BuildContext context,
     String inst,
-    String latest,
-  ) {
+    String latest, {
+    bool expressiveAction = false,
+    bool isAmbiguous = false,
+    VoidCallback? onTriggerUpdate,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-        decoration: BoxDecoration(
-          color: colorScheme.primary.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-          border: Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.30),
-            width: 0.6,
-          ),
+    final pill = Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: expressiveAction ? 9 : 7,
+        vertical: expressiveAction ? 3.5 : 2,
+      ),
+      decoration: BoxDecoration(
+        color: expressiveAction
+            ? colorScheme.primary
+            : colorScheme.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+        border: Border.all(
+          color: expressiveAction
+              ? colorScheme.primary
+              : colorScheme.primary.withValues(alpha: 0.30),
+          width: 0.6,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.arrow_upward_rounded,
-              size: 9,
-              color: colorScheme.primary,
-            ),
-            const SizedBox(width: 3),
-            Flexible(
-              child: Text(
-                '$inst → $latest',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 9.5,
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.primary,
-                  fontFamily: 'monospace',
-                  letterSpacing: 0.1,
-                ),
+        boxShadow: expressiveAction
+            ? AppShadows.smooth(
+                color: colorScheme.primary,
+                opacity: 0.25,
+                blurFactor: 0.5,
+              )
+            : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            expressiveAction
+                ? (isAmbiguous
+                      ? Icons.help_outline_rounded
+                      : Icons.download_rounded)
+                : Icons.arrow_upward_rounded,
+            size: expressiveAction ? 11 : 9,
+            color: expressiveAction
+                ? colorScheme.onPrimary
+                : colorScheme.primary,
+          ),
+          const SizedBox(width: 3),
+          Flexible(
+            child: Text(
+              '$inst → $latest',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: expressiveAction ? 10 : 9.5,
+                fontWeight: FontWeight.w700,
+                color: expressiveAction
+                    ? colorScheme.onPrimary
+                    : colorScheme.primary,
+                fontFamily: 'monospace',
+                letterSpacing: 0.1,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: expressiveAction && onTriggerUpdate != null
+          ? ScaleTouchWrapper(
+              scaleDownFactor: 0.92,
+              hapticOnPressDown: true,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  AppHaptics.mediumImpact();
+                  onTriggerUpdate();
+                },
+                child: pill,
+              ),
+            )
+          : pill,
     );
   }
 }

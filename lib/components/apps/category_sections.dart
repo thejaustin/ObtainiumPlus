@@ -167,37 +167,95 @@ class CategorySections extends StatelessWidget {
     final double aspectRatio = GridMetrics.childAspectRatio(
       columnCount: columnCount,
       hasExtraDetails: showDetails,
+      squareTiles: plusSettings.plusGridSquareTiles,
     );
 
     final colorScheme = Theme.of(context).colorScheme;
+    final accentColor = categoryColor ?? colorScheme.primary;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+
+    List<Uint8List?> categoryIcons = [];
+    if (settingsProvider.categoryIconPosition !=
+            CategoryIconPosition.disabled &&
+        settingsProvider.categoryIconCount > 0) {
+      categoryIcons = settingsProvider.categoryIconCount >= 20
+          ? appsInCategory.map((e) => e.icon).toList()
+          : appsInCategory
+                .take(settingsProvider.categoryIconCount)
+                .map((e) => e.icon)
+                .toList();
+    }
 
     return [
       SliverToBoxAdapter(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: const Alignment(-1, 0),
-              end: const Alignment(-0.97, 0),
-              colors: [
-                categoryColor ?? colorScheme.surface,
-                colorScheme.surface.withValues(alpha: 0.0),
-              ],
-              stops: const [0.99, 1],
-            ),
-          ),
-          child: Row(
-            children: [
-              Text(
-                (categoryName ?? tr('noCategory')).toUpperCase(),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: ShapeDecoration(
+              color: colorScheme.surfaceContainerLow.withValues(
+                alpha: plusSettings.plusEnableGlassmorphism ? 0.55 : 0.85,
+              ),
+              shape: CardMetrics.shape(
+                CardMetrics.inner(radius),
+                expressive: plusSettings.plusEnableMaterialExpressive,
+                side: BorderSide(
+                  color: accentColor.withValues(alpha: 0.22),
+                  width: 1.0,
                 ),
               ),
-              const Spacer(),
-              _buildCategoryStats(context, appsInCategory.length, updateCount),
-            ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: accentColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                if (settingsProvider.categoryIconPosition ==
+                        CategoryIconPosition.leading &&
+                    categoryIcons.isNotEmpty) ...[
+                  CategoryIconStack(
+                    icons: categoryIcons,
+                    maxIcons: settingsProvider.categoryIconCount,
+                  ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: Text(
+                    categoryName ?? tr('noCategory'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.2,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                if (settingsProvider.categoryIconPosition ==
+                        CategoryIconPosition.trailing &&
+                    categoryIcons.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  CategoryIconStack(
+                    icons: categoryIcons,
+                    maxIcons: settingsProvider.categoryIconCount,
+                  ),
+                ],
+                const SizedBox(width: 8),
+                _buildCategoryStats(
+                  context,
+                  appsInCategory.length,
+                  updateCount,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -338,9 +396,7 @@ class CategorySections extends StatelessWidget {
     final categoryColor = categoryColorInt != null
         ? getCachedCategoryColor(categoryColorInt)
         : null;
-    final transparent = Theme.of(
-      context,
-    ).colorScheme.surface.withValues(alpha: 0.0).value;
+    final accentColor = categoryColor ?? Theme.of(context).colorScheme.primary;
 
     List<Uint8List?> categoryIcons = [];
     if (settingsProvider.categoryIconPosition !=
@@ -356,6 +412,15 @@ class CategorySections extends StatelessWidget {
 
     Widget categoryTitle = Row(
       children: [
+        Container(
+          width: 4,
+          height: 20,
+          decoration: BoxDecoration(
+            color: accentColor,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 10),
         if (settingsProvider.categoryIconPosition ==
                 CategoryIconPosition.leading &&
             categoryIcons.isNotEmpty) ...[
@@ -482,15 +547,9 @@ class CategorySections extends StatelessWidget {
 
     return Container(
       key: ValueKey(categoryName ?? 'null_category'),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: const Alignment(-1, 0),
-          end: const Alignment(-0.97, 0),
-          colors: [categoryColor ?? Color(transparent), Color(transparent)],
-          stops: const [0.99, 1],
-        ),
-      ),
       child: ExpansionTile(
+        shape: const Border(),
+        collapsedShape: const Border(),
         key: PageStorageKey<String>(
           'category_tile:${categoryName ?? '__uncategorized__'}',
         ),
@@ -556,9 +615,12 @@ class CategorySections extends StatelessWidget {
                 vertical: isCompact ? 2 : 6,
               ),
               child: Container(
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: getActionColor(behaviorSettings.swipeRightAction),
-                  borderRadius: BorderRadius.circular(radius),
+                  shape: CardMetrics.shape(
+                    radius,
+                    expressive: plusSettings.plusEnableMaterialExpressive,
+                  ),
                 ),
                 alignment: Alignment.centerLeft,
                 padding: const EdgeInsets.only(left: 20.0),
@@ -571,9 +633,12 @@ class CategorySections extends StatelessWidget {
                 vertical: isCompact ? 2 : 6,
               ),
               child: Container(
-                decoration: BoxDecoration(
+                decoration: ShapeDecoration(
                   color: getActionColor(behaviorSettings.swipeLeftAction),
-                  borderRadius: BorderRadius.circular(radius),
+                  shape: CardMetrics.shape(
+                    radius,
+                    expressive: plusSettings.plusEnableMaterialExpressive,
+                  ),
                 ),
                 alignment: Alignment.centerRight,
                 padding: const EdgeInsets.only(right: 20.0),

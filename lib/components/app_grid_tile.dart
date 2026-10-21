@@ -180,9 +180,16 @@ class _AppGridTileState extends State<AppGridTile>
                       : AppConstants.standardStandard)
                 : Curves.easeInOut;
 
+            final bool isCardless =
+                plusSettings.plusGridCardlessStyle &&
+                !widget.isSelected &&
+                !widget.hasUpdate;
+
             // Surface color tokens aligned with Material 3 Expressive
             Color cardColor;
-            if (widget.isSelected) {
+            if (isCardless) {
+              cardColor = Colors.transparent;
+            } else if (widget.isSelected) {
               cardColor = colorScheme.primaryContainer.withValues(alpha: 0.85);
             } else if (plusSettings.plusEnableGlassmorphism) {
               cardColor = colorScheme.surface.withValues(
@@ -200,7 +207,9 @@ class _AppGridTileState extends State<AppGridTile>
 
             // Border styling with M3E stroke hierarchy
             BorderSide cardBorderSide;
-            if (widget.isSelected) {
+            if (isCardless) {
+              cardBorderSide = BorderSide.none;
+            } else if (widget.isSelected) {
               cardBorderSide = BorderSide(
                 color: colorScheme.primary,
                 width: 2.0,
@@ -237,7 +246,10 @@ class _AppGridTileState extends State<AppGridTile>
             }
 
             List<BoxShadow>? cardShadow;
-            if (widget.isSelected && plusSettings.plusEnableGlassmorphism) {
+            if (isCardless) {
+              cardShadow = null;
+            } else if (widget.isSelected &&
+                plusSettings.plusEnableGlassmorphism) {
               // Glow only when glass is on — border+background already signal
               // selection when glass is off, and glow without clipping bleeds.
               cardShadow = AppShadows.glow(
@@ -295,7 +307,7 @@ class _AppGridTileState extends State<AppGridTile>
                       // 1. Backdrop blur (clipped inside card)
                       // Cards use glassBlurSigmaSoft (12) not glassBlurSigma (24) —
                       // strong blur on 20+ grid cards causes GPU layer overload.
-                      if (plusSettings.plusEnableGlassmorphism)
+                      if (plusSettings.plusEnableGlassmorphism && !isCardless)
                         Positioned.fill(
                           child: ConditionalBlur(
                             enabled: true,
@@ -305,7 +317,7 @@ class _AppGridTileState extends State<AppGridTile>
                         ),
 
                       // 2. Glass sheen gradient
-                      if (plusSettings.plusEnableGlassmorphism)
+                      if (plusSettings.plusEnableGlassmorphism && !isCardless)
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
@@ -334,7 +346,7 @@ class _AppGridTileState extends State<AppGridTile>
                         ),
 
                       // 3. Top specular highlight streak
-                      if (plusSettings.plusEnableGlassmorphism)
+                      if (plusSettings.plusEnableGlassmorphism && !isCardless)
                         Positioned(
                           top: 0,
                           left: 0,
@@ -358,8 +370,8 @@ class _AppGridTileState extends State<AppGridTile>
                           ),
                         ),
 
-                      // 3.5 Smart Launcher 6-inspired ambient radial icon halo (M3E)
-                      if (plusSettings.plusEnableMaterialExpressive)
+                      // 3.5 Smart Launcher 6-inspired ambient radial icon halo
+                      if (plusSettings.plusGridAmbientIconHalo)
                         Positioned.fill(
                           child: IgnorePointer(
                             child: DecoratedBox(
@@ -375,7 +387,7 @@ class _AppGridTileState extends State<AppGridTile>
                                                 ? colorScheme.primary
                                                 : colorScheme.primary))
                                         .withValues(
-                                          alpha: isDark ? 0.14 : 0.09,
+                                          alpha: isDark ? 0.16 : 0.10,
                                         ),
                                     Colors.transparent,
                                   ],
@@ -599,11 +611,11 @@ class _AppGridTileState extends State<AppGridTile>
             // Footer: Action Pill or Status Pill
             if (!isUltraCompactTile || widget.hasUpdate) ...[
               if (widget.hasUpdate) ...[
-                _buildUpdateVersionPill(colorScheme),
+                _buildUpdateVersionPill(colorScheme, plusSettings),
               ] else if (viewSettings.displayShowVersion ||
                   viewSettings.displayShowAuthor ||
                   viewSettings.displayShowDate) ...[
-                _buildUpToDatePill(colorScheme, viewSettings),
+                _buildUpToDatePill(colorScheme, viewSettings, plusSettings),
               ],
             ],
             // Tag chips (shown on roomy square tiles when not actively downloading)
@@ -661,12 +673,12 @@ class _AppGridTileState extends State<AppGridTile>
               ),
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
-                _buildUpdateVersionPill(colorScheme),
+                _buildUpdateVersionPill(colorScheme, plusSettings),
               ] else if (viewSettings.displayShowVersion ||
                   viewSettings.displayShowAuthor ||
                   viewSettings.displayShowDate) ...[
                 const SizedBox(height: 3),
-                _buildUpToDatePill(colorScheme, viewSettings),
+                _buildUpToDatePill(colorScheme, viewSettings, plusSettings),
               ],
               _buildProgressIndicator(),
             ],
@@ -766,25 +778,34 @@ class _AppGridTileState extends State<AppGridTile>
           ),
         ),
         // Update / install / progress action attached to the icon corner
-        Positioned(
-          right: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
-          bottom: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
-          child: AppIconActionBadge(
-            appInMemory: widget.appInMemory,
-            hasUpdate: widget.hasUpdate,
-            needsInstall:
-                widget.appInMemory.app.installedVersion == null &&
-                widget.appInMemory.app.additionalSettings['trackOnly'] != true,
-            isAmbiguous: widget.isAmbiguous,
-            iconSize: iconSize,
-            ringColor: cardColor,
-            onPressed: () {
-              context.read<AppsProvider>().downloadAndInstallLatestApps([
-                widget.appInMemory.app.id,
-              ], context);
-            },
+        // (When plusUpdateExpressiveBadge is enabled, updates use the bottom
+        // version capsule button instead of covering the icon corner, unless
+        // a download is actively running or the app needs initial installation.)
+        if (!plusSettings.plusUpdateExpressiveBadge ||
+            !widget.hasUpdate ||
+            widget.appInMemory.downloadProgress != null)
+          Positioned(
+            right: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
+            bottom: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
+            child: AppIconActionBadge(
+              appInMemory: widget.appInMemory,
+              hasUpdate: widget.hasUpdate,
+              needsInstall:
+                  widget.appInMemory.app.installedVersion == null &&
+                  widget.appInMemory.app.additionalSettings['trackOnly'] !=
+                      true,
+              isAmbiguous: widget.isAmbiguous,
+              iconSize: iconSize,
+              ringColor: cardColor == Colors.transparent
+                  ? colorScheme.surface
+                  : cardColor,
+              onPressed: () {
+                context.read<AppsProvider>().downloadAndInstallLatestApps([
+                  widget.appInMemory.app.id,
+                ], context);
+              },
+            ),
           ),
-        ),
       ],
     );
   }
@@ -814,41 +835,87 @@ class _AppGridTileState extends State<AppGridTile>
     return DateFormat('yyyy-MM-dd').format(date.toLocal());
   }
 
-  /// Passive label showing the update target; the action lives on the icon badge
-  Widget _buildUpdateVersionPill(ColorScheme colorScheme) {
+  /// Shows the update target version; when [plusUpdateExpressiveBadge] is enabled,
+  /// renders as an interactive M3E action capsule with a download icon that triggers
+  /// updating directly on tap.
+  Widget _buildUpdateVersionPill(
+    ColorScheme colorScheme,
+    PlusSettingsProvider plusSettings,
+  ) {
     final app = widget.appInMemory.app;
     final version = app.latestVersion.isNotEmpty
         ? app.latestVersion
         : tr('update');
+    final isExpressivePill = plusSettings.plusUpdateExpressiveBadge;
+    final bg = widget.isAmbiguous
+        ? colorScheme.tertiaryContainer
+        : colorScheme.primaryContainer;
     final fg = widget.isAmbiguous
         ? colorScheme.onTertiaryContainer
         : colorScheme.onPrimaryContainer;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+
+    final pillContent = Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: isExpressivePill ? 9 : 8,
+        vertical: isExpressivePill ? 3.5 : 3,
+      ),
       decoration: BoxDecoration(
-        color: widget.isAmbiguous
-            ? colorScheme.tertiaryContainer
-            : colorScheme.primaryContainer,
+        color: bg,
         borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+        border: isExpressivePill
+            ? Border.all(color: fg.withValues(alpha: 0.25), width: 0.8)
+            : null,
       ),
-      child: Text(
-        version,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: fg,
-          fontFamily: 'monospace',
-          letterSpacing: 0.1,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (isExpressivePill) ...[
+            Icon(
+              widget.isAmbiguous
+                  ? Icons.help_outline_rounded
+                  : Icons.arrow_downward_rounded,
+              size: 11,
+              color: fg,
+            ),
+            const SizedBox(width: 3),
+          ],
+          Flexible(
+            child: Text(
+              version,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                color: fg,
+                fontFamily: 'monospace',
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+
+    if (!isExpressivePill) return pillContent;
+
+    return ScaleTouchWrapper(
+      hapticOnPressDown: true,
+      scaleDownFactor: 0.90,
+      onTap: () {
+        AppHaptics.selectionClick();
+        context.read<AppsProvider>().downloadAndInstallLatestApps([
+          widget.appInMemory.app.id,
+        ], context);
+      },
+      child: pillContent,
     );
   }
 
   Widget _buildUpToDatePill(
     ColorScheme colorScheme,
     ViewSettingsProvider viewSettings,
+    PlusSettingsProvider plusSettings,
   ) {
     final parts = <String>[];
     if (viewSettings.displayShowVersion) {
@@ -867,6 +934,11 @@ class _AppGridTileState extends State<AppGridTile>
       if (d != null) parts.add(d);
     }
     final summaryText = parts.join(' • ');
+    final showSource = plusSettings.plusGridShowSourceBadge;
+
+    if (!showSource && summaryText.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -878,9 +950,9 @@ class _AppGridTileState extends State<AppGridTile>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _buildSourceBadge(context),
+          if (showSource) _buildSourceBadge(context),
           if (summaryText.isNotEmpty) ...[
-            const SizedBox(width: 4),
+            if (showSource) const SizedBox(width: 4),
             Flexible(
               child: Text(
                 summaryText,

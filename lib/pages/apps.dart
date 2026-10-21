@@ -704,6 +704,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                         viewSettings.displayShowAuthor ||
                         viewSettings.displayShowDate ||
                         plusSettings.plusShowTagsInList,
+                    squareTiles: plusSettings.plusGridSquareTiles,
                   ),
                 ),
               ),
@@ -1905,6 +1906,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         final double aspectRatio = GridMetrics.childAspectRatio(
           columnCount: columnCount,
           hasExtraDetails: showDetails,
+          squareTiles: plusSettings.plusGridSquareTiles,
         );
         return SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

@@ -44,13 +44,16 @@ class AppearanceHub extends StatelessWidget {
     }
 
     final List<String> tileDecor = [];
+    if (plusSettings.plusGridSquareTiles) tileDecor.add('Square 1:1');
+    if (plusSettings.plusGridCardlessStyle) tileDecor.add('Cardless');
+    if (plusSettings.plusGridAmbientIconHalo) tileDecor.add('Icon halo');
+    if (plusSettings.plusUpdateExpressiveBadge) tileDecor.add('Update pill');
     if (plusSettings.plusPinnedBorderAccent) tileDecor.add('Pinned border');
     if (plusSettings.plusCategoryAccentRibbon) tileDecor.add('Category ribbon');
-    if (plusSettings.plusUpdateExpressiveBadge) tileDecor.add('Update pill');
     if (plusSettings.plusIconRimBorder) tileDecor.add('Icon rim');
     final tileSummary = tileDecor.isEmpty
         ? tr('plusAppTileStyling')
-        : tileDecor.take(2).join(' · ');
+        : tileDecor.take(3).join(' · ');
 
     final layoutSummary =
         '${viewSettings.globalViewMode.name.toUpperCase()} · ${viewSettings.appListDensity.name}${isCompact ? ' · Compact' : ''}';

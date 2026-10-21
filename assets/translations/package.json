@@ -1,5 +1,15 @@
 {
     "dependencies": {
         "translate": "^3.0.1"
-    }
+    },
+    "plusLauncherGridStyle": "Launcher & Grid Style",
+    "plusGridSquareTiles": "Square App Grid (1:1)",
+    "plusGridSquareTilesDescription": "Use balanced 1:1 square launcher tiles instead of taller portrait cards",
+    "plusGridCardlessStyle": "Cardless Launcher Mode",
+    "plusGridCardlessStyleDescription": "Float app icons and labels directly on the canvas without outer card boxes",
+    "plusGridAmbientIconHalo": "Ambient Icon Halo",
+    "plusGridAmbientIconHaloDescription": "Project a soft radial color glow behind app icons on grid and list tiles",
+    "plusGridShowSourceBadge": "Source Icon Badge",
+    "plusGridShowSourceBadgeDescription": "Show the repository source icon next to version pills on app tiles",
+    "appTilePreview": "Live Tile & Grid Style Preview"
 }

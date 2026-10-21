@@ -6,6 +6,8 @@ import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
+import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -202,6 +204,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               _matches(tr('plusShowStatusHub'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('settingsAppearanceLayoutNav'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('plusEnableBottomNavBar')))
               (
@@ -277,6 +280,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               _matches(tr('plusCategoryReorder'), isAdvanced: true)))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('settingsLayoutMode'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('plusModernAppPage')))
               (
@@ -356,6 +360,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           (_matches(tr('showFilterChips')) || _matches(tr('showAppCount'))))
         GenericBooleanControlGrid<ViewSettingsProvider>(
           title: tr('filterChips'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('showFilterChips')))
               (
@@ -379,6 +384,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (showLayout && showFabMenuGrid)
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('fabMenuItems'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('fabShowAddByUrl')))
               (
@@ -427,9 +433,58 @@ class AppsViewSettingsSection extends StatelessWidget {
           initiallyExpanded: true,
           children: sortingWidgets,
         ),
+      if (showTiles && !isSearching) _buildAppTileStylePreview(context),
+      if (showTiles &&
+          plusFeaturesEnabled &&
+          (_matches(tr('plusGridSquareTiles')) ||
+              _matches(tr('plusGridCardlessStyle')) ||
+              _matches(tr('plusGridAmbientIconHalo')) ||
+              _matches(tr('plusGridShowSourceBadge'))))
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('plusLauncherGridStyle'),
+          embedded: subCategory == null,
+          settings: [
+            if (_matches(tr('plusGridSquareTiles')))
+              (
+                icon: Icons.crop_square_rounded,
+                label: tr('plusGridSquareTiles'),
+                description: tr('plusGridSquareTilesDescription'),
+                getValue: (s) => s.plusGridSquareTiles,
+                setValue: (s, v) => onSetState(() => s.plusGridSquareTiles = v),
+              ),
+            if (_matches(tr('plusGridCardlessStyle')))
+              (
+                icon: Icons.border_clear_rounded,
+                label: tr('plusGridCardlessStyle'),
+                description: tr('plusGridCardlessStyleDescription'),
+                getValue: (s) => s.plusGridCardlessStyle,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusGridCardlessStyle = v),
+              ),
+            if (_matches(tr('plusGridAmbientIconHalo')))
+              (
+                icon: Icons.flare_rounded,
+                label: tr('plusGridAmbientIconHalo'),
+                description: tr('plusGridAmbientIconHaloDescription'),
+                getValue: (s) => s.plusGridAmbientIconHalo,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusGridAmbientIconHalo = v),
+              ),
+            if (_matches(tr('plusGridShowSourceBadge')))
+              (
+                icon: Icons.badge_outlined,
+                label: tr('plusGridShowSourceBadge'),
+                description: tr('plusGridShowSourceBadgeDescription'),
+                getValue: (s) => s.plusGridShowSourceBadge,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusGridShowSourceBadge = v),
+              ),
+          ],
+        ),
       if (showTiles && showDisplayGrid)
         GenericBooleanControlGrid<ViewSettingsProvider>(
           title: tr('appTileDisplay'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('showAuthor')))
               (
@@ -465,6 +520,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               _matches(tr('plusIconRimBorder'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('plusAppTileStyling'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('plusPinnedBorderAccent')))
               (
@@ -509,6 +565,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               _matches(tr('plusEnableModernAppListTile'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('plusEnableSwipeActions'),
+          embedded: subCategory == null,
           settings: [
             (
               icon: Icons.view_agenda_rounded,
@@ -531,6 +588,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (showLayout && plusFeaturesEnabled && showSearchGrid)
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('searchSettings'),
+          embedded: subCategory == null,
           settings: [
             if (_matches(tr('showAppBarSearch')))
               (
@@ -568,12 +626,358 @@ class AppsViewSettingsSection extends StatelessWidget {
     );
   }
 
+  Widget _buildAppTileStylePreview(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final viewSettings = context.watch<ViewSettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCompact = plusSettings.plusUseCompactSettings;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final isSquare = plusSettings.plusGridSquareTiles;
+    final isCardless = plusSettings.plusGridCardlessStyle;
+    final showHalo = plusSettings.plusGridAmbientIconHalo;
+    final showSource = plusSettings.plusGridShowSourceBadge;
+    final expressiveUpdate = plusSettings.plusUpdateExpressiveBadge;
+    final showRibbon = plusSettings.plusCategoryAccentRibbon;
+    final showPinnedBorder = plusSettings.plusPinnedBorderAccent;
+    final showIconRim = plusSettings.plusIconRimBorder;
+
+    Widget buildMockTile({
+      required String name,
+      required IconData appIcon,
+      required Color accentColor,
+      required String version,
+      required bool hasUpdate,
+      required bool isPinned,
+    }) {
+      final tileCardless = isCardless && !hasUpdate;
+      final itemRadius = CardMetrics.inner(radius);
+      final borderSide = tileCardless
+          ? BorderSide.none
+          : BorderSide(
+              color: hasUpdate
+                  ? colorScheme.primary.withValues(alpha: 0.42)
+                  : isPinned && showPinnedBorder
+                  ? colorScheme.primary.withValues(alpha: 0.55)
+                  : colorScheme.outlineVariant.withValues(
+                      alpha: isDark ? 0.35 : 0.65,
+                    ),
+              width: hasUpdate || (isPinned && showPinnedBorder) ? 1.5 : 1.0,
+            );
+
+      return AspectRatio(
+        aspectRatio: isSquare ? 1.0 : 0.85,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: AppConstants.expressiveStandard,
+          decoration: ShapeDecoration(
+            color: tileCardless
+                ? Colors.transparent
+                : hasUpdate
+                ? colorScheme.primaryContainer.withValues(alpha: 0.28)
+                : isPinned
+                ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.85)
+                : colorScheme.surfaceContainerLow,
+            shape: CardMetrics.shape(
+              radius,
+              expressive: plusSettings.plusEnableMaterialExpressive,
+              side: borderSide,
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Stack(
+            children: [
+              if (showRibbon)
+                Positioned(
+                  top: 0,
+                  left: 16,
+                  right: 16,
+                  child: Container(
+                    height: 3.5,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      borderRadius: const BorderRadius.vertical(
+                        bottom: Radius.circular(4),
+                      ),
+                    ),
+                  ),
+                ),
+              if (isPinned)
+                Positioned(
+                  top: 6,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.all(3.5),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer.withValues(
+                        alpha: 0.85,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.push_pin_rounded,
+                      size: 10,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 8.0,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 46,
+                      height: 46,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        alignment: Alignment.center,
+                        children: [
+                          if (showHalo)
+                            Positioned(
+                              width: 60,
+                              height: 60,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [
+                                      accentColor.withValues(
+                                        alpha: isDark ? 0.30 : 0.20,
+                                      ),
+                                      accentColor.withValues(alpha: 0.0),
+                                    ],
+                                    stops: const [0.15, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          Container(
+                            width: 44,
+                            height: 44,
+                            decoration: ShapeDecoration(
+                              color: accentColor.withValues(alpha: 0.16),
+                              shape: CardMetrics.shape(
+                                itemRadius,
+                                expressive:
+                                    plusSettings.plusEnableMaterialExpressive,
+                                side: showIconRim
+                                    ? BorderSide(
+                                        color: colorScheme.outlineVariant
+                                            .withValues(alpha: 0.55),
+                                        width: 1.0,
+                                      )
+                                    : BorderSide.none,
+                              ),
+                            ),
+                            child: Icon(appIcon, size: 22, color: accentColor),
+                          ),
+                          if (hasUpdate && !expressiveUpdate)
+                            Positioned(
+                              right: -5,
+                              bottom: -5,
+                              child: Container(
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: colorScheme.surface,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.download_rounded,
+                                  size: 11,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (viewSettings.displayShowVersion) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (!hasUpdate && showSource) ...[
+                            Icon(
+                              Icons.terminal_rounded,
+                              size: 10,
+                              color: colorScheme.primary.withValues(alpha: 0.8),
+                            ),
+                            const SizedBox(width: 3),
+                          ],
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: hasUpdate && expressiveUpdate ? 8 : 6,
+                              vertical: hasUpdate && expressiveUpdate ? 2.5 : 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: hasUpdate
+                                  ? (expressiveUpdate
+                                        ? colorScheme.primary
+                                        : colorScheme.primary.withValues(
+                                            alpha: 0.14,
+                                          ))
+                                  : colorScheme.surfaceContainerHighest
+                                        .withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(
+                                CardMetrics.pillRadius,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (hasUpdate) ...[
+                                  Icon(
+                                    expressiveUpdate
+                                        ? Icons.download_rounded
+                                        : Icons.arrow_upward_rounded,
+                                    size: 9,
+                                    color: expressiveUpdate
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 2),
+                                ],
+                                Text(
+                                  version,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'monospace',
+                                    color: hasUpdate
+                                        ? (expressiveUpdate
+                                              ? colorScheme.onPrimary
+                                              : colorScheme.primary)
+                                        : colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        12,
+        isCompact ? 4 : 6,
+        12,
+        isCompact ? 6 : 10,
+      ),
+      child: Container(
+        padding: EdgeInsets.all(isCompact ? 10 : 14),
+        decoration: ShapeDecoration(
+          color: colorScheme.surfaceContainerLowest.withValues(
+            alpha: isDark ? 0.55 : 0.85,
+          ),
+          shape: CardMetrics.shape(
+            CardMetrics.inner(radius),
+            expressive: plusSettings.plusEnableMaterialExpressive,
+            side: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+            ),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.visibility_rounded,
+                  size: 14,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  tr('appTilePreview'),
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.primary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${isSquare ? "1:1" : "Portrait"}${isCardless ? " · Cardless" : ""}',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: buildMockTile(
+                        name: 'Obtainium+',
+                        appIcon: Icons.auto_awesome_rounded,
+                        accentColor: colorScheme.primary,
+                        version: '1.6.17',
+                        hasUpdate: false,
+                        isPinned: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: buildMockTile(
+                        name: 'Shizuku+',
+                        appIcon: Icons.bolt_rounded,
+                        accentColor: colorScheme.tertiary,
+                        version: '2.4.0',
+                        hasUpdate: true,
+                        isPinned: false,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildGridSettings(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        if (settings.globalViewMode != ViewMode.grid)
-          return const SizedBox.shrink();
-
+        final isCompact = context.select<PlusSettingsProvider, bool>(
+          (s) => s.plusUseCompactSettings,
+        );
         bool showDisplay = _matches(tr('gridCategoryDisplay'));
         bool showCols = _matches(tr('gridColumns'));
 
@@ -581,44 +985,61 @@ class AppsViewSettingsSection extends StatelessWidget {
           children: [
             if (showDisplay)
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  isCompact ? 4 : 8,
+                  16,
+                  isCompact ? 4 : 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.grid_view_outlined, size: 22),
+                        buildSettingsIconBadge(
+                          context,
+                          Icons.grid_view_outlined,
+                        ),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
                             tr('gridCategoryDisplay'),
-                            style: Theme.of(context).textTheme.bodyLarge,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    SegmentedButton<GridCategoryMode>(
-                      segments: [
-                        ButtonSegment(
-                          value: GridCategoryMode.sections,
-                          label: Text(tr('categorySections')),
-                          icon: const Icon(Icons.category_outlined, size: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: SegmentedButton<GridCategoryMode>(
+                        style: SegmentedButton.styleFrom(
+                          visualDensity: isCompact
+                              ? VisualDensity.compact
+                              : VisualDensity.standard,
                         ),
-                        ButtonSegment(
-                          value: GridCategoryMode.disabled,
-                          label: Text(tr('flatGridOnly')),
-                          icon: const Icon(Icons.grid_3x3_rounded, size: 16),
-                        ),
-                      ],
-                      selected: {settings.gridCategoryMode},
-                      onSelectionChanged: (value) {
-                        AppHaptics.selectionClick();
-                        onSetState(
-                          () => settings.gridCategoryMode = value.first,
-                        );
-                      },
-                      showSelectedIcon: false,
+                        segments: [
+                          ButtonSegment(
+                            value: GridCategoryMode.sections,
+                            label: Text(tr('categorySections')),
+                            icon: const Icon(Icons.category_outlined, size: 16),
+                          ),
+                          ButtonSegment(
+                            value: GridCategoryMode.disabled,
+                            label: Text(tr('flatGridOnly')),
+                            icon: const Icon(Icons.grid_3x3_rounded, size: 16),
+                          ),
+                        ],
+                        selected: {settings.gridCategoryMode},
+                        onSelectionChanged: (value) {
+                          AppHaptics.selectionClick();
+                          onSetState(
+                            () => settings.gridCategoryMode = value.first,
+                          );
+                        },
+                        showSelectedIcon: false,
+                      ),
                     ),
                   ],
                 ),
@@ -646,49 +1067,72 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildCategoryIconPositionDropdown(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
+        final isCompact = context.select<PlusSettingsProvider, bool>(
+          (s) => s.plusUseCompactSettings,
+        );
         return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+          padding: EdgeInsets.fromLTRB(
+            16,
+            isCompact ? 4 : 8,
+            16,
+            isCompact ? 4 : 8,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.branding_watermark_outlined, size: 22),
+                  buildSettingsIconBadge(
+                    context,
+                    Icons.branding_watermark_outlined,
+                  ),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
                       tr('iconPosition'),
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
-              SegmentedButton<CategoryIconPosition>(
-                segments: [
-                  ButtonSegment(
-                    value: CategoryIconPosition.disabled,
-                    label: Text(tr('disabled')),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<CategoryIconPosition>(
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: isCompact
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
                   ),
-                  ButtonSegment(
-                    value: CategoryIconPosition.leading,
-                    label: Text(tr('leading')),
-                  ),
-                  ButtonSegment(
-                    value: CategoryIconPosition.trailing,
-                    label: Text(tr('trailing')),
-                  ),
-                  ButtonSegment(
-                    value: CategoryIconPosition.below,
-                    label: Text(tr('belowName')),
-                  ),
-                ],
-                selected: {settings.categoryIconPosition},
-                onSelectionChanged: (value) {
-                  AppHaptics.selectionClick();
-                  onSetState(() => settings.categoryIconPosition = value.first);
-                },
-                showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(
+                      value: CategoryIconPosition.disabled,
+                      label: Text(tr('disabled')),
+                    ),
+                    ButtonSegment(
+                      value: CategoryIconPosition.leading,
+                      label: Text(tr('leading')),
+                    ),
+                    ButtonSegment(
+                      value: CategoryIconPosition.trailing,
+                      label: Text(tr('trailing')),
+                    ),
+                    ButtonSegment(
+                      value: CategoryIconPosition.below,
+                      label: Text(tr('belowName')),
+                    ),
+                  ],
+                  selected: {settings.categoryIconPosition},
+                  onSelectionChanged: (value) {
+                    AppHaptics.selectionClick();
+                    onSetState(
+                      () => settings.categoryIconPosition = value.first,
+                    );
+                  },
+                  showSelectedIcon: false,
+                ),
               ),
             ],
           ),
@@ -727,22 +1171,39 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildViewModeDropdown(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
+        final isCompact = context.select<PlusSettingsProvider, bool>(
+          (s) => s.plusUseCompactSettings,
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.view_quilt_outlined),
+              dense: isCompact,
+              visualDensity: isCompact
+                  ? VisualDensity.compact
+                  : VisualDensity.standard,
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.view_quilt_outlined,
+              ),
               title: Text(
                 tr('defaultViewMode'),
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(tr('viewModeDescription')),
+              subtitle: isCompact ? null : Text(tr('viewModeDescription')),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, isCompact ? 8 : 12),
               child: SizedBox(
                 width: double.infinity,
                 child: SegmentedButton<ViewMode>(
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: isCompact
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
+                  ),
                   segments: [
                     ButtonSegment(
                       value: ViewMode.list,
@@ -757,6 +1218,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                   ],
                   selected: {settings.globalViewMode},
                   onSelectionChanged: (value) {
+                    AppHaptics.selectionClick();
                     onSetState(() => settings.globalViewMode = value.first);
                   },
                 ),
@@ -770,23 +1232,40 @@ class AppsViewSettingsSection extends StatelessWidget {
 
   Widget _buildAppBarStyleDropdown(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
+    final isCompact = context.select<PlusSettingsProvider, bool>(
+      (s) => s.plusUseCompactSettings,
+    );
     final currentStyle = settingsProvider.getAppBarStyleForPage('apps');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ListTile(
-          leading: const Icon(Icons.vertical_align_top_rounded),
+          dense: isCompact,
+          visualDensity: isCompact
+              ? VisualDensity.compact
+              : VisualDensity.standard,
+          leading: buildSettingsIconBadge(
+            context,
+            Icons.vertical_align_top_rounded,
+          ),
           title: Text(
             tr('appBarStyle'),
-            style: Theme.of(context).textTheme.bodyLarge,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          subtitle: Text(tr('appBarStyleDescription')),
+          subtitle: isCompact ? null : Text(tr('appBarStyleDescription')),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          padding: EdgeInsets.fromLTRB(16, 0, 16, isCompact ? 8 : 12),
           child: SizedBox(
             width: double.infinity,
             child: SegmentedButton<AppBarStyle>(
+              style: SegmentedButton.styleFrom(
+                visualDensity: isCompact
+                    ? VisualDensity.compact
+                    : VisualDensity.standard,
+              ),
               segments: AppBarStyle.values
                   .map(
                     (e) => ButtonSegment(
@@ -800,6 +1279,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                   .toList(),
               selected: {currentStyle},
               onSelectionChanged: (value) {
+                AppHaptics.selectionClick();
                 onSetState(() {
                   settingsProvider.setAppBarStyleForPage('apps', value.first);
                 });
@@ -814,24 +1294,39 @@ class AppsViewSettingsSection extends StatelessWidget {
   Widget _buildDensityDropdown(BuildContext context) {
     return Consumer<ViewSettingsProvider>(
       builder: (context, settings, child) {
-        if (settings.globalViewMode != ViewMode.list)
-          return const SizedBox.shrink();
+        final isCompact = context.select<PlusSettingsProvider, bool>(
+          (s) => s.plusUseCompactSettings,
+        );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ListTile(
-              leading: const Icon(Icons.density_medium_outlined),
+              dense: isCompact,
+              visualDensity: isCompact
+                  ? VisualDensity.compact
+                  : VisualDensity.standard,
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.density_medium_outlined,
+              ),
               title: Text(
                 tr('listDensity'),
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
-              subtitle: Text(tr('listDensityDescription')),
+              subtitle: isCompact ? null : Text(tr('listDensityDescription')),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: EdgeInsets.fromLTRB(16, 0, 16, isCompact ? 8 : 12),
               child: SizedBox(
                 width: double.infinity,
                 child: SegmentedButton<AppListDensity>(
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: isCompact
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
+                  ),
                   segments: AppListDensity.values
                       .map(
                         (e) => ButtonSegment(
@@ -842,6 +1337,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                       .toList(),
                   selected: {settings.appListDensity},
                   onSelectionChanged: (value) {
+                    AppHaptics.selectionClick();
                     onSetState(() => settings.appListDensity = value.first);
                   },
                 ),

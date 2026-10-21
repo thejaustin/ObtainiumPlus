@@ -592,6 +592,31 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusExpressiveFilterChips(bool val) =>
       _setBool('plusExpressiveFilterChips', val);
 
+  /// Use balanced 1:1 square tiles in multi-column app grids instead of taller
+  /// portrait cards.
+  bool get plusGridSquareTiles =>
+      _getBool('plusGridSquareTiles', defaultValue: true);
+  set plusGridSquareTiles(bool val) => _setBool('plusGridSquareTiles', val);
+
+  /// Render app grid tiles in a clean, cardless launcher style where unselected
+  /// and up-to-date apps float directly on the surface without outer card borders.
+  bool get plusGridCardlessStyle =>
+      _getBool('plusGridCardlessStyle', defaultValue: false);
+  set plusGridCardlessStyle(bool val) => _setBool('plusGridCardlessStyle', val);
+
+  /// Project a soft Smart Launcher 6-style radial color glow behind app icons
+  /// on grid and list tiles.
+  bool get plusGridAmbientIconHalo =>
+      _getBool('plusGridAmbientIconHalo', defaultValue: true);
+  set plusGridAmbientIconHalo(bool val) =>
+      _setBool('plusGridAmbientIconHalo', val);
+
+  /// Show the repository source icon badge next to version pills on app tiles.
+  bool get plusGridShowSourceBadge =>
+      _getBool('plusGridShowSourceBadge', defaultValue: true);
+  set plusGridShowSourceBadge(bool val) =>
+      _setBool('plusGridShowSourceBadge', val);
+
   ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
       ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
       : const AlwaysScrollableScrollPhysics();

@@ -66,22 +66,32 @@ class GridMetrics {
     return 2;
   }
 
-  /// Returns a 1:1 square aspect ratio for multi-column app grids
-  /// (and 2.2 for single-column horizontal banner tiles).
+  /// Returns a 1:1 square aspect ratio when [squareTiles] is true (default),
+  /// or a portrait card aspect ratio when [squareTiles] is false.
   static double childAspectRatio({
     required int columnCount,
     required bool hasExtraDetails,
+    bool squareTiles = true,
   }) {
     if (columnCount <= 1) return 2.2;
-    return 1.0;
+    if (squareTiles) return 1.0;
+    if (columnCount == 2) {
+      return hasExtraDetails ? 0.88 : 0.95;
+    }
+    if (columnCount == 3) {
+      return hasExtraDetails ? 0.82 : 0.90;
+    }
+    return hasExtraDetails ? 0.78 : 0.86;
   }
 
   /// Convenience alias for [childAspectRatio].
   static double gridAspectRatio(
     int columnCount, {
     bool hasExtraDetails = true,
+    bool squareTiles = true,
   }) => childAspectRatio(
     columnCount: columnCount,
     hasExtraDetails: hasExtraDetails,
+    squareTiles: squareTiles,
   );
 }
