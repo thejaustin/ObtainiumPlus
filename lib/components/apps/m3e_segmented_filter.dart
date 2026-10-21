@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
@@ -105,10 +106,14 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
           child: Stack(
             children: [
               // Fluid shape-morphing active indicator pill
-              AnimatedPositioned(
-                duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-                curve: Easing.emphasizedDecelerate,
-                left: inset + (activeIndex * segmentWidth),
+              AnimatedPositionedDirectional(
+                duration: animsEnabled
+                    ? AppMotion.spatial.duration
+                    : Duration.zero,
+                curve: animsEnabled
+                    ? AppMotion.spatial
+                    : Easing.emphasizedDecelerate,
+                start: inset + (activeIndex * segmentWidth),
                 top: inset,
                 bottom: inset,
                 width: segmentWidth,
@@ -218,7 +223,7 @@ class _SegmentItem extends StatelessWidget {
         .watch<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
     final fgColor = isSelected
-        ? colorScheme.onSecondaryContainer
+        ? colorScheme.onPrimaryContainer
         : colorScheme.onSurfaceVariant;
 
     final Color badgeBgColor;
@@ -278,9 +283,13 @@ class _SegmentItem extends StatelessWidget {
                 if (data.badgeCount != null) ...[
                   const SizedBox(width: 4),
                   AnimatedScale(
-                    scale: 1.0,
-                    duration: Duration(milliseconds: animsEnabled ? 260 : 0),
-                    curve: Easing.emphasizedDecelerate,
+                    scale: isSelected ? 1.06 : 1.0,
+                    duration: animsEnabled
+                        ? AppMotion.spatialFast.duration
+                        : Duration.zero,
+                    curve: animsEnabled
+                        ? AppMotion.spatialFast
+                        : Easing.emphasizedDecelerate,
                     child: AnimatedContainer(
                       duration: Duration(milliseconds: animsEnabled ? 260 : 0),
                       curve: Easing.emphasizedDecelerate,

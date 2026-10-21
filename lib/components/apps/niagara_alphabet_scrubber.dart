@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -31,6 +32,13 @@ class NiagaraAlphabetScrubber extends StatefulWidget {
 class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
   double? _dragNormalizedY;
   int? _activeIndex;
+  Timer? _tapClearTimer;
+
+  @override
+  void dispose() {
+    _tapClearTimer?.cancel();
+    super.dispose();
+  }
 
   /// Builds ordered list of available section symbols (★ for pinned, A-Z, #)
   /// mapped to the first app index in [widget.apps].
@@ -85,6 +93,7 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
     List<({String symbol, int firstAppIndex, String sampleAppName})> buckets,
   ) {
     if (buckets.isEmpty || railHeight <= 0) return;
+    _tapClearTimer?.cancel();
     final normY = (localPosition.dy / railHeight).clamp(0.0, 1.0);
     final idx = (normY * buckets.length).floor().clamp(0, buckets.length - 1);
 
@@ -95,7 +104,7 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
     });
 
     if (changed) {
-      AppHaptics.selectionClick();
+      AppHaptics.segmentTick();
       _scrollToAppIndex(buckets[idx].firstAppIndex);
     }
   }
@@ -235,10 +244,15 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
                     onVerticalDragCancel: _clearTouch,
                     onTapDown: (d) =>
                         _handleTouch(d.localPosition, railHeight, buckets),
-                    onTapUp: (_) =>
-                        Future.delayed(const Duration(milliseconds: 180), () {
+                    onTapUp: (_) {
+                      _tapClearTimer?.cancel();
+                      _tapClearTimer = Timer(
+                        const Duration(milliseconds: 180),
+                        () {
                           if (mounted) _clearTouch();
-                        }),
+                        },
+                      );
+                    },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       curve: Curves.easeOutCubic,

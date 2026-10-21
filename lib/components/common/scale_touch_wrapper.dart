@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -11,7 +12,7 @@ class ScaleTouchWrapper extends StatefulWidget {
   final bool hapticOnTap;
   final bool hapticOnLongPress;
 
-  /// Fire [AppHaptics.tapDown] immediately when the pointer makes contact.
+  /// Fire [AppHaptics.tapDown] when the pointer makes contact.
   /// This is the M3E pattern: haptics feel physical when fired on touch, not release.
   final bool hapticOnPressDown;
 
@@ -32,20 +33,55 @@ class ScaleTouchWrapper extends StatefulWidget {
 
 class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     with SingleTickerProviderStateMixin {
+  /// Tracks the innermost [ScaleTouchWrapper] that claimed the current
+  /// [PointerDownEvent] so ancestor wrappers (e.g. a parent card containing an
+  /// interactive icon button or action pill) do not simultaneously scale down
+  /// or fire duplicate haptics on the same touch.
+  static int? _lastClaimedPointer;
+  static Duration? _lastClaimedTimeStamp;
+
   // 0 = resting, 1 = fully pressed. Unbounded so the release spring can
   // overshoot past rest (scale briefly > 1) for the expressive pop-back.
   late final AnimationController _controller = AnimationController.unbounded(
     vsync: this,
   );
 
+  Offset? _downPosition;
+  bool _isPressed = false;
+  Timer? _pressHapticTimer;
+  bool _pendingPressHaptic = false;
+
+  static const double _scrollSlopSquared = 64.0; // 8px movement cancels press
+
   @override
   void dispose() {
+    _pressHapticTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   void _onPointerDown(PointerDownEvent event) {
-    if (widget.hapticOnPressDown) AppHaptics.tapDown();
+    if (_lastClaimedPointer == event.pointer &&
+        _lastClaimedTimeStamp == event.timeStamp) {
+      return;
+    }
+    _lastClaimedPointer = event.pointer;
+    _lastClaimedTimeStamp = event.timeStamp;
+
+    _downPosition = event.position;
+    _isPressed = true;
+    _pressHapticTimer?.cancel();
+
+    if (widget.hapticOnPressDown) {
+      _pendingPressHaptic = true;
+      _pressHapticTimer = Timer(const Duration(milliseconds: 35), () {
+        if (_isPressed && _pendingPressHaptic && mounted) {
+          _pendingPressHaptic = false;
+          AppHaptics.tapDown();
+        }
+      });
+    }
+
     if (!_animate) return;
     _controller.animateWith(
       SpringSimulation(
@@ -57,7 +93,38 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     );
   }
 
+  void _onPointerMove(PointerMoveEvent event) {
+    if (!_isPressed || _downPosition == null) return;
+    if ((event.position - _downPosition!).distanceSquared >
+        _scrollSlopSquared) {
+      _cancelPressHaptic();
+      _release();
+    }
+  }
+
+  void _onPointerUp(PointerUpEvent event) {
+    if (_isPressed && _pendingPressHaptic) {
+      _pressHapticTimer?.cancel();
+      _pendingPressHaptic = false;
+      AppHaptics.tapDown();
+    }
+    _release();
+  }
+
+  void _onPointerCancel(PointerCancelEvent event) {
+    _cancelPressHaptic();
+    _release();
+  }
+
+  void _cancelPressHaptic() {
+    _pressHapticTimer?.cancel();
+    _pendingPressHaptic = false;
+  }
+
   void _release() {
+    if (!_isPressed && _controller.value == 0) return;
+    _isPressed = false;
+    _downPosition = null;
     if (!_animate) return;
     _controller.animateWith(
       SpringSimulation(
@@ -101,8 +168,9 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     return _withGestures(
       Listener(
         onPointerDown: _onPointerDown,
-        onPointerUp: (_) => _release(),
-        onPointerCancel: (_) => _release(),
+        onPointerMove: _onPointerMove,
+        onPointerUp: _onPointerUp,
+        onPointerCancel: _onPointerCancel,
         child: !_animate
             ? widget.child
             : AnimatedBuilder(

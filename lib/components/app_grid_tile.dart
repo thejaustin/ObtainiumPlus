@@ -1,7 +1,6 @@
-import 'dart:ui';
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -48,6 +47,7 @@ class _AppGridTileState extends State<AppGridTile>
   late final AnimationController _entranceController;
   late final Animation<double> _entranceFade;
   late final Animation<Offset> _entranceSlide;
+  Timer? _entranceTimer;
 
   @override
   void initState() {
@@ -79,7 +79,7 @@ class _AppGridTileState extends State<AppGridTile>
       if (widget.entranceDelay == Duration.zero) {
         _entranceController.forward();
       } else {
-        Future.delayed(widget.entranceDelay, () {
+        _entranceTimer = Timer(widget.entranceDelay, () {
           if (mounted) _entranceController.forward();
         });
       }
@@ -99,6 +99,7 @@ class _AppGridTileState extends State<AppGridTile>
 
   @override
   void dispose() {
+    _entranceTimer?.cancel();
     _entranceController.dispose();
     super.dispose();
   }

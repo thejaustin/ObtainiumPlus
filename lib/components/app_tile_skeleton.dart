@@ -65,50 +65,75 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
         final alpha = _animation.value;
 
         if (widget.isGrid) {
+          final isCardless = plusSettings.plusGridCardlessStyle;
+          final isM3E = plusSettings.plusEnableMaterialExpressive;
           return Container(
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow.withValues(
-                alpha: alpha * 0.6 + 0.3,
+            decoration: ShapeDecoration(
+              color: isCardless
+                  ? Colors.transparent
+                  : colorScheme.surfaceContainerLow.withValues(
+                      alpha: alpha * 0.6 + 0.3,
+                    ),
+              shape: CardMetrics.shape(
+                cardRadius,
+                expressive: isM3E,
+                side: isCardless
+                    ? BorderSide.none
+                    : BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.25,
+                        ),
+                      ),
               ),
-              borderRadius: BorderRadius.circular(cardRadius),
             ),
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: alpha,
+            padding: const EdgeInsets.all(10),
+            child: Center(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: ShapeDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: alpha,
+                        ),
+                        shape: CardMetrics.shape(
+                          innerRadius,
+                          expressive: isM3E,
+                        ),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(innerRadius),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  width: 80,
-                  height: 11,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: alpha,
+                    const SizedBox(height: 8),
+                    Container(
+                      width: 72,
+                      height: 11,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: alpha,
+                        ),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  width: 56,
-                  height: 9,
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(
-                      alpha: alpha * 0.7,
+                    const SizedBox(height: 5),
+                    Container(
+                      width: 48,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: alpha * 0.7,
+                        ),
+                        borderRadius: BorderRadius.circular(
+                          CardMetrics.pillRadius,
+                        ),
+                      ),
                     ),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         }

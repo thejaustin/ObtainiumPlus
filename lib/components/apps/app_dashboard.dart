@@ -445,9 +445,11 @@ class _AppDashboardState extends State<AppDashboard>
   }) {
     final itemRadius = CardMetrics.inner(radius);
     final colorScheme = Theme.of(context).colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
     final hasUpdate =
         app.app.installedVersion != null &&
         app.app.installedVersion != app.app.latestVersion;
+    final iconShape = CardMetrics.shape(itemRadius, expressive: isM3E);
 
     return Tooltip(
       message: app.name,
@@ -460,74 +462,110 @@ class _AppDashboardState extends State<AppDashboard>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
+              SizedBox(
                 width: 52,
                 height: 52,
-                decoration: ShapeDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.55,
-                  ),
-                  shape: CardMetrics.shape(
-                    itemRadius,
-                    expressive: isM3E,
-                    side: BorderSide(
-                      color: hasUpdate
-                          ? colorScheme.primary.withValues(alpha: 0.45)
-                          : colorScheme.outlineVariant.withValues(alpha: 0.35),
-                      width: hasUpdate ? 1.3 : 1.0,
-                    ),
-                  ),
-                ),
                 child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Center(
-                        child: Builder(
-                          builder: (ctx) {
-                            if (app.icon == null && app.installedInfo != null) {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (ctx.mounted && app.icon == null) {
-                                  ctx.read<AppsProvider>().updateAppIcon(
-                                    app.app.id,
-                                  );
-                                }
-                              });
-                            }
-                            return app.icon != null
-                                ? Image.memory(
+                    if (plusSettings.plusGridAmbientIconHalo)
+                      Positioned(
+                        width: 64,
+                        height: 64,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  colorScheme.primary.withValues(
+                                    alpha:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? 0.24
+                                        : 0.16,
+                                  ),
+                                  colorScheme.primary.withValues(alpha: 0.0),
+                                ],
+                                stops: const [0.15, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Container(
+                      width: 52,
+                      height: 52,
+                      decoration: ShapeDecoration(
+                        color: colorScheme.surfaceContainerHighest.withValues(
+                          alpha: 0.55,
+                        ),
+                        shape: CardMetrics.shape(
+                          itemRadius,
+                          expressive: isM3E,
+                          side: BorderSide(
+                            color: hasUpdate
+                                ? colorScheme.primary.withValues(alpha: 0.50)
+                                : plusSettings.plusPinnedBorderAccent
+                                ? colorScheme.primary.withValues(alpha: 0.45)
+                                : colorScheme.outlineVariant.withValues(
+                                    alpha: 0.35,
+                                  ),
+                            width:
+                                hasUpdate || plusSettings.plusPinnedBorderAccent
+                                ? 1.3
+                                : 1.0,
+                          ),
+                        ),
+                      ),
+                      child: Builder(
+                        builder: (ctx) {
+                          if (app.icon == null && app.installedInfo != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (ctx.mounted && app.icon == null) {
+                                ctx.read<AppsProvider>().updateAppIcon(
+                                  app.app.id,
+                                );
+                              }
+                            });
+                          }
+                          return app.icon != null
+                              ? ClipPath(
+                                  clipper: ShapeBorderClipper(shape: iconShape),
+                                  child: Image.memory(
                                     app.icon!,
-                                    fit: BoxFit.contain,
+                                    fit: BoxFit.cover,
                                     filterQuality: FilterQuality.medium,
                                     cacheWidth:
-                                        (44 *
+                                        (52 *
                                                 MediaQuery.devicePixelRatioOf(
                                                   context,
                                                 ))
                                             .round(),
                                     cacheHeight:
-                                        (44 *
+                                        (52 *
                                                 MediaQuery.devicePixelRatioOf(
                                                   context,
                                                 ))
                                             .round(),
-                                  )
-                                : Icon(
-                                    Icons.apps_rounded,
-                                    size: 24,
-                                    color: colorScheme.primary,
-                                  );
-                          },
-                        ),
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.apps_rounded,
+                                  size: 24,
+                                  color: colorScheme.primary,
+                                );
+                        },
                       ),
                     ),
                     if (hasUpdate)
                       Positioned(
-                        right: 3,
-                        top: 3,
+                        right: -2,
+                        top: -2,
                         child: Container(
-                          width: 10,
-                          height: 10,
+                          width: 12,
+                          height: 12,
                           decoration: BoxDecoration(
                             color: colorScheme.primary,
                             shape: BoxShape.circle,
@@ -569,6 +607,9 @@ class _AppDashboardState extends State<AppDashboard>
   }) {
     final itemRadius = CardMetrics.inner(radius);
     final colorScheme = Theme.of(context).colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final iconShape = CardMetrics.shape(itemRadius, expressive: isM3E);
+
     return Tooltip(
       message: '${app.name} (${app.app.latestVersion})',
       child: ScaleTouchWrapper(
@@ -580,91 +621,122 @@ class _AppDashboardState extends State<AppDashboard>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
+              SizedBox(
                 width: 56,
                 height: 56,
-                decoration: ShapeDecoration(
-                  color: colorScheme.surfaceContainerLow,
-                  shape: CardMetrics.shape(
-                    itemRadius,
-                    expressive: isM3E,
-                    side: BorderSide(
-                      color: colorScheme.primary.withValues(alpha: 0.50),
-                      width: 1.5,
-                    ),
-                  ),
-                  shadows: [
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.12),
-                      blurRadius: 8,
-                      spreadRadius: -1,
-                    ),
-                  ],
-                ),
-                child: Builder(
-                  builder: (ctx) {
-                    if (app.icon == null && app.installedInfo != null) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (ctx.mounted && app.icon == null) {
-                          ctx.read<AppsProvider>().updateAppIcon(app.app.id);
-                        }
-                      });
-                    }
-                    return Stack(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(7.0),
-                          child: Center(
-                            child: app.icon != null
-                                ? Image.memory(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    if (plusSettings.plusGridAmbientIconHalo)
+                      Positioned(
+                        width: 68,
+                        height: 68,
+                        child: IgnorePointer(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: RadialGradient(
+                                colors: [
+                                  colorScheme.primary.withValues(
+                                    alpha:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? 0.28
+                                        : 0.18,
+                                  ),
+                                  colorScheme.primary.withValues(alpha: 0.0),
+                                ],
+                                stops: const [0.15, 1.0],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: ShapeDecoration(
+                        color: colorScheme.surfaceContainerLow,
+                        shape: CardMetrics.shape(
+                          itemRadius,
+                          expressive: isM3E,
+                          side: BorderSide(
+                            color: colorScheme.primary.withValues(alpha: 0.50),
+                            width: 1.5,
+                          ),
+                        ),
+                        shadows: [
+                          BoxShadow(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            blurRadius: 8,
+                            spreadRadius: -1,
+                          ),
+                        ],
+                      ),
+                      child: Builder(
+                        builder: (ctx) {
+                          if (app.icon == null && app.installedInfo != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (ctx.mounted && app.icon == null) {
+                                ctx.read<AppsProvider>().updateAppIcon(
+                                  app.app.id,
+                                );
+                              }
+                            });
+                          }
+                          return app.icon != null
+                              ? ClipPath(
+                                  clipper: ShapeBorderClipper(shape: iconShape),
+                                  child: Image.memory(
                                     app.icon!,
-                                    fit: BoxFit.contain,
+                                    fit: BoxFit.cover,
                                     filterQuality: FilterQuality.medium,
                                     cacheWidth:
-                                        (48 *
+                                        (56 *
                                                 MediaQuery.devicePixelRatioOf(
                                                   context,
                                                 ))
                                             .round(),
                                     cacheHeight:
-                                        (48 *
+                                        (56 *
                                                 MediaQuery.devicePixelRatioOf(
                                                   context,
                                                 ))
                                             .round(),
-                                  )
-                                : Icon(
-                                    Icons.apps_rounded,
-                                    color: colorScheme.primary.withValues(
-                                      alpha: AppOpacity.half,
-                                    ),
                                   ),
+                                )
+                              : Icon(
+                                  Icons.apps_rounded,
+                                  color: colorScheme.primary.withValues(
+                                    alpha: AppOpacity.half,
+                                  ),
+                                );
+                        },
+                      ),
+                    ),
+                    Positioned(
+                      right: -3,
+                      bottom: -3,
+                      child: Container(
+                        width: 18,
+                        height: 18,
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: colorScheme.surface,
+                            width: 1.5,
                           ),
                         ),
-                        Positioned(
-                          right: 3,
-                          top: 3,
-                          child: Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: colorScheme.surface,
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.arrow_upward_rounded,
-                              size: 9,
-                              color: colorScheme.onPrimary,
-                            ),
-                          ),
+                        child: Icon(
+                          Icons.arrow_upward_rounded,
+                          size: 10,
+                          color: colorScheme.onPrimary,
                         ),
-                      ],
-                    );
-                  },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 4),

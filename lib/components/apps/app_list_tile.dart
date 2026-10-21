@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,7 +17,6 @@ import 'package:obtainium/components/app_grid_tile.dart'
     show AppIconActionBadge;
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/glass_dialog.dart';
-import 'dart:ui';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
 class AppListTile extends StatefulWidget {
@@ -52,6 +52,7 @@ class _AppListTileState extends State<AppListTile>
   late final AnimationController _entranceController;
   late final Animation<double> _entranceFade;
   late final Animation<Offset> _entranceSlide;
+  Timer? _entranceTimer;
 
   @override
   void initState() {
@@ -83,7 +84,7 @@ class _AppListTileState extends State<AppListTile>
       if (widget.entranceDelay == Duration.zero) {
         _entranceController.forward();
       } else {
-        Future.delayed(widget.entranceDelay, () {
+        _entranceTimer = Timer(widget.entranceDelay, () {
           if (mounted) _entranceController.forward();
         });
       }
@@ -112,6 +113,7 @@ class _AppListTileState extends State<AppListTile>
 
   @override
   void dispose() {
+    _entranceTimer?.cancel();
     _entranceController.dispose();
     super.dispose();
   }

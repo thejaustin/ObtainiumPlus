@@ -64,7 +64,11 @@ class AppHaptics {
   /// Use with [ScaleTouchWrapper]'s hapticOnPressDown for responsive feel.
   static void tapDown() {
     if (!enabled) return;
-    _lastTapDownUs = DateTime.now().microsecondsSinceEpoch;
+    final nowUs = DateTime.now().microsecondsSinceEpoch;
+    if (nowUs - _lastTapDownUs < 40 * 1000) {
+      return;
+    }
+    _lastTapDownUs = nowUs;
     HapticFeedback.selectionClick();
   }
 
