@@ -238,7 +238,7 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --flavor normal --no-pub --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+          flutter build apk --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
           find build/app/outputs/flutter-apk/ -name "app-*normal*.apk" -exec bash -c 'mv "$1" "${1//-normal/}"' -- {} \;
           if [ "${{ steps.detect_build.outputs.is_dev }}" = "true" ]; then
             mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/Obtainium-Plus-Dev.apk

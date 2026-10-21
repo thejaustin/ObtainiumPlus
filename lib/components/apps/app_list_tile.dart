@@ -15,7 +15,6 @@ import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:obtainium/components/app_grid_tile.dart'
     show AppIconActionBadge;
-import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 
@@ -672,14 +671,9 @@ class _AppListTileState extends State<AppListTile>
                         ).colorScheme.primary.withValues(alpha: 0.06),
                         child: Stack(
                           children: [
-                            if (plusSettings.plusEnableGlassmorphism)
-                              Positioned.fill(
-                                child: ConditionalBlur(
-                                  enabled: true,
-                                  sigma: AppConstants.glassBlurSigmaSoft,
-                                  child: Container(color: Colors.transparent),
-                                ),
-                              ),
+                            // Glass sheen gradient (no per-tile BackdropFilter over
+                            // flat Scaffold background — eliminates offscreen GPU
+                            // saveLayer passes while scrolling)
                             if (plusSettings.plusEnableGlassmorphism)
                               Positioned.fill(
                                 child: Container(

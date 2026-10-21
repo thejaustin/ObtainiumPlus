@@ -71,7 +71,12 @@ class CategoryFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewSettings = context.watch<ViewSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final appsProvider = context.watch<AppsProvider>();
+    // Select only (appsRevision, apps.length) so download progress ticks do not
+    // rebuild the category filter bar on every byte chunk.
+    context.select<AppsProvider, (int, int)>(
+      (p) => (p.appsRevision, p.apps.length),
+    );
+    final appsProvider = context.read<AppsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
     if (viewSettings.categories.isEmpty || viewSettings.groupByCategory) {

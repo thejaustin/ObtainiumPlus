@@ -49,6 +49,41 @@ class ThemeBuilder {
       popupMenuTheme: PopupMenuThemeData(
         color: colorScheme.surfaceContainerHigh,
         surfaceTintColor: Colors.transparent,
+        elevation: plusEnableMaterialExpressive ? 6 : 3,
+        shape: _shape(
+          plusEnableMaterialExpressive,
+          plusEnableMaterialExpressive ? 20 : 14,
+          BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+            width: 0.8,
+          ),
+        ),
+      ),
+      tooltipTheme: TooltipThemeData(
+        decoration: ShapeDecoration(
+          color: colorScheme.inverseSurface,
+          shape: _shape(
+            plusEnableMaterialExpressive,
+            plusEnableMaterialExpressive ? 12 : 8,
+          ),
+        ),
+        textStyle: TextStyle(
+          color: colorScheme.onInverseSurface,
+          fontSize: 12,
+          fontWeight: plusEnableMaterialExpressive
+              ? FontWeight.w600
+              : FontWeight.w500,
+        ),
+      ),
+      badgeTheme: BadgeThemeData(
+        backgroundColor: colorScheme.error,
+        textColor: colorScheme.onError,
+        textStyle: TextStyle(
+          fontSize: 11,
+          fontWeight: plusEnableMaterialExpressive
+              ? FontWeight.w700
+              : FontWeight.w600,
+        ),
       ),
       fontFamily: useSystemFont ? 'SystemFont' : 'Montserrat',
       // M3 sparkle ripple is the expressive touch feedback; shader-based, so
@@ -61,7 +96,10 @@ class ThemeBuilder {
         plusEnableMaterialExpressive,
         cornerRadius,
       ),
-      dropdownMenuTheme: _buildDropdownMenuTheme(colorScheme),
+      dropdownMenuTheme: _buildDropdownMenuTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+      ),
       textTheme: _buildTextTheme(
         useSystemFont,
         colorScheme,
@@ -77,7 +115,11 @@ class ThemeBuilder {
         plusEnableMaterialExpressive,
         cornerRadius,
       ),
-      switchTheme: _buildSwitchTheme(colorScheme, tvFocus),
+      switchTheme: _buildSwitchTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        tvFocus,
+      ),
       sliderTheme: _buildSliderTheme(colorScheme, plusEnableMaterialExpressive),
       expansionTileTheme: ExpansionTileThemeData(
         shape: const Border(),
@@ -247,6 +289,15 @@ class ThemeBuilder {
 
     if (!expressive) {
       return baseTextTheme.copyWith(
+        displayLarge: baseTextTheme.displayLarge?.copyWith(
+          fontFamily: fontFamily,
+        ),
+        displayMedium: baseTextTheme.displayMedium?.copyWith(
+          fontFamily: fontFamily,
+        ),
+        displaySmall: baseTextTheme.displaySmall?.copyWith(
+          fontFamily: fontFamily,
+        ),
         headlineLarge: baseTextTheme.headlineLarge?.copyWith(
           fontFamily: fontFamily,
         ),
@@ -273,75 +324,113 @@ class ThemeBuilder {
     }
 
     return baseTextTheme.copyWith(
-      headlineLarge: baseTextTheme.headlineLarge?.copyWith(
+      displayLarge: baseTextTheme.displayLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.8,
+        height: 1.12,
+      ),
+      displayMedium: baseTextTheme.displayMedium?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.6,
+        height: 1.15,
+      ),
+      displaySmall: baseTextTheme.displaySmall?.copyWith(
         fontFamily: fontFamily,
         fontWeight: FontWeight.w700,
+        letterSpacing: -0.4,
+        height: 1.18,
+      ),
+      headlineLarge: baseTextTheme.headlineLarge?.copyWith(
+        fontFamily: fontFamily,
+        fontWeight: FontWeight.w800,
         letterSpacing: -0.5,
+        height: 1.2,
       ),
       headlineMedium: baseTextTheme.headlineMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w600,
-        letterSpacing: -0.25,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+        height: 1.22,
       ),
       headlineSmall: baseTextTheme.headlineSmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.15,
+        height: 1.25,
       ),
       titleLarge: baseTextTheme.titleLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.1,
       ),
       titleMedium: baseTextTheme.titleMedium?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.05,
       ),
       titleSmall: baseTextTheme.titleSmall?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w500,
-        letterSpacing: 0.1,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.05,
       ),
       bodyLarge: baseTextTheme.bodyLarge?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.25,
+        letterSpacing: 0.2,
       ),
       bodyMedium: baseTextTheme.bodyMedium?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.25,
+        letterSpacing: 0.2,
       ),
       bodySmall: baseTextTheme.bodySmall?.copyWith(
         fontFamily: fontFamily,
-        letterSpacing: 0.4,
+        letterSpacing: 0.35,
       ),
       labelLarge: baseTextTheme.labelLarge?.copyWith(
         fontFamily: fontFamily,
-        fontWeight: FontWeight.w600,
+        fontWeight: FontWeight.w700,
         letterSpacing: 0.1,
       ),
       labelMedium: baseTextTheme.labelMedium?.copyWith(
         fontFamily: fontFamily,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        letterSpacing: 0.4,
       ),
       labelSmall: baseTextTheme.labelSmall?.copyWith(
         fontFamily: fontFamily,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.5,
+        letterSpacing: 0.4,
       ),
     );
   }
 
-  /// Builds DropdownMenuThemeData with consistent text styling
+  /// Builds DropdownMenuThemeData with consistent text styling and squircle menu
   static DropdownMenuThemeData _buildDropdownMenuTheme(
     ColorScheme colorScheme,
+    bool expressive,
   ) {
     return DropdownMenuThemeData(
       textStyle: TextStyle(
         color: colorScheme.onSurface,
         fontSize: 16,
-        fontWeight: FontWeight.w500,
+        fontWeight: expressive ? FontWeight.w600 : FontWeight.w500,
+      ),
+      menuStyle: MenuStyle(
+        backgroundColor: WidgetStatePropertyAll(
+          colorScheme.surfaceContainerHigh,
+        ),
+        surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
+        shape: WidgetStatePropertyAll(
+          _shape(
+            expressive,
+            expressive ? 20 : 14,
+            BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+              width: 0.8,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -390,20 +479,27 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds SwitchThemeData using M3 color tokens
+  /// Builds SwitchThemeData using M3 / M3E color tokens
   static SwitchThemeData _buildSwitchTheme(
     ColorScheme colorScheme,
+    bool expressive,
     _TvFocus tvFocus,
   ) {
     return SwitchThemeData(
       overlayColor: tvFocus.overlay(0.5),
       thumbColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return colorScheme.onSurface.withValues(alpha: 0.38);
+        }
         if (states.contains(WidgetState.selected)) {
           return colorScheme.onPrimary;
         }
-        return colorScheme.outline;
+        return expressive ? colorScheme.onSurfaceVariant : colorScheme.outline;
       }),
       trackColor: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return colorScheme.surfaceContainerHighest.withValues(alpha: 0.38);
+        }
         if (states.contains(WidgetState.selected)) {
           return colorScheme.primary;
         }
@@ -413,7 +509,15 @@ class ThemeBuilder {
         if (states.contains(WidgetState.selected)) {
           return Colors.transparent;
         }
-        return colorScheme.outline;
+        return expressive
+            ? colorScheme.outlineVariant.withValues(alpha: 0.85)
+            : colorScheme.outline;
+      }),
+      trackOutlineWidth: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.selected)) {
+          return 0.0;
+        }
+        return expressive ? 1.5 : 2.0;
       }),
       thumbIcon: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
@@ -641,7 +745,7 @@ class ThemeBuilder {
     );
   }
 
-  /// Builds ChipThemeData for consistent chip styling
+  /// Builds ChipThemeData for consistent chip styling (M3E squircle vs classic M3)
   static ChipThemeData _buildChipTheme(
     ColorScheme colorScheme,
     bool expressive,
@@ -650,13 +754,21 @@ class ThemeBuilder {
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.primaryContainer,
       disabledColor: colorScheme.onSurface.withValues(alpha: AppOpacity.hint),
-      labelStyle: TextStyle(color: colorScheme.onSurfaceVariant),
-      secondaryLabelStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+      labelStyle: TextStyle(
+        color: colorScheme.onSurfaceVariant,
+        fontWeight: expressive ? FontWeight.w600 : FontWeight.w500,
+      ),
+      secondaryLabelStyle: TextStyle(
+        color: colorScheme.onPrimaryContainer,
+        fontWeight: expressive ? FontWeight.w700 : FontWeight.w500,
+      ),
       shape: expressive
-          ? const StadiumBorder()
+          ? RoundedSuperellipseBorder(borderRadius: BorderRadius.circular(12))
           : RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       side: BorderSide(
-        color: colorScheme.outline.withValues(alpha: AppOpacity.half),
+        color: expressive
+            ? colorScheme.outlineVariant.withValues(alpha: 0.55)
+            : colorScheme.outline.withValues(alpha: AppOpacity.half),
       ),
     );
   }
@@ -693,6 +805,10 @@ class ThemeBuilder {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
+        textStyle: TextStyle(
+          fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
+          letterSpacing: expressive ? 0.1 : 0.2,
+        ),
         shape: cornerRadius != null
             ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
@@ -708,6 +824,10 @@ class ThemeBuilder {
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
+        textStyle: TextStyle(
+          fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
+          letterSpacing: expressive ? 0.1 : 0.2,
+        ),
         shape: cornerRadius != null
             ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
@@ -723,6 +843,10 @@ class ThemeBuilder {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
+        textStyle: TextStyle(
+          fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
+          letterSpacing: expressive ? 0.1 : 0.2,
+        ),
         shape: cornerRadius != null
             ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),
@@ -738,6 +862,10 @@ class ThemeBuilder {
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
+        textStyle: TextStyle(
+          fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
+          letterSpacing: expressive ? 0.1 : 0.2,
+        ),
         shape: cornerRadius != null
             ? _shape(expressive, cornerRadius.clamp(0.0, 24.0))
             : const StadiumBorder(),

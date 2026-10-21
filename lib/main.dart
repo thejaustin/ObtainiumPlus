@@ -744,15 +744,26 @@ class _ObtainiumState extends State<Obtainium> {
 
   @override
   Widget build(BuildContext context) {
-    final settingsProvider = context.watch<SettingsProvider>();
-    final updateSettings = context.watch<UpdateSettingsProvider>();
-    final plusSettings = context.watch<PlusSettingsProvider>();
+    // Select only the specific fields that affect MaterialApp/ThemeData or
+    // background service lifecycle so unrelated setting toggles (haptics, grid
+    // columns, animations, etc.) do not trigger a full root MaterialApp rebuild.
+    final isTV = context.select<SettingsProvider, bool>((s) => s.isTV);
+    final (updateInterval, _) = context
+        .select<UpdateSettingsProvider, (int, bool)>(
+          (u) => (u.updateInterval, u.useFGService),
+        );
+    final (plusEnableMaterialExpressive, plusGlobalCornerRadius) = context
+        .select<PlusSettingsProvider, (bool, double)>(
+          (p) => (p.plusEnableMaterialExpressive, p.plusGlobalCornerRadius),
+        );
     final themeSettings = context.watch<ThemeSettingsProvider>();
+    final settingsProvider = context.read<SettingsProvider>();
+    final updateSettings = context.read<UpdateSettingsProvider>();
     final appsProvider = context.read<AppsProvider>();
     final logs = context.read<LogsProvider>();
 
-    if (updateSettings.updateInterval != existingUpdateInterval) {
-      existingUpdateInterval = updateSettings.updateInterval;
+    if (updateInterval != existingUpdateInterval) {
+      existingUpdateInterval = updateInterval;
       if (existingUpdateInterval > 0) {
         initPlatformState(existingUpdateInterval);
       }
@@ -854,20 +865,18 @@ class _ObtainiumState extends State<Obtainium> {
             theme: ThemeBuilder.buildTheme(
               colorScheme: lightColorScheme,
               useSystemFont: themeSettings.useSystemFont,
-              plusEnableMaterialExpressive:
-                  plusSettings.plusEnableMaterialExpressive,
-              cornerRadius: plusSettings.plusGlobalCornerRadius,
+              plusEnableMaterialExpressive: plusEnableMaterialExpressive,
+              cornerRadius: plusGlobalCornerRadius,
               matchSystemMaterialStyle: matchSystemStyle,
-              isTV: settingsProvider.isTV,
+              isTV: isTV,
             ),
             darkTheme: ThemeBuilder.buildTheme(
               colorScheme: darkColorScheme,
               useSystemFont: themeSettings.useSystemFont,
-              plusEnableMaterialExpressive:
-                  plusSettings.plusEnableMaterialExpressive,
-              cornerRadius: plusSettings.plusGlobalCornerRadius,
+              plusEnableMaterialExpressive: plusEnableMaterialExpressive,
+              cornerRadius: plusGlobalCornerRadius,
               matchSystemMaterialStyle: matchSystemStyle,
-              isTV: settingsProvider.isTV,
+              isTV: isTV,
             ),
             home: Shortcuts(
               shortcuts: <LogicalKeySet, Intent>{

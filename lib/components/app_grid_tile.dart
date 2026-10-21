@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
-import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -305,19 +304,10 @@ class _AppGridTileState extends State<AppGridTile>
                   ),
                   child: Stack(
                     children: [
-                      // 1. Backdrop blur (clipped inside card)
-                      // Cards use glassBlurSigmaSoft (12) not glassBlurSigma (24) —
-                      // strong blur on 20+ grid cards causes GPU layer overload.
-                      if (plusSettings.plusEnableGlassmorphism && !isCardless)
-                        Positioned.fill(
-                          child: ConditionalBlur(
-                            enabled: true,
-                            sigma: AppConstants.glassBlurSigmaSoft,
-                            child: const SizedBox.expand(),
-                          ),
-                        ),
-
-                      // 2. Glass sheen gradient
+                      // 1. Glass sheen gradient (no per-tile BackdropFilter over flat
+                      // Scaffold surface — eliminates 12-24 offscreen GPU saveLayer
+                      // passes per frame while preserving the translucent surface tint,
+                      // diagonal specular sheen, and top-edge highlight)
                       if (plusSettings.plusEnableGlassmorphism && !isCardless)
                         Positioned.fill(
                           child: Container(
