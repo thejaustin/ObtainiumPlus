@@ -1,6 +1,8 @@
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -563,18 +565,44 @@ class _OmnibarState extends State<Omnibar> {
   }
 }
 
-/// FAB menu for quick app actions
+/// FAB menu for quick app actions with scroll-aware extended/compact morphing
+/// and an animated Scroll-to-Top companion button.
 class AppActionsFAB extends StatelessWidget {
-  const AppActionsFAB({super.key});
+  final ValueListenable<({bool isCollapsed, bool showScrollToTop})>?
+  scrollStateListenable;
+  final VoidCallback? onScrollToTop;
+
+  const AppActionsFAB({
+    super.key,
+    this.scrollStateListenable,
+    this.onScrollToTop,
+  });
+
+  static Future<String?> _readClipboardUrl() async {
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim() ?? '';
+      if (text.isEmpty || text.contains(' ') || text.length > 512) return null;
+      final uri = Uri.tryParse(text);
+      if (uri != null &&
+          (uri.scheme == 'https' || uri.scheme == 'http') &&
+          uri.host.contains('.')) {
+        return text;
+      }
+    } catch (_) {}
+    return null;
+  }
 
   static void showAddAppMenu(BuildContext context) {
     final plusSettings = context.read<PlusSettingsProvider>();
     final enableGlass = plusSettings.plusEnableGlassmorphism;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final colorScheme = Theme.of(context).colorScheme;
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final sheetRadius = radius.clamp(24.0, 48.0);
+    final clipboardUrlFuture = _readClipboardUrl();
 
     showModalBottomSheet(
       context: context,
@@ -654,6 +682,113 @@ class AppActionsFAB extends StatelessWidget {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Smart Clipboard URL quick-add pill
+                          FutureBuilder<String?>(
+                            future: clipboardUrlFuture,
+                            builder: (ctx, snap) {
+                              final clipUrl = snap.data;
+                              if (clipUrl == null) {
+                                return const SizedBox.shrink();
+                              }
+                              final itemRadius = CardMetrics.inner(
+                                CardMetrics.card(radius),
+                              );
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Container(
+                                  decoration: ShapeDecoration(
+                                    color: colorScheme.primaryContainer
+                                        .withValues(alpha: 0.35),
+                                    shape: CardMetrics.shape(
+                                      itemRadius,
+                                      expressive: isM3E,
+                                      side: BorderSide(
+                                        color: colorScheme.primary.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    dense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 2,
+                                    ),
+                                    shape: CardMetrics.shape(
+                                      itemRadius,
+                                      expressive: isM3E,
+                                    ),
+                                    leading: Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: ShapeDecoration(
+                                        color: colorScheme.primary.withValues(
+                                          alpha: 0.16,
+                                        ),
+                                        shape: CardMetrics.shape(
+                                          itemRadius,
+                                          expressive: isM3E,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        Icons.content_paste_go_rounded,
+                                        size: 20,
+                                        color: colorScheme.primary,
+                                      ),
+                                    ),
+                                    title: Text(
+                                      tr('addAppByUrl'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: colorScheme.primary,
+                                          ),
+                                    ),
+                                    subtitle: Text(
+                                      clipUrl,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                    trailing: Icon(
+                                      Icons.add_circle_rounded,
+                                      color: colorScheme.primary,
+                                      size: 22,
+                                    ),
+                                    onTap: () {
+                                      AppHaptics.selectionClick();
+                                      Navigator.pop(context);
+                                      showAddAppSheet(
+                                        context: context,
+                                        initialUrl: clipUrl,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // Search & Discover (CommandCenter)
+                          _buildMenuItem(
+                            context,
+                            icon: Icons.travel_explore_rounded,
+                            title: tr('search'),
+                            subtitle: tr('searchSourceRepos'),
+                            containerColor: colorScheme.secondaryContainer
+                                .withValues(alpha: 0.65),
+                            iconColor: colorScheme.secondary,
+                            onTap: () {
+                              Navigator.pop(context);
+                              CommandCenter.show(context);
+                            },
+                          ),
+
                           // Add by URL
                           if (plusSettings.plusFabShowAddByUrl)
                             _buildMenuItem(
@@ -857,119 +992,228 @@ class AppActionsFAB extends StatelessWidget {
     final fabRadius = CardMetrics.pill(plusSettings.plusGlobalCornerRadius);
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final colorScheme = Theme.of(context).colorScheme;
+    final animEnabled = plusSettings.plusEnableEnhancedAnimations;
 
-    return Semantics(
-      label: tr('addApp'),
-      hint: tr('moreAddOptionsHint'),
-      button: true,
-      child: ScaleTouchWrapper(
-        onTap: () {
-          AppHaptics.selectionClick();
-          CommandCenter.show(context);
-        },
-        onLongPress: () {
-          AppHaptics.heavyImpact();
-          showAddAppMenu(context);
-        },
-        scaleDownFactor: 0.95,
-        hapticOnPressDown: true,
-        child: Container(
-          decoration: ShapeDecoration(
-            gradient: LinearGradient(
-              colors: [colorScheme.primary, colorScheme.tertiary],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            shape: CardMetrics.shape(
-              fabRadius,
-              expressive: isM3E,
-              side: BorderSide(
-                color: Colors.white.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-            shadows: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.38),
-                blurRadius: 16,
-                spreadRadius: 1,
-                offset: const Offset(0, 6),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.16),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Primary action: opens CommandCenter
-                InkWell(
-                  borderRadius: BorderRadius.horizontal(
-                    left: Radius.circular(fabRadius),
-                  ),
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    CommandCenter.show(context);
-                  },
-                  onLongPress: () {
-                    AppHaptics.heavyImpact();
-                    showAddAppMenu(context);
-                  },
+    Widget buildFabStack({
+      required bool isCollapsed,
+      required bool showScrollToTop,
+    }) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (onScrollToTop != null)
+            AnimatedScale(
+              scale: showScrollToTop ? 1.0 : 0.0,
+              duration: Duration(milliseconds: animEnabled ? 260 : 120),
+              curve: showScrollToTop
+                  ? AppConstants.expressiveSpring
+                  : Curves.easeInCubic,
+              child: AnimatedOpacity(
+                opacity: showScrollToTop ? 1.0 : 0.0,
+                duration: Duration(milliseconds: animEnabled ? 200 : 100),
+                child: IgnorePointer(
+                  ignoring: !showScrollToTop,
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add_rounded, color: onPrimary, size: 22),
-                        const SizedBox(width: 8),
-                        Text(
-                          tr('addApp'),
-                          style: TextStyle(
-                            color: onPrimary,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.3,
+                    padding: const EdgeInsets.only(bottom: 10, right: 4),
+                    child: ScaleTouchWrapper(
+                      hapticOnPressDown: false,
+                      scaleDownFactor: 0.90,
+                      child: Material(
+                        color: colorScheme.surfaceContainerHigh,
+                        elevation: 3,
+                        shadowColor: Colors.black.withValues(alpha: 0.25),
+                        shape: CardMetrics.shape(
+                          isM3E ? 16 : 20,
+                          expressive: isM3E,
+                          side: BorderSide(
+                            color: colorScheme.primary.withValues(alpha: 0.28),
+                            width: 1,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Subtle vertical divider between the main button and options affordance
-                Container(
-                  width: 1,
-                  height: 20,
-                  color: onPrimary.withValues(alpha: 0.25),
-                ),
-                // Secondary action affordance: directly opens the quick options menu
-                Tooltip(
-                  message: tr('moreAddOptions'),
-                  child: InkWell(
-                    borderRadius: BorderRadius.horizontal(
-                      right: Radius.circular(fabRadius),
-                    ),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      showAddAppMenu(context);
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(8, 14, 14, 14),
-                      child: Icon(
-                        Icons.keyboard_arrow_down_rounded,
-                        color: onPrimary.withValues(alpha: 0.9),
-                        size: 20,
+                        clipBehavior: Clip.antiAlias,
+                        child: InkWell(
+                          onTap: () {
+                            AppHaptics.lightImpact();
+                            onScrollToTop!();
+                          },
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(
+                              Icons.vertical_align_top_rounded,
+                              size: 20,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
+            ),
+          Semantics(
+            label: tr('addApp'),
+            hint: tr('moreAddOptionsHint'),
+            button: true,
+            child: ScaleTouchWrapper(
+              scaleDownFactor: 0.95,
+              hapticOnPressDown: false,
+              child: Container(
+                decoration: ShapeDecoration(
+                  gradient: LinearGradient(
+                    colors: [colorScheme.primary, colorScheme.tertiary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  shape: CardMetrics.shape(
+                    isCollapsed ? (isM3E ? 20 : 28) : fabRadius,
+                    expressive: isM3E,
+                    side: BorderSide(
+                      color: Colors.white.withValues(alpha: 0.25),
+                      width: 1,
+                    ),
+                  ),
+                  shadows: [
+                    BoxShadow(
+                      color: colorScheme.primary.withValues(alpha: 0.36),
+                      blurRadius: 16,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 6),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.16),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: AnimatedSize(
+                    duration: Duration(milliseconds: animEnabled ? 280 : 140),
+                    curve: animEnabled
+                        ? AppConstants.expressiveSpring
+                        : Curves.easeOutCubic,
+                    child: isCollapsed
+                        ? InkWell(
+                            customBorder: CardMetrics.shape(
+                              isM3E ? 20 : 28,
+                              expressive: isM3E,
+                            ),
+                            onTap: () {
+                              AppHaptics.selectionClick();
+                              CommandCenter.show(context);
+                            },
+                            onLongPress: () {
+                              AppHaptics.heavyImpact();
+                              showAddAppMenu(context);
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(15),
+                              child: Icon(
+                                Icons.add_rounded,
+                                color: onPrimary,
+                                size: 24,
+                              ),
+                            ),
+                          )
+                        : Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Primary action: opens CommandCenter
+                              InkWell(
+                                borderRadius: BorderRadius.horizontal(
+                                  left: Radius.circular(fabRadius),
+                                ),
+                                onTap: () {
+                                  AppHaptics.selectionClick();
+                                  CommandCenter.show(context);
+                                },
+                                onLongPress: () {
+                                  AppHaptics.heavyImpact();
+                                  showAddAppMenu(context);
+                                },
+                                child: Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    18,
+                                    14,
+                                    12,
+                                    14,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.add_rounded,
+                                        color: onPrimary,
+                                        size: 22,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        tr('addApp'),
+                                        style: TextStyle(
+                                          color: onPrimary,
+                                          fontWeight: FontWeight.w700,
+                                          letterSpacing: 0.25,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // Subtle vertical divider between the main button and options affordance
+                              Container(
+                                width: 1,
+                                height: 20,
+                                color: onPrimary.withValues(alpha: 0.25),
+                              ),
+                              // Secondary action affordance: directly opens the quick options menu
+                              Tooltip(
+                                message: tr('moreAddOptions'),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.horizontal(
+                                    right: Radius.circular(fabRadius),
+                                  ),
+                                  onTap: () {
+                                    AppHaptics.selectionClick();
+                                    showAddAppMenu(context);
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      10,
+                                      14,
+                                      14,
+                                      14,
+                                    ),
+                                    child: Icon(
+                                      Icons.keyboard_arrow_down_rounded,
+                                      color: onPrimary.withValues(alpha: 0.92),
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+        ],
+      );
+    }
+
+    if (scrollStateListenable == null) {
+      return buildFabStack(isCollapsed: false, showScrollToTop: false);
+    }
+    return ValueListenableBuilder<({bool isCollapsed, bool showScrollToTop})>(
+      valueListenable: scrollStateListenable!,
+      builder: (context, state, _) => buildFabStack(
+        isCollapsed: state.isCollapsed,
+        showScrollToTop: state.showScrollToTop,
       ),
     );
   }

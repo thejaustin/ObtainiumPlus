@@ -21,6 +21,7 @@ class PlusFloatingNavBar extends StatefulWidget {
   final ValueChanged<int> onDestinationSelected;
   final bool animationsEnabled;
   final bool alwaysShowLabels;
+  final Map<int, int> badges;
 
   const PlusFloatingNavBar({
     super.key,
@@ -29,6 +30,7 @@ class PlusFloatingNavBar extends StatefulWidget {
     required this.onDestinationSelected,
     required this.animationsEnabled,
     required this.alwaysShowLabels,
+    this.badges = const {},
   });
 
   @override
@@ -160,10 +162,12 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalW = constraints.maxWidth;
-        const pillH = 36.0;
         const vPad = 8.0;
         const labelH = 18.0;
-        final barH = pillH + vPad * 2 + labelH;
+        final barH = widget.alwaysShowLabels
+            ? (36.0 + vPad * 2 + labelH)
+            : 64.0;
+        final pillH = widget.alwaysShowLabels ? 36.0 : (barH - vPad * 2);
 
         return AnimatedBuilder(
           animation: Listenable.merge([_leftCtrl, _rightCtrl]),
@@ -189,7 +193,10 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                       height: pillH,
                       decoration: ShapeDecoration(
                         color: cs.primaryContainer,
-                        shape: CardMetrics.shape(18, expressive: isM3E),
+                        shape: CardMetrics.shape(
+                          widget.alwaysShowLabels ? 18 : 22,
+                          expressive: isM3E,
+                        ),
                       ),
                     ),
                   ),
@@ -197,6 +204,18 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                   Row(
                     children: List.generate(n, (i) {
                       final sel = i == widget.currentIndex;
+                      final showLabel = sel || widget.alwaysShowLabels;
+                      final badgeCount = widget.badges[i] ?? 0;
+                      final iconWidget = Icon(
+                        sel
+                            ? (widget.pages[i].selectedIcon ??
+                                  widget.pages[i].icon)
+                            : widget.pages[i].icon,
+                        size: 23,
+                        color: sel
+                            ? cs.onPrimaryContainer
+                            : cs.onSurfaceVariant,
+                      );
                       return Expanded(
                         child: Semantics(
                           label: tr(widget.pages[i].title),
@@ -221,39 +240,57 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                                           scale: _bounceAnim[i].value,
                                           child: child,
                                         ),
-                                    child: Icon(
-                                      widget.pages[i].icon,
-                                      size: 24,
-                                      color: sel
-                                          ? cs.onPrimaryContainer
-                                          : cs.onSurfaceVariant,
-                                    ),
+                                    child: badgeCount > 0
+                                        ? Badge.count(
+                                            count: badgeCount,
+                                            child: iconWidget,
+                                          )
+                                        : iconWidget,
                                   ),
-                                  const SizedBox(height: 2),
-                                  Opacity(
-                                    opacity: (sel || widget.alwaysShowLabels)
-                                        ? 1.0
-                                        : 0.0,
-                                    child: AnimatedDefaultTextStyle(
+                                  ClipRect(
+                                    child: AnimatedAlign(
                                       duration: Duration(
                                         milliseconds: widget.animationsEnabled
-                                            ? 180
+                                            ? 200
                                             : 0,
                                       ),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall!
-                                          .copyWith(
-                                            color: sel
-                                                ? cs.onPrimaryContainer
-                                                : cs.onSurfaceVariant,
-                                            fontWeight: sel
-                                                ? FontWeight.w600
-                                                : FontWeight.normal,
+                                      curve: Curves.easeOutCubic,
+                                      alignment: Alignment.topCenter,
+                                      heightFactor: showLabel ? 1.0 : 0.0,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(top: 2),
+                                        child: AnimatedOpacity(
+                                          duration: Duration(
+                                            milliseconds:
+                                                widget.animationsEnabled
+                                                ? 160
+                                                : 0,
                                           ),
-                                      child: Text(
-                                        tr(widget.pages[i].title),
-                                        overflow: TextOverflow.ellipsis,
+                                          opacity: showLabel ? 1.0 : 0.0,
+                                          child: AnimatedDefaultTextStyle(
+                                            duration: Duration(
+                                              milliseconds:
+                                                  widget.animationsEnabled
+                                                  ? 180
+                                                  : 0,
+                                            ),
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall!
+                                                .copyWith(
+                                                  color: sel
+                                                      ? cs.onPrimaryContainer
+                                                      : cs.onSurfaceVariant,
+                                                  fontWeight: sel
+                                                      ? FontWeight.w700
+                                                      : FontWeight.w500,
+                                                ),
+                                            child: Text(
+                                              tr(widget.pages[i].title),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),

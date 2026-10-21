@@ -250,8 +250,58 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
 
   late final ScrollController scrollController = ScrollController();
 
+  final ValueNotifier<({bool isCollapsed, bool showScrollToTop})>
+  scrollFabState = ValueNotifier((isCollapsed: false, showScrollToTop: false));
+  double _lastScrollOffset = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+    final offset = scrollController.offset;
+    final delta = offset - _lastScrollOffset;
+    _lastScrollOffset = offset;
+
+    final prev = scrollFabState.value;
+    bool nextCollapsed = prev.isCollapsed;
+    if (offset <= 48) {
+      nextCollapsed = false;
+    } else if (delta > 6) {
+      nextCollapsed = true;
+    } else if (delta < -6) {
+      nextCollapsed = false;
+    }
+    final nextShowScrollTop = offset > 360;
+
+    if (nextCollapsed != prev.isCollapsed ||
+        nextShowScrollTop != prev.showScrollToTop) {
+      scrollFabState.value = (
+        isCollapsed: nextCollapsed,
+        showScrollToTop: nextShowScrollTop,
+      );
+    }
+  }
+
+  void scrollToTop() {
+    if (_activeDiscoverQuery != null) {
+      _clearDiscoverResults();
+    }
+    if (!scrollController.hasClients || scrollController.offset <= 0) return;
+    scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 380),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
   @override
   void dispose() {
+    scrollController.removeListener(_onScroll);
+    scrollFabState.dispose();
     scrollController.dispose();
     super.dispose();
   }
@@ -2247,10 +2297,11 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                             (plusSettings.plusEnableBottomNavBar &&
                                 !plusSettings.plusTopUILayout &&
                                 !settingsProvider.isTV)
-                            ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0)
+                            ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0) +
+                                  (plusSettings.plusEnableFAB ? 64.0 : 0.0)
                             : (plusSettings.plusEnableFAB &&
                                       !settingsProvider.isTV
-                                  ? 80.0
+                                  ? 88.0
                                   : 24.0),
                       ),
                     ),

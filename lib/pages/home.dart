@@ -48,9 +48,10 @@ class HomePage extends StatefulWidget {
 class NavigationPageItem {
   late String title;
   late IconData icon;
+  late IconData? selectedIcon;
   late Widget widget;
 
-  NavigationPageItem(this.title, this.icon, this.widget);
+  NavigationPageItem(this.title, this.icon, this.widget, {this.selectedIcon});
 }
 
 class HomePageState extends State<HomePage> with TickerProviderStateMixin {
@@ -61,6 +62,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   StreamSubscription<Uri>? _linkSubscription;
 
   final GlobalKey<AppsPageState> _appsPageKey = GlobalKey<AppsPageState>();
+  final GlobalKey<SettingsPageState> _settingsPageKey =
+      GlobalKey<SettingsPageState>();
   late List<NavigationPageItem> pages;
 
   bool _providersInitialized = false;
@@ -104,24 +107,28 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   List<NavigationPageItem> _buildPages(bool withSystemUpdates) => [
     NavigationPageItem(
       'appsString',
-      Icons.apps_rounded,
+      Icons.apps_outlined,
       AppsPage(key: _appsPageKey),
+      selectedIcon: Icons.apps_rounded,
     ),
     if (withSystemUpdates)
       NavigationPageItem(
         'systemUpdates',
         Icons.system_update_alt_rounded,
         const SystemUpdatesPage(),
+        selectedIcon: Icons.system_update_alt_rounded,
       ),
     NavigationPageItem(
       'importExport',
-      Icons.import_export_rounded,
+      Icons.swap_vert_rounded,
       const ImportExportPage(),
+      selectedIcon: Icons.import_export_rounded,
     ),
     NavigationPageItem(
       'settings',
-      Icons.settings_rounded,
-      const SettingsPage(),
+      Icons.settings_outlined,
+      SettingsPage(key: _settingsPageKey),
+      selectedIcon: Icons.settings_rounded,
     ),
   ];
 
@@ -458,6 +465,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         ? 0
         : selectedIndexHistory.last;
     if (_tabController.index == index && currentTab == index) {
+      // Re-tapping the active destination scrolls that page back to the top.
+      AppHaptics.lightImpact();
+      final title = index < pages.length ? pages[index].title : '';
+      if (title == 'appsString') {
+        _appsPageKey.currentState?.scrollToTop();
+      } else if (title == 'settings') {
+        _settingsPageKey.currentState?.scrollToTop();
+      }
       return;
     }
     _tabController.animateTo(index);
@@ -486,6 +501,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isSelecting = context.select<AppsProvider, bool>(
       (p) => p.selectedAppIds.isNotEmpty,
+    );
+    final updateCount = context.select<AppsProvider, int>(
+      (p) => p.findExistingUpdates(installedOnly: true).length,
     );
 
     _syncSystemUpdatesPage(
@@ -593,7 +611,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ],
           ),
-          floatingActionButton: showAddFab ? const AppActionsFAB() : null,
+          floatingActionButton: showAddFab
+              ? AppActionsFAB(
+                  scrollStateListenable:
+                      _appsPageKey.currentState?.scrollFabState,
+                  onScrollToTop: () => _appsPageKey.currentState?.scrollToTop(),
+                )
+              : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
           body: pageBody,
         ),
@@ -627,9 +651,13 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         extendBody: true,
         backgroundColor: Theme.of(context).colorScheme.surface,
         // The omnibar "+" — the single entry point for the combined
-        // add/search/discover flow, visible on every tab.
+        // add/search/discover flow, with scroll-aware morphing & scroll-to-top.
         floatingActionButton: showAddFab && !isSelecting
-            ? const AppActionsFAB()
+            ? AppActionsFAB(
+                scrollStateListenable:
+                    _appsPageKey.currentState?.scrollFabState,
+                onScrollToTop: () => _appsPageKey.currentState?.scrollToTop(),
+              )
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
         body: settingsProvider.isTV && showNavBar
@@ -638,10 +666,29 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   FocusTraversalGroup(
                     child: NavigationRail(
                       destinations: pages
+                          .asMap()
+                          .entries
                           .map(
-                            (e) => NavigationRailDestination(
-                              icon: Icon(e.icon),
-                              label: Text(tr(e.title)),
+                            (entry) => NavigationRailDestination(
+                              icon: entry.key == 0 && updateCount > 0
+                                  ? Badge.count(
+                                      count: updateCount,
+                                      child: Icon(entry.value.icon),
+                                    )
+                                  : Icon(entry.value.icon),
+                              selectedIcon: entry.key == 0 && updateCount > 0
+                                  ? Badge.count(
+                                      count: updateCount,
+                                      child: Icon(
+                                        entry.value.selectedIcon ??
+                                            entry.value.icon,
+                                      ),
+                                    )
+                                  : Icon(
+                                      entry.value.selectedIcon ??
+                                          entry.value.icon,
+                                    ),
+                              label: Text(tr(entry.value.title)),
                             ),
                           )
                           .toList(),
@@ -657,7 +704,12 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             : pageBody,
         bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
-            : _buildBottomNavBar(context, plusSettings, currentIndex),
+            : _buildBottomNavBar(
+                context,
+                plusSettings,
+                currentIndex,
+                updateCount,
+              ),
       ),
     );
   }
@@ -666,6 +718,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     BuildContext context,
     PlusSettingsProvider plusSettings,
     int currentIndex,
+    int updateCount,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final isFloating = plusSettings.plusFloatingNavBar;
@@ -706,11 +759,29 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         milliseconds: plusSettings.plusEnableEnhancedAnimations ? 400 : 250,
       ),
       destinations: pages
+          .asMap()
+          .entries
           .map(
-            (e) => NavigationDestination(
-              icon: Icon(e.icon),
-              selectedIcon: Icon(e.icon, color: colorScheme.onPrimaryContainer),
-              label: tr(e.title),
+            (entry) => NavigationDestination(
+              icon: entry.key == 0 && updateCount > 0
+                  ? Badge.count(
+                      count: updateCount,
+                      child: Icon(entry.value.icon),
+                    )
+                  : Icon(entry.value.icon),
+              selectedIcon: entry.key == 0 && updateCount > 0
+                  ? Badge.count(
+                      count: updateCount,
+                      child: Icon(
+                        entry.value.selectedIcon ?? entry.value.icon,
+                        color: colorScheme.onPrimaryContainer,
+                      ),
+                    )
+                  : Icon(
+                      entry.value.selectedIcon ?? entry.value.icon,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+              label: tr(entry.value.title),
             ),
           )
           .toList(),
@@ -730,6 +801,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       onDestinationSelected: switchToPage,
       animationsEnabled: AppMotion.enabled(context),
       alwaysShowLabels: plusSettings.plusNavBarAlwaysShowLabels,
+      badges: {if (updateCount > 0) 0: updateCount},
     );
 
     final enableGlass = plusSettings.plusEnableGlassmorphism;
@@ -741,76 +813,81 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            // Shadows outside ClipRRect so they aren't clipped.
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 36,
-                    spreadRadius: 0,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.14),
-                    blurRadius: 14,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 10),
-                  ),
-                  if (enableGlass)
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.06),
-                      blurRadius: 28,
-                      spreadRadius: 2,
-                      offset: Offset.zero,
-                    ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: ConditionalBlur(
-                  enabled: enableGlass,
-                  sigma: 20,
-                  child: Container(
-                    decoration: ShapeDecoration(
-                      color: colorScheme.surfaceContainerHigh.withValues(
-                        alpha: enableGlass ? 0.72 : 1.0,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                // Shadows outside ClipRRect so they aren't clipped.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 36,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
                       ),
-                      shape: CardMetrics.shape(
-                        32,
-                        expressive: isM3E,
-                        side: BorderSide(
-                          color: enableGlass
-                              ? colorScheme.primary.withValues(alpha: 0.18)
-                              : colorScheme.outlineVariant.withValues(
-                                  alpha: 0.18,
-                                ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.14),
+                        blurRadius: 14,
+                        spreadRadius: -4,
+                        offset: const Offset(0, 10),
+                      ),
+                      if (enableGlass)
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.06),
+                          blurRadius: 28,
+                          spreadRadius: 2,
+                          offset: Offset.zero,
                         ),
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Inner top-edge highlight beneath nav content
-                        Positioned.fill(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  colorScheme.primaryContainer.withValues(
-                                    alpha: enableGlass ? 0.10 : 0.04,
-                                  ),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.45],
-                              ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: ConditionalBlur(
+                      enabled: enableGlass,
+                      sigma: 20,
+                      child: Container(
+                        decoration: ShapeDecoration(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: enableGlass ? 0.72 : 1.0,
+                          ),
+                          shape: CardMetrics.shape(
+                            32,
+                            expressive: isM3E,
+                            side: BorderSide(
+                              color: enableGlass
+                                  ? colorScheme.primary.withValues(alpha: 0.18)
+                                  : colorScheme.outlineVariant.withValues(
+                                      alpha: 0.18,
+                                    ),
                             ),
                           ),
                         ),
-                        wrapWithFocus(plusNavBar),
-                      ],
+                        child: Stack(
+                          children: [
+                            // Inner top-edge highlight beneath nav content
+                            Positioned.fill(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      colorScheme.primaryContainer.withValues(
+                                        alpha: enableGlass ? 0.10 : 0.04,
+                                      ),
+                                      Colors.transparent,
+                                    ],
+                                    stops: const [0.0, 0.45],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            wrapWithFocus(plusNavBar),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

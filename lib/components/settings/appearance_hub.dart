@@ -329,9 +329,13 @@ class AppearanceHub extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
+                              decoration: ShapeDecoration(
                                 color: accentColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(12),
+                                shape: CardMetrics.shape(
+                                  12,
+                                  expressive:
+                                      plusSettings.plusEnableMaterialExpressive,
+                                ),
                               ),
                               child: Icon(icon, color: accentColor, size: 22),
                             ),
@@ -481,12 +485,14 @@ class _HubCard extends StatelessWidget {
                           vertical: isCompact ? 2 : 3,
                         ),
                         decoration: ShapeDecoration(
-                          color: colorScheme.surfaceContainerHighest.withValues(
-                            alpha: 0.45,
-                          ),
+                          color: accentColor.withValues(alpha: 0.10),
                           shape: CardMetrics.shape(
                             CardMetrics.pill(baseRadius),
                             expressive: isM3E,
+                            side: BorderSide(
+                              color: accentColor.withValues(alpha: 0.24),
+                              width: 0.8,
+                            ),
                           ),
                         ),
                         child: Text(
