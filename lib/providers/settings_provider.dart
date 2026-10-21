@@ -67,7 +67,8 @@ class SettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
   SettingsProvider([this.prefs]);
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
-  final Map<String, String> _secureCache = {};
+  static final Map<String, String> _secureCache = {};
+  static bool _secureCacheLoaded = false;
 
   /// Credential settings kept in secure storage instead of plain prefs.
   static const List<String> secureKeys = [
@@ -98,45 +99,76 @@ class SettingsProvider with ChangeNotifier {
   static String? _cachedDefaultAppDir;
   static bool? _cachedIsTV;
 
-  Future<void> initializeSettings() async {
-    prefs = await SharedPreferences.getInstance();
-
-    // Migrate existing plaintext keys to secure storage and cache them
+  Future<void> _loadSecureSettings() async {
     try {
-      for (final key in secureKeys) {
-        if (prefs!.containsKey(key)) {
-          final plaintextVal = prefs!.getString(key);
-          if (plaintextVal != null && plaintextVal.isNotEmpty) {
-            await secureStorage.write(key: key, value: plaintextVal);
-            _secureCache[key] = plaintextVal;
+      await Future.wait(
+        secureKeys.map((key) async {
+          if (prefs!.containsKey(key)) {
+            final plaintextVal = prefs!.getString(key);
+            if (plaintextVal != null && plaintextVal.isNotEmpty) {
+              await secureStorage.write(key: key, value: plaintextVal);
+              _secureCache[key] = plaintextVal;
+            }
+            await prefs!.remove(key); // Clear plaintext
+          } else if (!_secureCacheLoaded) {
+            final secureVal = await secureStorage.read(key: key);
+            if (secureVal != null) {
+              _secureCache[key] = secureVal;
+            }
           }
-          await prefs!.remove(key); // Clear plaintext
-        } else {
-          final secureVal = await secureStorage.read(key: key);
-          if (secureVal != null) {
-            _secureCache[key] = secureVal;
-          }
-        }
-      }
+        }),
+      );
+      _secureCacheLoaded = true;
     } catch (e) {
       talker.warning('Could not initialize secure storage: $e');
+    }
+  }
+
+  Future<void> initializeSettings([
+    SharedPreferences? existingPrefs,
+    bool deferSecureStorage = false,
+  ]) async {
+    prefs = existingPrefs ?? prefs ?? await SharedPreferences.getInstance();
+
+    final secureFuture = _loadSecureSettings();
+    if (deferSecureStorage) {
+      unawaited(secureFuture);
     }
 
     // Neither platform lookup is worth failing all of settings init over —
     // both have sane fallbacks (defaultAppDir stays null, isTV stays false)
-    try {
-      defaultAppDir = (await AppFileService.getAppStorageDir()).path;
-    } catch (e) {
-      talker.warning('Could not determine app storage dir: $e');
-    }
-    try {
-      final info = await DeviceInfoPlugin().androidInfo;
-      isTV =
-          info.systemFeatures.contains('android.hardware.type.television') ||
-          info.systemFeatures.contains('android.software.leanback');
-    } catch (e) {
-      isTV = false;
-    }
+    await Future.wait([
+      if (!deferSecureStorage) secureFuture,
+      () async {
+        if (_cachedDefaultAppDir != null) {
+          defaultAppDir = _cachedDefaultAppDir;
+          return;
+        }
+        try {
+          _cachedDefaultAppDir = (await AppFileService.getAppStorageDir()).path;
+          defaultAppDir = _cachedDefaultAppDir;
+        } catch (e) {
+          talker.warning('Could not determine app storage dir: $e');
+        }
+      }(),
+      () async {
+        if (_cachedIsTV != null) {
+          isTV = _cachedIsTV!;
+          return;
+        }
+        try {
+          final info = await DeviceInfoPlugin().androidInfo;
+          _cachedIsTV =
+              info.systemFeatures.contains(
+                'android.hardware.type.television',
+              ) ||
+              info.systemFeatures.contains('android.software.leanback');
+          isTV = _cachedIsTV!;
+        } catch (e) {
+          isTV = false;
+        }
+      }(),
+    ]);
     _migrateLegacyExportSetting();
     _normalizeInstallPreference();
     _migrateGroupBySetting();

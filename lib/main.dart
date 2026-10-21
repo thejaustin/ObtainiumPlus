@@ -19,6 +19,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/home.dart';
 import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
+import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -355,7 +356,9 @@ Future<void> _runObtainium() async {
 }
 
 Future<void> _startObtainium() async {
-  final caCertFuture = () async {
+  // Fire non-critical platform & certificate setup asynchronously so it never
+  // delays the first frame.
+  unawaited(() async {
     try {
       ByteData data = await PlatformAssetBundle().load(
         'assets/ca/lets-encrypt-r3.pem',
@@ -364,14 +367,14 @@ Future<void> _startObtainium() async {
         data.buffer.asUint8List(),
       );
     } catch (_) {}
-  }();
+  }());
 
-  final prefsFuture = SharedPreferences.getInstance();
-  final dateFormattingFuture = initializeDateFormatting();
-  final easyLocalizationFuture = EasyLocalization.ensureInitialized();
+  unawaited(initializeDateFormatting());
+
   final np = NotificationsProvider();
-  final npInitFuture = np.initialize();
-  final systemUiFuture = () async {
+  unawaited(np.initialize());
+
+  unawaited(() async {
     try {
       final androidInfo = await DeviceInfoPlugin().androidInfo;
       if (androidInfo.version.sdkInt >= 29) {
@@ -385,7 +388,18 @@ Future<void> _startObtainium() async {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       }
     } catch (_) {}
-  }();
+  }());
+
+  // Warm up app directories and OS dynamic color palette in parallel with
+  // SharedPreferences and EasyLocalization initialization.
+  unawaited(
+    AppFileService.initAppDirectories().catchError(
+      (_) => <String, Directory>{},
+    ),
+  );
+  final dynamicColorWarmup = ObtainiumDynamicColorBuilder.warmUp();
+  final prefsFuture = SharedPreferences.getInstance();
+  final easyLocalizationFuture = EasyLocalization.ensureInitialized();
 
   final SharedPreferences prefs = await prefsFuture;
 
@@ -400,12 +414,9 @@ Future<void> _startObtainium() async {
   final authProvider = AuthProvider();
 
   await Future.wait([
-    caCertFuture,
-    dateFormattingFuture,
     easyLocalizationFuture,
-    npInitFuture,
-    systemUiFuture,
-    sp.initializeSettings(),
+    dynamicColorWarmup,
+    sp.initializeSettings(prefs, true),
     plusSettings.initializeSettings(prefs),
     themeSettings.initializeSettings(prefs),
     behaviorSettings.initializeSettings(prefs),
@@ -413,27 +424,29 @@ Future<void> _startObtainium() async {
     updateSettings.initializeSettings(prefs),
     pluginProvider.initialize(prefs),
     sourceConfigProvider.initializeSettings(prefs),
-    authProvider.initialize(prefs),
+    authProvider.initialize(prefs, deferSecureStorage: true),
   ]);
 
   plusSettings.addListener(() {
     sp.notifyPlusSettingsChanged();
   });
 
+  // Start loading tracked apps from disk immediately so Phase 1 overlaps with
+  // the initial widget tree mount instead of waiting for lazy provider lookup.
+  final appsProvider = AppsProvider(
+    settingsProvider: sp,
+    plusSettingsProvider: plusSettings,
+    themeSettingsProvider: themeSettings,
+    behaviorSettingsProvider: behaviorSettings,
+    viewSettingsProvider: viewSettings,
+    updateSettingsProvider: updateSettings,
+  );
+
   FlutterForegroundTask.initCommunicationPort();
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (context) => AppsProvider(
-            settingsProvider: sp,
-            plusSettingsProvider: plusSettings,
-            themeSettingsProvider: themeSettings,
-            behaviorSettingsProvider: behaviorSettings,
-            viewSettingsProvider: viewSettings,
-            updateSettingsProvider: updateSettings,
-          ),
-        ),
+        ChangeNotifierProvider(create: (context) => appsProvider),
         ChangeNotifierProvider(create: (context) => sp),
         ChangeNotifierProvider(create: (context) => plusSettings),
         ChangeNotifierProvider(create: (context) => themeSettings),
@@ -765,11 +778,16 @@ class _ObtainiumState extends State<Obtainium> {
     if (updateInterval != existingUpdateInterval) {
       existingUpdateInterval = updateInterval;
       if (existingUpdateInterval > 0) {
-        initPlatformState(existingUpdateInterval);
+        final intervalToConfigure = existingUpdateInterval;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) initPlatformState(intervalToConfigure);
+        });
       }
     }
 
-    _manageServices(updateSettings, logs);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _manageServices(updateSettings, logs);
+    });
     _handleFirstRun(settingsProvider, appsProvider, context);
 
     return WithForegroundTask(
@@ -841,7 +859,9 @@ class _ObtainiumState extends State<Obtainium> {
           }
 
           // The system font is also needed when matching the system style
-          if (themeSettings.useSystemFont || matchSystemStyle) {
+          if ((themeSettings.useSystemFont || matchSystemStyle) &&
+              !_fontLoaded) {
+            _fontLoaded = true;
             NativeFeatures.loadSystemFont();
           }
 

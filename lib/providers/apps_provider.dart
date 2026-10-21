@@ -2227,27 +2227,36 @@ class AppsProvider with ChangeNotifier {
 
   Future<void> _loadAppsPhase1(String? singleId) async {
     final sp = SourceProvider();
-    final appsDir = await getAppsDir();
     final List<List<String>> errors = [];
-    final entities = await appsDir.list().toList();
-
-    // Map existing cached icon files to avoid repeated per-app disk lookups
-    final iconsDir =
-        _iconsCacheDir ??
-        (await AppFileService.initAppDirectories())['iconsCacheDir']!;
     final Map<String, File> cachedIconFiles = {};
-    try {
-      if (await iconsDir.exists()) {
-        final iconEntities = await iconsDir.list().toList();
-        for (final entity in iconEntities) {
-          if (entity is File && entity.path.endsWith('.png')) {
-            final fileName = entity.path.split('/').last;
-            final appId = fileName.substring(0, fileName.length - 4);
-            cachedIconFiles[appId] = entity;
+    late List<FileSystemEntity> entities;
+
+    await Future.wait([
+      () async {
+        final appsDir = await getAppsDir();
+        entities = await appsDir.list().toList();
+      }(),
+      () async {
+        // Map existing cached icon files to avoid repeated per-app disk lookups
+        try {
+          final iconsDir =
+              _iconsCacheDir ??
+              (await AppFileService.initAppDirectories())['iconsCacheDir']!;
+          if (await iconsDir.exists()) {
+            final iconEntities = await iconsDir.list().toList();
+            for (final entity in iconEntities) {
+              if (entity is File && entity.path.endsWith('.png')) {
+                final fileName = entity.path.split('/').last;
+                final appId = fileName.substring(0, fileName.length - 4);
+                cachedIconFiles[appId] = entity;
+              }
+            }
           }
-        }
-      }
-    } catch (_) {}
+        } catch (_) {}
+      }(),
+    ]);
+
+    int preloadedIcons = 0;
 
     await Future.wait(
       entities.map((item) async {
@@ -2299,7 +2308,8 @@ class AppsProvider with ChangeNotifier {
           Uint8List? iconBytes = apps[app.id]?.icon;
           if (iconBytes == null &&
               cachedIconFiles.containsKey(app.id) &&
-              (singleId != null || apps.length < 12)) {
+              (singleId != null || preloadedIcons < 12)) {
+            preloadedIcons++;
             try {
               iconBytes = await cachedIconFiles[app.id]!.readAsBytes();
             } catch (_) {}

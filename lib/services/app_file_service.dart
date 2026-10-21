@@ -42,12 +42,23 @@ class AppFileService {
   }
 
   static final Set<String> _activeDownloadPaths = <String>{};
+  static Directory? _cachedAppStorageDir;
+  static Directory? _cachedAppsDir;
+  static Map<String, Directory>? _cachedAppDirectories;
 
-  static Future<Directory> getAppStorageDir() async =>
-      await getExternalStorageDirectory() ??
-      await getApplicationDocumentsDirectory();
+  static Future<Directory> getAppStorageDir() async {
+    if (_cachedAppStorageDir != null) return _cachedAppStorageDir!;
+    final dir =
+        await getExternalStorageDirectory() ??
+        await getApplicationDocumentsDirectory();
+    _cachedAppStorageDir = dir;
+    return dir;
+  }
 
   static Future<Directory> getAppsDir() async {
+    if (_cachedAppsDir != null && _cachedAppsDir!.existsSync()) {
+      return _cachedAppsDir!;
+    }
     Directory appsDir = Directory(
       '${(await getAppStorageDir()).path}/app_data',
     );
@@ -64,6 +75,7 @@ class AppFileService {
         }
       }
     }
+    _cachedAppsDir = appsDir;
     return appsDir;
   }
 
@@ -104,14 +116,25 @@ class AppFileService {
   }
 
   static Future<Map<String, Directory>> initAppDirectories() async {
+    if (_cachedAppDirectories != null) {
+      return _cachedAppDirectories!;
+    }
     late Directory APKDir;
     late Directory iconsCacheDir;
 
     Directory? cacheRoot;
     try {
+      final results = await Future.wait<Object?>([
+        getExternalCacheDirectories(),
+        getExternalStorageDirectory(),
+      ]);
+      final extStorage = results[1] as Directory?;
+      if (extStorage != null) {
+        _cachedAppStorageDir ??= extStorage;
+      }
       cacheRoot = selectPrimaryExternalCache(
-        await getExternalCacheDirectories(),
-        await getExternalStorageDirectory(),
+        results[0] as List<Directory>?,
+        extStorage,
       );
     } catch (_) {}
 
@@ -207,7 +230,9 @@ class AppFileService {
       }
     }
 
-    return {'APKDir': APKDir, 'iconsCacheDir': iconsCacheDir};
+    final result = {'APKDir': APKDir, 'iconsCacheDir': iconsCacheDir};
+    _cachedAppDirectories = result;
+    return result;
   }
 
   static void clearAppCache(String appId, Directory APKDir) {

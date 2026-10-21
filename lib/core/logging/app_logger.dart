@@ -24,14 +24,16 @@ class AppLogger {
   static Future<void> init() async {
     if (_db != null) return;
     final db = AppLogDb();
-    try {
-      await db.purgeOlderThan(const Duration(days: 7));
-    } catch (e) {
-      // Logging must never prevent the app from starting. Keep the handle so
-      // later writes still attempt (they are individually guarded below).
-      debugPrint('Failed to initialize log database: $e');
-    }
     _db = db;
+    // Purge old logs asynchronously off the critical cold-launch path.
+    unawaited(
+      db.purgeOlderThan(const Duration(days: 7)).catchError((Object e) {
+        // Logging must never prevent the app from starting. Keep the handle so
+        // later writes still attempt (they are individually guarded below).
+        debugPrint('Failed to initialize log database: $e');
+        return 0;
+      }),
+    );
   }
 
   static Future<List<LogEntry>> getLogs({

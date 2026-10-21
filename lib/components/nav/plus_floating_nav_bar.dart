@@ -162,12 +162,10 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
     return LayoutBuilder(
       builder: (context, constraints) {
         final totalW = constraints.maxWidth;
+        const pillH = 36.0;
         const vPad = 8.0;
         const labelH = 18.0;
-        final barH = widget.alwaysShowLabels
-            ? (36.0 + vPad * 2 + labelH)
-            : 64.0;
-        final pillH = widget.alwaysShowLabels ? 36.0 : (barH - vPad * 2);
+        const barH = pillH + vPad * 2 + labelH;
 
         return AnimatedBuilder(
           animation: Listenable.merge([_leftCtrl, _rightCtrl]),
@@ -193,10 +191,7 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                       height: pillH,
                       decoration: ShapeDecoration(
                         color: cs.primaryContainer,
-                        shape: CardMetrics.shape(
-                          widget.alwaysShowLabels ? 18 : 22,
-                          expressive: isM3E,
-                        ),
+                        shape: CardMetrics.shape(18, expressive: isM3E),
                       ),
                     ),
                   ),
@@ -211,7 +206,7 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                             ? (widget.pages[i].selectedIcon ??
                                   widget.pages[i].icon)
                             : widget.pages[i].icon,
-                        size: 23,
+                        size: 24,
                         color: sel
                             ? cs.onPrimaryContainer
                             : cs.onSurfaceVariant,
@@ -247,50 +242,34 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                                           )
                                         : iconWidget,
                                   ),
-                                  ClipRect(
-                                    child: AnimatedAlign(
+                                  const SizedBox(height: 2),
+                                  AnimatedOpacity(
+                                    duration: Duration(
+                                      milliseconds: widget.animationsEnabled
+                                          ? 160
+                                          : 0,
+                                    ),
+                                    opacity: showLabel ? 1.0 : 0.0,
+                                    child: AnimatedDefaultTextStyle(
                                       duration: Duration(
                                         milliseconds: widget.animationsEnabled
-                                            ? 200
+                                            ? 180
                                             : 0,
                                       ),
-                                      curve: Curves.easeOutCubic,
-                                      alignment: Alignment.topCenter,
-                                      heightFactor: showLabel ? 1.0 : 0.0,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(top: 2),
-                                        child: AnimatedOpacity(
-                                          duration: Duration(
-                                            milliseconds:
-                                                widget.animationsEnabled
-                                                ? 160
-                                                : 0,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall!
+                                          .copyWith(
+                                            color: sel
+                                                ? cs.onPrimaryContainer
+                                                : cs.onSurfaceVariant,
+                                            fontWeight: sel
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
                                           ),
-                                          opacity: showLabel ? 1.0 : 0.0,
-                                          child: AnimatedDefaultTextStyle(
-                                            duration: Duration(
-                                              milliseconds:
-                                                  widget.animationsEnabled
-                                                  ? 180
-                                                  : 0,
-                                            ),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall!
-                                                .copyWith(
-                                                  color: sel
-                                                      ? cs.onPrimaryContainer
-                                                      : cs.onSurfaceVariant,
-                                                  fontWeight: sel
-                                                      ? FontWeight.w700
-                                                      : FontWeight.w500,
-                                                ),
-                                            child: Text(
-                                              tr(widget.pages[i].title),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ),
+                                      child: Text(
+                                        tr(widget.pages[i].title),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ),

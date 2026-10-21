@@ -122,7 +122,42 @@ class AuthProvider with ChangeNotifier {
 
   // ── Initialisation ────────────────────────────────────────────────────────
 
-  Future<void> initialize(SharedPreferences prefs) async {
+  Future<void> _loadSecureAuth(String? legacyEmail) async {
+    if (legacyEmail != null) {
+      try {
+        await _storage.write(key: _kMicroGEmail, value: legacyEmail);
+      } finally {
+        await _prefs?.remove('microg_email');
+      }
+    }
+
+    // Email and tokens stored in encrypted secure storage — never in SharedPreferences
+    final results = await Future.wait([
+      _storage.read(key: _kMicroGEmail),
+      _storage.read(key: _kAnonBundle),
+      _storage.read(key: _kPersonalBundle),
+    ]);
+    _microGEmail = results[0];
+
+    final anonJson = results[1];
+    if (anonJson != null) {
+      try {
+        _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson));
+      } catch (_) {}
+    }
+
+    final personalJson = results[2];
+    if (personalJson != null) {
+      try {
+        _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson));
+      } catch (_) {}
+    }
+  }
+
+  Future<void> initialize(
+    SharedPreferences prefs, {
+    bool deferSecureStorage = false,
+  }) async {
     _prefs = prefs;
 
     _dispensers = _prefs?.safeStringList('play_store_dispensers') ?? [];
@@ -145,32 +180,13 @@ class AuthProvider with ChangeNotifier {
     }
 
     // One-time migration: move email from SharedPreferences → secure storage.
-    // Uses try/finally so the plaintext key is always removed even if the
-    // secure write fails (prefer losing the value over leaving it in plaintext).
     final legacyEmail = _prefs?.safeString('microg_email');
-    if (legacyEmail != null) {
-      try {
-        await _storage.write(key: _kMicroGEmail, value: legacyEmail);
-      } finally {
-        await _prefs?.remove('microg_email');
-      }
-    }
-
-    // Email and tokens stored in encrypted secure storage — never in SharedPreferences
-    _microGEmail = await _storage.read(key: _kMicroGEmail);
-
-    final anonJson = await _storage.read(key: _kAnonBundle);
-    if (anonJson != null) {
-      try {
-        _anonymousBundle = AuthBundle.fromJson(jsonDecode(anonJson));
-      } catch (_) {}
-    }
-
-    final personalJson = await _storage.read(key: _kPersonalBundle);
-    if (personalJson != null) {
-      try {
-        _personalBundle = AuthBundle.fromJson(jsonDecode(personalJson));
-      } catch (_) {}
+    if (deferSecureStorage) {
+      _loadSecureAuth(
+        legacyEmail,
+      ).then((_) => notifyListeners()).catchError((_) {});
+    } else {
+      await _loadSecureAuth(legacyEmail);
     }
 
     notifyListeners();

@@ -96,6 +96,47 @@ class ObtainiumDynamicColorBuilder extends StatefulWidget {
 
   final Widget Function(ColorScheme? light, ColorScheme? dark) builder;
 
+  static ColorScheme? _cachedLight;
+  static ColorScheme? _cachedDark;
+  static Future<void>? _warmUpFuture;
+
+  /// Pre-fetches the OS dynamic color palette during startup so the very first
+  /// frame renders with the final [ColorScheme]s without a post-mount rebuild.
+  static Future<void> warmUp() => _warmUpFuture ??= _fetchDynamicColors();
+
+  static Future<void> _fetchDynamicColors() async {
+    try {
+      // ignore: deprecated_member_use
+      final corePalette = await DynamicColorPlugin.getCorePalette();
+      if (corePalette != null) {
+        _cachedLight = corePaletteToColorScheme(corePalette);
+        _cachedDark = corePaletteToColorScheme(
+          corePalette,
+          brightness: Brightness.dark,
+        );
+        return;
+      }
+    } on PlatformException {
+      // Dynamic color is unavailable; the caller falls back to a seeded scheme.
+    } catch (_) {}
+
+    try {
+      final accentColor = await DynamicColorPlugin.getAccentColor();
+      if (accentColor != null) {
+        _cachedLight = ColorScheme.fromSeed(
+          seedColor: accentColor,
+          brightness: Brightness.light,
+        );
+        _cachedDark = ColorScheme.fromSeed(
+          seedColor: accentColor,
+          brightness: Brightness.dark,
+        );
+      }
+    } on PlatformException {
+      // Dynamic color is unavailable; the caller falls back to a seeded scheme.
+    } catch (_) {}
+  }
+
   @override
   State<ObtainiumDynamicColorBuilder> createState() =>
       _ObtainiumDynamicColorBuilderState();
@@ -104,14 +145,16 @@ class ObtainiumDynamicColorBuilder extends StatefulWidget {
 class _ObtainiumDynamicColorBuilderState
     extends State<ObtainiumDynamicColorBuilder>
     with WidgetsBindingObserver {
-  ColorScheme? _light;
-  ColorScheme? _dark;
+  ColorScheme? _light = ObtainiumDynamicColorBuilder._cachedLight;
+  ColorScheme? _dark = ObtainiumDynamicColorBuilder._cachedDark;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _loadDynamicColors();
+    if (_light == null && _dark == null) {
+      _loadDynamicColors();
+    }
   }
 
   @override
@@ -124,45 +167,21 @@ class _ObtainiumDynamicColorBuilderState
   // background; pick it up on return.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _loadDynamicColors();
+    if (state == AppLifecycleState.resumed) {
+      ObtainiumDynamicColorBuilder._warmUpFuture = null;
+      _loadDynamicColors();
+    }
   }
 
   Future<void> _loadDynamicColors() async {
-    try {
-      // ignore: deprecated_member_use
-      final corePalette = await DynamicColorPlugin.getCorePalette();
-      if (!mounted) return;
-      if (corePalette != null) {
-        setState(() {
-          _light = corePaletteToColorScheme(corePalette);
-          _dark = corePaletteToColorScheme(
-            corePalette,
-            brightness: Brightness.dark,
-          );
-        });
-        return;
-      }
-    } on PlatformException {
-      // Dynamic color is unavailable; the caller falls back to a seeded scheme.
-    }
-
-    try {
-      final accentColor = await DynamicColorPlugin.getAccentColor();
-      if (!mounted) return;
-      if (accentColor != null) {
-        setState(() {
-          _light = ColorScheme.fromSeed(
-            seedColor: accentColor,
-            brightness: Brightness.light,
-          );
-          _dark = ColorScheme.fromSeed(
-            seedColor: accentColor,
-            brightness: Brightness.dark,
-          );
-        });
-      }
-    } on PlatformException {
-      // Dynamic color is unavailable; the caller falls back to a seeded scheme.
+    await ObtainiumDynamicColorBuilder.warmUp();
+    if (!mounted) return;
+    if (_light != ObtainiumDynamicColorBuilder._cachedLight ||
+        _dark != ObtainiumDynamicColorBuilder._cachedDark) {
+      setState(() {
+        _light = ObtainiumDynamicColorBuilder._cachedLight;
+        _dark = ObtainiumDynamicColorBuilder._cachedDark;
+      });
     }
   }
 
