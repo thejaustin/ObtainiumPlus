@@ -1052,6 +1052,9 @@ class AppsProvider with ChangeNotifier {
     LogsProvider? logsProvider,
   }) {
     _isBg = isBg;
+    // Report "loading" from construction so the UI shows skeletons instead of
+    // flashing the "No apps" empty state before the first loadApps() starts.
+    loadingApps = !isBg;
     this.settingsProvider = settingsProvider ?? SettingsProvider();
     if (plusSettingsProvider != null) plusSettings = plusSettingsProvider;
     if (themeSettingsProvider != null) themeSettings = themeSettingsProvider;
@@ -1151,6 +1154,10 @@ class AppsProvider with ChangeNotifier {
       _initCompleter.future.ignore();
       if (!_initCompleter.isCompleted) _initCompleter.completeError(e);
       initError = e.toString();
+      if (loadingApps && appsLoadingCompleter == null) {
+        loadingApps = false;
+        if (!_disposed) _notifyUiOnly();
+      }
       AppLogger.error(e, message: 'AppsProvider async init error');
     });
   }

@@ -71,25 +71,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   late SettingsProvider settingsProvider;
   late AppsProvider appsProvider;
 
-  // Measured height of the floating bottom nav bar (divider + NavigationBar
-  // + its own safe-area inset). extendBody:true lets page content draw
-  // behind the translucent bar for the frosted-glass look, so each page
-  // needs this as bottom padding or its last items/buttons render hidden
-  // underneath the bar instead of above it.
+  // Key for the bottom nav bar's RepaintBoundary. (Pages read the bar's
+  // inset via MediaQuery padding from extendBody, so no manual measuring —
+  // the old per-build measure pass triggered an extra setState rebuild.)
   final GlobalKey _bottomNavBarKey = GlobalKey();
-  double _bottomNavBarHeight = 0;
-
-  void _measureBottomNavBar() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final height = _bottomNavBarKey.currentContext?.size?.height;
-      if (height != null && height != _bottomNavBarHeight) {
-        setState(() {
-          _bottomNavBarHeight = height;
-        });
-      }
-    });
-  }
 
   @override
   void didChangeDependencies() {
@@ -502,8 +487,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final isSelecting = context.select<AppsProvider, bool>(
       (p) => p.selectedAppIds.isNotEmpty,
     );
+    // Memoized per apps-revision, so download-progress ticks don't re-run
+    // version matching across every tracked app.
     final updateCount = context.select<AppsProvider, int>(
-      (p) => p.findExistingUpdates(installedOnly: true).length,
+      (p) => p.findAllPendingUpdates().updates.length,
     );
 
     _syncSystemUpdatesPage(
@@ -513,9 +500,6 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     final isTopNav = plusSettings.plusTopUILayout && !settingsProvider.isTV;
     final showNavBar =
         plusSettings.plusEnableBottomNavBar && !isTopNav && !isSelecting;
-    if (showNavBar && !settingsProvider.isTV) {
-      _measureBottomNavBar();
-    }
     final currentIndex = (showNavBar || isTopNav)
         ? (selectedIndexHistory.isEmpty ? 0 : selectedIndexHistory.last)
         : 0;
