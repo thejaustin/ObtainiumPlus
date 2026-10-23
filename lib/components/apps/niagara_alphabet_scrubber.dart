@@ -28,11 +28,17 @@ class NiagaraAlphabetScrubber extends StatefulWidget {
   /// updates" is on); they get one ↑ entry instead of letters.
   final Set<String> leadingIds;
 
+  /// A zero-height marker at the top of the app list. The rail shows once
+  /// it scrolls above the rail, so it never covers whatever sits above the
+  /// list (dashboard, tips, filters), however tall that is.
+  final GlobalKey? listStartKey;
+
   const NiagaraAlphabetScrubber({
     super.key,
     required this.apps,
     required this.scrollController,
     this.leadingIds = const {},
+    this.listStartKey,
   });
 
   /// Extra end padding lists/grids should reserve so the resting rail never
@@ -116,16 +122,17 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
   Set<String>? _bucketsLeading;
   List<ScrubberBucket>? _cachedBuckets;
 
-  /// Scroll offset past which the list, not the header/dashboard above it,
-  /// fills the middle of the screen where the rail sits.
+  /// Fallback when there's no list marker: scroll offset past which the
+  /// list fills the middle of the screen where the rail sits.
   static const double _revealOffset = 220;
+  final _railKey = GlobalKey();
   bool _revealed = false;
 
   @override
   void initState() {
     super.initState();
     widget.scrollController.addListener(_onScroll);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _onScroll());
+    _onScroll();
   }
 
   @override
@@ -135,11 +142,41 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
       oldWidget.scrollController.removeListener(_onScroll);
       widget.scrollController.addListener(_onScroll);
     }
+    // Content above the list can change height without a scroll (a tip
+    // dismissed, filters toggled).
+    _onScroll();
   }
 
+  bool _measureScheduled = false;
+
+  /// Scroll notifications arrive before the new layout, so measure after
+  /// the frame.
   void _onScroll() {
+    if (_measureScheduled) return;
+    _measureScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measureScheduled = false;
+      _measure();
+    });
+    WidgetsBinding.instance.ensureVisualUpdate();
+  }
+
+  void _measure() {
     if (!mounted || !widget.scrollController.hasClients) return;
-    final revealed = widget.scrollController.offset > _revealOffset;
+    final anchor = widget.listStartKey?.currentContext?.findRenderObject();
+    final rail = _railKey.currentContext?.findRenderObject();
+    final bool revealed;
+    if (anchor is RenderBox &&
+        anchor.attached &&
+        rail is RenderBox &&
+        rail.attached &&
+        rail.hasSize) {
+      revealed =
+          anchor.localToGlobal(Offset.zero).dy <=
+          rail.localToGlobal(Offset.zero).dy;
+    } else {
+      revealed = widget.scrollController.offset > _revealOffset;
+    }
     if (revealed != _revealed) setState(() => _revealed = revealed);
   }
 
@@ -269,6 +306,7 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
         return Align(
           alignment: Alignment.centerRight,
           child: SizedBox(
+            key: _railKey,
             width: isDragging ? 220 : 28,
             height: railHeight + 48,
             child: Stack(

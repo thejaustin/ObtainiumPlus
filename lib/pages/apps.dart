@@ -177,6 +177,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     includeNonInstalled: false,
   );
   Set<String> selectedAppIds = {};
+  final GlobalKey _listStartKey = GlobalKey();
   String? activeTag;
 
   // Inline discover search state
@@ -2355,6 +2356,9 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                           });
                         },
                       ),
+                    SliverToBoxAdapter(
+                      child: SizedBox(key: _listStartKey),
+                    ),
                     ...getLoadingWidgets(),
                     if (_activeDiscoverQuery != null)
                       ..._buildDiscoverResultsSlivers(context, plusSettings)
@@ -2387,6 +2391,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                   apps: listedApps,
                   scrollController: scrollController,
                   leadingIds: scrubberLeading,
+                  listStartKey: _listStartKey,
                 ),
               ),
           ],
