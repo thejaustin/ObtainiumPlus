@@ -49,6 +49,15 @@ class AppLogger {
     return _db!.delete(before: before, after: after);
   }
 
+  /// Set from the Deep logging setting: keeps [trace] lines and stack
+  /// traces in the log viewer.
+  static bool verbose = false;
+
+  /// Detail that's only worth keeping while deep logging is on.
+  static void trace(String message) {
+    if (verbose) _log(AppLogLevel.debug, message);
+  }
+
   static void debug(String message, {Object? error, StackTrace? stackTrace}) {
     _log(AppLogLevel.debug, message, error: error, stackTrace: stackTrace);
   }
@@ -77,9 +86,11 @@ class AppLogger {
     StackTrace? stackTrace,
   }) {
     _logToConsole(level, message, error: error, stackTrace: stackTrace);
-    _persist(
-      LogEntry(message: _formatPersistedMessage(message, error), level: level),
-    );
+    var persisted = _formatPersistedMessage(message, error);
+    if (verbose && stackTrace != null) {
+      persisted = '$persisted\n${_trimStack(stackTrace)}';
+    }
+    _persist(LogEntry(message: persisted, level: level));
   }
 
   static void _logToConsole(
@@ -129,6 +140,14 @@ class AppLogger {
       }),
     );
   }
+
+  static String _trimStack(StackTrace stackTrace, {int frames = 12}) =>
+      stackTrace
+          .toString()
+          .split('\n')
+          .where((l) => l.trim().isNotEmpty)
+          .take(frames)
+          .join('\n');
 
   static String _formatPersistedMessage(String message, Object? error) {
     if (error == null) return message;

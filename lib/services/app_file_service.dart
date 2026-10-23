@@ -1,3 +1,4 @@
+import 'package:obtainium/core/logging/app_logger.dart' as core_log;
 import 'dart:async';
 import 'package:obtainium/utils/logger.dart';
 import 'dart:convert';
@@ -417,6 +418,9 @@ class AppFileService {
 
         logs?.add(
           'Download failed ($e). Retrying in $delaySeconds seconds... (Attempt $attempt)',
+        );
+        core_log.AppLogger.trace(
+          'Retrying $fileName in ${delaySeconds}s (attempt $attempt): $e',
         );
         await Future.delayed(Duration(seconds: delaySeconds));
 

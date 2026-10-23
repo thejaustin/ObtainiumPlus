@@ -129,6 +129,7 @@ class SettingsProvider with ChangeNotifier {
     bool deferSecureStorage = false,
   ]) async {
     prefs = existingPrefs ?? prefs ?? await SharedPreferences.getInstance();
+    AppLogger.verbose = enableDeepLogging;
 
     final secureFuture = _loadSecureSettings();
     if (deferSecureStorage) {
@@ -1064,6 +1065,7 @@ class SettingsProvider with ChangeNotifier {
   bool get enableDeepLogging => prefs?.safeBool('enableDeepLogging') ?? false;
   set enableDeepLogging(bool val) {
     prefs?.setBool('enableDeepLogging', val);
+    AppLogger.verbose = val;
     notifyListeners();
   }
 
