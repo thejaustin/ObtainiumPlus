@@ -243,7 +243,7 @@ class ActiveOperationsBanner extends StatelessWidget {
                                   onTap: () {
                                     AppHaptics.selectionClick();
                                     final appId = activeDownloads[i].app.id;
-                                    showDraggableModalBottomSheet(
+                                    showAdaptiveDetailSheet(
                                       context: context,
                                       builder: (context, controller) => AppPage(
                                         appId: appId,

@@ -478,7 +478,7 @@ class _AppDashboardState extends State<AppDashboard>
       provider.toggleAppSelection(app.app.id);
       return;
     }
-    showDraggableModalBottomSheet(
+    showAdaptiveDetailSheet(
       context: context,
       builder: (context, controller) => AppPage(
         appId: app.app.id,

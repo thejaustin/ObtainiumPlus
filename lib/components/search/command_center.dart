@@ -620,7 +620,7 @@ class _CommandCenterState extends State<CommandCenter> {
             borderRadius: BorderRadius.circular(itemRadius),
             onTap: () {
               Navigator.pop(context);
-              showDraggableModalBottomSheet(
+              showAdaptiveDetailSheet(
                 context: context,
                 builder: (context, controller) => AppPage(
                   appId: app.app.id,

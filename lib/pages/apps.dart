@@ -1238,7 +1238,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
               toggleAppSelected(listedApps[index].app);
             } else {
               AppHaptics.selectionClick();
-              showDraggableModalBottomSheet(
+              showAdaptiveDetailSheet(
                 context: context,
                 builder: (context, controller) => AppPage(
                   appId: listedApps[index].app.id,
@@ -1978,7 +1978,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
           toggleAppSelected: toggleAppSelected,
           onAppTap: (app) {
             AppHaptics.selectionClick();
-            showDraggableModalBottomSheet(
+            showAdaptiveDetailSheet(
               context: context,
               builder: (context, controller) => AppPage(
                 appId: app.id,
@@ -2037,7 +2037,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                         toggleAppSelected(app.app);
                       } else {
                         AppHaptics.selectionClick();
-                        showDraggableModalBottomSheet(
+                        showAdaptiveDetailSheet(
                           context: context,
                           builder: (context, controller) => AppPage(
                             appId: app.app.id,
@@ -2091,7 +2091,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
           updateAppIds: existingUpdates,
           getChangeLogFn: getChangeLogFn,
           onAppTap: (app) {
-            showDraggableModalBottomSheet(
+            showAdaptiveDetailSheet(
               context: context,
               builder: (context, controller) => AppPage(
                 appId: app.id,
@@ -2644,7 +2644,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     }
 
     AppHaptics.selectionClick();
-    showDraggableModalBottomSheet(
+    showAdaptiveDetailSheet(
       context: context,
       builder: (context, controller) => AppPage(
         appId: app.app.id,
@@ -2729,7 +2729,7 @@ class _AppIconWidgetState extends State<AppIconWidget> {
       },
       onLongPress: () {
         AppHaptics.selectionClick();
-        showDraggableModalBottomSheet(
+        showAdaptiveDetailSheet(
           context: context,
           builder: (context, controller) => AppPage(
             appId: widget.appId,

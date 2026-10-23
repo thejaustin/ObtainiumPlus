@@ -280,7 +280,7 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusEnablePopupSlider(bool val) => _setBool('plusEnablePopupSlider', val);
 
   bool get plusEnableResponsiveAppLayout =>
-      _getBool('plusEnableResponsiveAppLayout', defaultValue: true);
+      _getBool('plusEnableResponsiveAppLayout', defaultValue: false);
   set plusEnableResponsiveAppLayout(bool val) =>
       _setBool('plusEnableResponsiveAppLayout', val);
 
