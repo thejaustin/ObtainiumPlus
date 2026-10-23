@@ -76,7 +76,11 @@ class AppPage extends StatefulWidget {
 }
 
 class _AppPageState extends State<AppPage> {
-  late final WebViewController _webViewController;
+  /// Built on first use: most users never show the web page, and creating
+  /// a WebView (and loading the app's page) on every open is costly.
+  WebViewController? _webViewControllerInstance;
+  WebViewController get _webViewController =>
+      _webViewControllerInstance ??= _createWebViewController();
   bool _wasWebViewOpened = false;
   AppInMemory? prevApp;
   bool updating = false;
@@ -446,10 +450,8 @@ class _AppPageState extends State<AppPage> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _webViewController = WebViewController()
+  WebViewController _createWebViewController() {
+    return WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
@@ -532,7 +534,11 @@ class _AppPageState extends State<AppPage> {
         app != null &&
         updateSettings.checkUpdateOnDetailPage) {
       prevApp = app;
-      getUpdate(app.app.id);
+      // Not during build: the check notifies AppsProvider and sets state.
+      final id = app.app.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) getUpdate(id);
+      });
     }
     var trackOnly = app?.app.additionalSettings['trackOnly'] == true;
 
@@ -543,7 +549,7 @@ class _AppPageState extends State<AppPage> {
         ? isVersionPseudo(app!.app)
         : false;
 
-    if (app != null && !_wasWebViewOpened) {
+    if (app != null && showAppWebpageFinal && !_wasWebViewOpened) {
       _wasWebViewOpened = true;
       _webViewController.loadRequest(Uri.parse(app.app.url));
     }
@@ -2285,9 +2291,12 @@ class _AppPageState extends State<AppPage> {
         ],
       );
 
+      // heightFactor: 1 — a plain Center in the bottomSheet slot grows to
+      // the whole page height, covering the details with an empty panel.
       if (isFloating) {
         return SafeArea(
           child: Center(
+            heightFactor: 1,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 840),
               child: Padding(
@@ -2351,6 +2360,7 @@ class _AppPageState extends State<AppPage> {
             MediaQuery.of(context).padding.bottom,
           ),
           child: Center(
+            heightFactor: 1,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 840),
               child: menuContent,

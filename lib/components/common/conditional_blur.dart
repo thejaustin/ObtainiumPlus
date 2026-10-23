@@ -21,10 +21,15 @@ class ConditionalBlur extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!enabled) return child;
+    // A BackdropFilter blurs everything behind it up to the nearest clip;
+    // without its own clip, one unclipped use blurred the whole screen
+    // (e.g. the app page's action bar turned the details into a blur).
     return RepaintBoundary(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-        child: child,
+      child: ClipRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
+          child: child,
+        ),
       ),
     );
   }
