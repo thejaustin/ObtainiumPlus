@@ -14,14 +14,25 @@ import 'package:provider/provider.dart';
 /// right edge. When touched or dragged vertically, nearby letters arc inward
 /// in a smooth Gaussian wave while a floating M3E squircle bubble previews the
 /// active letter and first matching app name, scrolling the list in real time.
+typedef ScrubberBucket = ({
+  String symbol,
+  int firstAppIndex,
+  String sampleAppName,
+});
+
 class NiagaraAlphabetScrubber extends StatefulWidget {
   final List<AppInMemory> apps;
   final ScrollController scrollController;
+
+  /// Apps lifted above the name-sorted list (pending updates when "pin
+  /// updates" is on); they get one ↑ entry instead of letters.
+  final Set<String> leadingIds;
 
   const NiagaraAlphabetScrubber({
     super.key,
     required this.apps,
     required this.scrollController,
+    this.leadingIds = const {},
   });
 
   /// Extra end padding lists/grids should reserve so the resting rail never
@@ -31,15 +42,65 @@ class NiagaraAlphabetScrubber extends StatefulWidget {
   /// Cheap pre-check mirroring [build]'s visibility rules (min app count and
   /// at least 3 distinct letter buckets), so layouts can reserve [railGutter]
   /// only when the rail will actually render.
-  static bool willShow(List<AppInMemory> apps) {
+  static bool willShow(
+    List<AppInMemory> apps, {
+    Set<String> leadingIds = const {},
+  }) {
     if (apps.length < 8) return false;
+    final buckets = buildBuckets(apps, leadingIds);
+    return buckets != null && buckets.length >= 3;
+  }
+
+  static final RegExp _alpha = RegExp(r'^[A-Z]$');
+
+  /// Rail entries in list order: ★ for pinned, ↑ for [leadingIds], then one
+  /// per first letter. Returns null when the letters aren't in contiguous,
+  /// one-directional runs (sorted by date, buried non-installed apps, ...):
+  /// a rail would jump back and forth there, so it's hidden instead. `#`
+  /// (digits, symbols, accents) may sort at either end and is exempt.
+  @visibleForTesting
+  static List<ScrubberBucket>? buildBuckets(
+    List<AppInMemory> apps,
+    Set<String> leadingIds,
+  ) {
+    final buckets = <ScrubberBucket>[];
     final seen = <String>{};
-    for (final a in apps) {
-      final n = a.name.trim();
-      seen.add(a.app.pinned ? '★' : (n.isEmpty ? '#' : n[0].toUpperCase()));
-      if (seen.length >= 3) return true;
+    String? current;
+    for (var i = 0; i < apps.length; i++) {
+      final a = apps[i];
+      final String symbol;
+      if (a.app.pinned || a.app.hasPendingRepoRename) {
+        symbol = '★';
+      } else if (leadingIds.contains(a.app.id)) {
+        symbol = '↑';
+      } else {
+        final name = a.name.trim();
+        final c = name.isNotEmpty ? name[0].toUpperCase() : '#';
+        symbol = _alpha.hasMatch(c) ? c : '#';
+      }
+      if (symbol == current) continue;
+      if (!seen.add(symbol)) {
+        if (symbol == '#') {
+          current = symbol;
+          continue;
+        }
+        return null;
+      }
+      current = symbol;
+      buckets.add((symbol: symbol, firstAppIndex: i, sampleAppName: a.name));
     }
-    return false;
+    // Letters must also run one way (A-Z, or Z-A for a descending sort).
+    final letters = [
+      for (final b in buckets)
+        if (_alpha.hasMatch(b.symbol)) b.symbol,
+    ];
+    if (letters.length > 1) {
+      final up = letters[1].compareTo(letters[0]) > 0;
+      for (var i = 1; i < letters.length; i++) {
+        if ((letters[i].compareTo(letters[i - 1]) > 0) != up) return null;
+      }
+    }
+    return buckets;
   }
 
   @override
@@ -48,13 +109,12 @@ class NiagaraAlphabetScrubber extends StatefulWidget {
 }
 
 class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
-  static final RegExp _alpha = RegExp(r'^[A-Z]$');
   double? _dragNormalizedY;
   int? _activeIndex;
   Timer? _tapClearTimer;
   List<AppInMemory>? _bucketsFor;
-  List<({String symbol, int firstAppIndex, String sampleAppName})>?
-  _cachedBuckets;
+  Set<String>? _bucketsLeading;
+  List<ScrubberBucket>? _cachedBuckets;
 
   /// Scroll offset past which the list, not the header/dashboard above it,
   /// fills the middle of the screen where the rail sits.
@@ -90,75 +150,26 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
     super.dispose();
   }
 
-  /// Builds ordered list of available section symbols (★ for pinned, A-Z, #)
-  /// mapped to the first app index in [widget.apps].
-  List<({String symbol, int firstAppIndex, String sampleAppName})>
-  _buildBuckets() {
+  List<ScrubberBucket> _buildBuckets() {
     // AppsPage rebuilds on every provider tick; only rebucket when the list
     // instance actually changes.
-    if (identical(_bucketsFor, widget.apps) && _cachedBuckets != null) {
+    if (identical(_bucketsFor, widget.apps) &&
+        identical(_bucketsLeading, widget.leadingIds) &&
+        _cachedBuckets != null) {
       return _cachedBuckets!;
     }
-    final buckets =
-        <({String symbol, int firstAppIndex, String sampleAppName})>[];
-    final seenSymbols = <String>{};
-
-    // Separate pinned vs unpinned in the same visual order as AppListView
-    final pinned = <AppInMemory>[];
-    final unpinned = <AppInMemory>[];
-    for (final a in widget.apps) {
-      if (a.app.pinned) {
-        pinned.add(a);
-      } else {
-        unpinned.add(a);
-      }
-    }
-
-    if (pinned.isNotEmpty) {
-      buckets.add((
-        symbol: '★',
-        firstAppIndex: 0,
-        sampleAppName: pinned.first.name,
-      ));
-      seenSymbols.add('★');
-    }
-
-    // The list isn't always name-ordered (updates float to the top, other
-    // sort columns), so collect each letter's first app and lay the rail out
-    // A-Z, with # last.
-    final baseOffset = pinned.length;
-    final letters =
-        <String, ({String symbol, int firstAppIndex, String sampleAppName})>{};
-    for (int i = 0; i < unpinned.length; i++) {
-      final name = unpinned[i].name.trim();
-      final firstChar = name.isNotEmpty ? name[0].toUpperCase() : '#';
-      final isAlpha = _alpha.hasMatch(firstChar);
-      final symbol = isAlpha ? firstChar : '#';
-      if (seenSymbols.add(symbol)) {
-        letters[symbol] = (
-          symbol: symbol,
-          firstAppIndex: baseOffset + i,
-          sampleAppName: unpinned[i].name,
-        );
-      }
-    }
-    final ordered = letters.keys.toList()
-      ..sort((a, b) {
-        if (a == '#') return 1;
-        if (b == '#') return -1;
-        return a.compareTo(b);
-      });
-    buckets.addAll(ordered.map((k) => letters[k]!));
-
     _bucketsFor = widget.apps;
-    _cachedBuckets = buckets;
-    return buckets;
+    _bucketsLeading = widget.leadingIds;
+    _cachedBuckets =
+        NiagaraAlphabetScrubber.buildBuckets(widget.apps, widget.leadingIds) ??
+        const [];
+    return _cachedBuckets!;
   }
 
   void _handleTouch(
     Offset localPosition,
     double railHeight,
-    List<({String symbol, int firstAppIndex, String sampleAppName})> buckets,
+    List<ScrubberBucket> buckets,
   ) {
     if (buckets.isEmpty || railHeight <= 0) return;
     _tapClearTimer?.cancel();
@@ -240,7 +251,7 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
 
   Widget _buildRail(
     BuildContext context,
-    List<({String symbol, int firstAppIndex, String sampleAppName})> buckets,
+    List<ScrubberBucket> buckets,
     ColorScheme colorScheme,
     bool isM3E,
     bool isDragging,

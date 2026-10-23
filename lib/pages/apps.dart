@@ -726,13 +726,21 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
               .map((e) => e.app)
               .toSet();
 
+    // Pinned updates sit above the name-sorted list; the rail gives them one
+    // ↑ entry so its letters stay in scroll order.
+    final Set<String> scrubberLeading = viewSettings.pinUpdates
+        ? existingUpdates
+        : const {};
     // Reserve an end gutter only when the alphabet rail renders, so it never
     // overlaps the rightmost column (mirrors the scrubber's mount condition).
     final double scrubberGutter =
         !settingsProvider.isTV &&
             _activeDiscoverQuery == null &&
             !viewSettings.groupByCategory &&
-            NiagaraAlphabetScrubber.willShow(listedApps)
+            NiagaraAlphabetScrubber.willShow(
+              listedApps,
+              leadingIds: scrubberLeading,
+            )
         ? NiagaraAlphabetScrubber.railGutter
         : 0.0;
 
@@ -2334,6 +2342,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                 child: NiagaraAlphabetScrubber(
                   apps: listedApps,
                   scrollController: scrollController,
+                  leadingIds: scrubberLeading,
                 ),
               ),
           ],
