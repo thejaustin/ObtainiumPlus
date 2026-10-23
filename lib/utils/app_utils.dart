@@ -42,23 +42,37 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         final curvedAnimation = isExpressive
             ? CurvedAnimation(
-                parent: reverse ? ReverseAnimation(animation) : animation,
+                parent: animation,
                 curve: Curves.easeInOutCubicEmphasized,
                 reverseCurve: Curves.easeOutCubic,
               )
-            : (reverse ? ReverseAnimation(animation) : animation);
-
+            : animation;
         final curvedSecondary = isExpressive
             ? CurvedAnimation(
-                parent: reverse
-                    ? ReverseAnimation(secondaryAnimation)
-                    : secondaryAnimation,
+                parent: secondaryAnimation,
                 curve: Curves.easeInOutCubicEmphasized,
                 reverseCurve: Curves.easeOutCubic,
               )
-            : (reverse
-                  ? ReverseAnimation(secondaryAnimation)
-                  : secondaryAnimation);
+            : secondaryAnimation;
+
+        if (reverse) {
+          // Mirror the direction (enter from the left). Running the route
+          // animation backwards instead left every pushed page at its start
+          // state: blank (#340).
+          return SlideTransition(
+            position: Tween(
+              begin: Offset.zero,
+              end: const Offset(0.08, 0),
+            ).animate(curvedSecondary),
+            child: SlideTransition(
+              position: Tween(
+                begin: const Offset(-0.08, 0),
+                end: Offset.zero,
+              ).animate(curvedAnimation),
+              child: FadeTransition(opacity: curvedAnimation, child: child),
+            ),
+          );
+        }
 
         return SharedAxisTransition(
           animation: curvedAnimation,

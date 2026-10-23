@@ -208,6 +208,26 @@ void main() {
     }, timeout: const Timeout(Duration(minutes: 1)));
   }
 
+  // #340: with the main bottom bar off, settings shows its own bottom bar
+  // (plusSettingsBottomNavBar defaults to true); users got a black screen.
+  for (final mainBar in [false, true]) {
+    testWidgets('settings bottom bar builds (main bottom bar $mainBar)', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'plusSettingsBottomNavBar': true,
+        'plusEnableBottomNavBar': mainBar,
+      });
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(0);
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+    }, timeout: const Timeout(Duration(minutes: 1)));
+  }
+
   // First screen of every fresh install; restored after being unreachable
   // from May to October.
   testWidgets('onboarding page builds', (tester) async {
