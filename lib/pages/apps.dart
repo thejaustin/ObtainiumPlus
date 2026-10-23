@@ -767,7 +767,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     final double scrubberGutter =
         !settingsProvider.isTV &&
             _activeDiscoverQuery == null &&
-            !viewSettings.groupByCategory &&
+            !viewSettings.groupsInCurrentView &&
             NiagaraAlphabetScrubber.willShow(
               listedApps,
               leadingIds: scrubberLeading,
@@ -1967,7 +1967,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     getDisplayedList() {
       final isGrid = viewSettings.globalViewMode == ViewMode.grid;
 
-      if (viewSettings.groupByCategory &&
+      if (viewSettings.groupsInCurrentView &&
           !(listedCategories.isEmpty ||
               (listedCategories.length == 1 && listedCategories[0] == null))) {
         return CategorySections(
@@ -2335,7 +2335,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                         ),
                       ),
                     if (viewSettings.displayShowFilterChips &&
-                        !viewSettings.groupByCategory)
+                        !viewSettings.groupsInCurrentView)
                       CategoryFilterBar(
                         selectedCategories: filter.categoryFilter,
                         onCategoriesChanged: (newCats) {
@@ -2381,7 +2381,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
             ),
             if (!settingsProvider.isTV &&
                 _activeDiscoverQuery == null &&
-                !viewSettings.groupByCategory)
+                !viewSettings.groupsInCurrentView)
               Positioned.fill(
                 child: NiagaraAlphabetScrubber(
                   apps: listedApps,

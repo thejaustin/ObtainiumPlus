@@ -242,6 +242,13 @@ class ViewSettingsProvider with ChangeNotifier {
 
   /// Falls back to the older "always show nav labels" switch so its value
   /// carries over until this is set.
+  /// Whether the current view groups apps by category: the grid can opt
+  /// out with "flat grid only".
+  bool get groupsInCurrentView =>
+      groupByCategory &&
+      !(globalViewMode == ViewMode.grid &&
+          gridCategoryMode == GridCategoryMode.disabled);
+
   NavigationDestinationLabelBehavior get navigationLabelBehavior {
     final stored = prefs?.safeEnum(
       'navigationLabelBehavior',

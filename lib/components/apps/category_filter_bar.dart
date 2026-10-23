@@ -79,7 +79,7 @@ class CategoryFilterBar extends StatelessWidget {
     final appsProvider = context.read<AppsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
 
-    if (viewSettings.categories.isEmpty || viewSettings.groupByCategory) {
+    if (viewSettings.categories.isEmpty || viewSettings.groupsInCurrentView) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 

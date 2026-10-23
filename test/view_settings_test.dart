@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -49,5 +50,19 @@ void main() {
     expect(p.pinUpdates, isTrue);
     p.showUpdatesRow = false;
     expect(p.showUpdatesRow, isFalse);
+  });
+
+  test('flat grid only turns grouping off in the grid, not the list', () async {
+    final p = await provider({
+      'groupByCategory': true,
+      'gridCategoryMode': GridCategoryMode.disabled.index,
+      'globalViewMode': ViewMode.grid.index,
+    });
+    expect(p.groupsInCurrentView, isFalse);
+    p.globalViewMode = ViewMode.list;
+    expect(p.groupsInCurrentView, isTrue);
+    p.gridCategoryMode = GridCategoryMode.sections;
+    p.globalViewMode = ViewMode.grid;
+    expect(p.groupsInCurrentView, isTrue);
   });
 }
