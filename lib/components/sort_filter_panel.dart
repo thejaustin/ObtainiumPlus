@@ -540,6 +540,12 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     );
   }
 
+  /// Category and tag chips are pills unless the user turned that off.
+  OutlinedBorder _tagChipShape(double itemRadius) =>
+      context.read<PlusSettingsProvider>().plusExpressiveFilterChips
+      ? const StadiumBorder()
+      : RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius));
+
   Widget _buildCategorySection(ThemeData theme, double radius) {
     final cats = widget.categories;
     final selectedCats = widget.filter.categoryFilter;
@@ -570,9 +576,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 });
                 widget.onFilterChanged();
               },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(itemRadius),
-              ),
+              shape: _tagChipShape(itemRadius),
             );
           }).toList(),
         ),
@@ -616,9 +620,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 });
                 widget.onFilterChanged();
               },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(itemRadius),
-              ),
+              shape: _tagChipShape(itemRadius),
             );
           }).toList(),
         ),

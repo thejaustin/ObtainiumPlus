@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/tag_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -20,6 +21,14 @@ class TagFilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final tagProvider = context.watch<TagProvider>();
     final colorScheme = Theme.of(context).colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final OutlinedBorder chipShape = plusSettings.plusExpressiveFilterChips
+        ? const StadiumBorder()
+        : RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              CardMetrics.inner(plusSettings.plusGlobalCornerRadius),
+            ),
+          );
     final tags = tagProvider.allTags.toList()..sort();
 
     if (tags.isEmpty) return const SliverToBoxAdapter();
@@ -47,7 +56,7 @@ class TagFilterBar extends StatelessWidget {
                     AppHaptics.selectionClick();
                     onTagSelected(tag);
                   },
-                  shape: const StadiumBorder(),
+                  shape: chipShape,
                   selectedColor: colorScheme.primaryContainer,
                   checkmarkColor: colorScheme.onPrimaryContainer,
                   side: BorderSide(
