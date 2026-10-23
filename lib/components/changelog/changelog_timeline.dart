@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +31,9 @@ class _ReleaseCache {
   static bool exhausted = false;
   static DateTime? fetchedAt;
 
+  /// Bumped by [reset] so a fetch started before a reset is discarded.
+  static int generation = 0;
+
   static bool get fresh =>
       releases.isNotEmpty &&
       fetchedAt != null &&
@@ -40,6 +44,7 @@ class _ReleaseCache {
     nextPage = 1;
     exhausted = false;
     fetchedAt = null;
+    generation++;
   }
 }
 
@@ -127,7 +132,15 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
     if (_state == _LoadState.loading || _ReleaseCache.exhausted) return;
     setState(() => _state = _LoadState.loading);
     try {
-      final page = await _fetchPage(_ReleaseCache.nextPage);
+      // Two timelines (e.g. the post-update sheet and the settings page)
+      // can share the cache; never skip or double-count a page.
+      final requested = _ReleaseCache.nextPage;
+      final generation = _ReleaseCache.generation;
+      final page = await _fetchPage(requested);
+      if (generation != _ReleaseCache.generation) {
+        if (mounted) setState(() => _state = _LoadState.idle);
+        return;
+      }
       final known = _releases.map((r) => r.tag).toSet();
       final fresh = page
           .map(ChangelogRelease.fromGitHub)
@@ -144,7 +157,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
           if (bd == null) return -1;
           return bd.compareTo(ad);
         });
-      _ReleaseCache.nextPage++;
+      _ReleaseCache.nextPage = math.max(_ReleaseCache.nextPage, requested + 1);
       _ReleaseCache.fetchedAt = DateTime.now();
       if (page.length < _perPage) _ReleaseCache.exhausted = true;
       if (mounted) setState(() => _state = _LoadState.idle);
@@ -261,7 +274,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
               ),
             ),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 16, 0),
+            padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 16, 0),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, i) {
                 final r = shown[i];
@@ -442,7 +455,12 @@ String relativeReleaseDate(BuildContext context, DateTime? date) {
   if (age.inDays < 7) {
     return tr('changelogTimeAgo', args: [plural('day', age.inDays)]);
   }
-  return DateFormat.yMMMd(context.locale.toLanguageTag()).format(local);
+  try {
+    return DateFormat.yMMMd(context.locale.toLanguageTag()).format(local);
+  } catch (_) {
+    // Locale without intl date symbols.
+    return DateFormat('yyyy-MM-dd').format(local);
+  }
 }
 
 // ─── Summary ────────────────────────────────────────────────────────────────
@@ -704,8 +722,8 @@ class _ReleaseRow extends StatelessWidget {
 
     return Stack(
       children: [
-        Positioned(
-          left: 0,
+        PositionedDirectional(
+          start: 0,
           top: 0,
           bottom: 0,
           width: _railWidth,
@@ -720,15 +738,18 @@ class _ReleaseRow extends StatelessWidget {
           ),
         ),
         if (isLatest && animsEnabled)
-          const Positioned(
-            left: 0,
+          const PositionedDirectional(
+            start: 0,
             top: _nodeY - _railWidth / 2,
             width: _railWidth,
             height: _railWidth,
             child: _PulseHalo(),
           ),
         Padding(
-          padding: const EdgeInsets.only(left: _railWidth + 8, bottom: 12),
+          padding: const EdgeInsetsDirectional.only(
+            start: _railWidth + 8,
+            bottom: 12,
+          ),
           child: card,
         ),
       ],
@@ -917,7 +938,11 @@ class _ChangeLine extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(top: 8, left: 6, right: 10),
+            padding: const EdgeInsetsDirectional.only(
+              top: 8,
+              start: 6,
+              end: 10,
+            ),
             child: Container(
               width: 5,
               height: 5,

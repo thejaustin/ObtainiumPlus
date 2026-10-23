@@ -139,11 +139,13 @@ void main() {
     ChangelogTimeline.debugFetchPage = (page) async => page == 1
         ? [
             _release('v2', '2026-10-21T00:00:00Z', '- feat: newest thing'),
-            _release('v1', '2026-10-20T00:00:00Z', bullets),
+            // Old enough to take the locale date-format path.
+            _release('v1', '2025-06-15T12:00:00Z', bullets),
           ]
         : [];
     await pumpTimeline(tester, installed: '2', brightness: Brightness.light);
 
+    expect(find.textContaining('2025'), findsOneWidget);
     expect(find.text('Issue number 0'), findsOneWidget);
     expect(find.text('Issue number 8'), findsNothing);
     await tester.tap(find.text('Show 6 more'));

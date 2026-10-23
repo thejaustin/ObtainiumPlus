@@ -77,6 +77,10 @@ class SettingsPageState extends State<SettingsPage> {
       _searchController.clear();
     }
     if (!_scrollController.hasClients || _scrollController.offset <= 0) return;
+    if (!context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
+      _scrollController.jumpTo(0);
+      return;
+    }
     _scrollController.animateTo(
       0,
       duration: const Duration(milliseconds: 350),
@@ -114,7 +118,12 @@ class SettingsPageState extends State<SettingsPage> {
       Scrollable.ensureVisible(
         chipContext,
         alignment: 0.5,
-        duration: const Duration(milliseconds: 250),
+        duration: Duration(
+          milliseconds:
+              context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations
+              ? 250
+              : 0,
+        ),
         curve: Curves.easeOutCubic,
       );
     });

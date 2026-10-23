@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
@@ -962,6 +963,8 @@ class _AppGridTileState extends State<AppGridTile>
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.center,
+      // Version strings read left-to-right even in RTL locales.
+      textDirection: ui.TextDirection.ltr,
     );
   }
 

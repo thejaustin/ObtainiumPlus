@@ -1501,5 +1501,32 @@
     "plusGridAmbientIconHaloDescription": "הקרנת זוהר צבע רדיאלי רך מאחורי סמלי יישומים באריחי רשת ורשימה",
     "plusGridShowSourceBadge": "תגית סמל מקור",
     "plusGridShowSourceBadgeDescription": "הצגת סמל מקור המאגר לצד תגיות הגרסה באריחי היישומים",
-    "appTilePreview": "תצוגה מקדימה חיה של סגנון אריחים ורשת"
+    "appTilePreview": "תצוגה מקדימה חיה של סגנון אריחים ורשת",
+    "changelogFilterAll": "All",
+    "changelogKindFeatures": "Features",
+    "changelogKindFixes": "Fixes",
+    "changelogKindDesign": "Design",
+    "changelogKindDocs": "Docs & translations",
+    "changelogKindOther": "Other",
+    "changelogBadgeLatest": "Latest",
+    "changelogBadgeInstalled": "Installed",
+    "changelogBadgeNew": "New",
+    "changelogBadgePrerelease": "Pre-release",
+    "changelogJustNow": "Just now",
+    "changelogTimeAgo": "{} ago",
+    "changelogChangeCount": {
+        "one": "{} change",
+        "other": "{} changes"
+    },
+    "changelogNewReleaseCount": {
+        "one": "{} new release since you last looked",
+        "other": "{} new releases since you last looked"
+    },
+    "changelogUpToDate": "You're on the latest release",
+    "changelogShowMore": "Show {} more",
+    "changelogShowLess": "Show less",
+    "changelogLoadOlder": "Load older releases",
+    "changelogLoadOlderFailed": "Couldn't load older releases",
+    "changelogAllLoaded": "That's every release",
+    "changelogNoMatches": "No releases match this filter"
 }
