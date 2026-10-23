@@ -1568,5 +1568,9 @@
     "checkEveryXHours": {
         "one": "Check every hour",
         "other": "Check every {} hours"
-    }
+    },
+    "storeDefault": "Default",
+    "storeSetDefault": "Set as default",
+    "storeClearDefault": "Clear default store",
+    "installFailedWithCode": "Installation failed (code {})"
 }

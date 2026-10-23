@@ -683,7 +683,7 @@ class AppInstallService {
     } else {
       if (context.mounted) {
         ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-          SnackBar(content: Text('Installation failed with code: $code')),
+          SnackBar(content: Text(tr('installFailedWithCode', args: ['$code']))),
         );
       }
     }

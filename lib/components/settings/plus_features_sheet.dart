@@ -215,7 +215,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                             AppHaptics.selectionClick();
                             ShizukuInstaller.openShizukuManager();
                           },
-                          child: const Text('Open'),
+                          child: Text(tr('open')),
                         )
                       : null,
                 ),

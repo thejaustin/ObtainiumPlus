@@ -158,7 +158,7 @@ class _AppPageState extends State<AppPage> {
       showDialog(
         context: context,
         builder: (ctx) => GlassDialog(
-          title: 'Open in Store',
+          title: tr('openInStore'),
           icon: Icons.storefront_outlined,
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -180,7 +180,7 @@ class _AppPageState extends State<AppPage> {
                       plusSettings.plusDefaultStorePackage == store['package']
                       ? Chip(
                           label: Text(
-                            'Default',
+                            tr('storeDefault'),
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   color: Theme.of(
@@ -216,7 +216,7 @@ class _AppPageState extends State<AppPage> {
                             Navigator.pop(ctx);
                             _showStoreChooser(context, appId);
                           },
-                          child: const Text('Set Default'),
+                          child: Text(tr('storeSetDefault')),
                         ),
                   onTap: () {
                     AppHaptics.selectionClick();
@@ -228,7 +228,7 @@ class _AppPageState extends State<AppPage> {
               if (plusSettings.plusDefaultStorePackage != null)
                 ListTile(
                   leading: const Icon(Icons.clear),
-                  title: const Text('Clear Default Store'),
+                  title: Text(tr('storeClearDefault')),
                   onTap: () {
                     AppHaptics.selectionClick();
                     plusSettings.plusDefaultStorePackage = null;
@@ -242,7 +242,7 @@ class _AppPageState extends State<AppPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'),
+              child: Text(tr('close')),
             ),
           ],
         ),
