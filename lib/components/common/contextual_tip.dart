@@ -4,51 +4,86 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 
-class ContextualTip extends StatefulWidget {
+/// One tip the user can dismiss for good. [id] keys the dismissal.
+class TipSpec {
+  final String id;
   final String title;
   final String message;
   final IconData icon;
 
-  const ContextualTip({
-    super.key,
+  const TipSpec({
+    required this.id,
     required this.title,
     required this.message,
     this.icon = Icons.lightbulb_outline,
   });
-
-  @override
-  State<ContextualTip> createState() => _ContextualTipState();
 }
 
-class _ContextualTipState extends State<ContextualTip> {
-  bool _dismissed = false;
+/// Shows the first of [tips] the user hasn't dismissed, when tips are on.
+class ContextualTip extends StatelessWidget {
+  final List<TipSpec> tips;
+
+  const ContextualTip({super.key, required this.tips});
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    if (!settings.enableContextualTips || _dismissed) {
-      return const SizedBox.shrink();
+    TipSpec? tip;
+    if (settings.enableContextualTips) {
+      final dismissed = settings.dismissedTips;
+      for (final t in tips) {
+        if (!dismissed.contains(t.id)) {
+          tip = t;
+          break;
+        }
+      }
     }
+    final anims = plusSettings.plusEnableEnhancedAnimations;
+    return AnimatedSize(
+      duration: Duration(milliseconds: anims ? 260 : 0),
+      curve: Curves.easeOutCubic,
+      alignment: Alignment.topCenter,
+      child: AnimatedSwitcher(
+        duration: Duration(milliseconds: anims ? 200 : 0),
+        child: tip == null
+            ? const SizedBox(width: double.infinity)
+            : _TipCard(key: ValueKey(tip.id), tip: tip),
+      ),
+    );
+  }
+}
 
+class _TipCard extends StatelessWidget {
+  final TipSpec tip;
+
+  const _TipCard({super.key, required this.tip});
+
+  @override
+  Widget build(BuildContext context) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final onColor = colorScheme.onTertiaryContainer;
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
       color: plusSettings.plusEnableGlassmorphism
-          ? Theme.of(
-              context,
-            ).colorScheme.tertiaryContainer.withValues(alpha: 0.45)
-          : Theme.of(context).colorScheme.tertiaryContainer,
+          ? colorScheme.tertiaryContainer.withValues(alpha: 0.45)
+          : colorScheme.tertiaryContainer,
       elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: CardMetrics.shape(
+        CardMetrics.card(plusSettings.plusGlobalCornerRadius),
+        expressive: plusSettings.plusEnableMaterialExpressive,
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              widget.icon,
-              color: Theme.of(context).colorScheme.onTertiaryContainer,
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(tip.icon, color: onColor, size: 22),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -56,19 +91,18 @@ class _ContextualTipState extends State<ContextualTip> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onTertiaryContainer,
+                    tip.title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: onColor,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
-                    widget.message,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Theme.of(context).colorScheme.onTertiaryContainer,
-                    ),
+                    tip.message,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: onColor),
                   ),
                 ],
               ),
@@ -79,10 +113,10 @@ class _ContextualTipState extends State<ContextualTip> {
               child: IconButton(
                 icon: const Icon(Icons.close, size: 20),
                 tooltip: tr('close'),
-                color: Theme.of(context).colorScheme.onTertiaryContainer,
-                onPressed: () => setState(() => _dismissed = true),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                color: onColor,
+                visualDensity: VisualDensity.compact,
+                onPressed: () =>
+                    context.read<SettingsProvider>().dismissTip(tip.id),
               ),
             ),
           ],

@@ -103,7 +103,10 @@ class AdvancedSettingsSection extends StatelessWidget {
           title: tr('enableContextualTips'),
           subtitle: tr('enableContextualTipsDescription'),
           value: (s) => s.enableContextualTips,
-          onChanged: (s, v) => s.enableContextualTips = v,
+          onChanged: (s, v) {
+            s.enableContextualTips = v;
+            if (v) s.resetTips();
+          },
         ),
       if (_matches(tr('highlightTouchTargets'), isAdvanced: true))
         _buildSettingsToggle(

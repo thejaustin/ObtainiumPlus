@@ -1041,9 +1041,23 @@ class SettingsProvider with ChangeNotifier {
   double get animationSpeedMultiplier =>
       prefs?.safeDouble('animationSpeedMultiplier') ?? 1.0;
   bool get enableContextualTips =>
-      prefs?.safeBool('enableContextualTips') ?? true;
+      prefs?.safeBool('enableContextualTips') ?? false;
   set enableContextualTips(bool val) {
     prefs?.setBool('enableContextualTips', val);
+    notifyListeners();
+  }
+
+  List<String> get dismissedTips =>
+      prefs?.safeStringList('dismissedTips') ?? const [];
+  void dismissTip(String id) {
+    if (dismissedTips.contains(id)) return;
+    prefs?.setStringList('dismissedTips', [...dismissedTips, id]);
+    notifyListeners();
+  }
+
+  /// Brings back every dismissed tip, e.g. when tips are switched back on.
+  void resetTips() {
+    prefs?.remove('dismissedTips');
     notifyListeners();
   }
 

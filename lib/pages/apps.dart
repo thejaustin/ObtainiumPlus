@@ -7,6 +7,7 @@ import 'package:obtainium/components/apps/category_filter_bar.dart';
 import 'package:obtainium/components/apps/niagara_alphabet_scrubber.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
+import 'package:obtainium/components/common/contextual_tip.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -324,6 +325,36 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   List<String?>? _memoAllCategories;
   List<String?>? _memoUpdatesCategories;
   List<String?>? _memoInstalledCategories;
+
+  /// Tips for what this screen can do, shown one at a time in order.
+  List<TipSpec> _homeTips(
+    ViewSettingsProvider viewSettings,
+    BehaviorSettingsProvider behaviorSettings, {
+    required bool hasScrubber,
+  }) => [
+    if (viewSettings.globalViewMode != ViewMode.grid &&
+        !(behaviorSettings.swipeRightAction == AppSwipeAction.none &&
+            behaviorSettings.swipeLeftAction == AppSwipeAction.none))
+      TipSpec(
+        id: 'swipeActions',
+        icon: Icons.swipe_rounded,
+        title: tr('tipSwipeTitle'),
+        message: tr('tipSwipeMessage'),
+      ),
+    TipSpec(
+      id: 'multiSelect',
+      icon: Icons.checklist_rounded,
+      title: tr('tipSelectTitle'),
+      message: tr('tipSelectMessage'),
+    ),
+    if (hasScrubber)
+      TipSpec(
+        id: 'alphabetRail',
+        icon: Icons.sort_by_alpha_rounded,
+        title: tr('tipRailTitle'),
+        message: tr('tipRailMessage'),
+      ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -2290,6 +2321,19 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                         ),
                       ),
                     const SliverToBoxAdapter(child: ActiveOperationsBanner()),
+                    if (_activeDiscoverQuery == null &&
+                        filter.nameFilter.isEmpty &&
+                        selectedAppIds.isEmpty &&
+                        listedApps.isNotEmpty)
+                      SliverToBoxAdapter(
+                        child: ContextualTip(
+                          tips: _homeTips(
+                            viewSettings,
+                            behaviorSettings,
+                            hasScrubber: scrubberGutter > 0,
+                          ),
+                        ),
+                      ),
                     if (viewSettings.displayShowFilterChips &&
                         !viewSettings.groupByCategory)
                       CategoryFilterBar(

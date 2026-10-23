@@ -1515,5 +1515,11 @@
     "updatesPlacement": "Where updates show",
     "updatesPlacementDescription": "Show apps with updates in the Recent Updates row, at the top of the list, both, or neither",
     "updatesPlacementRow": "Updates row",
-    "updatesPlacementPinned": "Top of list"
+    "updatesPlacementPinned": "Top of list",
+    "tipSwipeTitle": "Swipe for quick actions",
+    "tipSwipeMessage": "Swipe an app left or right for a quick action like updating or pinning it. You can choose what each direction does in Settings.",
+    "tipSelectTitle": "Select several apps",
+    "tipSelectMessage": "Long-press an app to start selecting, then update, share or remove them together.",
+    "tipRailTitle": "Jump through your apps",
+    "tipRailMessage": "Drag along the letters at the right edge to jump to any part of the list."
 }
