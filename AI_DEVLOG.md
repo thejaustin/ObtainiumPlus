@@ -7,6 +7,14 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-23 — Claude Code (Opus 5.5): timeline changelog, grid update badge, settings dock
+
+**Commits (not pushed):** `9caa65c7` settings dock/bottom insets (includes pre-existing uncommitted WIP of unknown origin: scrubber gutter, `paddingOf(bottom)` insets), `8efec19e` timeline changelog, `c6ad91b6` grid update badge.
+- **Changelog** now `lib/components/changelog/` — `changelog_parser.dart` (pure Dart, port of ShizukuPlus `ChangelogParser`, word-boundary headings) + `changelog_timeline.dart` (rail, summary, kind filters, paging `per_page=30`, 20-min session cache, `debugFetchPage` test hook). Used by `showWhatsNewSheet(sinceVersion:)` and `ChangelogPage`. Old markdown/chips view + bundled fallback removed. Tests: `test/changelog_parser_test.dart`, `test/changelog_timeline_test.dart`. 21 `changelog*` keys added to every locale (English placeholders — need translating).
+- **Grid**: idle updates → top-right `_TileUpdateBadge` (up arrow / progress / spinner); footer shows `installed → latest` text unless `plusUpdateExpressiveBadge`. No widget test (AppsProvider not constructible in tests).
+- **Settings dock**: Scaffold `extendBody` already adds nav-bar height to `padding.bottom` (verified in SDK `_BodyBuilder`), so hardcoded 92/108 offsets double-counted. Dock hides on scroll-down.
+- **Open:** "system scan screen bright white in dark mode" — no light surface found in `system_updates.dart`/`empty_state.dart`; ADB loopback + rish were down, need a screenshot. None of today's UI is verified on device.
+
 ## Stable-release audit — 2026-10-18 (Claude session f85c6d81)
 
 Sources: GitHub/web scan, Claude+Antigravity session mining, security audit, M3E UI audit, local `flutter analyze`/`flutter test`. Stability-audit and CHANGELOG-completeness agents were cut off by rate limits — **re-run those two** next session.

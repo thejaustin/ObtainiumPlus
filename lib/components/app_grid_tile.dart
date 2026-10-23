@@ -514,7 +514,23 @@ class _AppGridTileState extends State<AppGridTile>
                           ),
                         ),
 
-                      // 8. Multi-Select Checkmark (Top-Right)
+                      // 8. Update badge (Top-Right) — mirrors the pinned badge;
+                      // tap updates, shows progress while downloading.
+                      if (widget.hasUpdate &&
+                          !widget.isSelected &&
+                          !plusSettings.plusUpdateExpressiveBadge)
+                        Positioned(
+                          top: -3,
+                          right: -3,
+                          child: _TileUpdateBadge(
+                            appInMemory: widget.appInMemory,
+                            isAmbiguous: widget.isAmbiguous,
+                            animsEnabled:
+                                plusSettings.plusEnableEnhancedAnimations,
+                          ),
+                        ),
+
+                      // 9. Multi-Select Checkmark (Top-Right)
                       if (widget.isSelected)
                         Positioned(
                           top: 6,
@@ -772,9 +788,11 @@ class _AppGridTileState extends State<AppGridTile>
         // (When plusUpdateExpressiveBadge is enabled, updates use the bottom
         // version capsule button instead of covering the icon corner, unless
         // a download is actively running or the app needs initial installation.)
-        if (!plusSettings.plusUpdateExpressiveBadge ||
-            !widget.hasUpdate ||
-            widget.appInMemory.downloadProgress != null)
+        // Updates live in the top-right badge (or the expressive pill); the
+        // icon corner keeps install / in-progress states.
+        if (!widget.hasUpdate ||
+            (plusSettings.plusUpdateExpressiveBadge &&
+                widget.appInMemory.downloadProgress != null))
           Positioned(
             right: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
             bottom: -(40 - (iconSize * 0.46).clamp(20.0, 28.0)) / 2 - 2,
@@ -833,6 +851,9 @@ class _AppGridTileState extends State<AppGridTile>
     ColorScheme colorScheme,
     PlusSettingsProvider plusSettings,
   ) {
+    if (!plusSettings.plusUpdateExpressiveBadge) {
+      return _buildUpdateVersionLine(colorScheme);
+    }
     final app = widget.appInMemory.app;
     final version = app.latestVersion.isNotEmpty
         ? app.latestVersion
@@ -900,6 +921,47 @@ class _AppGridTileState extends State<AppGridTile>
         ], context);
       },
       child: pillContent,
+    );
+  }
+
+  /// Quiet "installed → latest" line; the top-right badge is the action.
+  Widget _buildUpdateVersionLine(ColorScheme colorScheme) {
+    final app = widget.appInMemory.app;
+    final latest = app.latestVersion;
+    final installed = app.installedVersion;
+    final accent = widget.isAmbiguous
+        ? colorScheme.tertiary
+        : colorScheme.primary;
+    const mono = TextStyle(
+      fontSize: 10,
+      fontFamily: 'monospace',
+      letterSpacing: 0.1,
+      height: 1.2,
+    );
+    return Text.rich(
+      TextSpan(
+        style: mono,
+        children: [
+          if (installed != null && installed.isNotEmpty && installed != latest)
+            TextSpan(
+              text: '$installed ',
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+              ),
+            ),
+          TextSpan(
+            text: '→ ',
+            style: TextStyle(color: accent.withValues(alpha: 0.8)),
+          ),
+          TextSpan(
+            text: latest.isNotEmpty ? latest : tr('update'),
+            style: TextStyle(color: accent, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
     );
   }
 
@@ -1360,6 +1422,129 @@ class AppIconActionBadge extends StatelessWidget {
                           ),
                         ),
                       ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Top-right update action on grid tiles, shaped like the pinned badge.
+/// Idle: up arrow (tap to update). Downloading: progress ring (tap cancels).
+/// Installing / checking: spinner.
+class _TileUpdateBadge extends StatelessWidget {
+  final AppInMemory appInMemory;
+  final bool isAmbiguous;
+  final bool animsEnabled;
+
+  const _TileUpdateBadge({
+    required this.appInMemory,
+    required this.isAmbiguous,
+    required this.animsEnabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final appId = appInMemory.app.id;
+    final checking = context.select<AppsProvider, bool>(
+      (p) => p.checkingUpdateIds.contains(appId),
+    );
+    final bg = isAmbiguous ? cs.tertiary : cs.primary;
+    final fg = isAmbiguous ? cs.onTertiary : cs.onPrimary;
+
+    return ValueListenableBuilder<double?>(
+      valueListenable: appInMemory.downloadProgressNotifier,
+      builder: (context, progress, _) {
+        final downloading = progress != null && progress >= 0;
+        final busy = (progress != null && progress < 0) || checking;
+        final String state;
+        final Widget face;
+        final String label;
+        VoidCallback? tap;
+        if (downloading) {
+          state = 'download';
+          label = tr('cancel');
+          face = SizedBox(
+            width: 14,
+            height: 14,
+            child: ExpressiveCircularProgressIndicator(
+              value: (progress / 100).clamp(0.0, 1.0),
+              strokeWidth: 2,
+              color: fg,
+              backgroundColor: fg.withValues(alpha: 0.25),
+            ),
+          );
+          tap = () {
+            AppHaptics.selectionClick();
+            context.read<AppsProvider>().cancelDownload(appId);
+          };
+        } else if (busy) {
+          state = 'busy';
+          label = progress != null ? tr('installing') : tr('update');
+          face = SizedBox(
+            width: 14,
+            height: 14,
+            child: ExpressiveCircularProgressIndicator(
+              strokeWidth: 2,
+              color: fg,
+              morph: false,
+            ),
+          );
+        } else {
+          state = 'idle';
+          label = isAmbiguous ? tr('ambiguousUpdate') : tr('update');
+          face = Icon(
+            isAmbiguous
+                ? Icons.help_outline_rounded
+                : Icons.arrow_upward_rounded,
+            size: 14,
+            color: fg,
+          );
+          tap = () {
+            AppHaptics.selectionClick();
+            context.read<AppsProvider>().downloadAndInstallLatestApps([
+              appId,
+            ], context);
+          };
+        }
+
+        return Semantics(
+          button: tap != null,
+          label: label,
+          child: Tooltip(
+            message: label,
+            child: ScaleTouchWrapper(
+              hapticOnPressDown: tap != null,
+              scaleDownFactor: 0.85,
+              onTap: tap,
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: Center(
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: bg,
+                      borderRadius: BorderRadius.circular(7),
+                      boxShadow: [
+                        BoxShadow(
+                          color: bg.withValues(alpha: 0.35),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: animsEnabled ? 220 : 0),
+                      child: KeyedSubtree(key: ValueKey(state), child: face),
                     ),
                   ),
                 ),
