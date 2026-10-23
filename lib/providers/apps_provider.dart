@@ -2663,14 +2663,20 @@ class AppsProvider with ChangeNotifier {
   }
 
   Timer? _throttledNotifyTimer;
+  bool _throttledNeedsFull = false;
 
-  /// At most one full notify per interval. A batch update check saved (and
-  /// fully notified) once per app, so every check re-filtered, re-sorted and
-  /// rebuilt the whole app list (#330).
-  void _throttledNotify() {
+  /// At most one notify per interval during a batch update check. It saved
+  /// and notified once per app (plus two spinner ticks), so every check
+  /// re-filtered, re-sorted and rebuilt the whole app list (#330). [full]
+  /// marks that app data changed, not just spinner state.
+  void _throttledNotify({bool full = true}) {
+    _throttledNeedsFull |= full;
     if (_throttledNotifyTimer?.isActive ?? false) return;
     _throttledNotifyTimer = Timer(const Duration(milliseconds: 600), () {
-      if (!_disposed) notifyListeners();
+      final needsFull = _throttledNeedsFull;
+      _throttledNeedsFull = false;
+      if (_disposed) return;
+      needsFull ? notifyListeners() : _notifyUiOnly();
     });
   }
 
@@ -2820,7 +2826,8 @@ class AppsProvider with ChangeNotifier {
     // Spinner state only: _notifyUiOnly avoids invalidating the apps memo,
     // which made every per-app tick re-filter/sort the whole list (#330).
     checkingUpdateIds.add(appId);
-    _notifyUiOnly();
+    final batch = gettingUpdates;
+    batch ? _throttledNotify(full: false) : _notifyUiOnly();
     try {
       SourceProvider sourceProvider = SourceProvider();
       App newApp = await sourceProvider
@@ -2846,12 +2853,12 @@ class AppsProvider with ChangeNotifier {
         [newApp],
         reuseInstalledInfo: true,
         // A batch check notifies once at the end anyway.
-        throttleNotify: gettingUpdates,
+        throttleNotify: batch,
       );
       return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
     } finally {
       checkingUpdateIds.remove(appId);
-      _notifyUiOnly();
+      batch ? _throttledNotify(full: false) : _notifyUiOnly();
     }
   }
 
