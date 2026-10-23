@@ -170,7 +170,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       if (plusSettings.plusLastSeenVersion != currentVersion) {
         // Show What's New bottom sheet on update
         if (context.mounted) {
-          await showWhatsNewSheet(context, targetVersion: currentVersion);
+          await showWhatsNewSheet(
+            context,
+            targetVersion: currentVersion,
+            sinceVersion: plusSettings.plusLastSeenVersion,
+          );
         }
         plusSettings.plusLastSeenVersion = currentVersion;
         // Don't follow up with the verification warning on the same launch —

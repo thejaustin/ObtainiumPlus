@@ -1512,5 +1512,32 @@
     "plusGridAmbientIconHaloDescription": "Project a soft radial color glow behind app icons on grid and list tiles",
     "plusGridShowSourceBadge": "Source Icon Badge",
     "plusGridShowSourceBadgeDescription": "Show the repository source icon next to version pills on app tiles",
-    "appTilePreview": "Live Tile & Grid Style Preview"
+    "appTilePreview": "Live Tile & Grid Style Preview",
+    "changelogFilterAll": "All",
+    "changelogKindFeatures": "Features",
+    "changelogKindFixes": "Fixes",
+    "changelogKindDesign": "Design",
+    "changelogKindDocs": "Docs & translations",
+    "changelogKindOther": "Other",
+    "changelogBadgeLatest": "Latest",
+    "changelogBadgeInstalled": "Installed",
+    "changelogBadgeNew": "New",
+    "changelogBadgePrerelease": "Pre-release",
+    "changelogJustNow": "Just now",
+    "changelogTimeAgo": "{} ago",
+    "changelogChangeCount": {
+        "one": "{} change",
+        "other": "{} changes"
+    },
+    "changelogNewReleaseCount": {
+        "one": "{} new release since you last looked",
+        "other": "{} new releases since you last looked"
+    },
+    "changelogUpToDate": "You're on the latest release",
+    "changelogShowMore": "Show {} more",
+    "changelogShowLess": "Show less",
+    "changelogLoadOlder": "Load older releases",
+    "changelogLoadOlderFailed": "Couldn't load older releases",
+    "changelogAllLoaded": "That's every release",
+    "changelogNoMatches": "No releases match this filter"
 }
