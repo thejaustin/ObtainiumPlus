@@ -66,6 +66,8 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
           transitionType: isExpressive
               ? SharedAxisTransitionType.scaled
               : SharedAxisTransitionType.horizontal,
+          // Match the page surface (see MaterialUiThemeBridge).
+          fillColor: Theme.of(context).colorScheme.surface,
           child: child,
         );
       },

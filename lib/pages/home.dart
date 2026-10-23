@@ -533,6 +533,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     animation: animation,
                     secondaryAnimation: secondaryAnimation,
                     transitionType: SharedAxisTransitionType.horizontal,
+                    // Match the Scaffold so transparent tabs never show the
+                    // transition's fill (see MaterialUiThemeBridge).
+                    fillColor: Theme.of(context).colorScheme.surface,
                     child: child,
                   );
                 },
