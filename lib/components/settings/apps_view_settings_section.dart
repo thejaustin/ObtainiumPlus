@@ -107,19 +107,10 @@ class AppsViewSettingsSection extends StatelessWidget {
             _matches(tr('fabShowImportInstalled')));
 
     List<Widget> sortingWidgets = [
-      if (_matches(tr('plusIconCaching')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.cached_rounded,
-          title: tr('plusIconCaching'),
-          subtitle: tr('plusIconCachingDescription'),
-          value: (s) => s.plusEnableIconCaching,
-          onChanged: (s, v) => onSetState(() => s.plusEnableIconCaching = v),
-        ),
       if (_matches(tr('plusQuickFilters')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
-          icon: Icons.back_hand_outlined,
+          icon: Icons.filter_list_rounded,
           title: tr('plusQuickFilters'),
           subtitle: tr('plusQuickFiltersDescription'),
           value: (s) => s.plusEnableQuickFilters,
@@ -257,7 +248,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           plusFeaturesEnabled &&
           (_matches(tr('plusModernAddAppPage')) ||
               _matches(tr('plusHomeDashboard')) ||
-              _matches(tr('plusDeduplicateRecents')) ||
               _matches(tr('plusHeaderContextSubtitle')) ||
               _matches(tr('plusExpressiveFilterChips')) ||
               _matches(tr('plusResponsiveLayout'), isAdvanced: true) ||
@@ -283,15 +273,6 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.plusEnableHomeDashboard,
                 setValue: (s, v) =>
                     onSetState(() => s.plusEnableHomeDashboard = v),
-              ),
-            if (_matches(tr('plusDeduplicateRecents')))
-              (
-                icon: Icons.auto_awesome_mosaic_outlined,
-                label: tr('plusDeduplicateRecents'),
-                description: tr('plusDeduplicateRecentsDescription'),
-                getValue: (s) => s.plusDeduplicateRecents,
-                setValue: (s, v) =>
-                    onSetState(() => s.plusDeduplicateRecents = v),
               ),
             if (_matches(tr('plusHeaderContextSubtitle')))
               (
