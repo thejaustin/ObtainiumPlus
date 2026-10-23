@@ -274,8 +274,9 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusEnableGlassmorphism(bool val) =>
       _setBool('plusEnableGlassmorphism', val);
 
+  /// Long app descriptions start collapsed on the app page.
   bool get plusEnablePopupSlider =>
-      _getBool('plusEnablePopupSlider', defaultValue: true);
+      _getBool('plusEnablePopupSlider', defaultValue: false);
   set plusEnablePopupSlider(bool val) => _setBool('plusEnablePopupSlider', val);
 
   bool get plusEnableResponsiveAppLayout =>

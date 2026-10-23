@@ -1534,5 +1534,9 @@
     "tipSelectTitle": "Select several apps",
     "tipSelectMessage": "Long-press an app to start selecting, then update, share or remove them together.",
     "tipRailTitle": "Jump through your apps",
-    "tipRailMessage": "Drag along the letters at the right edge to jump to any part of the list."
+    "tipRailMessage": "Drag along the letters at the right edge to jump to any part of the list.",
+    "plusCollapsibleAbout": "Collapse long descriptions",
+    "plusCollapsibleAboutDescription": "Long app descriptions start as a short preview on the app page; tap Show more to read the rest",
+    "aboutShowMore": "Show more",
+    "aboutShowLess": "Show less"
 }

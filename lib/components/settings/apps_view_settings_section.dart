@@ -255,8 +255,7 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
       if (showLayout &&
           plusFeaturesEnabled &&
-          (_matches(tr('plusModernAppPage')) ||
-              _matches(tr('plusModernAddAppPage')) ||
+          (_matches(tr('plusModernAddAppPage')) ||
               _matches(tr('plusHomeDashboard')) ||
               _matches(tr('plusDeduplicateRecents')) ||
               _matches(tr('plusHeaderContextSubtitle')) ||
@@ -267,15 +266,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           title: tr('settingsLayoutMode'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('plusModernAppPage')))
-              (
-                icon: Icons.pages_outlined,
-                label: tr('plusModernAppPage'),
-                description: tr('plusModernAppPageDescription'),
-                getValue: (s) => s.plusEnableModernAppPage,
-                setValue: (s, v) =>
-                    onSetState(() => s.plusEnableModernAppPage = v),
-              ),
             if (_matches(tr('plusModernAddAppPage')))
               (
                 icon: Icons.add_box_outlined,

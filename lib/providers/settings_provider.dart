@@ -1091,8 +1091,6 @@ class SettingsProvider with ChangeNotifier {
   @Deprecated('Use PlusSettingsProvider.plusEnableGlassmorphism')
   bool get plusEnableGlassmorphism =>
       prefs?.safeBool('plusEnableGlassmorphism') ?? true;
-  bool get plusEnablePopupSlider =>
-      prefs?.safeBool('plusEnablePopupSlider') ?? true;
   bool get plusEnableExpressiveProgress =>
       prefs?.safeBool('plusEnableExpressiveProgress') ?? true;
   bool get plusEnableSmartRetries =>

@@ -63,12 +63,13 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableGlassmorphism,
           onChanged: (s, v) => s.plusEnableGlassmorphism = v,
         ),
-      if (_matches(tr('plusPopupSlider'), isAdvanced: true))
+      if (_matches(tr('plusCollapsibleAbout')) ||
+          _matches(tr('plusPopupSlider'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
-          icon: Icons.unfold_more_rounded,
-          title: tr('plusPopupSlider'),
-          subtitle: tr('plusPopupSliderDescription'),
+          icon: Icons.unfold_less_rounded,
+          title: tr('plusCollapsibleAbout'),
+          subtitle: tr('plusCollapsibleAboutDescription'),
           value: (s) => s.plusEnablePopupSlider,
           onChanged: (s, v) => s.plusEnablePopupSlider = v,
         ),

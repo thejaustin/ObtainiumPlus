@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/apps/collapsible_about.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/tag_editor.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -1150,35 +1151,38 @@ class _AppPageState extends State<AppPage> {
                         SnackBar(content: Text(tr('copiedToClipboard'))),
                       );
                     },
-                    child: Markdown(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      styleSheet: MarkdownStyleSheet(
-                        p: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.copyWith(height: 1.5),
-                        blockquoteDecoration: BoxDecoration(
-                          color: Theme.of(
+                    child: CollapsibleAbout(
+                      text: app?.app.additionalSettings['about'] ?? '',
+                      child: Markdown(
+                        physics: const NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: Theme.of(
                             context,
-                          ).colorScheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.circular(8),
+                          ).textTheme.bodyMedium?.copyWith(height: 1.5),
+                          blockquoteDecoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      data: app?.app.additionalSettings['about'],
-                      onTapLink: (text, href, title) {
-                        if (href != null) {
-                          launchUrlString(
-                            href,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
-                      extensionSet: md.ExtensionSet(
-                        md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                        [
-                          md.EmojiSyntax(),
-                          ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                        ],
+                        data: app?.app.additionalSettings['about'],
+                        onTapLink: (text, href, title) {
+                          if (href != null) {
+                            launchUrlString(
+                              href,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        },
+                        extensionSet: md.ExtensionSet(
+                          md.ExtensionSet.gitHubFlavored.blockSyntaxes,
+                          [
+                            md.EmojiSyntax(),
+                            ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
+                          ],
+                        ),
                       ),
                     ),
                   ),
