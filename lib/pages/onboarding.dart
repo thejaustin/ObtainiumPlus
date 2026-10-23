@@ -1039,9 +1039,9 @@ class _OnboardingPageState extends State<OnboardingPage>
       skip: ScaleTouchWrapper(
         hapticOnPressDown: true,
         scaleDownFactor: 0.92,
-        child: const Text(
-          'Skip',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        child: Text(
+          tr('skip'),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       next: ScaleTouchWrapper(
@@ -1052,13 +1052,20 @@ class _OnboardingPageState extends State<OnboardingPage>
       done: ScaleTouchWrapper(
         hapticOnPressDown: true,
         scaleDownFactor: 0.92,
-        child: const Text(
-          'Done',
-          style: TextStyle(fontWeight: FontWeight.w600),
+        child: Text(
+          tr('done'),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       curve: Curves.fastLinearToSlowEaseIn,
-      controlsMargin: const EdgeInsets.all(16),
+      // Edge-to-edge: keep Skip / dots / next above the system nav bar
+      // (three-button navigation covered them, #330).
+      controlsMargin: EdgeInsets.fromLTRB(
+        16,
+        16,
+        16,
+        16 + MediaQuery.viewPaddingOf(context).bottom,
+      ),
       controlsPadding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
       dotsDecorator: DotsDecorator(
         size: const Size(10.0, 10.0),

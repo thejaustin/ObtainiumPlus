@@ -230,6 +230,34 @@ void main() {
 
   // First screen of every fresh install; restored after being unreachable
   // from May to October.
+  // #330: three-button navigation covered Skip / dots / next.
+  testWidgets('onboarding controls clear the system nav bar', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2340);
+    tester.view.devicePixelRatio = 2.75;
+    tester.view.viewPadding = const FakeViewPadding(bottom: 48 * 2.75);
+    tester.view.padding = const FakeViewPadding(bottom: 48 * 2.75);
+    addTearDown(tester.view.reset);
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0, home: OnboardingPage(onDone: () {}));
+    });
+    await tester.pumpWidget(app);
+    for (var i = 0; i < 40; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      if (tester.any(find.text('Skip'))) break;
+    }
+    await tester.pump(const Duration(seconds: 1));
+    final screenHeight = 2340 / 2.75;
+    expect(
+      tester.getRect(find.text('Skip')).bottom,
+      lessThanOrEqualTo(screenHeight - 48),
+    );
+  }, timeout: const Timeout(Duration(minutes: 1)));
+
   testWidgets('onboarding page builds', (tester) async {
     late Widget app;
     await tester.runAsync(() async {
