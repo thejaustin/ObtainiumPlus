@@ -56,8 +56,36 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
   List<({String symbol, int firstAppIndex, String sampleAppName})>?
   _cachedBuckets;
 
+  /// Scroll offset past which the list, not the header/dashboard above it,
+  /// fills the middle of the screen where the rail sits.
+  static const double _revealOffset = 220;
+  bool _revealed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _onScroll());
+  }
+
+  @override
+  void didUpdateWidget(NiagaraAlphabetScrubber oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController.removeListener(_onScroll);
+      widget.scrollController.addListener(_onScroll);
+    }
+  }
+
+  void _onScroll() {
+    if (!mounted || !widget.scrollController.hasClients) return;
+    final revealed = widget.scrollController.offset > _revealOffset;
+    if (revealed != _revealed) setState(() => _revealed = revealed);
+  }
+
   @override
   void dispose() {
+    widget.scrollController.removeListener(_onScroll);
     _tapClearTimer?.cancel();
     super.dispose();
   }
@@ -95,21 +123,32 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
       seenSymbols.add('★');
     }
 
+    // The list isn't always name-ordered (updates float to the top, other
+    // sort columns), so collect each letter's first app and lay the rail out
+    // A-Z, with # last.
     final baseOffset = pinned.length;
+    final letters =
+        <String, ({String symbol, int firstAppIndex, String sampleAppName})>{};
     for (int i = 0; i < unpinned.length; i++) {
       final name = unpinned[i].name.trim();
       final firstChar = name.isNotEmpty ? name[0].toUpperCase() : '#';
       final isAlpha = _alpha.hasMatch(firstChar);
       final symbol = isAlpha ? firstChar : '#';
-      if (!seenSymbols.contains(symbol)) {
-        seenSymbols.add(symbol);
-        buckets.add((
+      if (seenSymbols.add(symbol)) {
+        letters[symbol] = (
           symbol: symbol,
           firstAppIndex: baseOffset + i,
           sampleAppName: unpinned[i].name,
-        ));
+        );
       }
     }
+    final ordered = letters.keys.toList()
+      ..sort((a, b) {
+        if (a == '#') return 1;
+        if (b == '#') return -1;
+        return a.compareTo(b);
+      });
+    buckets.addAll(ordered.map((k) => letters[k]!));
 
     _bucketsFor = widget.apps;
     _cachedBuckets = buckets;
@@ -177,6 +216,36 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
         : plusSettings.plusGlobalCornerRadius;
     final bubbleRadius = CardMetrics.card(baseRadius);
 
+    // At the top of the page the rail would sit over the dashboard and steal
+    // its taps; it fades in once the list is scrolled into view.
+    final visible = _revealed || isDragging;
+    return IgnorePointer(
+      ignoring: !visible,
+      child: AnimatedOpacity(
+        opacity: visible ? 1 : 0,
+        duration: Duration(
+          milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
+        ),
+        child: _buildRail(
+          context,
+          buckets,
+          colorScheme,
+          isM3E,
+          isDragging,
+          bubbleRadius,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRail(
+    BuildContext context,
+    List<({String symbol, int firstAppIndex, String sampleAppName})> buckets,
+    ColorScheme colorScheme,
+    bool isM3E,
+    bool isDragging,
+    double bubbleRadius,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxRailHeight = (constraints.maxHeight * 0.58).clamp(

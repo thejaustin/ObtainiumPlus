@@ -57,10 +57,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
     final effectiveLeading =
         widget.leading ?? (canPop ? const BackButton() : null);
 
-    // OneUI expanded viewing area height (typically ~240-270dp)
+    // OneUI-style expanded viewing area: tall enough to bring content into
+    // thumb reach, short enough that the first content isn't below the fold.
     final effectiveExpandedHeight =
         widget.expandedHeight ??
-        (220.0 + bottomHeight + (widget.subtitle != null ? 24.0 : 0.0));
+        (196.0 + bottomHeight + (widget.subtitle != null ? 24.0 : 0.0));
 
     if (!isOneHanded) {
       // Standard compact pinned AppBar when one-handed mode is off

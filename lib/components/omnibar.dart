@@ -347,9 +347,11 @@ class _OmnibarState extends State<Omnibar> {
                       }
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        14,
+                        8,
+                        6,
+                        8,
                       ),
                       child: AnimatedSwitcher(
                         duration: Duration(
@@ -393,10 +395,21 @@ class _OmnibarState extends State<Omnibar> {
                             alpha: 0.7,
                           ),
                         ),
+                        // The bar is the field: the theme's filled,
+                        // outlined input would draw a second box inside it,
+                        // leaving the search icon stranded outside.
+                        filled: false,
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 14,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
+                        contentPadding: const EdgeInsetsDirectional.fromSTEB(
+                          4,
+                          14,
+                          12,
+                          14,
                         ),
                       ),
                       onChanged: _handleInput,
