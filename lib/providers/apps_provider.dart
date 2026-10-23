@@ -2576,6 +2576,7 @@ class AppsProvider with ChangeNotifier {
     bool attemptToCorrectInstallStatus = true,
     bool onlyIfExists = true,
     bool reuseInstalledInfo = false,
+    bool throttleNotify = false,
   }) async {
     // Resolve the apps directory once instead of once per app in Future.wait.
     final appsDirPath = (await getAppsDir()).path;
@@ -2653,8 +2654,24 @@ class AppsProvider with ChangeNotifier {
         }
       }),
     );
-    notifyListeners();
+    if (throttleNotify) {
+      _throttledNotify();
+    } else {
+      notifyListeners();
+    }
     scheduleAutoExport();
+  }
+
+  Timer? _throttledNotifyTimer;
+
+  /// At most one full notify per interval. A batch update check saved (and
+  /// fully notified) once per app, so every check re-filtered, re-sorted and
+  /// rebuilt the whole app list (#330).
+  void _throttledNotify() {
+    if (_throttledNotifyTimer?.isActive ?? false) return;
+    _throttledNotifyTimer = Timer(const Duration(milliseconds: 600), () {
+      if (!_disposed) notifyListeners();
+    });
   }
 
   Future<void> removeApps(List<String> appIds) async {
@@ -2825,7 +2842,12 @@ class AppsProvider with ChangeNotifier {
       // Reuse cached PackageInfo/icon: installed version doesn't change during
       // a sync, and re-querying it per app is an expensive platform-channel
       // call. loadApps() and the FGBG refresh keep the cached info fresh.
-      await saveApps([newApp], reuseInstalledInfo: true);
+      await saveApps(
+        [newApp],
+        reuseInstalledInfo: true,
+        // A batch check notifies once at the end anyway.
+        throttleNotify: gettingUpdates,
+      );
       return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
     } finally {
       checkingUpdateIds.remove(appId);
@@ -3163,6 +3185,7 @@ class AppsProvider with ChangeNotifier {
       token.cancel();
     }
     _downloadCancellations.clear();
+    _throttledNotifyTimer?.cancel();
     _disposed = true;
     foregroundSubscription?.cancel();
     _autoExportDebounce?.cancel();
