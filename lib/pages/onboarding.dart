@@ -837,11 +837,9 @@ class _OnboardingPageState extends State<OnboardingPage>
                     ),
                     Center(
                       child: Text(
-                        tr(
+                        plural(
                           'checkEveryXHours',
-                          args: [
-                            (settings.updateInterval / 60).round().toString(),
-                          ],
+                          (settings.updateInterval / 60).round(),
                         ),
                         style: TextStyle(
                           color: colorScheme.primary,

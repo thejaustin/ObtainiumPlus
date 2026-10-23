@@ -1543,5 +1543,26 @@
     "updateNotFinished": {
         "one": "{} wasn't updated: the install was cancelled or didn't finish",
         "other": "{} apps weren't updated: the installs were cancelled or didn't finish"
+    },
+    "back": "Back",
+    "clearSearch": "Clear search",
+    "dev": "Dev",
+    "failedToImport": "Couldn't import",
+    "filterChips": "Filter chips",
+    "onlyCheckInstalledOrTrackOnlyAppsDescription": "Skip apps that aren't installed, unless they're track-only",
+    "open": "Open",
+    "openInStore": "Open in store",
+    "paste": "Paste",
+    "searchSourceRepos": "Search app sources for repositories",
+    "systemSettings": "System settings",
+    "tryDifferentSearch": "Try a different search term",
+    "unknownSource": "Unknown source",
+    "upToDate": "Up to date",
+    "updateHealthSubtitle": "See which apps have trouble updating and why",
+    "website": "Website",
+    "fixedInVersion": "Fixed in {version}",
+    "checkEveryXHours": {
+        "one": "Check every hour",
+        "other": "Check every {} hours"
     }
 }
