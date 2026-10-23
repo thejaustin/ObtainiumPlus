@@ -137,7 +137,7 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusEnableGridView(bool val) => _setBool('plusEnableGridView', val);
 
   bool get plusEnableQuickFilters =>
-      _getBool('plusEnableQuickFilters', defaultValue: true);
+      _getBool('plusEnableQuickFilters', defaultValue: false);
   set plusEnableQuickFilters(bool val) =>
       _setBool('plusEnableQuickFilters', val);
 

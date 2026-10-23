@@ -37,8 +37,10 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
       case 'installed':
         return 2;
       case 'all':
-      default:
         return 0;
+      default:
+        // A filter the segments don't cover (quick filters, filter sheet).
+        return -1;
     }
   }
 
@@ -84,6 +86,7 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
           double.infinity,
         );
         final segmentWidth = trackWidth / segments.length;
+        final hasActive = _currentIndex >= 0;
         final activeIndex = _currentIndex.clamp(0, segments.length - 1);
 
         return Container(
@@ -117,32 +120,38 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                 top: inset,
                 bottom: inset,
                 width: segmentWidth,
-                child: Container(
-                  decoration: ShapeDecoration(
-                    color: colorScheme.primaryContainer,
-                    shape: CardMetrics.shape(
-                      innerPillRadius,
-                      expressive: isM3E,
-                      side: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.22,
+                child: AnimatedOpacity(
+                  opacity: hasActive ? 1 : 0,
+                  duration: animsEnabled
+                      ? const Duration(milliseconds: 180)
+                      : Duration.zero,
+                  child: Container(
+                    decoration: ShapeDecoration(
+                      color: colorScheme.primaryContainer,
+                      shape: CardMetrics.shape(
+                        innerPillRadius,
+                        expressive: isM3E,
+                        side: BorderSide(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.22,
+                          ),
+                          width: 0.6,
                         ),
-                        width: 0.6,
                       ),
+                      shadows: [
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.14),
+                          blurRadius: 8,
+                          spreadRadius: 0.5,
+                          offset: const Offset(0, 1.5),
+                        ),
+                        BoxShadow(
+                          color: colorScheme.shadow.withValues(alpha: 0.06),
+                          blurRadius: 3,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
                     ),
-                    shadows: [
-                      BoxShadow(
-                        color: colorScheme.primary.withValues(alpha: 0.14),
-                        blurRadius: 8,
-                        spreadRadius: 0.5,
-                        offset: const Offset(0, 1.5),
-                      ),
-                      BoxShadow(
-                        color: colorScheme.shadow.withValues(alpha: 0.06),
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
                   ),
                 ),
               ),
@@ -157,7 +166,7 @@ class M3ExpressiveSegmentedFilter extends StatelessWidget {
                         Expanded(
                           child: _SegmentItem(
                             data: segments[i],
-                            isSelected: i == activeIndex,
+                            isSelected: hasActive && i == activeIndex,
                             innerRadius: innerPillRadius,
                             isM3E: isM3E,
                             onTap: () {

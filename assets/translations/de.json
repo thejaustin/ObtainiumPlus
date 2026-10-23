@@ -1525,5 +1525,6 @@
     "plusCollapsibleAbout": "Collapse long descriptions",
     "plusCollapsibleAboutDescription": "Long app descriptions start as a short preview on the app page; tap Show more to read the rest",
     "aboutShowMore": "Show more",
-    "aboutShowLess": "Show less"
+    "aboutShowLess": "Show less",
+    "quickFilterUpToDate": "Up to date"
 }

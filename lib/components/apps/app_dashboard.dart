@@ -87,6 +87,54 @@ class _AppDashboardState extends State<AppDashboard>
   }
 
   /// Wraps a child with a fade + vertical slide entrance animation.
+  /// Statuses the segmented filter doesn't cover, one tap away.
+  Widget _buildQuickFilters(BuildContext context, double radius) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+    final OutlinedBorder shape = plusSettings.plusExpressiveFilterChips
+        ? const StadiumBorder()
+        : RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(CardMetrics.inner(radius)),
+          );
+    const filters = [
+      ('uptodate', 'quickFilterUpToDate', Icons.check_circle_outline_rounded),
+      ('notinstalled', 'notInstalled', Icons.cloud_download_outlined),
+      ('trackonly', 'trackOnly', Icons.visibility_outlined),
+    ];
+    return SizedBox(
+      height: 48,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.only(top: 8),
+        children: [
+          for (final (mode, label, icon) in filters)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: FilterChip(
+                avatar: widget.currentFilterMode == mode
+                    ? null
+                    : Icon(icon, size: 18),
+                label: Text(tr(label)),
+                selected: widget.currentFilterMode == mode,
+                showCheckmark: true,
+                shape: shape,
+                visualDensity: VisualDensity.compact,
+                selectedColor: colorScheme.secondaryContainer,
+                checkmarkColor: colorScheme.onSecondaryContainer,
+                side: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+                onSelected: (on) {
+                  AppHaptics.selectionClick();
+                  widget.onFilterChanged(on ? mode : 'all');
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _animated(Animation<double> anim, Widget child) {
     return FadeTransition(
       opacity: anim,
@@ -262,6 +310,8 @@ class _AppDashboardState extends State<AppDashboard>
               isGlass: plusSettings.plusEnableGlassmorphism,
             ),
           ),
+          if (plusSettings.plusEnableQuickFilters)
+            _animated(_segmentedAnim, _buildQuickFilters(context, radius)),
 
           // Recent updates — Adaptive Hide + AnimatedSize
           AnimatedSize(
