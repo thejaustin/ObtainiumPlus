@@ -5,6 +5,7 @@ import 'package:android_package_installer/android_package_installer.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/installers/installer.dart';
+import 'package:obtainium/installers/install_landed.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/adb_port_prober.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -69,6 +70,11 @@ class ShizukuInstaller extends Installer {
   /// Uses progressive backoff (50ms, 100ms, 150ms, 200ms) for fast (<100ms)
   /// connection when the daemon is alive.
   Future<String?> checkPermissionWithRetry({int retries = _maxRetries}) async {
+    // The background engine starts with a fresh plugin; check against the
+    // backend the user chose (Shizuku or Dhizuku), not the default.
+    try {
+      await _applyBackend();
+    } catch (_) {}
     String? status;
     for (int i = 0; i <= retries; i++) {
       try {
@@ -290,6 +296,19 @@ class ShizukuInstaller extends Installer {
     }
   }
 
+  /// Shizuku providers host the binder we install through, so installing one
+  /// restarts it mid-install.
+  static const Set<String> providerPackages = {
+    AppConstants.shizukuPlusId,
+    AppConstants.shizukuStockId,
+    AppConstants.dhizukuId,
+  };
+
+  /// Neither the Shizuku result nor package polling confirmed the install in
+  /// time. Distinct from PackageInstaller codes so callers don't start a
+  /// second install while this one may still finish.
+  static const int confirmationTimeoutCode = -1001;
+
   @override
   Future<InstallResult> installApk(
     List<String> apkFilePaths, {
@@ -297,38 +316,23 @@ class ShizukuInstaller extends Installer {
     Map<String, dynamic> installOptions = const {},
   }) async {
     await _applyBackend();
-    // --- Smart binder pre-check with system fallback ---
-    // If the binder is unavailable and shizukuFallbackToSystem is enabled,
-    // skip Shizuku entirely and use the session-based stock installer, which
-    // still works silently when Obtainium is the installer package on Android 12+.
-    final bool fallbackEnabled =
-        installOptions['shizukuFallbackToSystem'] != false &&
-        (settingsProvider.shizukuFallbackToSystem);
     final stopwatch = Stopwatch()..start();
-    if (fallbackEnabled) {
-      final preCheckStatus = await ShizukuApkInstaller()
-          .checkPermission()
-          .timeout(const Duration(seconds: 2), onTimeout: () => null);
-      final binderAlive =
-          preCheckStatus?.startsWith('authorized') == true ||
-          preCheckStatus?.startsWith('granted') == true;
-      if (!binderAlive) {
-        // Binder is down — gracefully fall back to stock session installer
-        final code = await AndroidPackageInstaller.installApk(
-          apkFilePath: apkFilePaths.join(','),
-        );
-        stopwatch.stop();
-        final res = InstallResult.fromPlatformCode(code);
-        ShizukuTelemetryService.instance.log(
-          action: 'systemFallback',
-          targetPackage: appId,
-          durationMs: stopwatch.elapsedMilliseconds,
-          status: res.isSuccess ? 'success' : 'error',
-          details:
-              'Shizuku daemon suspended; fell back to stock installer (code $code)',
-        );
-        return res;
-      }
+    // A suspended daemon would only fail later; report it up front so the
+    // caller can use the system installer (if the fallback setting allows).
+    // Retried: a just-started binder often misses the first ping.
+    final preCheckStatus = await checkPermissionWithRetry();
+    final binderAlive =
+        preCheckStatus?.startsWith('authorized') == true ||
+        preCheckStatus?.startsWith('granted') == true;
+    if (!binderAlive) {
+      ShizukuTelemetryService.instance.log(
+        action: 'binderUnavailable',
+        targetPackage: appId,
+        durationMs: stopwatch.elapsedMilliseconds,
+        status: 'stopped',
+        details: 'Shizuku not ready ($preCheckStatus)',
+      );
+      throw ShizukuUnavailableError(preCheckStatus);
     }
 
     final fakeInstallSource =
@@ -338,7 +342,6 @@ class ShizukuInstaller extends Installer {
     final uris = apkFilePaths.map((p) => File(p).uri.toString()).toList();
 
     final completer = Completer<InstallResult>();
-    Timer? pollTimer;
 
     final int? targetVersionCode = installOptions['targetVersionCode'] as int?;
     final String? targetVersionName =
@@ -347,65 +350,48 @@ class ShizukuInstaller extends Installer {
         installOptions['existingVersionCode'] as int?;
     final String? existingVersionName =
         installOptions['existingVersionName'] as String?;
+    final bool wasInstalled =
+        installOptions['wasInstalled'] as bool? ??
+        (existingVersionCode != null || existingVersionName != null);
+    final int? existingUpdateTime =
+        installOptions['existingUpdateTime'] as int?;
+
+    Future<bool> landed() async {
+      final info = await AppInstallService.getInstalledInfo(
+        appId,
+        printErr: false,
+      );
+      return info != null &&
+          hasInstallLanded(
+            wasInstalled: wasInstalled,
+            existingCode: existingVersionCode,
+            existingName: existingVersionName,
+            existingUpdateTime: existingUpdateTime,
+            targetCode: targetVersionCode,
+            targetName: targetVersionName,
+            currentCode: info.versionCode,
+            currentName: info.versionName,
+            currentUpdateTime: info.lastUpdateTime,
+          );
+    }
 
     // Concurrent package-verification polling.
     // Adaptive interval: 350ms for the first 10s, then every ~3rd tick (~1050ms)
     // to reduce package manager pressure during longer installs.
-    final pollStart = DateTime.now().millisecondsSinceEpoch;
     int pollTick = 0;
-    pollTimer = Timer.periodic(const Duration(milliseconds: 350), (t) async {
+    final pollTimer = Timer.periodic(const Duration(milliseconds: 350), (
+      t,
+    ) async {
       pollTick++;
       if (completer.isCompleted) {
         t.cancel();
         return;
       }
-      final elapsedMs = DateTime.now().millisecondsSinceEpoch - pollStart;
-      // Stop 5s before overall timeout to avoid racing with cleanup
-      if (elapsedMs > 85000) {
-        t.cancel();
-        return;
-      }
-      // After 10s switch to ~1s effective interval to ease PM pressure
-      if (elapsedMs > 10000 && pollTick % 3 != 0) return;
+      if (stopwatch.elapsedMilliseconds > 10000 && pollTick % 3 != 0) return;
       try {
-        final info = await AppInstallService.getInstalledInfo(
-          appId,
-          printErr: false,
-        );
-        if (info != null) {
-          final currentCode = info.versionCode ?? 0;
-          bool isSuccess = false;
-          if (existingVersionCode == null || existingVersionCode == 0) {
-            if (targetVersionCode != null && targetVersionCode > 0) {
-              if (currentCode >= targetVersionCode) isSuccess = true;
-            } else if (targetVersionName != null &&
-                targetVersionName.isNotEmpty) {
-              if (info.versionName == targetVersionName) isSuccess = true;
-            } else {
-              isSuccess = true;
-            }
-          } else {
-            if (targetVersionCode != null &&
-                targetVersionCode > 0 &&
-                targetVersionCode > existingVersionCode) {
-              if (currentCode >= targetVersionCode) isSuccess = true;
-            } else if (targetVersionName != null &&
-                targetVersionName.isNotEmpty &&
-                targetVersionName != existingVersionName) {
-              if (info.versionName == targetVersionName) isSuccess = true;
-            } else if (currentCode > existingVersionCode) {
-              isSuccess = true;
-            } else if (currentCode == 0 &&
-                existingVersionCode == 0 &&
-                targetVersionName != null &&
-                info.versionName == targetVersionName) {
-              isSuccess = true;
-            }
-          }
-          if (isSuccess && !completer.isCompleted) {
-            t.cancel();
-            completer.complete(InstallResult.success());
-          }
+        if (await landed() && !completer.isCompleted) {
+          t.cancel();
+          completer.complete(InstallResult.success());
         }
       } catch (_) {}
     });
@@ -423,6 +409,14 @@ class ShizukuInstaller extends Installer {
         );
       }
     }
+
+    // A binder error doesn't mean the install failed: updating a Shizuku
+    // provider restarts the binder mid-install. Let polling look a little
+    // longer before reporting failure (and triggering a fallback install).
+    final graceAfterError = providerPackages.contains(appId)
+        ? const Duration(seconds: 15)
+        : const Duration(seconds: 3);
+    Timer? graceTimer;
 
     // Fire Shizuku install with a 30s binder-hang guard. A hung binder callback
     // is the primary cause of the indefinite spinner — detect it early, log it,
@@ -446,19 +440,27 @@ class ShizukuInstaller extends Installer {
             completer.complete(InstallResult.fromPlatformCode(code));
           }
         })
-        .catchError((err) {
-          if (!completer.isCompleted) {
-            // Not a PackageInstaller status: use a distinct unknown code.
-            completer.complete(InstallResult.error(unknownInstallerErrorCode));
-          }
+        .catchError((Object err) {
+          graceTimer = Timer(graceAfterError, () {
+            if (!completer.isCompleted) {
+              // Not a PackageInstaller status: use a distinct unknown code.
+              completer.complete(
+                InstallResult.error(unknownInstallerErrorCode),
+              );
+            }
+          });
         });
 
-    // 90s ceiling: 30s binder hang detection + 60s polling window after
+    // 90s ceiling: 30s binder hang detection + 60s polling window after.
+    // One last look before giving up, since polling slows down near the end.
     final res = await completer.future.timeout(
       const Duration(seconds: 90),
-      onTimeout: () => InstallResult.error(1),
+      onTimeout: () async => await landed().catchError((Object _) => false)
+          ? InstallResult.success()
+          : InstallResult.error(confirmationTimeoutCode),
     );
     pollTimer.cancel();
+    graceTimer?.cancel();
     stopwatch.stop();
 
     // Log telemetry for this install
@@ -470,7 +472,9 @@ class ShizukuInstaller extends Installer {
               : (res.isCancelled ? 'cancelled' : 'error'));
     final detailsMsg = res.isSuccess
         ? 'Successfully committed via Shizuku binder'
-        : (res.errorCode != null
+        : (res.errorCode == confirmationTimeoutCode
+              ? 'No confirmation from Shizuku or the package manager in 90s'
+              : res.errorCode != null
               ? getDiagnosticMessageForErrorCode(res.errorCode!)
               : 'Outcome: ${res.outcome}');
 
@@ -484,4 +488,13 @@ class ShizukuInstaller extends Installer {
 
     return res;
   }
+}
+
+/// The Shizuku/Dhizuku binder isn't running or permission isn't granted.
+class ShizukuUnavailableError implements Exception {
+  final String? status;
+  const ShizukuUnavailableError(this.status);
+
+  @override
+  String toString() => 'Shizuku unavailable ($status)';
 }

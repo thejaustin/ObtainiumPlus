@@ -1549,5 +1549,9 @@
     "plusCollapsibleAboutDescription": "Long app descriptions start as a short preview on the app page; tap Show more to read the rest",
     "aboutShowMore": "Show more",
     "aboutShowLess": "Show less",
-    "quickFilterUpToDate": "Up to date"
+    "quickFilterUpToDate": "Up to date",
+    "updateNotFinished": {
+        "one": "{} wasn't updated: the install was cancelled or didn't finish",
+        "other": "{} apps weren't updated: the installs were cancelled or didn't finish"
+    }
 }

@@ -50,14 +50,10 @@ class AppDownloadService {
     String str, {
     String? strB,
   }) {
-    int indA = list.indexOf(str);
-    int indB = strB != null ? list.indexOf(strB) : -1;
-    if (indA != -1) {
-      list.add(list.removeAt(indA));
-    }
-    if (indB != -1) {
-      list.add(list.removeAt(indB));
-    }
+    // Stable: removing by precomputed index shifted the second match.
+    final moved = list.where((e) => e == str || e == strB).toList();
+    list.removeWhere((e) => e == str || e == strB);
+    list.addAll(moved);
     return list;
   }
 
@@ -152,6 +148,11 @@ class AppDownloadService {
     MultiAppMultiError errors = MultiAppMultiError();
     List<String> installedIds = [];
 
+    // Installing a Shizuku provider restarts the binder the other installs
+    // go through, so it goes last — before only Obtainium+ itself.
+    for (final provider in ShizukuInstaller.providerPackages) {
+      appsToInstall = moveStrToEnd(appsToInstall, provider);
+    }
     appsToInstall = moveStrToEnd(
       appsToInstall,
       'dev.thejaustin.obtainiumplus',
@@ -234,6 +235,7 @@ class AppDownloadService {
       await Future.wait(workers);
       downloadResults = results;
     }
+    final notUpdatedNames = <String>[];
     for (var res in downloadResults) {
       final id = res['id'] as String?;
       if (id == null) continue;
@@ -244,6 +246,7 @@ class AppDownloadService {
         continue;
       }
       if (!errors.appIdNames.containsKey(id)) {
+        final isUpdate = apps[id]?.installedInfo != null;
         try {
           var installed = await _installApp(
             id: id,
@@ -261,11 +264,31 @@ class AppDownloadService {
             notificationsProvider: notificationsProvider,
             context: context?.mounted == true ? context : null,
           );
-          if (installed) installedIds.add(id);
+          if (installed) {
+            installedIds.add(id);
+          } else if (isUpdate) {
+            // New installs already say "cancelled"; updates said nothing.
+            notUpdatedNames.add(apps[id]?.name ?? id);
+          }
         } catch (e) {
           errors.add(id, e, appName: apps[id]?.name);
         }
       }
+    }
+
+    if (notUpdatedNames.isNotEmpty && context != null && context.mounted) {
+      final n = notUpdatedNames.length;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        SnackBar(
+          content: Text(
+            plural(
+              'updateNotFinished',
+              n,
+              args: [n == 1 ? notUpdatedNames.single : '$n'],
+            ),
+          ),
+        ),
+      );
     }
 
     errors.successfulAppIds = installedIds;
@@ -805,8 +828,13 @@ class AppDownloadService {
           resCode?.startsWith('granted') == true;
       if (isGranted) return;
 
-      if (!willBeSilent &&
-          (await behaviorSettings.getInstallPermission(enforce: false))) {
+      // ShizukuInstaller hands off to the system installer when the binder
+      // is down (if allowed), so don't fail the install here. A silent
+      // install only got this far if the system installer can do it
+      // silently too.
+      if (settingsProvider.shizukuFallbackToSystem &&
+          (willBeSilent ||
+              await behaviorSettings.getInstallPermission(enforce: false))) {
         talker.warning(
           'Shizuku unavailable ($resCode), falling back to AndroidPackageInstaller',
         );

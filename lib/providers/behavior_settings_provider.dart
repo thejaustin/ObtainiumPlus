@@ -19,12 +19,19 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool get useShizuku {
-    return prefs?.safeBool('useShizuku') ?? false;
-  }
+  /// Follows the installer method. The old standalone bool is only a
+  /// fallback: SettingsProvider migrates it into `installMethod` and deletes
+  /// it, so reading it directly said "not Shizuku" for migrated users.
+  bool get useShizuku => installerMode == InstallerMode.shizuku.name;
 
   set useShizuku(bool useShizuku) {
     prefs?.setBool('useShizuku', useShizuku);
+    if (useShizuku) {
+      prefs?.setString('installMethod', InstallerMode.shizuku.name);
+    } else if (installerMode == InstallerMode.shizuku.name) {
+      // Leave root/external alone; only drop Shizuku itself.
+      prefs?.setString('installMethod', InstallerMode.system.name);
+    }
     notifyListeners();
   }
 
@@ -33,7 +40,9 @@ class BehaviorSettingsProvider with ChangeNotifier {
     if (stored != null && InstallerMode.values.any((m) => m.name == stored)) {
       return stored;
     }
-    return useShizuku ? InstallerMode.shizuku.name : InstallerMode.system.name;
+    return prefs?.safeBool('useShizuku') == true
+        ? InstallerMode.shizuku.name
+        : InstallerMode.system.name;
   }
 
   set installerMode(String mode) {

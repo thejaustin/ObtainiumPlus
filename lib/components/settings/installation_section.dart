@@ -459,7 +459,9 @@ class _InstallationSectionState extends State<InstallationSection>
         _checkShizukuStatus();
         return;
       }
-      behaviorSettings.useShizuku = false;
+      // Keep the current choice: a stopped Shizuku (e.g. after a reboot)
+      // shouldn't silently switch an existing Shizuku user to the system
+      // installer; installs fall back on their own when allowed.
       if (!context.mounted) return;
       final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
       if (pkg == null) {
