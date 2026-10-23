@@ -110,6 +110,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
   _LoadState _state = _LoadState.idle;
   final Set<ChangeKind> _filter = {};
   final Set<String> _toggled = {}; // releases flipped from their default
+  bool _showTop = false;
 
   List<ChangelogRelease> get _releases => _ReleaseCache.releases;
 
@@ -167,16 +168,40 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
   }
 
   bool _onScroll(ScrollNotification n) {
-    if (n.metrics.axis == Axis.vertical &&
-        n.metrics.extentAfter < 900 &&
-        _state == _LoadState.idle) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    if (n.metrics.extentAfter < 900 && _state == _LoadState.idle) {
       _loadMore();
     }
+    final showTop = n.metrics.pixels > 1200;
+    if (showTop != _showTop) setState(() => _showTop = showTop);
     return false;
+  }
+
+  void _scrollToTop(bool anims) {
+    AppHaptics.selectionClick();
+    if (!_controller.hasClients) return;
+    if (anims) {
+      _controller.animateTo(
+        0,
+        duration: const Duration(milliseconds: 450),
+        curve: AppConstants.expressiveDecelerate,
+      );
+    } else {
+      _controller.jumpTo(0);
+    }
   }
 
   bool _isInstalled(ChangelogRelease r) =>
       _bare(r.tag) == _bare(widget.installedVersion);
+
+  /// Newer than the installed build: the user hasn't got these yet.
+  bool _isAvailable(ChangelogRelease r) {
+    final cmp = compareVersionStrings(
+      _bare(r.tag),
+      _bare(widget.installedVersion),
+    );
+    return cmp != null && cmp > 0;
+  }
 
   bool _isNew(ChangelogRelease r) {
     final since = widget.sinceVersion;
@@ -244,7 +269,23 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
     final footerOpen = _state != _LoadState.idle || !_ReleaseCache.exhausted;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
-    return NotificationListener<ScrollNotification>(
+    // Day headers between releases; grouped from what's shown so they
+    // follow the filter. Undated releases (sorted last) get no header.
+    final entries = <Object>[];
+    DateTime? lastDay;
+    for (final r in shown) {
+      final local = r.publishedAt?.toLocal();
+      if (local != null) {
+        final day = DateTime(local.year, local.month, local.day);
+        if (day != lastDay) entries.add(day);
+        lastDay = day;
+      }
+      entries.add(r);
+    }
+    final now = DateTime.now();
+    final lastRelease = shown.isEmpty ? null : shown.last;
+
+    final list = NotificationListener<ScrollNotification>(
       onNotification: _onScroll,
       child: CustomScrollView(
         controller: _controller,
@@ -256,6 +297,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
               releases: meaningful,
               installedVersion: widget.installedVersion,
               isNew: _isNew,
+              isAvailable: _isAvailable,
               radius: radius,
             ),
           ),
@@ -277,10 +319,24 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
             padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 16, 0),
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, i) {
-                final r = shown[i];
+                final entry = entries[i];
+                if (entry is DateTime) {
+                  return _DayHeader(
+                    label: changelogDayLabel(
+                      entry,
+                      now,
+                      context.locale.toLanguageTag(),
+                    ),
+                    isFirst: i == 0,
+                  );
+                }
+                final r = entry as ChangelogRelease;
                 final collapsible = r.changeCount > _collapseAbove;
                 final defaultOpen =
-                    !collapsible || r.tag == latestTag || _isNew(r);
+                    !collapsible ||
+                    r.tag == latestTag ||
+                    _isNew(r) ||
+                    _isAvailable(r);
                 final open = _toggled.contains(r.tag)
                     ? !defaultOpen
                     : defaultOpen;
@@ -288,10 +344,11 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
                   key: ValueKey(r.tag),
                   release: r,
                   isFirst: i == 0,
-                  isLast: i == shown.length - 1 && !footerOpen,
+                  isLast: identical(r, lastRelease) && !footerOpen,
                   isLatest: r.tag == latestTag,
                   isInstalled: _isInstalled(r),
                   isNew: _isNew(r),
+                  isAvailable: _isAvailable(r),
                   expanded: open,
                   collapsible: collapsible,
                   animsEnabled: anims,
@@ -303,7 +360,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
                     });
                   },
                 );
-              }, childCount: shown.length),
+              }, childCount: entries.length),
             ),
           ),
           SliverToBoxAdapter(
@@ -314,6 +371,30 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
           ),
         ],
       ),
+    );
+
+    return Stack(
+      children: [
+        list,
+        PositionedDirectional(
+          end: 16,
+          bottom: 16 + bottomInset,
+          child: IgnorePointer(
+            ignoring: !_showTop,
+            child: AnimatedScale(
+              scale: _showTop ? 1 : 0,
+              duration: Duration(milliseconds: anims ? 200 : 0),
+              curve: AppConstants.expressiveDecelerate,
+              child: FloatingActionButton.small(
+                heroTag: null,
+                tooltip: tr('changelogScrollToTop'),
+                onPressed: () => _scrollToTop(anims),
+                child: const Icon(Icons.vertical_align_top_rounded),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -441,26 +522,31 @@ IconData kindIcon(ChangeKind k) => switch (k) {
   _ => (cs.surfaceContainerHighest, cs.onSurfaceVariant),
 };
 
-String relativeReleaseDate(BuildContext context, DateTime? date) {
-  if (date == null) return '';
-  final local = date.toLocal();
-  final age = DateTime.now().difference(local);
-  if (age.isNegative || age.inMinutes < 1) return tr('changelogJustNow');
-  if (age.inHours < 1) {
-    return tr('changelogTimeAgo', args: [plural('minute', age.inMinutes)]);
+/// "Today", "Yesterday", a weekday within the last week, else a date
+/// (year only when it isn't this year). Pure so tests can pin [now].
+String changelogDayLabel(DateTime day, DateTime now, String locale) {
+  final today = DateTime(now.year, now.month, now.day);
+  final d = DateTime(day.year, day.month, day.day);
+  // Calendar-day difference, immune to DST hour shifts.
+  final diff = DateTime.utc(
+    today.year,
+    today.month,
+    today.day,
+  ).difference(DateTime.utc(d.year, d.month, d.day)).inDays;
+  if (diff == 0) return tr('changelogToday');
+  if (diff == 1) return tr('changelogYesterday');
+  String fmt(DateFormat Function(String) f, String fallback) {
+    try {
+      return f(locale).format(d);
+    } catch (_) {
+      // Locale without intl date symbols.
+      return DateFormat(fallback).format(d);
+    }
   }
-  if (age.inDays < 1) {
-    return tr('changelogTimeAgo', args: [plural('hour', age.inHours)]);
-  }
-  if (age.inDays < 7) {
-    return tr('changelogTimeAgo', args: [plural('day', age.inDays)]);
-  }
-  try {
-    return DateFormat.yMMMd(context.locale.toLanguageTag()).format(local);
-  } catch (_) {
-    // Locale without intl date symbols.
-    return DateFormat('yyyy-MM-dd').format(local);
-  }
+
+  if (diff > 1 && diff < 7) return fmt(DateFormat.EEEE, 'EEEE');
+  if (d.year == now.year) return fmt(DateFormat.MMMMd, 'MMMM d');
+  return fmt(DateFormat.yMMMMd, 'yyyy-MM-dd');
 }
 
 // ─── Summary ────────────────────────────────────────────────────────────────
@@ -469,12 +555,14 @@ class _SummaryCard extends StatelessWidget {
   final List<ChangelogRelease> releases;
   final String installedVersion;
   final bool Function(ChangelogRelease) isNew;
+  final bool Function(ChangelogRelease) isAvailable;
   final double radius;
 
   const _SummaryCard({
     required this.releases,
     required this.installedVersion,
     required this.isNew,
+    required this.isAvailable,
     required this.radius,
   });
 
@@ -485,13 +573,17 @@ class _SummaryCard extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final latest = releases.first;
     final newOnes = releases.where(isNew).toList();
-    final pool = newOnes.isEmpty ? [latest] : newOnes;
+    // Behind: talk about what an update brings, not what's already here.
+    final available = releases.where(isAvailable).toList();
+    final pool = available.isNotEmpty
+        ? available
+        : (newOnes.isNotEmpty ? newOnes : [latest]);
 
     final tally = [
-      for (final k in [ChangeKind.feature, ChangeKind.fix, ChangeKind.ui])
-        if (pool.fold(0, (n, r) => n + r.count(k)) > 0)
-          '${pool.fold(0, (n, r) => n + r.count(k))} ${kindLabel(k)}',
-    ].join(' · ');
+      for (final k in ChangeKind.values)
+        if (pool.fold(0, (n, r) => n + r.count(k)) case final n when n > 0)
+          (k, n),
+    ];
 
     final installed = _bare(installedVersion);
     final cmp = compareVersionStrings(installed, _bare(latest.tag));
@@ -541,7 +633,9 @@ class _SummaryCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              newOnes.isNotEmpty
+              available.isNotEmpty
+                  ? plural('changelogAvailableCount', available.length)
+                  : newOnes.isNotEmpty
                   ? plural('changelogNewReleaseCount', newOnes.length)
                   : (behind ? latest.tag : tr('changelogUpToDate')),
               style: text.titleMedium?.copyWith(
@@ -550,12 +644,13 @@ class _SummaryCard extends StatelessWidget {
               ),
             ),
             if (tally.isNotEmpty) ...[
-              const SizedBox(height: 2),
-              Text(
-                tally,
-                style: text.bodySmall?.copyWith(
-                  color: cs.onPrimaryContainer.withValues(alpha: 0.8),
-                ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: [
+                  for (final (k, n) in tally) _KindTag(kind: k, count: n),
+                ],
               ),
             ],
           ],
@@ -609,6 +704,7 @@ class _ReleaseRow extends StatelessWidget {
   final bool isLatest;
   final bool isInstalled;
   final bool isNew;
+  final bool isAvailable;
   final bool expanded;
   final bool collapsible;
   final bool animsEnabled;
@@ -623,6 +719,7 @@ class _ReleaseRow extends StatelessWidget {
     required this.isLatest,
     required this.isInstalled,
     required this.isNew,
+    required this.isAvailable,
     required this.expanded,
     required this.collapsible,
     required this.animsEnabled,
@@ -634,14 +731,18 @@ class _ReleaseRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final active = isLatest || isInstalled || isNew;
+    final active = isLatest || isInstalled || isNew || isAvailable;
     final node = active ? cs.primary : cs.outline;
     final r = release;
+    // A release with one kind of change shows that kind here instead of a
+    // section heading over its list.
+    final single = r.sections.length == 1 ? r.sections.single.kind : null;
 
+    // The day header carries the date; rows show the time.
     final meta = [
-      relativeReleaseDate(context, r.publishedAt),
-      if (r.changeCount > 0) plural('changelogChangeCount', r.changeCount),
-    ].where((s) => s.isNotEmpty).join(' · ');
+      if (r.publishedAt != null) _time(context, r.publishedAt!),
+      if (r.changeCount > 1) plural('changelogChangeCount', r.changeCount),
+    ].join(' · ');
 
     final card = Material(
       color: active
@@ -684,13 +785,22 @@ class _ReleaseRow extends StatelessWidget {
                             ..._badges(cs),
                           ],
                         ),
-                        if (meta.isNotEmpty) ...[
-                          const SizedBox(height: 2),
-                          Text(
-                            meta,
-                            style: text.labelSmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
+                        if (meta.isNotEmpty || single != null) ...[
+                          const SizedBox(height: 4),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 2,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              if (single != null) _KindTag(kind: single),
+                              if (meta.isNotEmpty)
+                                Text(
+                                  meta,
+                                  style: text.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                            ],
                           ),
                         ],
                       ],
@@ -756,6 +866,15 @@ class _ReleaseRow extends StatelessWidget {
     );
   }
 
+  static String _time(BuildContext context, DateTime at) {
+    final local = at.toLocal();
+    try {
+      return DateFormat.jm(context.locale.toLanguageTag()).format(local);
+    } catch (_) {
+      return DateFormat('HH:mm').format(local);
+    }
+  }
+
   List<Widget> _badges(ColorScheme cs) {
     final wanted = <(String, Color, Color)>[
       if (isInstalled)
@@ -766,6 +885,12 @@ class _ReleaseRow extends StatelessWidget {
         ),
       if (isLatest)
         (tr('changelogBadgeLatest'), cs.primary, cs.onPrimary)
+      else if (isAvailable)
+        (
+          tr('changelogBadgeAvailable'),
+          cs.primaryContainer,
+          cs.onPrimaryContainer,
+        )
       else if (isNew)
         (
           tr('changelogBadgeNew'),
@@ -804,41 +929,43 @@ class _ReleaseRow extends StatelessWidget {
     if (r.sections.isEmpty) return const SizedBox(width: double.infinity);
     var budget = expanded ? 1 << 30 : _previewCount;
     final children = <Widget>[];
+    final single = r.sections.length == 1;
     for (final s in r.sections) {
       if (budget <= 0) break;
       final items = s.items.take(budget).toList();
       budget -= items.length;
       final (bg, fg) = _kindColors(cs, s.kind);
-      children.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 4, bottom: 2),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: ShapeDecoration(
-                  color: bg,
-                  shape: CardMetrics.shape(8),
+      if (!single)
+        children.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 2),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: ShapeDecoration(
+                    color: bg,
+                    shape: CardMetrics.shape(8),
+                  ),
+                  child: Icon(kindIcon(s.kind), size: 13, color: fg),
                 ),
-                child: Icon(kindIcon(s.kind), size: 13, color: fg),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                kindLabel(s.kind),
-                style: text.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: cs.onSurface,
+                const SizedBox(width: 8),
+                Text(
+                  kindLabel(s.kind),
+                  style: text.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: cs.onSurface,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${s.items.length}',
-                style: text.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text(
+                  '${s.items.length}',
+                  style: text.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       for (final item in items) {
         children.add(
           _ChangeLine(
@@ -869,13 +996,131 @@ class _ReleaseRow extends StatelessWidget {
       );
     }
     return Padding(
-      padding: EdgeInsets.fromLTRB(14, 0, 14, collapsible ? 4 : 12),
+      padding: EdgeInsets.fromLTRB(
+        14,
+        single ? 2 : 0,
+        14,
+        collapsible ? 4 : 12,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: children,
       ),
     );
   }
+}
+
+/// Small tonal "kind" label used in a single-kind release's header.
+class _KindTag extends StatelessWidget {
+  final ChangeKind kind;
+  final int? count;
+
+  const _KindTag({required this.kind, this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final (bg, fg) = _kindColors(cs, kind);
+    return Container(
+      padding: const EdgeInsetsDirectional.fromSTEB(5, 2, 8, 2),
+      decoration: ShapeDecoration(color: bg, shape: CardMetrics.shape(8)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(kindIcon(kind), size: 12, color: fg),
+          const SizedBox(width: 4),
+          Text(
+            kindLabel(kind),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (count != null) ...[
+            const SizedBox(width: 4),
+            Text(
+              '$count',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: fg.withValues(alpha: 0.75),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Day label sitting on the rail between releases.
+class _DayHeader extends StatelessWidget {
+  final String label;
+  final bool isFirst;
+
+  const _DayHeader({required this.label, required this.isFirst});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 36,
+      child: Stack(
+        children: [
+          PositionedDirectional(
+            start: 0,
+            top: 0,
+            bottom: 0,
+            width: _railWidth,
+            child: CustomPaint(
+              painter: _RailLinePainter(
+                color: cs.outlineVariant,
+                fromCenter: isFirst,
+              ),
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: _railWidth + 8),
+              child: Text(
+                label,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RailLinePainter extends CustomPainter {
+  final Color color;
+  final bool fromCenter;
+
+  _RailLinePainter({required this.color, required this.fromCenter});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(cx, fromCenter ? size.height / 2 : 0),
+      Offset(cx, size.height),
+      paint,
+    );
+    // Small tick marking the day boundary on the rail.
+    canvas.drawCircle(Offset(cx, size.height / 2), 3, Paint()..color = color);
+  }
+
+  @override
+  bool shouldRepaint(_RailLinePainter old) =>
+      old.color != color || old.fromCenter != fromCenter;
 }
 
 /// One change, with `**bold**`, `` `code` `` and `#123` issue references

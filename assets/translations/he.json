@@ -1512,8 +1512,6 @@
     "changelogBadgeInstalled": "Installed",
     "changelogBadgeNew": "New",
     "changelogBadgePrerelease": "Pre-release",
-    "changelogJustNow": "Just now",
-    "changelogTimeAgo": "{} ago",
     "changelogChangeCount": {
         "one": "{} change",
         "other": "{} changes"
@@ -1528,5 +1526,13 @@
     "changelogLoadOlder": "Load older releases",
     "changelogLoadOlderFailed": "Couldn't load older releases",
     "changelogAllLoaded": "That's every release",
-    "changelogNoMatches": "No releases match this filter"
+    "changelogNoMatches": "No releases match this filter",
+    "changelogToday": "Today",
+    "changelogYesterday": "Yesterday",
+    "changelogBadgeAvailable": "Available",
+    "changelogAvailableCount": {
+        "one": "{} release newer than yours",
+        "other": "{} releases newer than yours"
+    },
+    "changelogScrollToTop": "Back to top"
 }

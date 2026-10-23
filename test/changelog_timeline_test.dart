@@ -154,6 +154,39 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('when behind, newer releases are marked available', (
+    tester,
+  ) async {
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [
+            _release('v1.7.1-p29', '2026-10-21T20:46:29Z', '- feat: newest'),
+            _release('v1.7.1-p28', '2026-10-21T11:12:48Z', '- fix: middle'),
+            _release('v1.7.1-p27', '2026-10-20T06:28:10Z', '- fix: mine'),
+          ]
+        : [];
+    await pumpTimeline(tester, installed: '1.7.1-p27', since: '1.7.1-p27');
+
+    expect(find.text('2 releases newer than yours'), findsOneWidget);
+    expect(find.text('Latest'), findsOneWidget);
+    expect(find.text('Available'), findsOneWidget);
+    expect(find.text('Installed'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('day labels: today, yesterday, weekday, then a date', (
+    tester,
+  ) async {
+    ChangelogTimeline.debugFetchPage = (_) async => [];
+    await pumpTimeline(tester, installed: '1');
+    final now = DateTime(2026, 10, 23, 0, 30); // Friday, just after midnight
+    String label(DateTime d) => changelogDayLabel(d, now, 'en');
+    expect(label(DateTime(2026, 10, 23, 0, 5)), 'Today');
+    expect(label(DateTime(2026, 10, 22, 23, 55)), 'Yesterday');
+    expect(label(DateTime(2026, 10, 19, 12)), 'Monday');
+    expect(label(DateTime(2026, 10, 2, 12)), 'October 2');
+    expect(label(DateTime(2025, 6, 15, 12)), 'June 15, 2025');
+  });
+
   testWidgets('shows retry when the first page fails', (tester) async {
     ChangelogTimeline.debugFetchPage = (_) async => throw Exception('403');
     await tester.runAsync(() async {});

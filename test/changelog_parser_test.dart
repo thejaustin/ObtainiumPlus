@@ -36,6 +36,8 @@ $_badge
 ''';
     final s = ChangelogParser.parse(body).single;
     expect(s.items, ['Hebrew for Obtainium+ (#339)']);
+    // A language name leading the subject is a translation.
+    expect(s.kind, ChangeKind.docs);
   });
 
   test('a body with only the generated compare link has no changes', () {

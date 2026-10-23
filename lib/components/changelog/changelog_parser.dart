@@ -76,6 +76,10 @@ class ChangelogParser {
   static final _docsWords = RegExp(
     r'\b(readme|docs?|documentation|changelog|wiki|translat\w*|i18n|locali[sz]\w*)\b',
   );
+  // Community translation PRs are often titled just "<Language> for ...".
+  static final _languageWords = RegExp(
+    r'^(arabic|bengali|catalan|chinese|czech|danish|dutch|farsi|persian|finnish|french|german|greek|hebrew|hindi|hungarian|indonesian|italian|japanese|korean|norwegian|polish|portuguese|romanian|russian|spanish|swedish|thai|turkish|ukrainian|vietnamese)\b',
+  );
   static final _readmeOnly = RegExp(r'\breadme(\.md)?\b', caseSensitive: false);
 
   /// Removes everything that isn't a change: HTML comments, the
@@ -202,7 +206,9 @@ class ChangelogParser {
     }
     final t = text.toLowerCase();
     if (_fixWords.hasMatch(t)) return ChangeKind.fix;
-    if (_docsWords.hasMatch(t)) return ChangeKind.docs;
+    if (_docsWords.hasMatch(t) || _languageWords.hasMatch(t)) {
+      return ChangeKind.docs;
+    }
     if (_uiWords.hasMatch(t)) return ChangeKind.ui;
     if (_featureWords.hasMatch(t)) return ChangeKind.feature;
     return ChangeKind.other;
