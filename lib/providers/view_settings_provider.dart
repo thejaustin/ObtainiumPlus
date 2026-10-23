@@ -62,6 +62,15 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get showUpdatesRow {
+    return prefs?.safeBool('showUpdatesRow') ?? true;
+  }
+
+  set showUpdatesRow(bool show) {
+    prefs?.setBool('showUpdatesRow', show);
+    notifyListeners();
+  }
+
   bool get buryNonInstalled {
     return prefs?.safeBool('buryNonInstalled') ?? false;
   }

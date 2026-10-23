@@ -1,4 +1,5 @@
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:share_plus/share_plus.dart';
@@ -141,7 +142,11 @@ class _AppDashboardState extends State<AppDashboard>
         .toList();
     final updatesAvailable = _cachedUpdateApps!.length;
     final idleUpdates = updateApps.length;
+    final showUpdatesRow = context.select<ViewSettingsProvider, bool>(
+      (s) => s.showUpdatesRow,
+    );
     final showRecent =
+        showUpdatesRow &&
         idleUpdates > 0 &&
         !appsProvider.gettingUpdates &&
         (totalApps >= 5 || updatesAvailable > 1);

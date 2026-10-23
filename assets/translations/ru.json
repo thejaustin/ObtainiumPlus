@@ -1528,5 +1528,9 @@
         "one": "{} release newer than yours",
         "other": "{} releases newer than yours"
     },
-    "changelogScrollToTop": "Back to top"
+    "changelogScrollToTop": "Back to top",
+    "updatesPlacement": "Where updates show",
+    "updatesPlacementDescription": "Show apps with updates in the Recent Updates row, at the top of the list, both, or neither",
+    "updatesPlacementRow": "Updates row",
+    "updatesPlacementPinned": "Top of list"
 }

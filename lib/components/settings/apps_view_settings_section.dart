@@ -80,15 +80,10 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.showAppWebpage,
           onChanged: (s, v) => onSetState(() => s.showAppWebpage = v),
         ),
-      if (_matches(tr('pinUpdates')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.push_pin_outlined,
-          title: tr('pinUpdates'),
-          subtitle: tr('pinUpdatesDescription'),
-          value: (s) => s.pinUpdates,
-          onChanged: (s, v) => onSetState(() => s.pinUpdates = v),
-        ),
+      if (_matches(tr('updatesPlacement')) ||
+          _matches(tr('pinUpdates')) ||
+          _matches(tr('recentUpdates')))
+        _buildUpdatesPlacement(context),
       if (_matches(tr('buryNonInstalled')))
         buildFeatureToggle<ViewSettingsProvider>(
           context,
@@ -1288,6 +1283,80 @@ class AppsViewSettingsSection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// Updates can show in the dashboard row, pinned to the top of the list,
+  /// both or neither.
+  Widget _buildUpdatesPlacement(BuildContext context) {
+    return Consumer<ViewSettingsProvider>(
+      builder: (context, settings, child) {
+        final isCompact = context.select<PlusSettingsProvider, bool>(
+          (s) => s.plusUseCompactSettings,
+        );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              dense: isCompact,
+              visualDensity: isCompact
+                  ? VisualDensity.compact
+                  : VisualDensity.standard,
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.push_pin_outlined,
+              ),
+              title: Text(
+                tr('updatesPlacement'),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: isCompact
+                  ? null
+                  : Text(tr('updatesPlacementDescription')),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, isCompact ? 8 : 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<String>(
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: isCompact
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
+                  ),
+                  multiSelectionEnabled: true,
+                  emptySelectionAllowed: true,
+                  segments: [
+                    ButtonSegment(
+                      value: 'row',
+                      icon: const Icon(Icons.view_carousel_outlined),
+                      label: Text(tr('updatesPlacementRow')),
+                    ),
+                    ButtonSegment(
+                      value: 'pinned',
+                      icon: const Icon(Icons.vertical_align_top_rounded),
+                      label: Text(tr('updatesPlacementPinned')),
+                    ),
+                  ],
+                  selected: {
+                    if (settings.showUpdatesRow) 'row',
+                    if (settings.pinUpdates) 'pinned',
+                  },
+                  onSelectionChanged: (value) {
+                    AppHaptics.selectionClick();
+                    onSetState(() {
+                      settings.showUpdatesRow = value.contains('row');
+                      settings.pinUpdates = value.contains('pinned');
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
