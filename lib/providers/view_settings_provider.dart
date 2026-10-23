@@ -240,12 +240,19 @@ class ViewSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  NavigationDestinationLabelBehavior get navigationLabelBehavior =>
-      prefs?.safeEnum(
-        'navigationLabelBehavior',
-        NavigationDestinationLabelBehavior.values,
-      ) ??
-      NavigationDestinationLabelBehavior.values[0];
+  /// Falls back to the older "always show nav labels" switch so its value
+  /// carries over until this is set.
+  NavigationDestinationLabelBehavior get navigationLabelBehavior {
+    final stored = prefs?.safeEnum(
+      'navigationLabelBehavior',
+      NavigationDestinationLabelBehavior.values,
+    );
+    if (stored != null) return stored;
+    return prefs?.safeBool('plusNavBarAlwaysShowLabels') == true
+        ? NavigationDestinationLabelBehavior.alwaysShow
+        : NavigationDestinationLabelBehavior.onlyShowSelected;
+  }
+
   set navigationLabelBehavior(NavigationDestinationLabelBehavior val) {
     prefs?.setInt('navigationLabelBehavior', val.index);
     notifyListeners();

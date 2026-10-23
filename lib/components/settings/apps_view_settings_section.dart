@@ -192,7 +192,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           plusFeaturesEnabled &&
           (_matches(tr('plusEnableBottomNavBar')) ||
               _matches(tr('plusFloatingNavBar')) ||
-              _matches(tr('plusNavBarAlwaysShowLabels')) ||
               _matches(tr('plusSettingsBottomNavBar')) ||
               _matches(tr('plusEnableFAB')) ||
               _matches(tr('plusFloatingActionBar')) ||
@@ -217,15 +216,6 @@ class AppsViewSettingsSection extends StatelessWidget {
                 description: tr('plusFloatingNavBarDescription'),
                 getValue: (s) => s.plusFloatingNavBar,
                 setValue: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
-              ),
-            if (_matches(tr('plusNavBarAlwaysShowLabels')))
-              (
-                icon: Icons.label_important_rounded,
-                label: tr('plusNavBarAlwaysShowLabels'),
-                description: tr('plusNavBarAlwaysShowLabelsDescription'),
-                getValue: (s) => s.plusNavBarAlwaysShowLabels,
-                setValue: (s, v) =>
-                    onSetState(() => s.plusNavBarAlwaysShowLabels = v),
               ),
             if (_matches(tr('plusSettingsBottomNavBar')))
               (

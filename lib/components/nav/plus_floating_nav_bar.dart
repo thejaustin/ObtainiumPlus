@@ -21,6 +21,7 @@ class PlusFloatingNavBar extends StatefulWidget {
   final ValueChanged<int> onDestinationSelected;
   final bool animationsEnabled;
   final bool alwaysShowLabels;
+  final bool hideLabels;
   final Map<int, int> badges;
 
   const PlusFloatingNavBar({
@@ -30,6 +31,7 @@ class PlusFloatingNavBar extends StatefulWidget {
     required this.onDestinationSelected,
     required this.animationsEnabled,
     required this.alwaysShowLabels,
+    this.hideLabels = false,
     this.badges = const {},
   });
 
@@ -199,7 +201,9 @@ class _PlusFloatingNavBarState extends State<PlusFloatingNavBar>
                   Row(
                     children: List.generate(n, (i) {
                       final sel = i == widget.currentIndex;
-                      final showLabel = sel || widget.alwaysShowLabels;
+                      final showLabel =
+                          !widget.hideLabels &&
+                          (sel || widget.alwaysShowLabels);
                       final badgeCount = widget.badges[i] ?? 0;
                       final iconWidget = Icon(
                         sel

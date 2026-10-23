@@ -28,6 +28,7 @@ import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -713,9 +714,8 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final isFloating = plusSettings.plusFloatingNavBar;
-    final labelBehavior = plusSettings.plusNavBarAlwaysShowLabels
-        ? NavigationDestinationLabelBehavior.alwaysShow
-        : NavigationDestinationLabelBehavior.onlyShowSelected;
+    final labelBehavior = context.select<ViewSettingsProvider,
+        NavigationDestinationLabelBehavior>((s) => s.navigationLabelBehavior);
 
     // Shared keyboard focus handler
     Widget wrapWithFocus(Widget child) => FocusTraversalGroup(
@@ -791,7 +791,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       currentIndex: currentIndex,
       onDestinationSelected: switchToPage,
       animationsEnabled: AppMotion.enabled(context),
-      alwaysShowLabels: plusSettings.plusNavBarAlwaysShowLabels,
+      alwaysShowLabels:
+          labelBehavior == NavigationDestinationLabelBehavior.alwaysShow,
+      hideLabels: labelBehavior == NavigationDestinationLabelBehavior.alwaysHide,
       badges: {if (updateCount > 0) 0: updateCount},
     );
 

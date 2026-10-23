@@ -138,7 +138,8 @@ class ThemeSettingsSection extends StatelessWidget {
       _buildMaterialYouToggle(context),
       _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
-      if (_matches(tr('navigationLabels')))
+      if (_matches(tr('navigationLabels')) ||
+          _matches(tr('plusNavBarAlwaysShowLabels')))
         _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
