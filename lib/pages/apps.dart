@@ -726,6 +726,16 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
               .map((e) => e.app)
               .toSet();
 
+    // Reserve an end gutter only when the alphabet rail renders, so it never
+    // overlaps the rightmost column (mirrors the scrubber's mount condition).
+    final double scrubberGutter =
+        !settingsProvider.isTV &&
+            _activeDiscoverQuery == null &&
+            !viewSettings.groupByCategory &&
+            NiagaraAlphabetScrubber.willShow(listedApps)
+        ? NiagaraAlphabetScrubber.railGutter
+        : 0.0;
+
     getLoadingWidgets() {
       // Show M3E skeleton tiles during initial load instead of hourglass icon
       if (appsProvider.loadingApps && listedApps.isEmpty) {
@@ -1959,7 +1969,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
           squareTiles: plusSettings.plusGridSquareTiles,
         );
         return SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: EdgeInsets.fromLTRB(12, 6, 12 + scrubberGutter, 6),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
               (ctx, index) {
@@ -2036,6 +2046,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       if (plusSettings.plusEnableModernAppListTile && !settingsProvider.isTV) {
         return AppListView(
           apps: listedApps,
+          endInset: scrubberGutter,
           selectedAppIds: selectedAppIds,
           onToggleSelected: toggleAppSelected,
           updateAppIds: existingUpdates,
@@ -2053,10 +2064,16 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         );
       }
 
-      return SliverList(
-        delegate: SliverChildBuilderDelegate((BuildContext context, int index) {
-          return getSingleAppHorizTile(index);
-        }, childCount: listedApps.length),
+      return SliverPadding(
+        padding: EdgeInsets.only(right: scrubberGutter),
+        sliver: SliverList(
+          delegate: SliverChildBuilderDelegate((
+            BuildContext context,
+            int index,
+          ) {
+            return getSingleAppHorizTile(index);
+          }, childCount: listedApps.length),
+        ),
       );
     }
 
@@ -2291,18 +2308,19 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                       ..._buildDiscoverResultsSlivers(context, plusSettings)
                     else
                       getDisplayedList(),
+                    // Read the inset inside this Scaffold: it already counts
+                    // Home's nav bar (extendBody) + system gesture area, and
+                    // drops it when persistent footer buttons take over.
                     SliverToBoxAdapter(
-                      child: SizedBox(
-                        height:
-                            (plusSettings.plusEnableBottomNavBar &&
-                                !plusSettings.plusTopUILayout &&
-                                !settingsProvider.isTV)
-                            ? (plusSettings.plusFloatingNavBar ? 108.0 : 92.0) +
-                                  (plusSettings.plusEnableFAB ? 64.0 : 0.0)
-                            : (plusSettings.plusEnableFAB &&
+                      child: Builder(
+                        builder: (ctx) => SizedBox(
+                          height:
+                              MediaQuery.paddingOf(ctx).bottom +
+                              (plusSettings.plusEnableFAB &&
                                       !settingsProvider.isTV
                                   ? 88.0
                                   : 24.0),
+                        ),
                       ),
                     ),
                   ],

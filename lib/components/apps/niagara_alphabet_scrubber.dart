@@ -24,15 +24,37 @@ class NiagaraAlphabetScrubber extends StatefulWidget {
     required this.scrollController,
   });
 
+  /// Extra end padding lists/grids should reserve so the resting rail never
+  /// covers (or steals taps from) the rightmost tiles.
+  static const double railGutter = 20.0;
+
+  /// Cheap pre-check mirroring [build]'s visibility rules (min app count and
+  /// at least 3 distinct letter buckets), so layouts can reserve [railGutter]
+  /// only when the rail will actually render.
+  static bool willShow(List<AppInMemory> apps) {
+    if (apps.length < 8) return false;
+    final seen = <String>{};
+    for (final a in apps) {
+      final n = a.name.trim();
+      seen.add(a.app.pinned ? '★' : (n.isEmpty ? '#' : n[0].toUpperCase()));
+      if (seen.length >= 3) return true;
+    }
+    return false;
+  }
+
   @override
   State<NiagaraAlphabetScrubber> createState() =>
       _NiagaraAlphabetScrubberState();
 }
 
 class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
+  static final RegExp _alpha = RegExp(r'^[A-Z]$');
   double? _dragNormalizedY;
   int? _activeIndex;
   Timer? _tapClearTimer;
+  List<AppInMemory>? _bucketsFor;
+  List<({String symbol, int firstAppIndex, String sampleAppName})>?
+  _cachedBuckets;
 
   @override
   void dispose() {
@@ -44,6 +66,11 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
   /// mapped to the first app index in [widget.apps].
   List<({String symbol, int firstAppIndex, String sampleAppName})>
   _buildBuckets() {
+    // AppsPage rebuilds on every provider tick; only rebucket when the list
+    // instance actually changes.
+    if (identical(_bucketsFor, widget.apps) && _cachedBuckets != null) {
+      return _cachedBuckets!;
+    }
     final buckets =
         <({String symbol, int firstAppIndex, String sampleAppName})>[];
     final seenSymbols = <String>{};
@@ -72,7 +99,7 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
     for (int i = 0; i < unpinned.length; i++) {
       final name = unpinned[i].name.trim();
       final firstChar = name.isNotEmpty ? name[0].toUpperCase() : '#';
-      final isAlpha = RegExp(r'^[A-Z]$').hasMatch(firstChar);
+      final isAlpha = _alpha.hasMatch(firstChar);
       final symbol = isAlpha ? firstChar : '#';
       if (!seenSymbols.contains(symbol)) {
         seenSymbols.add(symbol);
@@ -84,6 +111,8 @@ class _NiagaraAlphabetScrubberState extends State<NiagaraAlphabetScrubber> {
       }
     }
 
+    _bucketsFor = widget.apps;
+    _cachedBuckets = buckets;
     return buckets;
   }
 

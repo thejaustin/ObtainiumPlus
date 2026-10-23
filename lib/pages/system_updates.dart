@@ -122,7 +122,12 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       body = Scaffold(
         key: const ValueKey('results'),
         body: ListView.builder(
-          padding: EdgeInsets.fromLTRB(adaptiveMargin, 8, adaptiveMargin, 96),
+          padding: EdgeInsets.fromLTRB(
+            adaptiveMargin,
+            8,
+            adaptiveMargin,
+            MediaQuery.paddingOf(context).bottom + 88,
+          ),
           itemCount: _updates.length,
           itemBuilder: (context, index) {
             final update = _updates[index];

@@ -1003,7 +1003,7 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     ],
                   ),
 
-                const SizedBox(height: 96),
+                SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
               ]),
             ),
           ),

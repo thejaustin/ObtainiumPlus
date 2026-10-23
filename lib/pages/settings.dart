@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/appearance_hub.dart';
@@ -54,6 +55,23 @@ class SettingsPageState extends State<SettingsPage> {
   };
   bool _noResults = false;
 
+  /// Floating section dock slides away while scrolling down through a
+  /// section and returns on scroll-up, so it never sits on top of content.
+  final ValueNotifier<bool> _dockVisible = ValueNotifier(true);
+
+  bool _onUserScroll(UserScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    if (n.direction == ScrollDirection.reverse &&
+        n.metrics.pixels > 24 &&
+        n.metrics.extentAfter > 0) {
+      _dockVisible.value = false;
+    } else if (n.direction == ScrollDirection.forward ||
+        n.metrics.pixels <= 24) {
+      _dockVisible.value = true;
+    }
+    return false;
+  }
+
   void scrollToTop() {
     if (_searchQuery.isNotEmpty) {
       _searchController.clear();
@@ -77,12 +95,17 @@ class SettingsPageState extends State<SettingsPage> {
       _previousSectionIndex = _selectedSectionIndex;
       _selectedSectionIndex = index;
     });
+    _dockVisible.value = true;
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-      );
+      if (context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
+        _scrollController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      } else {
+        _scrollController.jumpTo(0);
+      }
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || index < 0 || index >= _chipKeys.length) return;
@@ -158,6 +181,7 @@ class SettingsPageState extends State<SettingsPage> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _dockVisible.dispose();
     _tabsScrollController.dispose();
     super.dispose();
   }
@@ -237,446 +261,483 @@ class SettingsPageState extends State<SettingsPage> {
           : null,
       body: Stack(
         children: [
-          CustomScrollView(
-            key: const PageStorageKey<String>('settings_page_scroll'),
-            controller: _scrollController,
-            physics: plusSettings.scrollPhysics,
-            slivers: [
-              CustomAppBar(
-                title: tr('settings'),
-                actions: [
-                  FutureBuilder<dynamic>(
-                    future: _versionFuture,
-                    builder: (context, snap) {
-                      final String? v = snap.data?.versionName as String?;
-                      final isM3E = plusSettings.plusEnableMaterialExpressive;
-                      final colorScheme = Theme.of(context).colorScheme;
-                      return ScaleTouchWrapper(
-                        hapticOnPressDown: true,
-                        scaleDownFactor: 0.92,
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 4),
-                          child: ActionChip(
-                            visualDensity: VisualDensity.compact,
-                            materialTapTargetSize:
-                                MaterialTapTargetSize.shrinkWrap,
-                            avatar: Icon(
-                              Icons.history_edu_rounded,
-                              size: 15,
-                              color: colorScheme.primary,
-                            ),
-                            label: Text(
-                              (v != null && v.isNotEmpty)
-                                  ? v
-                                  : tr('viewChangelog'),
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: colorScheme.onSurface,
-                                  ),
-                            ),
-                            shape: CardMetrics.shape(
-                              CardMetrics.pill(
-                                plusSettings.plusGlobalCornerRadius,
+          NotificationListener<UserScrollNotification>(
+            onNotification: _onUserScroll,
+            child: CustomScrollView(
+              key: const PageStorageKey<String>('settings_page_scroll'),
+              controller: _scrollController,
+              physics: plusSettings.scrollPhysics,
+              slivers: [
+                CustomAppBar(
+                  title: tr('settings'),
+                  actions: [
+                    FutureBuilder<dynamic>(
+                      future: _versionFuture,
+                      builder: (context, snap) {
+                        final String? v = snap.data?.versionName as String?;
+                        final isM3E = plusSettings.plusEnableMaterialExpressive;
+                        final colorScheme = Theme.of(context).colorScheme;
+                        return ScaleTouchWrapper(
+                          hapticOnPressDown: true,
+                          scaleDownFactor: 0.92,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 4),
+                            child: ActionChip(
+                              visualDensity: VisualDensity.compact,
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              avatar: Icon(
+                                Icons.history_edu_rounded,
+                                size: 15,
+                                color: colorScheme.primary,
                               ),
-                              expressive: isM3E,
-                              side: BorderSide(
-                                color: colorScheme.outlineVariant.withValues(
-                                  alpha: 0.35,
+                              label: Text(
+                                (v != null && v.isNotEmpty)
+                                    ? v
+                                    : tr('viewChangelog'),
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: colorScheme.onSurface,
+                                    ),
+                              ),
+                              shape: CardMetrics.shape(
+                                CardMetrics.pill(
+                                  plusSettings.plusGlobalCornerRadius,
+                                ),
+                                expressive: isM3E,
+                                side: BorderSide(
+                                  color: colorScheme.outlineVariant.withValues(
+                                    alpha: 0.35,
+                                  ),
                                 ),
                               ),
+                              backgroundColor: colorScheme.surfaceContainerLow,
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                showWhatsNewSheet(context);
+                              },
                             ),
-                            backgroundColor: colorScheme.surfaceContainerLow,
-                            onPressed: () {
-                              AppHaptics.selectionClick();
-                              showWhatsNewSheet(context);
-                            },
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                  ScaleTouchWrapper(
-                    hapticOnPressDown: false,
-                    scaleDownFactor: 0.88,
-                    child: IconButton(
-                      visualDensity: VisualDensity.compact,
-                      tooltip: tr('plusUseCompactSettings'),
-                      icon: Icon(
-                        plusSettings.plusUseCompactSettings
-                            ? Icons.density_small_rounded
-                            : Icons.density_medium_rounded,
-                        size: 20,
-                        color: plusSettings.plusUseCompactSettings
-                            ? Theme.of(context).colorScheme.primary
-                            : null,
-                      ),
-                      onPressed: () {
-                        final next = !plusSettings.plusUseCompactSettings;
-                        next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                        plusSettings.plusUseCompactSettings = next;
+                        );
                       },
                     ),
-                  ),
-                ],
-                bottom: PreferredSize(
-                  preferredSize: Size.fromHeight(isCompact ? 54 : 60),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      adaptiveMargin,
-                      0,
-                      adaptiveMargin,
-                      isCompact ? 8 : 12,
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: false,
+                      scaleDownFactor: 0.88,
+                      child: IconButton(
+                        visualDensity: VisualDensity.compact,
+                        tooltip: tr('plusUseCompactSettings'),
+                        icon: Icon(
+                          plusSettings.plusUseCompactSettings
+                              ? Icons.density_small_rounded
+                              : Icons.density_medium_rounded,
+                          size: 20,
+                          color: plusSettings.plusUseCompactSettings
+                              ? Theme.of(context).colorScheme.primary
+                              : null,
+                        ),
+                        onPressed: () {
+                          final next = !plusSettings.plusUseCompactSettings;
+                          next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                          plusSettings.plusUseCompactSettings = next;
+                        },
+                      ),
                     ),
-                    child: AnimatedContainer(
+                  ],
+                  bottom: PreferredSize(
+                    preferredSize: Size.fromHeight(isCompact ? 54 : 60),
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        adaptiveMargin,
+                        0,
+                        adaptiveMargin,
+                        isCompact ? 8 : 12,
+                      ),
+                      child: AnimatedContainer(
+                        duration: Duration(
+                          milliseconds:
+                              plusSettings.plusEnableEnhancedAnimations
+                              ? 280
+                              : 0,
+                        ),
+                        curve: Easing.emphasizedDecelerate,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(
+                            _searchQuery.isNotEmpty ? 18.0 : 28.0,
+                          ),
+                          boxShadow: _searchQuery.isNotEmpty
+                              ? [
+                                  BoxShadow(
+                                    color: Theme.of(context).colorScheme.primary
+                                        .withValues(alpha: 0.16),
+                                    blurRadius: 14,
+                                    spreadRadius: 1,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: SearchBar(
+                          controller: _searchController,
+                          constraints: BoxConstraints(
+                            minHeight: isCompact ? 42 : 48,
+                            maxHeight: isCompact ? 46 : 52,
+                          ),
+                          hintText: tr('searchSettings'),
+                          leading: const Icon(Icons.search, size: 20),
+                          trailing: [
+                            if (_searchQuery.isNotEmpty)
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                tooltip: tr('clear'),
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () => _searchController.clear(),
+                              ),
+                          ],
+                          elevation: WidgetStateProperty.all(0),
+                          shape: WidgetStateProperty.resolveWith((states) {
+                            final isFocused = states.contains(
+                              WidgetState.focused,
+                            );
+                            final isShifted =
+                                isFocused || _searchQuery.isNotEmpty;
+                            return CardMetrics.shape(
+                              isShifted ? 18.0 : 28.0,
+                              expressive:
+                                  plusSettings.plusEnableMaterialExpressive,
+                              side: BorderSide(
+                                color: isShifted
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                          .colorScheme
+                                          .outlineVariant
+                                          .withValues(alpha: 0.3),
+                                width: isShifted ? 1.5 : 1.0,
+                              ),
+                            );
+                          }),
+                          backgroundColor: WidgetStateProperty.all(
+                            Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: adaptiveMargin,
+                    vertical: 2,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: PlusFeaturesSection(
+                      searchQuery: _searchQuery,
+                      showAdvancedSettings:
+                          plusSettings.plusShowAdvancedSettings,
+                    ),
+                  ),
+                ),
+                if (showTopPinnedCategoryBar)
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _SettingsCategoryBarDelegate(
+                      height: isCompact ? 48.0 : 54.0,
+                      scrollController: _tabsScrollController,
+                      scrollPhysics: plusSettings.scrollPhysics,
+                      adaptiveMargin: adaptiveMargin,
+                      selectedIndex: _selectedSectionIndex,
+                      isCompact: isCompact,
+                      isM3E: plusSettings.plusEnableMaterialExpressive,
+                      cornerRadius: plusSettings.plusGlobalCornerRadius,
+                      colorScheme: Theme.of(context).colorScheme,
+                      chipKeys: _chipKeys,
+                      onSelect: _selectSection,
+                    ),
+                  ),
+                SliverPadding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: adaptiveMargin,
+                    vertical: plusSettings.plusUseCompactSettings ? 4 : 8,
+                  ),
+                  sliver: SliverToBoxAdapter(
+                    child: AnimatedSwitcher(
                       duration: Duration(
                         milliseconds: plusSettings.plusEnableEnhancedAnimations
-                            ? 280
+                            ? 260
                             : 0,
                       ),
-                      curve: Easing.emphasizedDecelerate,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(
-                          _searchQuery.isNotEmpty ? 18.0 : 28.0,
-                        ),
-                        boxShadow: _searchQuery.isNotEmpty
-                            ? [
-                                BoxShadow(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primary.withValues(alpha: 0.16),
-                                  blurRadius: 14,
-                                  spreadRadius: 1,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                            : null,
-                      ),
-                      child: SearchBar(
-                        controller: _searchController,
-                        constraints: BoxConstraints(
-                          minHeight: isCompact ? 42 : 48,
-                          maxHeight: isCompact ? 46 : 52,
-                        ),
-                        hintText: tr('searchSettings'),
-                        leading: const Icon(Icons.search, size: 20),
-                        trailing: [
-                          if (_searchQuery.isNotEmpty)
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              tooltip: tr('clear'),
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () => _searchController.clear(),
-                            ),
-                        ],
-                        elevation: WidgetStateProperty.all(0),
-                        shape: WidgetStateProperty.resolveWith((states) {
-                          final isFocused = states.contains(
-                            WidgetState.focused,
-                          );
-                          final isShifted =
-                              isFocused || _searchQuery.isNotEmpty;
-                          return CardMetrics.shape(
-                            isShifted ? 18.0 : 28.0,
-                            expressive:
-                                plusSettings.plusEnableMaterialExpressive,
-                            side: BorderSide(
-                              color: isShifted
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outlineVariant
-                                        .withValues(alpha: 0.3),
-                              width: isShifted ? 1.5 : 1.0,
-                            ),
-                          );
-                        }),
-                        backgroundColor: WidgetStateProperty.all(
-                          Theme.of(context).colorScheme.surfaceContainerHighest
-                              .withValues(alpha: 0.5),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SliverPadding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: adaptiveMargin,
-                  vertical: 2,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: PlusFeaturesSection(
-                    searchQuery: _searchQuery,
-                    showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-                  ),
-                ),
-              ),
-              if (showTopPinnedCategoryBar)
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _SettingsCategoryBarDelegate(
-                    height: isCompact ? 48.0 : 54.0,
-                    scrollController: _tabsScrollController,
-                    scrollPhysics: plusSettings.scrollPhysics,
-                    adaptiveMargin: adaptiveMargin,
-                    selectedIndex: _selectedSectionIndex,
-                    isCompact: isCompact,
-                    isM3E: plusSettings.plusEnableMaterialExpressive,
-                    cornerRadius: plusSettings.plusGlobalCornerRadius,
-                    colorScheme: Theme.of(context).colorScheme,
-                    chipKeys: _chipKeys,
-                    onSelect: _selectSection,
-                  ),
-                ),
-              SliverPadding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: adaptiveMargin,
-                  vertical: plusSettings.plusUseCompactSettings ? 4 : 8,
-                ),
-                sliver: SliverToBoxAdapter(
-                  child: AnimatedSwitcher(
-                    duration: Duration(
-                      milliseconds: plusSettings.plusEnableEnhancedAnimations
-                          ? 260
-                          : 0,
-                    ),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder:
-                        (Widget child, Animation<double> animation) {
-                          final bool isForward =
-                              _selectedSectionIndex >= _previousSectionIndex;
-                          final beginOffset = _searchQuery.isNotEmpty
-                              ? const Offset(0.0, 0.03)
-                              : Offset(isForward ? 0.05 : -0.05, 0.0);
-                          return FadeTransition(
-                            opacity: CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            ),
-                            child: SlideTransition(
-                              position:
-                                  Tween<Offset>(
-                                    begin: beginOffset,
-                                    end: Offset.zero,
-                                  ).animate(
-                                    CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves.easeOutCubic,
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder:
+                          (Widget child, Animation<double> animation) {
+                            final bool isForward =
+                                _selectedSectionIndex >= _previousSectionIndex;
+                            final beginOffset = _searchQuery.isNotEmpty
+                                ? const Offset(0.0, 0.03)
+                                : Offset(isForward ? 0.05 : -0.05, 0.0);
+                            return FadeTransition(
+                              opacity: CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              ),
+                              child: SlideTransition(
+                                position:
+                                    Tween<Offset>(
+                                      begin: beginOffset,
+                                      end: Offset.zero,
+                                    ).animate(
+                                      CurvedAnimation(
+                                        parent: animation,
+                                        curve: Curves.easeOutCubic,
+                                      ),
                                     ),
+                                child: child,
+                              ),
+                            );
+                          },
+                      child: KeyedSubtree(
+                        key: ValueKey<String>(
+                          _searchQuery.isNotEmpty
+                              ? 'search_$_searchQuery'
+                              : 'tab_$_selectedSectionIndex',
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_searchQuery.isNotEmpty && _noResults)
+                              _SettingsEmptyState(
+                                onClear: _searchController.clear,
+                              ),
+                            Column(
+                              key: _resultsKey,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                if (_searchQuery.isEmpty)
+                                  _SettingsTabBanner(
+                                    key: ValueKey(
+                                      'banner_$_selectedSectionIndex',
+                                    ),
+                                    tabIndex: _selectedSectionIndex,
+                                    jumpChips: _buildJumpChipsForTab(
+                                      _selectedSectionIndex,
+                                      plusSettings,
+                                    ),
+                                    onJump: _jumpToTarget,
                                   ),
-                              child: child,
-                            ),
-                          );
-                        },
-                    child: KeyedSubtree(
-                      key: ValueKey<String>(
-                        _searchQuery.isNotEmpty
-                            ? 'search_$_searchQuery'
-                            : 'tab_$_selectedSectionIndex',
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (_searchQuery.isNotEmpty && _noResults)
-                            _SettingsEmptyState(
-                              onClear: _searchController.clear,
-                            ),
-                          Column(
-                            key: _resultsKey,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              if (_searchQuery.isEmpty)
-                                _SettingsTabBanner(
-                                  key: ValueKey(
-                                    'banner_$_selectedSectionIndex',
-                                  ),
-                                  tabIndex: _selectedSectionIndex,
-                                  jumpChips: _buildJumpChipsForTab(
-                                    _selectedSectionIndex,
-                                    plusSettings,
-                                  ),
-                                  onJump: _jumpToTarget,
-                                ),
-                              if (_searchQuery.isNotEmpty ||
-                                  _selectedSectionIndex == 0) ...[
-                                if (_searchQuery.isEmpty &&
-                                    plusSettings.plusSettingsUseSubmenuHub) ...[
-                                  if (plusSettings
-                                      .plusSettingsUseVisualThemePicker)
-                                    const VisualThemeSelector(),
-                                  AppearanceHub(
-                                    androidInfoFuture: _androidInfoFuture,
-                                    themeContent: ThemeSettingsSection(
-                                      searchQuery: _searchQuery,
+                                if (_searchQuery.isNotEmpty ||
+                                    _selectedSectionIndex == 0) ...[
+                                  if (_searchQuery.isEmpty &&
+                                      plusSettings
+                                          .plusSettingsUseSubmenuHub) ...[
+                                    if (plusSettings
+                                        .plusSettingsUseVisualThemePicker)
+                                      const VisualThemeSelector(),
+                                    AppearanceHub(
                                       androidInfoFuture: _androidInfoFuture,
-                                      colorsNameMap:
-                                          const <ColorSwatch<Object>, String>{},
-                                      showAdvancedSettings:
-                                          plusSettings.plusShowAdvancedSettings,
-                                      subCategory: 'theme',
+                                      themeContent: ThemeSettingsSection(
+                                        searchQuery: _searchQuery,
+                                        androidInfoFuture: _androidInfoFuture,
+                                        colorsNameMap:
+                                            const <
+                                              ColorSwatch<Object>,
+                                              String
+                                            >{},
+                                        showAdvancedSettings: plusSettings
+                                            .plusShowAdvancedSettings,
+                                        subCategory: 'theme',
+                                      ),
+                                      appTileContent: AppsViewSettingsSection(
+                                        searchQuery: _searchQuery,
+                                        onSetState: (fn) => setState(fn),
+                                        showAdvancedSettings: plusSettings
+                                            .plusShowAdvancedSettings,
+                                        subCategory: 'tiles',
+                                      ),
+                                      layoutNavContent: AppsViewSettingsSection(
+                                        searchQuery: _searchQuery,
+                                        onSetState: (fn) => setState(fn),
+                                        showAdvancedSettings: plusSettings
+                                            .plusShowAdvancedSettings,
+                                        subCategory: 'layout',
+                                      ),
+                                      motionPhysicsContent:
+                                          ThemeSettingsSection(
+                                            searchQuery: _searchQuery,
+                                            androidInfoFuture:
+                                                _androidInfoFuture,
+                                            colorsNameMap:
+                                                const <
+                                                  ColorSwatch<Object>,
+                                                  String
+                                                >{},
+                                            showAdvancedSettings: plusSettings
+                                                .plusShowAdvancedSettings,
+                                            subCategory: 'motion',
+                                          ),
                                     ),
-                                    appTileContent: AppsViewSettingsSection(
-                                      searchQuery: _searchQuery,
-                                      onSetState: (fn) => setState(fn),
-                                      showAdvancedSettings:
-                                          plusSettings.plusShowAdvancedSettings,
-                                      subCategory: 'tiles',
+                                    const SettingsLayoutSelector(),
+                                  ] else ...[
+                                    KeyedSubtree(
+                                      key: _searchQuery.isEmpty
+                                          ? _jumpTargetKeys['theme']
+                                          : null,
+                                      child: ThemeSettingsSection(
+                                        searchQuery: _searchQuery,
+                                        androidInfoFuture: _androidInfoFuture,
+                                        colorsNameMap:
+                                            const <
+                                              ColorSwatch<Object>,
+                                              String
+                                            >{},
+                                        showAdvancedSettings: plusSettings
+                                            .plusShowAdvancedSettings,
+                                      ),
                                     ),
-                                    layoutNavContent: AppsViewSettingsSection(
-                                      searchQuery: _searchQuery,
-                                      onSetState: (fn) => setState(fn),
-                                      showAdvancedSettings:
-                                          plusSettings.plusShowAdvancedSettings,
-                                      subCategory: 'layout',
+                                    KeyedSubtree(
+                                      key: _searchQuery.isEmpty
+                                          ? _jumpTargetKeys['appsView']
+                                          : null,
+                                      child: AppsViewSettingsSection(
+                                        searchQuery: _searchQuery,
+                                        onSetState: (fn) => setState(fn),
+                                        showAdvancedSettings: plusSettings
+                                            .plusShowAdvancedSettings,
+                                      ),
                                     ),
-                                    motionPhysicsContent: ThemeSettingsSection(
-                                      searchQuery: _searchQuery,
-                                      androidInfoFuture: _androidInfoFuture,
-                                      colorsNameMap:
-                                          const <ColorSwatch<Object>, String>{},
-                                      showAdvancedSettings:
-                                          plusSettings.plusShowAdvancedSettings,
-                                      subCategory: 'motion',
-                                    ),
-                                  ),
-                                  const SettingsLayoutSelector(),
-                                ] else ...[
+                                  ],
+                                ],
+                                if (_searchQuery.isNotEmpty ||
+                                    _selectedSectionIndex == 1) ...[
                                   KeyedSubtree(
                                     key: _searchQuery.isEmpty
-                                        ? _jumpTargetKeys['theme']
+                                        ? _jumpTargetKeys['updates']
                                         : null,
-                                    child: ThemeSettingsSection(
+                                    child: UpdateSettingsSection(
                                       searchQuery: _searchQuery,
+                                      showIntervalLabel: _showIntervalLabel,
+                                      onIntervalLabelChange: (val) => setState(
+                                        () => _showIntervalLabel = val,
+                                      ),
                                       androidInfoFuture: _androidInfoFuture,
-                                      colorsNameMap:
-                                          const <ColorSwatch<Object>, String>{},
                                       showAdvancedSettings:
                                           plusSettings.plusShowAdvancedSettings,
                                     ),
                                   ),
+                                  if (_searchQuery.isEmpty)
+                                    const _SectionConnector(),
                                   KeyedSubtree(
                                     key: _searchQuery.isEmpty
-                                        ? _jumpTargetKeys['appsView']
+                                        ? _jumpTargetKeys['install']
                                         : null,
-                                    child: AppsViewSettingsSection(
+                                    child: InstallationSection(
                                       searchQuery: _searchQuery,
-                                      onSetState: (fn) => setState(fn),
+                                      showAdvancedSettings:
+                                          plusSettings.plusShowAdvancedSettings,
+                                    ),
+                                  ),
+                                ],
+                                if (_searchQuery.isNotEmpty ||
+                                    _selectedSectionIndex == 2)
+                                  NotificationSettingsSection(
+                                    searchQuery: _searchQuery,
+                                    showAdvancedSettings:
+                                        plusSettings.plusShowAdvancedSettings,
+                                  ),
+                                if (_searchQuery.isNotEmpty ||
+                                    _selectedSectionIndex == 3)
+                                  AppBehaviorSection(
+                                    searchQuery: _searchQuery,
+                                    showAdvancedSettings:
+                                        plusSettings.plusShowAdvancedSettings,
+                                  ),
+                                if (_searchQuery.isNotEmpty ||
+                                    _selectedSectionIndex == 4) ...[
+                                  KeyedSubtree(
+                                    key: _searchQuery.isEmpty
+                                        ? _jumpTargetKeys['advanced']
+                                        : null,
+                                    child: AdvancedSettingsSection(
+                                      searchQuery: _searchQuery,
+                                      showAdvancedSettings:
+                                          plusSettings.plusShowAdvancedSettings,
+                                    ),
+                                  ),
+                                  if (_searchQuery.isEmpty)
+                                    const _SectionConnector(),
+                                  KeyedSubtree(
+                                    key: _searchQuery.isEmpty
+                                        ? _jumpTargetKeys['troubleshooting']
+                                        : null,
+                                    child: TroubleshootingSection(
+                                      searchQuery: _searchQuery,
                                       showAdvancedSettings:
                                           plusSettings.plusShowAdvancedSettings,
                                     ),
                                   ),
                                 ],
                               ],
-                              if (_searchQuery.isNotEmpty ||
-                                  _selectedSectionIndex == 1) ...[
-                                KeyedSubtree(
-                                  key: _searchQuery.isEmpty
-                                      ? _jumpTargetKeys['updates']
-                                      : null,
-                                  child: UpdateSettingsSection(
-                                    searchQuery: _searchQuery,
-                                    showIntervalLabel: _showIntervalLabel,
-                                    onIntervalLabelChange: (val) => setState(
-                                      () => _showIntervalLabel = val,
-                                    ),
-                                    androidInfoFuture: _androidInfoFuture,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                ),
-                                if (_searchQuery.isEmpty)
-                                  const _SectionConnector(),
-                                KeyedSubtree(
-                                  key: _searchQuery.isEmpty
-                                      ? _jumpTargetKeys['install']
-                                      : null,
-                                  child: InstallationSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                ),
-                              ],
-                              if (_searchQuery.isNotEmpty ||
-                                  _selectedSectionIndex == 2)
-                                NotificationSettingsSection(
-                                  searchQuery: _searchQuery,
-                                  showAdvancedSettings:
-                                      plusSettings.plusShowAdvancedSettings,
-                                ),
-                              if (_searchQuery.isNotEmpty ||
-                                  _selectedSectionIndex == 3)
-                                AppBehaviorSection(
-                                  searchQuery: _searchQuery,
-                                  showAdvancedSettings:
-                                      plusSettings.plusShowAdvancedSettings,
-                                ),
-                              if (_searchQuery.isNotEmpty ||
-                                  _selectedSectionIndex == 4) ...[
-                                KeyedSubtree(
-                                  key: _searchQuery.isEmpty
-                                      ? _jumpTargetKeys['advanced']
-                                      : null,
-                                  child: AdvancedSettingsSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                ),
-                                if (_searchQuery.isEmpty)
-                                  const _SectionConnector(),
-                                KeyedSubtree(
-                                  key: _searchQuery.isEmpty
-                                      ? _jumpTargetKeys['troubleshooting']
-                                      : null,
-                                  child: TroubleshootingSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          _buildFooter(context),
-                          SizedBox(
-                            height: hasMainBottomNavBar
-                                ? (plusSettings.plusFloatingNavBar
-                                          ? 108.0
-                                          : 92.0) +
-                                      (useSettingsFloatingBottomDock
-                                          ? 64.0
-                                          : 0.0)
-                                : (useSettingsScaffoldBottomBar
-                                      ? 92.0
-                                      : 24 +
-                                            MediaQuery.paddingOf(
-                                              context,
-                                            ).bottom),
-                          ),
-                        ],
+                            ),
+                            const SizedBox(height: 24),
+                            _buildFooter(context),
+                            SizedBox(
+                              // paddingOf(bottom) already includes the main
+                              // nav bar (Home uses extendBody) plus the system
+                              // gesture inset, so only add our own clearance.
+                              height: useSettingsScaffoldBottomBar
+                                  ? 24.0
+                                  : MediaQuery.paddingOf(context).bottom +
+                                        (useSettingsFloatingBottomDock
+                                            ? 88.0
+                                            : 24.0),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (useSettingsFloatingBottomDock && _searchQuery.isEmpty)
             Positioned(
               left: 16,
               right: 16,
-              bottom:
-                  (plusSettings.plusFloatingNavBar ? 92.0 : 76.0) +
-                  MediaQuery.paddingOf(context).bottom,
+              bottom: MediaQuery.paddingOf(context).bottom + 12,
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 460),
-                  child: _SettingsFloatingSectionDock(
-                    selectedIndex: _selectedSectionIndex,
-                    isM3E: plusSettings.plusEnableMaterialExpressive,
-                    onSelect: _selectSection,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: _dockVisible,
+                    builder: (context, visible, child) {
+                      final anims = plusSettings.plusEnableEnhancedAnimations;
+                      return IgnorePointer(
+                        ignoring: !visible,
+                        child: AnimatedSlide(
+                          offset: visible ? Offset.zero : const Offset(0, 1.6),
+                          duration: Duration(milliseconds: anims ? 260 : 0),
+                          curve: visible
+                              ? Easing.emphasizedDecelerate
+                              : Easing.emphasizedAccelerate,
+                          child: AnimatedOpacity(
+                            opacity: visible ? 1 : 0,
+                            duration: Duration(milliseconds: anims ? 200 : 0),
+                            child: child,
+                          ),
+                        ),
+                      );
+                    },
+                    child: _SettingsFloatingSectionDock(
+                      selectedIndex: _selectedSectionIndex,
+                      isM3E: plusSettings.plusEnableMaterialExpressive,
+                      animsEnabled: plusSettings.plusEnableEnhancedAnimations,
+                      cornerRadius: plusSettings.plusGlobalCornerRadius,
+                      onSelect: _selectSection,
+                    ),
                   ),
                 ),
               ),
@@ -1237,11 +1298,15 @@ class _SettingsCategoryBarDelegate extends SliverPersistentHeaderDelegate {
 class _SettingsFloatingSectionDock extends StatelessWidget {
   final int selectedIndex;
   final bool isM3E;
+  final bool animsEnabled;
+  final double cornerRadius;
   final ValueChanged<int> onSelect;
 
   const _SettingsFloatingSectionDock({
     required this.selectedIndex,
     required this.isM3E,
+    required this.animsEnabled,
+    required this.cornerRadius,
     required this.onSelect,
   });
 
@@ -1276,12 +1341,14 @@ class _SettingsFloatingSectionDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final outer = CardMetrics.pill(cornerRadius);
+    final inner = CardMetrics.inner(cornerRadius);
     return Material(
       elevation: 4,
       shadowColor: Colors.black.withValues(alpha: 0.22),
-      color: cs.surfaceContainerHigh.withValues(alpha: 0.94),
+      color: cs.surfaceContainerHigh.withValues(alpha: 0.96),
       shape: CardMetrics.shape(
-        24,
+        outer,
         expressive: isM3E,
         side: BorderSide(color: cs.primary.withValues(alpha: 0.22), width: 1),
       ),
@@ -1294,49 +1361,63 @@ class _SettingsFloatingSectionDock extends StatelessWidget {
             final sel = i == selectedIndex;
             final item = _items[i];
             return Expanded(
-              child: ScaleTouchWrapper(
-                hapticOnPressDown: false,
-                scaleDownFactor: 0.92,
-                child: InkWell(
-                  customBorder: CardMetrics.shape(18, expressive: isM3E),
-                  onTap: () => onSelect(i),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 7,
-                      horizontal: 4,
-                    ),
-                    decoration: ShapeDecoration(
-                      color: sel ? cs.primaryContainer : Colors.transparent,
-                      shape: CardMetrics.shape(18, expressive: isM3E),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          sel ? item.selectedIcon : item.icon,
-                          size: 18,
-                          color: sel
-                              ? cs.onPrimaryContainer
-                              : cs.onSurfaceVariant,
+              // Selected section gets the room for its label.
+              flex: sel ? 2 : 1,
+              child: Semantics(
+                button: true,
+                selected: sel,
+                label: tr(item.key),
+                excludeSemantics: true,
+                child: Tooltip(
+                  message: tr(item.key),
+                  child: ScaleTouchWrapper(
+                    hapticOnPressDown: false,
+                    scaleDownFactor: 0.92,
+                    child: InkWell(
+                      customBorder: CardMetrics.shape(inner, expressive: isM3E),
+                      onTap: () => onSelect(i),
+                      child: AnimatedContainer(
+                        duration: Duration(
+                          milliseconds: animsEnabled ? 220 : 0,
                         ),
-                        if (sel) ...[
-                          const SizedBox(width: 5),
-                          Flexible(
-                            child: Text(
-                              tr(item.key),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: cs.onPrimaryContainer,
-                                  ),
+                        curve: Curves.easeOutCubic,
+                        constraints: const BoxConstraints(minHeight: 40),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 6,
+                        ),
+                        decoration: ShapeDecoration(
+                          color: sel ? cs.primaryContainer : Colors.transparent,
+                          shape: CardMetrics.shape(inner, expressive: isM3E),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              sel ? item.selectedIcon : item.icon,
+                              size: 18,
+                              color: sel
+                                  ? cs.onPrimaryContainer
+                                  : cs.onSurfaceVariant,
                             ),
-                          ),
-                        ],
-                      ],
+                            if (sel) ...[
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  tr(item.key),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: cs.onPrimaryContainer,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

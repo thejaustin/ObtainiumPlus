@@ -26,6 +26,9 @@ class AppListView extends StatelessWidget {
   final void Function(App) onToggleSelected;
   final Set<String> updateAppIds;
 
+  /// Extra end padding (e.g. to clear the alphabet scrubber rail).
+  final double endInset;
+
   const AppListView({
     super.key,
     required this.apps,
@@ -35,6 +38,7 @@ class AppListView extends StatelessWidget {
     required this.selectedAppIds,
     required this.onToggleSelected,
     required this.updateAppIds,
+    this.endInset = 0.0,
   });
 
   @override
@@ -373,9 +377,11 @@ class AppListView extends StatelessWidget {
     }
 
     return SliverPadding(
-      padding: EdgeInsets.symmetric(
-        horizontal: horizontalPadding,
-        vertical: verticalPadding,
+      padding: EdgeInsets.fromLTRB(
+        horizontalPadding,
+        verticalPadding,
+        horizontalPadding + endInset,
+        verticalPadding,
       ),
       sliver: SliverMainAxisGroup(
         slivers: [
