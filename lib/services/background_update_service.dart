@@ -8,6 +8,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/core/logging/app_logger.dart' as core_log;
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 
@@ -57,6 +58,9 @@ class BackgroundUpdateService {
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
     await loadTranslations();
+    // The background isolate starts without it, so its warnings (and deep
+    // logging detail) were dropped. No-op when already running in-app.
+    await core_log.AppLogger.init();
 
     LogsProvider logs = LogsProvider();
     NotificationsProvider notificationsProvider = NotificationsProvider();
