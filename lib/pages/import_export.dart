@@ -706,12 +706,12 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     return _sectionCard(
                       icon: Icons.upload_rounded,
                       title: tr('obtainiumExport'),
-                      subtitle: tr(
-                        'exportedTo',
-                        args: [
-                          snapshot.data?.toString() ?? tr('pickExportDir'),
-                        ],
-                      ),
+                      subtitle: snapshot.data == null
+                          ? tr('noExportDirChosen')
+                          : tr(
+                              'exportedTo',
+                              args: [readableTreeUri(snapshot.data!)],
+                            ),
                       iconColor: colorScheme.tertiary,
                       actions: [
                         ScaleTouchWrapper(
@@ -1011,4 +1011,22 @@ class _ImportExportPageState extends State<ImportExportPage> {
       ),
     );
   }
+}
+
+/// "content://…/tree/primary%3ADocuments%2FObtainium" → "Documents/Obtainium".
+/// Falls back to the full URI for anything it doesn't recognise.
+@visibleForTesting
+String readableTreeUri(Uri uri) {
+  final segments = uri.pathSegments;
+  final treeIndex = segments.indexOf('tree');
+  if (treeIndex == -1 || treeIndex + 1 >= segments.length) {
+    return uri.toString();
+  }
+  final docId = segments[treeIndex + 1];
+  final colon = docId.indexOf(':');
+  if (colon == -1) return docId;
+  final volume = docId.substring(0, colon);
+  final path = docId.substring(colon + 1);
+  if (volume == 'primary') return path.isEmpty ? '/' : path;
+  return path.isEmpty ? volume : '$volume/$path';
 }

@@ -1555,5 +1555,6 @@
     "storeDefault": "Default",
     "storeSetDefault": "Set as default",
     "storeClearDefault": "Clear default store",
-    "installFailedWithCode": "Installation failed (code {})"
+    "installFailedWithCode": "Installation failed (code {})",
+    "noExportDirChosen": "No export folder chosen yet"
 }
