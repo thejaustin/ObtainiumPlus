@@ -105,16 +105,23 @@ class ExpressiveCircularProgressIndicator extends StatelessWidget {
     }
 
     // Below ~32dp the morphing shapes are unreadable; keep the wavy ring.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.biggest.shortestSide < 32) return wavy;
-        return FittedBox(
-          fit: BoxFit.contain,
-          child: LoadingIndicatorM3E(
-            color: color ?? Theme.of(context).colorScheme.primary,
-          ),
-        );
-      },
+    // The 48dp box (the indicator's natural size) answers intrinsic-size
+    // queries itself: a LayoutBuilder can't, and SliverFillRemaining /
+    // IntrinsicHeight parents threw and left the page broken (Logs page).
+    // A tighter or larger tight parent still wins.
+    return SizedBox.square(
+      dimension: 48,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.biggest.shortestSide < 32) return wavy;
+          return FittedBox(
+            fit: BoxFit.contain,
+            child: LoadingIndicatorM3E(
+              color: color ?? Theme.of(context).colorScheme.primary,
+            ),
+          );
+        },
+      ),
     );
   }
 }
