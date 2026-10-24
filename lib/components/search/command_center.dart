@@ -20,7 +20,7 @@ import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
-import 'package:obtainium/pages/logs_page.dart';
+import 'package:obtainium/pages/logs.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/custom_errors.dart';

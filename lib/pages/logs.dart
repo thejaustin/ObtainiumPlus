@@ -6,6 +6,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/core/logging/app_log_db.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -44,8 +45,22 @@ class _LogsPageState extends State<LogsPage> {
     setState(() => _loading = true);
     List<LogEntry> value;
     try {
-      value = await AppLogger.getLogs(
-        after: DateTime.now().subtract(Duration(days: days)),
+      final after = DateTime.now().subtract(Duration(days: days));
+      // Install, download and background-update messages go to the older
+      // LogsProvider store (the background isolate has no AppLogger), so
+      // show both, in time order.
+      final results = await Future.wait([
+        AppLogger.getLogs(after: after),
+        LogsProvider(runDefaultClear: false)
+            .get(after: after)
+            .then(
+              (l) => l,
+              onError: (Object _) => <Log>[],
+            ),
+      ]);
+      value = mergeLogStores(
+        results[0] as List<LogEntry>,
+        results[1] as List<Log>,
       );
     } catch (e, s) {
       AppLogger.error(e, stackTrace: s, message: 'Failed to load logs');
@@ -85,6 +100,9 @@ class _LogsPageState extends State<LogsPage> {
     );
     if (!cont) return;
     await AppLogger.clearLogs();
+    try {
+      await LogsProvider(runDefaultClear: false).clear();
+    } catch (_) {}
     if (!mounted) return;
     showMessage(tr('logsCleared'), context);
     await _loadLogs(_days);
@@ -345,4 +363,25 @@ class _LogsPageState extends State<LogsPage> {
       ),
     );
   }
+}
+
+/// Both log stores as one list, oldest first.
+@visibleForTesting
+List<LogEntry> mergeLogStores(List<LogEntry> appLogs, List<Log> legacyLogs) {
+  final merged = [
+    ...appLogs,
+    for (final l in legacyLogs)
+      LogEntry(
+        message: l.message,
+        level: switch (l.level) {
+          LogLevel.debug => AppLogLevel.debug,
+          LogLevel.info => AppLogLevel.info,
+          LogLevel.warning => AppLogLevel.warning,
+          LogLevel.error => AppLogLevel.error,
+        },
+        timestamp: l.timestamp,
+      ),
+  ];
+  merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+  return merged;
 }
