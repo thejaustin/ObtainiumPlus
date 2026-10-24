@@ -362,39 +362,46 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                     ]
                   : null,
             ),
-            child: RadioListTile<String>(
-              title: Text(
-                value,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                  color: isSelected
-                      ? cs.onPrimaryContainer
-                      : cs.onSurfaceVariant,
-                ),
-              ),
-              subtitle: Text(
-                value.contains('Official')
-                    ? 'github.com/microg'
-                    : 'github.com/ReVanced',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isSelected
-                      ? cs.onPrimaryContainer.withValues(alpha: 0.7)
-                      : cs.onSurfaceVariant.withValues(alpha: 0.5),
-                ),
-              ),
-              value: value,
-              groupValue: _selectedProvider,
-              onChanged: (val) {
-                if (val != null) {
-                  AppHaptics.selectionClick();
-                  setState(() => _selectedProvider = val);
-                }
-              },
-              controlAffinity: ListTileControlAffinity.trailing,
-              activeColor: cs.primary,
+            child: Material(
+              type: MaterialType.transparency,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(cardRadius),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: RadioListTile<String>(
+                title: Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    color: isSelected
+                        ? cs.onPrimaryContainer
+                        : cs.onSurfaceVariant,
+                  ),
+                ),
+                subtitle: Text(
+                  value.contains('Official')
+                      ? 'github.com/microg'
+                      : 'github.com/ReVanced',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: isSelected
+                        ? cs.onPrimaryContainer.withValues(alpha: 0.7)
+                        : cs.onSurfaceVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+                value: value,
+                groupValue: _selectedProvider,
+                onChanged: (val) {
+                  if (val != null) {
+                    AppHaptics.selectionClick();
+                    setState(() => _selectedProvider = val);
+                  }
+                },
+                controlAffinity: ListTileControlAffinity.trailing,
+                activeColor: cs.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                ),
               ),
             ),
           );
@@ -461,22 +468,35 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         color: cs.surfaceContainerLow,
         borderRadius: BorderRadius.circular(cardRadius),
       ),
-      child: CheckboxListTile(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
-        value: value,
-        onChanged: (v) {
-          if (v != null) {
-            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-            onChanged(v);
-          }
-        },
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      child: Material(
+        type: MaterialType.transparency,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cardRadius),
         ),
-        checkboxShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(6),
+        clipBehavior: Clip.antiAlias,
+        child: CheckboxListTile(
+          title: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+          value: value,
+          onChanged: (v) {
+            if (v != null) {
+              v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              onChanged(v);
+            }
+          },
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 4,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(cardRadius),
+          ),
+          checkboxShape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(6),
+          ),
         ),
       ),
     );
@@ -503,25 +523,32 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             color: cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(cardRadius),
           ),
-          child: SwitchListTile.adaptive(
-            title: Text(
-              tr('officialMicroGRoot'),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          child: Material(
+            type: MaterialType.transparency,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(cardRadius),
             ),
-            subtitle: Text(
-              _isRooted ? tr('rootAvailable') : tr('rootNotDetected'),
-            ),
-            value: _isRooted,
-            onChanged: _isRooted ? (val) {} : null,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
-            ),
-            secondary: Icon(
-              _isRooted
-                  ? Icons.verified_user
-                  : Icons.no_encryption_gmailerrorred,
-              color: _isRooted ? cs.primary : cs.error,
+            clipBehavior: Clip.antiAlias,
+            child: SwitchListTile.adaptive(
+              title: Text(
+                tr('officialMicroGRoot'),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                _isRooted ? tr('rootAvailable') : tr('rootNotDetected'),
+              ),
+              value: _isRooted,
+              onChanged: _isRooted ? (val) {} : null,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 8,
+              ),
+              secondary: Icon(
+                _isRooted
+                    ? Icons.verified_user
+                    : Icons.no_encryption_gmailerrorred,
+                color: _isRooted ? cs.primary : cs.error,
+              ),
             ),
           ),
         ),
