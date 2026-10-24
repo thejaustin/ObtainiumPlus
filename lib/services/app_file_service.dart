@@ -701,6 +701,18 @@ class AppFileService {
 
       await sink.close();
       sink = null;
+      // A stream can end without an error yet be short (a server that sends
+      // Content-Length but closes early). Keep the .part file so the retry
+      // resumes via Range, instead of handing a truncated APK to the
+      // installer ("package parsing error").
+      if (fullContentLength != null &&
+          fullContentLength > 0 &&
+          received < fullContentLength) {
+        throw ClientException(
+          'Incomplete download: received $received of $fullContentLength bytes',
+          Uri.tryParse(url),
+        );
+      }
     } on FileSystemException catch (e) {
       if (tempDownloadedFile.existsSync() && rangeStart == 0) {
         try {
