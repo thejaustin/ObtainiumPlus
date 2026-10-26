@@ -7,6 +7,25 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-26 — Antigravity: Subpage Non-Uniform Border Fixes, Omnibar & Search Download Flow
+
+- **Subpage Non-Uniform Border Crash Resolutions:**
+  - Audited codebase and eliminated all instances where `BoxDecoration` combined `borderRadius` with non-uniform `Border(top: ..., left: ..., right: ...)`.
+  - Fixed modal bottom sheets and cards in `DeveloperSettingsPage` (`lib/pages/developer_settings.dart:595, 1010, 1125`), `AppearanceHub` (`lib/components/settings/appearance_hub.dart:300`), `InstallationSection` (`lib/components/settings/installation_section.dart:754`), and `modal_utils.dart:51`.
+  - Verified with AST/regex scanner: zero non-uniform `Border` + `borderRadius` instances remain across the repository.
+- **Settings Subpage Polish & Navigation:**
+  - Modernized `TroubleshootingSection` to navigate to the full Material 3 Expressive `LogsPage` (`NavHelper.pushLogsPage(context)`) with its floating stadium action toolbar, replacing deprecated dialog.
+- **Search & Omnibar Download & Add App Workflow:**
+  - **Omnibar Ambient Downloads:** Added an ambient linear progress indicator and active download chip in `Omnibar` when background downloads or updates are in-flight, offering one-tap jump to active downloads in `CommandCenter`.
+  - **CommandCenter Active Downloads Hub:** Added a dedicated "Active Downloads" section displaying in-progress downloads, percentage, live progress bar, and cancellation controls.
+  - **Local Results Enhancements:** Expanded search visibility from 5 to 25 matching apps, showing installed status chips, update badges (`$installed → $latest`), and one-tap update/install buttons directly in search results.
+  - **Add App & Install Feedback:** In `CommandCenter` and `AppsPage`, successfully adding an app from a URL or discovery result maintains context, marks the item as added, and provides an immediate one-tap "Install" action without disruptive premature dialog dismissals.
+- **Verification:**
+  - Added regression test `test/search_and_download_test.dart` covering Omnibar download indicators and CommandCenter build.
+  - Ran test suite: `readable_tree_uri_test`, `settings_page_test` (all 20 subtests), `sort_filter_panel_test`, and `search_and_download_test` passing 100%.
+
+---
+
 ## 2026-10-26 — Antigravity: Filter Apps Visuals & SortFilterPanel Rendering Fixes
 
 - **SortFilterPanel Paint Crash (`Border.paint` assertion):**

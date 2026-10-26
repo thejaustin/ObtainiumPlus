@@ -297,15 +297,13 @@ class AppearanceHub extends StatelessWidget {
                               ? colorScheme.surfaceContainerHigh
                               : colorScheme.surfaceContainerLow),
                     borderRadius: BorderRadius.vertical(top: sheetRadius),
-                    border: Border(
-                      top: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: Theme.of(context).brightness == Brightness.dark
-                              ? 0.35
-                              : 0.65,
-                        ),
-                        width: 1.0,
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: Theme.of(context).brightness == Brightness.dark
+                            ? 0.35
+                            : 0.65,
                       ),
+                      width: 1.0,
                     ),
                   ),
                   child: Column(

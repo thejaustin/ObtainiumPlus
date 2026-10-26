@@ -592,16 +592,9 @@ class DeveloperSettingsPage extends StatelessWidget {
                 ? cs.surface.withValues(alpha: 0.78)
                 : cs.surfaceContainerLow,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            border: Border(
-              top: BorderSide(
-                color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2),
-              ),
-              left: BorderSide(
-                color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
-              ),
-              right: BorderSide(
-                color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
-              ),
+            border: Border.all(
+              color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.12),
+              width: 1,
             ),
           ),
           child: SafeArea(
@@ -1007,16 +1000,9 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
             ? cs.surface.withValues(alpha: 0.78)
             : cs.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(
-          top: BorderSide(
-            color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2),
-          ),
-          left: BorderSide(
-            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
-          ),
-          right: BorderSide(
-            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
-          ),
+        border: Border.all(
+          color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.12),
+          width: 1,
         ),
       ),
       padding: const EdgeInsets.all(24),
@@ -1122,16 +1108,9 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
             ? cs.surface.withValues(alpha: 0.78)
             : cs.surfaceContainerLow,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(
-          top: BorderSide(
-            color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.2),
-          ),
-          left: BorderSide(
-            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
-          ),
-          right: BorderSide(
-            color: cs.onSurface.withValues(alpha: enableGlass ? 0.12 : 0.0),
-          ),
+        border: Border.all(
+          color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.12),
+          width: 1,
         ),
       ),
       padding: EdgeInsets.only(

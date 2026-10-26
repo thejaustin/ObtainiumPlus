@@ -48,17 +48,15 @@ Future<T?> showDraggableModalBottomSheet<T>({
                         )
                       : Theme.of(context).colorScheme.surfaceContainerLow,
                   borderRadius: BorderRadius.vertical(top: sheetRadius),
-                  border: Border(
-                    top: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant
-                          .withValues(
-                            alpha:
-                                Theme.of(context).brightness == Brightness.dark
-                                ? 0.35
-                                : 0.65,
-                          ),
-                      width: 1,
-                    ),
+                  border: Border.all(
+                    color: Theme.of(context).colorScheme.outlineVariant
+                        .withValues(
+                          alpha:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                    width: 1,
                   ),
                 ),
                 child: SafeArea(

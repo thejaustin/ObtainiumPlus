@@ -98,14 +98,8 @@ extension AppsProviderUpdates on AppsProvider {
     if (currentApp == null) return null;
     final App? newApp = await fetchUpdate(appId);
     if (newApp == null) {
-      AppLogger.trace('Update check for ${currentApp.name}: no result');
       return null;
     }
-    AppLogger.trace(
-      'Update check for ${currentApp.name}: '
-      'installed ${currentApp.installedVersion ?? '-'}, '
-      'latest ${newApp.latestVersion}',
-    );
     await saveApps([newApp]);
     return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
   }

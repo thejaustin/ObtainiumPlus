@@ -205,7 +205,17 @@ class _ImportExportPageState extends State<ImportExportPage> {
           .export(pickOnly: pickOnly || !hadDir, bsp: behaviorSettings)
           .then((String? result) {
             if (result != null && context.mounted) {
-              showMessage(tr('exportedTo', args: [result]), context);
+              showMessage(
+                tr(
+                  'exportedTo',
+                  args: [
+                    result.startsWith('content://')
+                        ? readableTreeUri(Uri.parse(result))
+                        : result,
+                  ],
+                ),
+                context,
+              );
             }
           })
           .catchError((e) {
@@ -1018,11 +1028,15 @@ class _ImportExportPageState extends State<ImportExportPage> {
 @visibleForTesting
 String readableTreeUri(Uri uri) {
   final segments = uri.pathSegments;
+  // A file inside the folder ("…/tree/<folder>/document/<file>") names the
+  // file itself; prefer it.
+  final docIndex = segments.indexOf('document');
   final treeIndex = segments.indexOf('tree');
-  if (treeIndex == -1 || treeIndex + 1 >= segments.length) {
+  final idIndex = docIndex != -1 ? docIndex : treeIndex;
+  if (idIndex == -1 || idIndex + 1 >= segments.length) {
     return uri.toString();
   }
-  final docId = segments[treeIndex + 1];
+  final docId = segments[idIndex + 1];
   final colon = docId.indexOf(':');
   if (colon == -1) return docId;
   final volume = docId.substring(0, colon);

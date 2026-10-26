@@ -227,6 +227,7 @@ class _OmnibarState extends State<Omnibar> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final appsProvider = context.watch<AppsProvider>();
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
     final isM3E = plusSettings.plusEnableMaterialExpressive;
     final radius = plusSettings.plusOverrideIndividualCornerRadius
@@ -568,8 +569,70 @@ class _OmnibarState extends State<Omnibar> {
                                 )
                               : const SizedBox.shrink()),
                   ),
+
+                  // Ambient active download indicator pill when idle
+                  if (appsProvider.areDownloadsRunning() &&
+                      _controller.text.isEmpty &&
+                      !_isUrl)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.90,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(pillRadius),
+                          onTap: () {
+                            AppHaptics.selectionClick();
+                            CommandCenter.show(context);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: ShapeDecoration(
+                              color: colorScheme.primaryContainer.withValues(
+                                alpha: 0.8,
+                              ),
+                              shape: const StadiumBorder(),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.downloading_rounded,
+                                  size: 16,
+                                  color: colorScheme.primary,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  tr('installing'),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
+              if (appsProvider.areDownloadsRunning())
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(currentRadius),
+                    ),
+                    child: const LinearProgressIndicator(minHeight: 2.5),
+                  ),
+                ),
             ],
           ),
         ),
@@ -638,24 +701,13 @@ class AppActionsFAB extends StatelessWidget {
             borderRadius: BorderRadius.vertical(
               top: Radius.circular(sheetRadius),
             ),
-            border: Border(
-              top: BorderSide(
-                color: enableGlass
-                    ? colorScheme.onSurface.withValues(
-                        alpha: AppConstants.glassBorderAlpha,
-                      )
-                    : colorScheme.outline.withValues(alpha: AppOpacity.hint),
-              ),
-              left: BorderSide(
-                color: colorScheme.onSurface.withValues(
-                  alpha: enableGlass ? 0.12 : 0,
-                ),
-              ),
-              right: BorderSide(
-                color: colorScheme.onSurface.withValues(
-                  alpha: enableGlass ? 0.12 : 0,
-                ),
-              ),
+            border: Border.all(
+              color: enableGlass
+                  ? colorScheme.onSurface.withValues(
+                      alpha: AppConstants.glassBorderAlpha,
+                    )
+                  : colorScheme.outlineVariant.withValues(alpha: 0.35),
+              width: 1,
             ),
           ),
           constraints: BoxConstraints(

@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -15,7 +14,6 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_search_service.dart';
-import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/app.dart';
@@ -59,6 +57,7 @@ class _CommandCenterState extends State<CommandCenter> {
   Map<String, MapEntry<String, List<String>>> _discoverResults = {};
   bool _discoverSearchFailed = false;
   final Set<String> _pendingAddUrls = {};
+  final Set<String> _successfulAddUrls = {};
   final SourceProvider _sourceProvider = SourceProvider();
   Timer? _debounce;
 
@@ -69,7 +68,8 @@ class _CommandCenterState extends State<CommandCenter> {
       _isAddingUrl = true;
     });
     try {
-      final errors = await context.read<AppsProvider>().addAppsByURL([url]);
+      final ap = context.read<AppsProvider>();
+      final errors = await ap.addAppsByURL([url]);
       if (mounted) {
         setState(() {
           _pendingAddUrls.remove(url);
@@ -78,10 +78,27 @@ class _CommandCenterState extends State<CommandCenter> {
         if (errors.isNotEmpty) {
           showError(errors[0][1], context);
         } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(tr('appAdded'))));
-          if (Navigator.canPop(context)) Navigator.pop(context);
+          setState(() {
+            _successfulAddUrls.add(url);
+          });
+          final newApp =
+              ap.apps.values.where((a) => a.app.url == url).firstOrNull;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(tr('appAdded')),
+              action: newApp != null
+                  ? SnackBarAction(
+                      label: tr('install'),
+                      onPressed: () {
+                        ap.downloadAndInstallLatestApps(
+                          [newApp.app.id],
+                          context,
+                        );
+                      },
+                    )
+                  : null,
+            ),
+          );
         }
       } else {
         final globalCtx = globalNavigatorKey.currentContext;
@@ -201,7 +218,7 @@ class _CommandCenterState extends State<CommandCenter> {
     results.sort((a, b) => b.value.compareTo(a.value));
 
     setState(() {
-      _localResults = results.map((entry) => entry.key).take(5).toList();
+      _localResults = results.map((entry) => entry.key).take(25).toList();
     });
   }
 
@@ -291,30 +308,15 @@ class _CommandCenterState extends State<CommandCenter> {
                   borderRadius: BorderRadius.vertical(
                     top: Radius.circular(sheetRadius),
                   ),
-                  border: Border(
-                    top: BorderSide(
-                      color: plusSettings.plusEnableGlassmorphism
-                          ? theme.colorScheme.onSurface.withValues(
-                              alpha: AppConstants.glassBorderAlpha,
-                            )
-                          : theme.colorScheme.outlineVariant.withValues(
-                              alpha: isDark ? 0.35 : 0.65,
-                            ),
-                    ),
-                    left: BorderSide(
-                      color: plusSettings.plusEnableGlassmorphism
-                          ? theme.colorScheme.onSurface.withValues(
-                              alpha: AppOpacity.hint,
-                            )
-                          : Colors.transparent,
-                    ),
-                    right: BorderSide(
-                      color: plusSettings.plusEnableGlassmorphism
-                          ? theme.colorScheme.onSurface.withValues(
-                              alpha: AppOpacity.hint,
-                            )
-                          : Colors.transparent,
-                    ),
+                  border: Border.all(
+                    color: plusSettings.plusEnableGlassmorphism
+                        ? theme.colorScheme.onSurface.withValues(
+                            alpha: AppConstants.glassBorderAlpha,
+                          )
+                        : theme.colorScheme.outlineVariant.withValues(
+                            alpha: isDark ? 0.35 : 0.65,
+                          ),
+                    width: 1,
                   ),
                 ),
                 child: Column(
@@ -498,6 +500,10 @@ class _CommandCenterState extends State<CommandCenter> {
                                     horizontal: 8,
                                   ),
                                   children: [
+                                    _buildActiveDownloadsSection(
+                                      context,
+                                      context.watch<AppsProvider>(),
+                                    ),
                                     AnimatedSize(
                                       duration: Duration(
                                         milliseconds: animsEnabled ? 300 : 0,
@@ -594,12 +600,156 @@ class _CommandCenterState extends State<CommandCenter> {
     );
   }
 
-  Widget _buildLocalResult(AppInMemory app) {
+  Widget _buildActiveDownloadsSection(
+    BuildContext context,
+    AppsProvider appsProvider,
+  ) {
+    final downloading = appsProvider.apps.values
+        .where((e) => e.downloadProgress != null)
+        .toList();
+    if (downloading.isEmpty) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final itemRadius = CardMetrics.inner(radius);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildSectionHeader(tr('installing')),
+        for (final app in downloading)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Material(
+              color: cs.primaryContainer.withValues(alpha: 0.35),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(itemRadius),
+                side: BorderSide(
+                  color: cs.primary.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              itemRadius * 0.6,
+                            ),
+                            color: cs.surfaceContainerHighest,
+                          ),
+                          child: app.icon != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    itemRadius * 0.6,
+                                  ),
+                                  child: Image.memory(
+                                    app.icon!,
+                                    fit: BoxFit.cover,
+                                    filterQuality: FilterQuality.medium,
+                                  ),
+                                )
+                              : const Icon(Icons.downloading_rounded),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                app.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              ValueListenableBuilder<double?>(
+                                valueListenable: app.downloadProgressNotifier,
+                                builder: (context, p, _) {
+                                  final progressText = p != null && p >= 0
+                                      ? '${p.round()}%'
+                                      : tr('installing');
+                                  return Text(
+                                    progressText,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20),
+                          tooltip: tr('cancel'),
+                          onPressed: () {
+                            AppHaptics.selectionClick();
+                            appsProvider.cancelDownload(app.app.id);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ValueListenableBuilder<double?>(
+                      valueListenable: app.downloadProgressNotifier,
+                      builder: (context, p, _) {
+                        return ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: LinearProgressIndicator(
+                            value: p != null && p >= 0
+                                ? (p / 100.0).clamp(0.0, 1.0)
+                                : null,
+                            minHeight: 4,
+                            backgroundColor: cs.primary.withValues(alpha: 0.15),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              cs.primary,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildLocalResult(AppInMemory app) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final appsProvider = context.watch<AppsProvider>();
+    final cs = Theme.of(context).colorScheme;
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final itemRadius = CardMetrics.inner(radius);
+
+    final bool isInstalled = app.installedInfo != null;
+    final bool hasUpdate =
+        isInstalled &&
+        app.app.latestVersion.isNotEmpty &&
+        app.app.installedVersion != null &&
+        app.app.latestVersion != app.app.installedVersion;
+    final bool isDownloading = app.downloadProgress != null;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
@@ -608,10 +758,10 @@ class _CommandCenterState extends State<CommandCenter> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(itemRadius),
           side: BorderSide(
-            color: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.15),
-            width: 1,
+            color: hasUpdate
+                ? cs.primary.withValues(alpha: 0.4)
+                : cs.outlineVariant.withValues(alpha: 0.25),
+            width: hasUpdate ? 1.4 : 1.0,
           ),
         ),
         child: ScaleTouchWrapper(
@@ -661,7 +811,7 @@ class _CommandCenterState extends State<CommandCenter> {
                           )
                         : const Icon(Icons.apps_rounded),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 14),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -670,23 +820,135 @@ class _CommandCenterState extends State<CommandCenter> {
                           app.name,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          app.app.latestVersion,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
-                              ),
-                        ),
+                        const SizedBox(height: 2),
+                        if (isDownloading)
+                          ValueListenableBuilder<double?>(
+                            valueListenable: app.downloadProgressNotifier,
+                            builder: (context, p, _) {
+                              final text = p != null && p >= 0
+                                  ? '${p.round()}%'
+                                  : tr('installing');
+                              return Row(
+                                children: [
+                                  Expanded(
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(2),
+                                      child: LinearProgressIndicator(
+                                        value: p != null && p >= 0
+                                            ? (p / 100.0).clamp(0.0, 1.0)
+                                            : null,
+                                        minHeight: 3,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    text,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: cs.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ],
+                              );
+                            },
+                          )
+                        else if (hasUpdate)
+                          Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${app.app.installedVersion} → ',
+                                  style: TextStyle(
+                                    color: cs.onSurfaceVariant.withValues(
+                                      alpha: 0.8,
+                                    ),
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: app.app.latestVersion,
+                                  style: TextStyle(
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        else
+                          Text(
+                            isInstalled
+                                ? (app.app.latestVersion.isNotEmpty
+                                      ? app.app.latestVersion
+                                      : tr('installed'))
+                                : tr('notInstalled'),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                  const SizedBox(width: 8),
+                  if (isDownloading)
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, size: 20),
+                      tooltip: tr('cancel'),
+                      onPressed: () {
+                        AppHaptics.selectionClick();
+                        appsProvider.cancelDownload(app.app.id);
+                      },
+                    )
+                  else if (hasUpdate)
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.90,
+                      child: IconButton.filledTonal(
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(
+                          Icons.install_mobile_rounded,
+                          size: 18,
+                        ),
+                        tooltip: tr('update'),
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          appsProvider.downloadAndInstallLatestApps([
+                            app.app.id,
+                          ], context);
+                        },
+                      ),
+                    )
+                  else if (!isInstalled)
+                    ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.90,
+                      child: IconButton.filledTonal(
+                        visualDensity: VisualDensity.compact,
+                        icon: const Icon(Icons.download_rounded, size: 18),
+                        tooltip: tr('install'),
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          appsProvider.downloadAndInstallLatestApps([
+                            app.app.id,
+                          ], context);
+                        },
+                      ),
+                    )
+                  else
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: cs.onSurfaceVariant,
+                    ),
                 ],
               ),
             ),
@@ -846,25 +1108,59 @@ class _CommandCenterState extends State<CommandCenter> {
                           tooltip: tr('advancedOptions'),
                           onPressed: () => _openAddApp(url),
                         ),
-                        _pendingAddUrls.contains(url)
-                            ? const Padding(
-                                padding: EdgeInsets.all(12),
-                                child: SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: ExpressiveCircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                        if (_successfulAddUrls.contains(url) ||
+                            context.watch<AppsProvider>().apps.values.any(
+                              (a) => a.app.url == url,
+                            )) ...[
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.90,
+                            child: FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
                                 ),
-                              )
-                            : IconButton(
-                                icon: Icon(
-                                  Icons.add_circle_outline_rounded,
-                                  color: theme.colorScheme.primary,
-                                ),
-                                tooltip: tr('addApp'),
-                                onPressed: () => _submitAddAppUrl(url),
                               ),
+                              icon: const Icon(
+                                Icons.download_rounded,
+                                size: 16,
+                              ),
+                              label: Text(tr('install')),
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                final ap = context.read<AppsProvider>();
+                                final match = ap.apps.values
+                                    .where((a) => a.app.url == url)
+                                    .firstOrNull;
+                                if (match != null) {
+                                  ap.downloadAndInstallLatestApps([
+                                    match.app.id,
+                                  ], context);
+                                }
+                              },
+                            ),
+                          ),
+                        ] else if (_pendingAddUrls.contains(url))
+                          const Padding(
+                            padding: EdgeInsets.all(12),
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: ExpressiveCircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          )
+                        else
+                          IconButton(
+                            icon: Icon(
+                              Icons.add_circle_outline_rounded,
+                              color: theme.colorScheme.primary,
+                            ),
+                            tooltip: tr('addApp'),
+                            onPressed: () => _submitAddAppUrl(url),
+                          ),
                       ],
                     ),
                     onTap: _pendingAddUrls.contains(url)
@@ -881,6 +1177,12 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildUrlActionContent() {
+    final isAdded =
+        _successfulAddUrls.contains(_query) ||
+        context.watch<AppsProvider>().apps.values.any(
+          (a) => a.app.url == _query,
+        );
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       elevation: 0,
@@ -896,15 +1198,38 @@ class _CommandCenterState extends State<CommandCenter> {
                     height: 24,
                     child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.download_rounded),
-            title: Text(tr('addApp')),
+                : Icon(
+                    isAdded
+                        ? Icons.check_circle_rounded
+                        : Icons.download_rounded,
+                    color: isAdded
+                        ? Theme.of(context).colorScheme.primary
+                        : null,
+                  ),
+            title: Text(isAdded ? tr('install') : tr('addApp')),
             subtitle: Text(
               _query,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             trailing: _isAddingUrl ? null : const Icon(Icons.arrow_forward),
-            onTap: _isAddingUrl ? null : () => _submitAddAppUrl(_query),
+            onTap: _isAddingUrl
+                ? null
+                : () {
+                    if (isAdded) {
+                      final ap = context.read<AppsProvider>();
+                      final match = ap.apps.values
+                          .where((a) => a.app.url == _query)
+                          .firstOrNull;
+                      if (match != null) {
+                        ap.downloadAndInstallLatestApps([
+                          match.app.id,
+                        ], context);
+                      }
+                    } else {
+                      _submitAddAppUrl(_query);
+                    }
+                  },
           ),
           Divider(
             height: 1,
@@ -924,7 +1249,7 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildInitialState() {
-    final appsProvider = context.read<AppsProvider>();
+    final appsProvider = context.watch<AppsProvider>();
     final recentlyAdded = appsProvider
         .getAppValues()
         .toList()
@@ -937,6 +1262,7 @@ class _CommandCenterState extends State<CommandCenter> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _buildActiveDownloadsSection(context, appsProvider),
           if (recentlyAdded.isNotEmpty) ...[
             _buildSectionHeader(tr('recentlyAdded')),
             ...recentlyAdded.map(_buildLocalResult),

@@ -2302,15 +2302,36 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                             });
                           },
                           onUrlInput: (url) {
-                            context
-                                .read<AppsProvider>()
+                            final ap = context.read<AppsProvider>();
+                            ap
                                 .addAppsByURL([url])
                                 .then((errors) {
                                   if (!context.mounted) return;
                                   if (errors.isNotEmpty) {
                                     showError(errors[0][1], context);
                                   } else {
-                                    showMessage(tr('appAdded'), context);
+                                    final newApp = ap.apps.values
+                                        .where((a) => a.app.url == url)
+                                        .firstOrNull;
+                                    if (newApp != null) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(tr('appAdded')),
+                                          action: SnackBarAction(
+                                            label: tr('install'),
+                                            onPressed: () {
+                                              ap.downloadAndInstallLatestApps([
+                                                newApp.app.id,
+                                              ], context);
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    } else {
+                                      showMessage(tr('appAdded'), context);
+                                    }
                                   }
                                 })
                                 .catchError((Object e) {

@@ -20,6 +20,14 @@ void main() {
       '1A2B-3C4D/Backups',
     );
     expect(
+      readableTreeUri(
+        Uri.parse(
+          'content://com.android.externalstorage.documents/tree/primary%3ADocuments/document/primary%3ADocuments%2Fobtainium-export.json',
+        ),
+      ),
+      'Documents/obtainium-export.json',
+    );
+    expect(
       readableTreeUri(Uri.parse('file:///sdcard/x')),
       'file:///sdcard/x',
     );

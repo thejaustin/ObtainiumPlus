@@ -751,12 +751,10 @@ class _InstallationSectionState extends State<InstallationSection>
                             20.0,
                           ),
                         ),
-                        border: Border(
-                          left: BorderSide(
-                            color: Theme.of(context).colorScheme.primary
-                                .withValues(alpha: AppOpacity.moderate),
-                            width: 3,
-                          ),
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary
+                              .withValues(alpha: AppOpacity.moderate),
+                          width: 1.5,
                         ),
                       ),
                       child: Column(
