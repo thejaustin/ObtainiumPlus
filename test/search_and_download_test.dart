@@ -7,7 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/components/search/command_center.dart';
 import 'package:obtainium/models/app.dart';
-import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';

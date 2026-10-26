@@ -251,7 +251,7 @@ void main() {
       if (tester.any(find.text('Skip'))) break;
     }
     await tester.pump(const Duration(seconds: 1));
-    final screenHeight = 2340 / 2.75;
+    const screenHeight = 2340 / 2.75;
     expect(
       tester.getRect(find.text('Skip')).bottom,
       lessThanOrEqualTo(screenHeight - 48),
