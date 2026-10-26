@@ -7,6 +7,25 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-26 — Antigravity: Filter Apps Visuals & SortFilterPanel Rendering Fixes
+
+- **SortFilterPanel Paint Crash (`Border.paint` assertion):**
+  - Resolved Flutter rendering exception `'A borderRadius can only be given on borders with uniform colors'` thrown when opening the Filter Apps modal sheet.
+  - Replaced non-uniform `Border(top: ..., left: ..., right: ...)` and bare `Container` with `Material(shape: RoundedRectangleBorder(borderRadius: ..., side: BorderSide(...)))`.
+  - Wrapping in `Material` also resolves the `ListTile background color or ink splashes may be invisible` assertion for `ExpansionTile` and descendants.
+- **Visual & Layout Enhancements:**
+  - Standardized chip shape helper `_chipShape` across Sort ChoiceChips, Quick FilterChips, Category FilterChips, and Tag FilterChips respecting `plusExpressiveFilterChips`.
+  - Harmonized M3 chip colors (`secondaryContainer` and `onSecondaryContainer`) and added category color dot avatars to unselected category chips.
+  - Aligned quick filter statuses (`updates`, `installed`, `uptodate`, `notinstalled`, `trackonly`) with semantic icons and O(1) status partition routing.
+  - Cleaned up duplicate section header: changed nested ExpansionTile title from `tr('filterApps')` to `tr('advancedOptions')`.
+  - Styled `DropdownButtonFormField` with matched fill, content padding, and rounded outline borders consistent with the search text fields.
+  - Added bottom padding for keyboard insets (`MediaQuery.viewInsetsOf(context).bottom`) and `useSafeArea: true` to prevent keyboard obstruction.
+- **Verification:**
+  - Added regression test `test/sort_filter_panel_test.dart` verifying modal bottom sheet pumping and rendering.
+  - Ran full test suite: all 448 tests passed; `flutter analyze` clean with 0 issues.
+
+---
+
 ## 2026-10-26 — Antigravity: ObtainiumPlus icon upgrade (Plus icon, Samsung One UI notification vector, Material Monet theming design)
 
 - **Adaptive icon foreground (`ic_launcher_foreground.xml`):**

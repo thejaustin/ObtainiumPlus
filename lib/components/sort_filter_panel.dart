@@ -7,7 +7,6 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/models/apps_filter.dart';
 import 'package:obtainium/models/settings_enums.dart';
@@ -38,6 +37,7 @@ class SortFilterPanel extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       showDragHandle: false,
       builder: (context) => SortFilterPanel(
@@ -131,48 +131,32 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         : plusSettings.plusGlobalCornerRadius;
     final sheetRadius = radius.clamp(28.0, 48.0);
 
-    return ClipRRect(
+    final borderColor = plusSettings.plusEnableGlassmorphism
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.14)
+        : theme.colorScheme.outlineVariant.withValues(alpha: AppOpacity.subtle);
+    final sheetShape = RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
-      child: ConditionalBlur(
-        sigma: 16,
-        enabled: plusSettings.plusEnableGlassmorphism,
-        child: Container(
-          decoration: BoxDecoration(
-            color: plusSettings.plusEnableGlassmorphism
-                ? theme.colorScheme.surface.withValues(alpha: 0.75)
-                : (isDark
-                      ? theme.colorScheme.surfaceContainerHigh
-                      : theme.colorScheme.surfaceContainerLow),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(sheetRadius),
-            ),
-            border: Border(
-              top: BorderSide(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.18)
-                    : theme.colorScheme.outlineVariant.withValues(
-                        alpha: AppOpacity.subtle,
-                      ),
-                width: 1.5,
-              ),
-              left: BorderSide(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
-                    : Colors.transparent,
-              ),
-              right: BorderSide(
-                color: plusSettings.plusEnableGlassmorphism
-                    ? theme.colorScheme.onSurface.withValues(alpha: 0.12)
-                    : Colors.transparent,
-              ),
-            ),
-          ),
-          child: Stack(
-            children: [
-              // Glass sheen
-              if (plusSettings.plusEnableGlassmorphism)
-                Positioned.fill(
-                  child: Container(
+      side: BorderSide(color: borderColor, width: 1.0),
+    );
+
+    return ConditionalBlur(
+      sigma: 16,
+      enabled: plusSettings.plusEnableGlassmorphism,
+      child: Material(
+        color: plusSettings.plusEnableGlassmorphism
+            ? theme.colorScheme.surface.withValues(alpha: 0.75)
+            : (isDark
+                  ? theme.colorScheme.surfaceContainerHigh
+                  : theme.colorScheme.surfaceContainerLow),
+        shape: sheetShape,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            // Glass sheen
+            if (plusSettings.plusEnableGlassmorphism)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -187,145 +171,146 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                     ),
                   ),
                 ),
+              ),
 
-              SafeArea(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const DragHandle(
-                      margin: EdgeInsets.only(top: 10, bottom: 6),
-                    ),
+            SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const DragHandle(margin: EdgeInsets.only(top: 10, bottom: 6)),
 
-                    Flexible(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Header
-                            _buildAnimatedSection(
-                              0,
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 24),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        tr('filterApps'),
-                                        style: theme.textTheme.headlineSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: -0.5,
-                                            ),
+                  Flexible(
+                    child: SingleChildScrollView(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        8,
+                        20,
+                        24 + MediaQuery.viewInsetsOf(context).bottom,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header
+                          _buildAnimatedSection(
+                            0,
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 24),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      tr('filterApps'),
+                                      style: theme.textTheme.headlineSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: -0.5,
+                                          ),
+                                    ),
+                                  ),
+                                  ScaleTouchWrapper(
+                                    hapticOnPressDown: true,
+                                    scaleDownFactor: 0.92,
+                                    child: TextButton.icon(
+                                      onPressed: () {
+                                        AppHaptics.mediumImpact();
+                                        setState(() {
+                                          widget.filter.statusFilter.clear();
+                                          widget.filter.categoryFilter.clear();
+                                          widget.filter.tagFilter.clear();
+                                          widget.filter.nameFilter = '';
+                                          widget.filter.authorFilter = '';
+                                          widget.filter.idFilter = '';
+                                          widget.filter.sourceFilter = '';
+                                          widget.filter.includeUptodate = true;
+                                          widget.filter.includeNonInstalled =
+                                              true;
+                                          _nameController.clear();
+                                          _authorController.clear();
+                                          _idController.clear();
+                                        });
+                                        widget.onFilterChanged();
+                                      },
+                                      icon: const Icon(
+                                        Icons.refresh_rounded,
+                                        size: 18,
+                                      ),
+                                      label: Text(tr('reset')),
+                                      style: TextButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                        foregroundColor:
+                                            theme.colorScheme.primary,
                                       ),
                                     ),
-                                    ScaleTouchWrapper(
-                                      hapticOnPressDown: true,
-                                      scaleDownFactor: 0.92,
-                                      child: TextButton.icon(
-                                        onPressed: () {
-                                          AppHaptics.mediumImpact();
-                                          setState(() {
-                                            widget.filter.statusFilter.clear();
-                                            widget.filter.categoryFilter
-                                                .clear();
-                                            widget.filter.tagFilter.clear();
-                                            widget.filter.nameFilter = '';
-                                            widget.filter.authorFilter = '';
-                                            widget.filter.idFilter = '';
-                                            widget.filter.sourceFilter = '';
-                                            widget.filter.includeUptodate =
-                                                true;
-                                            widget.filter.includeNonInstalled =
-                                                true;
-                                            _nameController.clear();
-                                            _authorController.clear();
-                                            _idController.clear();
-                                          });
-                                          widget.onFilterChanged();
-                                        },
-                                        icon: const Icon(
-                                          Icons.refresh_rounded,
-                                          size: 18,
-                                        ),
-                                        label: Text(tr('reset')),
-                                        style: TextButton.styleFrom(
-                                          visualDensity: VisualDensity.compact,
-                                          foregroundColor:
-                                              theme.colorScheme.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
+                          ),
 
-                            // Sort section
-                            if (plusSettings.plusEnableAdvancedSorting) ...[
-                              _buildAnimatedSection(
-                                1,
-                                _buildSortSection(
-                                  settingsProvider,
-                                  theme,
-                                  radius,
-                                ),
-                              ),
-                              const SizedBox(height: 28),
-                            ],
-
-                            // View mode section
+                          // Sort section
+                          if (plusSettings.plusEnableAdvancedSorting) ...[
                             _buildAnimatedSection(
-                              2,
-                              _buildViewModeSection(
+                              1,
+                              _buildSortSection(
                                 settingsProvider,
                                 theme,
                                 radius,
                               ),
                             ),
                             const SizedBox(height: 28),
-
-                            // Quick filters section
-                            _buildAnimatedSection(
-                              3,
-                              _buildQuickFilterSection(theme, radius),
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Category filter section
-                            if (widget.categories.isNotEmpty) ...[
-                              _buildAnimatedSection(
-                                4,
-                                _buildCategorySection(theme, radius),
-                              ),
-                              const SizedBox(height: 28),
-                            ],
-
-                            // Tag filter section
-                            _buildAnimatedSection(
-                              4,
-                              _buildTagSection(theme, radius),
-                            ),
-                            const SizedBox(height: 28),
-
-                            // Advanced filters section
-                            _buildAnimatedSection(
-                              4,
-                              _buildAdvancedSection(
-                                sourceProvider,
-                                theme,
-                                radius,
-                              ),
-                            ),
                           ],
-                        ),
+
+                          // View mode section
+                          _buildAnimatedSection(
+                            2,
+                            _buildViewModeSection(
+                              settingsProvider,
+                              theme,
+                              radius,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+
+                          // Quick filters section
+                          _buildAnimatedSection(
+                            3,
+                            _buildQuickFilterSection(theme, radius),
+                          ),
+                          const SizedBox(height: 28),
+
+                          // Category filter section
+                          if (widget.categories.isNotEmpty) ...[
+                            _buildAnimatedSection(
+                              4,
+                              _buildCategorySection(theme, radius),
+                            ),
+                            const SizedBox(height: 28),
+                          ],
+
+                          // Tag filter section
+                          _buildAnimatedSection(
+                            4,
+                            _buildTagSection(theme, radius),
+                          ),
+                          const SizedBox(height: 28),
+
+                          // Advanced filters section
+                          _buildAnimatedSection(
+                            4,
+                            _buildAdvancedSection(
+                              sourceProvider,
+                              theme,
+                              radius,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -359,6 +344,11 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     );
   }
 
+  OutlinedBorder _chipShape(double itemRadius) =>
+      context.read<PlusSettingsProvider>().plusExpressiveFilterChips
+      ? const StadiumBorder()
+      : RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius));
+
   Widget _buildSortSection(
     ViewSettingsProvider sp,
     ThemeData theme,
@@ -366,6 +356,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   ) {
     final currentSort = sp.appSortMethod;
     final itemRadius = (radius * 0.45).clamp(10.0, 16.0);
+    final shape = _chipShape(itemRadius);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,7 +373,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 details.$2,
                 size: 16,
                 color: selected
-                    ? theme.colorScheme.onPrimary
+                    ? theme.colorScheme.onSecondaryContainer
                     : theme.colorScheme.onSurfaceVariant,
               ),
               label: Text(details.$1),
@@ -393,14 +384,19 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                   sp.appSortMethod = method;
                 }
               },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(itemRadius),
-              ),
+              shape: shape,
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-              selectedColor: theme.colorScheme.primary,
+              selectedColor: theme.colorScheme.secondaryContainer,
+              checkmarkColor: theme.colorScheme.onSecondaryContainer,
+              side: BorderSide(
+                color: selected
+                    ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                width: selected ? 1.2 : 0.8,
+              ),
               labelStyle: TextStyle(
                 color: selected
-                    ? theme.colorScheme.onPrimary
+                    ? theme.colorScheme.onSecondaryContainer
                     : theme.colorScheme.onSurfaceVariant,
                 fontWeight: selected ? FontWeight.bold : FontWeight.normal,
               ),
@@ -473,16 +469,41 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
   Widget _buildQuickFilterSection(ThemeData theme, double radius) {
     final statusFilter = widget.filter.statusFilter;
+    final itemRadius = (radius * 0.45).clamp(10.0, 16.0);
+    final shape = _chipShape(itemRadius);
 
-    Widget buildChip(String label, bool selected, Function(bool) onSelected) {
+    Widget buildChip(String label, IconData icon, String key) {
+      final selected = statusFilter.contains(key);
       return FilterChip(
+        avatar: selected ? null : Icon(icon, size: 16),
         label: Text(label),
         selected: selected,
-        onSelected: (v) {
+        onSelected: (val) {
           AppHaptics.selectionClick();
-          onSelected(v);
+          setState(() {
+            if (val) {
+              statusFilter.add(key);
+            } else {
+              statusFilter.remove(key);
+            }
+          });
+          widget.onFilterChanged();
         },
-        shape: const StadiumBorder(),
+        shape: shape,
+        selectedColor: theme.colorScheme.secondaryContainer,
+        checkmarkColor: theme.colorScheme.onSecondaryContainer,
+        side: BorderSide(
+          color: selected
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+              : theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+          width: selected ? 1.2 : 0.8,
+        ),
+        labelStyle: TextStyle(
+          color: selected
+              ? theme.colorScheme.onSecondaryContainer
+              : theme.colorScheme.onSurfaceVariant,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        ),
       );
     }
 
@@ -494,62 +515,34 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           spacing: 10,
           runSpacing: 10,
           children: [
-            buildChip(tr('installed'), statusFilter.contains('installed'), (
-              val,
-            ) {
-              setState(() {
-                if (val)
-                  statusFilter.add('installed');
-                else
-                  statusFilter.remove('installed');
-              });
-              widget.onFilterChanged();
-            }),
-            buildChip(tr('trackOnly'), statusFilter.contains('trackonly'), (
-              val,
-            ) {
-              setState(() {
-                if (val)
-                  statusFilter.add('trackonly');
-                else
-                  statusFilter.remove('trackonly');
-              });
-              widget.onFilterChanged();
-            }),
-            buildChip(tr('upToDateApps'), !widget.filter.includeUptodate, (
-              val,
-            ) {
-              setState(() {
-                widget.filter.includeUptodate = !val;
-              });
-              widget.onFilterChanged();
-            }),
+            buildChip(tr('updates'), Icons.update_rounded, 'updates'),
             buildChip(
-              tr('nonInstalledApps'),
-              !widget.filter.includeNonInstalled,
-              (val) {
-                setState(() {
-                  widget.filter.includeNonInstalled = !val;
-                });
-                widget.onFilterChanged();
-              },
+              tr('installed'),
+              Icons.install_mobile_rounded,
+              'installed',
             ),
+            buildChip(
+              tr('quickFilterUpToDate'),
+              Icons.check_circle_outline_rounded,
+              'uptodate',
+            ),
+            buildChip(
+              tr('notInstalled'),
+              Icons.cloud_download_outlined,
+              'notinstalled',
+            ),
+            buildChip(tr('trackOnly'), Icons.visibility_outlined, 'trackonly'),
           ],
         ),
       ],
     );
   }
 
-  /// Category and tag chips are pills unless the user turned that off.
-  OutlinedBorder _tagChipShape(double itemRadius) =>
-      context.read<PlusSettingsProvider>().plusExpressiveFilterChips
-      ? const StadiumBorder()
-      : RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius));
-
   Widget _buildCategorySection(ThemeData theme, double radius) {
     final cats = widget.categories;
     final selectedCats = widget.filter.categoryFilter;
     final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
+    final shape = _chipShape(itemRadius);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,21 +555,46 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             final selected = selectedCats.contains(cat);
             final color = Color(cats[cat]!);
             return FilterChip(
+              avatar: selected
+                  ? null
+                  : Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
               label: Text(cat),
               selected: selected,
-              selectedColor: color.withValues(alpha: 0.2),
+              selectedColor: color.withValues(alpha: 0.22),
               checkmarkColor: color,
+              side: BorderSide(
+                color: selected
+                    ? color.withValues(alpha: 0.7)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                width: selected ? 1.2 : 0.8,
+              ),
+              labelStyle: TextStyle(
+                color: selected
+                    ? (theme.brightness == Brightness.dark
+                          ? Colors.white
+                          : color)
+                    : null,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
               onSelected: (val) {
                 AppHaptics.selectionClick();
                 setState(() {
-                  if (val)
+                  if (val) {
                     selectedCats.add(cat);
-                  else
+                  } else {
                     selectedCats.remove(cat);
+                  }
                 });
                 widget.onFilterChanged();
               },
-              shape: _tagChipShape(itemRadius),
+              shape: shape,
             );
           }).toList(),
         ),
@@ -595,6 +613,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
 
     final selectedTags = widget.filter.tagFilter;
     final itemRadius = (radius * 0.4).clamp(8.0, 16.0);
+    final shape = _chipShape(itemRadius);
 
     if (allTags.isEmpty) return const SizedBox.shrink();
 
@@ -608,19 +627,41 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           children: allTags.map((tag) {
             final selected = selectedTags.contains(tag);
             return FilterChip(
+              avatar: selected
+                  ? null
+                  : Icon(
+                      Icons.tag_rounded,
+                      size: 15,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
               label: Text(tag),
               selected: selected,
+              selectedColor: theme.colorScheme.secondaryContainer,
+              checkmarkColor: theme.colorScheme.onSecondaryContainer,
+              side: BorderSide(
+                color: selected
+                    ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.35),
+                width: selected ? 1.2 : 0.8,
+              ),
+              labelStyle: TextStyle(
+                color: selected
+                    ? theme.colorScheme.onSecondaryContainer
+                    : theme.colorScheme.onSurfaceVariant,
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
               onSelected: (val) {
                 AppHaptics.selectionClick();
                 setState(() {
-                  if (val)
+                  if (val) {
                     selectedTags.add(tag);
-                  else
+                  } else {
                     selectedTags.remove(tag);
+                  }
                 });
                 widget.onFilterChanged();
               },
-              shape: _tagChipShape(itemRadius),
+              shape: shape,
             );
           }).toList(),
         ),
@@ -637,7 +678,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         widget.filter.nameFilter.isNotEmpty ||
         widget.filter.authorFilter.isNotEmpty ||
         widget.filter.idFilter.isNotEmpty ||
-        widget.filter.sourceFilter.isNotEmpty;
+        widget.filter.sourceFilter.isNotEmpty ||
+        !widget.filter.includeUptodate ||
+        !widget.filter.includeNonInstalled;
 
     return Theme(
       data: theme.copyWith(dividerColor: Colors.transparent),
@@ -646,10 +689,10 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         tilePadding: EdgeInsets.zero,
         initiallyExpanded: hasAdvancedFilters,
         onExpansionChanged: (_) => AppHaptics.selectionClick(),
-        expansionAnimationStyle: AnimationStyle(
+        expansionAnimationStyle: const AnimationStyle(
           curve: Easing.emphasizedDecelerate,
           reverseCurve: Easing.emphasizedAccelerate,
-          duration: const Duration(milliseconds: 280),
+          duration: Duration(milliseconds: 280),
         ),
         leading: Container(
           padding: const EdgeInsets.all(8),
@@ -664,37 +707,85 @@ class _SortFilterPanelState extends State<SortFilterPanel>
           ),
         ),
         title: Text(
-          tr('filterApps'),
+          tr('advancedOptions'),
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.w600,
           ),
         ),
         children: [
           const SizedBox(height: 16),
-          _buildTextField(tr('appName'), _nameController, (v) {
-            widget.filter.nameFilter = v;
-            widget.onFilterChanged();
-          }, theme),
+          _buildTextField(
+            tr('appName'),
+            _nameController,
+            (v) {
+              widget.filter.nameFilter = v;
+              widget.onFilterChanged();
+            },
+            theme,
+            prefixIcon: Icons.search_rounded,
+          ),
           const SizedBox(height: 16),
-          _buildTextField(tr('author'), _authorController, (v) {
-            widget.filter.authorFilter = v;
-            widget.onFilterChanged();
-          }, theme),
+          _buildTextField(
+            tr('author'),
+            _authorController,
+            (v) {
+              widget.filter.authorFilter = v;
+              widget.onFilterChanged();
+            },
+            theme,
+            prefixIcon: Icons.person_outline_rounded,
+          ),
           const SizedBox(height: 16),
-          _buildTextField(tr('appId'), _idController, (v) {
-            widget.filter.idFilter = v;
-            widget.onFilterChanged();
-          }, theme),
+          _buildTextField(
+            tr('appId'),
+            _idController,
+            (v) {
+              widget.filter.idFilter = v;
+              widget.onFilterChanged();
+            },
+            theme,
+            prefixIcon: Icons.fingerprint_rounded,
+          ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             decoration: InputDecoration(
               labelText: tr('appSource'),
+              prefixIcon: const Icon(Icons.source_outlined, size: 20),
+              filled: true,
+              fillColor: theme.colorScheme.surfaceContainerHigh.withValues(
+                alpha: 0.6,
+              ),
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,
               ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20.0),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                  width: 1.0,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20.0),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.3,
+                  ),
+                  width: 1.0,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16.0),
+                borderSide: BorderSide(
+                  color: theme.colorScheme.primary,
+                  width: 1.8,
+                ),
+              ),
             ),
-            value: widget.filter.sourceFilter.isEmpty
+            initialValue: widget.filter.sourceFilter.isEmpty
                 ? null
                 : widget.filter.sourceFilter,
             items: [
@@ -711,6 +802,43 @@ class _SortFilterPanelState extends State<SortFilterPanel>
               widget.onFilterChanged();
             },
           ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(tr('upToDateApps')),
+            subtitle: Text(
+              widget.filter.includeUptodate ? tr('yes') : tr('no'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            value: widget.filter.includeUptodate,
+            onChanged: (val) {
+              AppHaptics.selectionClick();
+              setState(() {
+                widget.filter.includeUptodate = val;
+              });
+              widget.onFilterChanged();
+            },
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(tr('nonInstalledApps')),
+            subtitle: Text(
+              widget.filter.includeNonInstalled ? tr('yes') : tr('no'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            value: widget.filter.includeNonInstalled,
+            onChanged: (val) {
+              AppHaptics.selectionClick();
+              setState(() {
+                widget.filter.includeNonInstalled = val;
+              });
+              widget.onFilterChanged();
+            },
+          ),
           const SizedBox(height: 12),
         ],
       ),
@@ -721,8 +849,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     String label,
     TextEditingController controller,
     Function(String) onChanged,
-    ThemeData theme,
-  ) {
+    ThemeData theme, {
+    IconData prefixIcon = Icons.search_rounded,
+  }) {
     return ValueListenableBuilder<TextEditingValue>(
       valueListenable: controller,
       builder: (context, value, child) {
@@ -757,7 +886,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                   onChanged: onChanged,
                   decoration: InputDecoration(
                     labelText: label,
-                    prefixIcon: const Icon(Icons.search, size: 20),
+                    prefixIcon: Icon(prefixIcon, size: 20),
                     suffixIcon: hasText
                         ? IconButton(
                             icon: const Icon(Icons.clear, size: 18),
@@ -816,9 +945,5 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         );
       },
     );
-  }
-
-  String _sortMethodLabel(AppSortMethod method) {
-    return _sortMethodDetails(method).$1;
   }
 }
