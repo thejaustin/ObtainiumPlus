@@ -39,9 +39,8 @@ class AppsViewSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
-    final plusFeaturesEnabled = context.select<PlusSettingsProvider, bool>(
-      (s) => s.enableAllPlusFeatures,
-    );
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final plusFeaturesEnabled = plusSettings.enableAllPlusFeatures;
 
     List<Widget> categoryWidgets = [
       if (!isSearching || _matches('category'))
@@ -116,15 +115,6 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableQuickFilters,
           onChanged: (s, v) => onSetState(() => s.plusEnableQuickFilters = v),
         ),
-      if (_matches(tr('plusShowTagsInList')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.label_outline,
-          title: tr('plusShowTagsInList'),
-          subtitle: tr('plusShowTagsInListDescription'),
-          value: (s) => s.plusShowTagsInList,
-          onChanged: (s, v) => onSetState(() => s.plusShowTagsInList = v),
-        ),
       if (_matches(tr('plusEnableTags')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
@@ -133,6 +123,18 @@ class AppsViewSettingsSection extends StatelessWidget {
           subtitle: tr('plusEnableTagsDescription'),
           value: (s) => s.plusEnableTags,
           onChanged: (s, v) => onSetState(() => s.plusEnableTags = v),
+        ),
+      if (plusSettings.plusEnableTags && _matches(tr('plusShowTagsInList')))
+        Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            icon: Icons.label_outline,
+            title: tr('plusShowTagsInList'),
+            subtitle: tr('plusShowTagsInListDescription'),
+            value: (s) => s.plusShowTagsInList,
+            onChanged: (s, v) => onSetState(() => s.plusShowTagsInList = v),
+          ),
         ),
       if (_matches(tr('plusAdvancedSorting'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
@@ -207,15 +209,6 @@ class AppsViewSettingsSection extends StatelessWidget {
                 description: tr('plusFloatingNavBarDescription'),
                 getValue: (s) => s.plusFloatingNavBar,
                 setValue: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
-              ),
-            if (_matches(tr('plusSettingsBottomNavBar')))
-              (
-                icon: Icons.table_rows_rounded,
-                label: tr('plusSettingsBottomNavBar'),
-                description: tr('plusSettingsBottomNavBarDescription'),
-                getValue: (s) => s.plusSettingsBottomNavBar,
-                setValue: (s, v) =>
-                    onSetState(() => s.plusSettingsBottomNavBar = v),
               ),
             if (_matches(tr('plusEnableFAB')))
               (

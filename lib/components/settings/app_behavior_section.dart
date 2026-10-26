@@ -42,12 +42,6 @@ class AppBehaviorSection extends StatelessWidget {
         _matches(tr('enableSwipeGestures')) ||
         _matches(tr('swipeRightAction')) ||
         _matches(tr('swipeLeftAction'));
-    final hasMotion =
-        _matches(tr('animations')) ||
-        _matches(tr('animationSpeed')) ||
-        _matches(tr('disablePageTransitions'), isAdvanced: true) ||
-        _matches(tr('reversePageTransitions')) ||
-        _matches(tr('highlightTouchTargets'));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -128,82 +122,7 @@ class AppBehaviorSection extends StatelessWidget {
             ],
           ),
 
-        // 3. Motion & Page Transitions Group
-        if (hasMotion)
-          Consumer<BehaviorSettingsProvider>(
-            builder: (context, behaviorSettings, child) {
-              return ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('animations'),
-                description: isSearching ? null : tr('animationsGroupDesc'),
-                persistKey: 'behaviorMotionTransitions',
-                icon: Icons.animation_rounded,
-                isExpandable: !isSearching,
-                initiallyExpanded: true,
-                children: [
-                  if (_matches(tr('animationSpeed')))
-                    SettingsSliderTile(
-                      icon: Icons.speed_outlined,
-                      title: tr('animationSpeed'),
-                      value: behaviorSettings.animationSpeedMultiplier.clamp(
-                        0.25,
-                        2.0,
-                      ),
-                      defaultValue: 1.0,
-                      min: 0.25,
-                      max: 2.0,
-                      divisions: 7,
-                      labelBuilder: (v) => '${(v * 100).round()}%',
-                      onChanged: (val) {
-                        const steps = [
-                          0.25,
-                          0.5,
-                          0.75,
-                          1.0,
-                          1.25,
-                          1.5,
-                          1.75,
-                          2.0,
-                        ];
-                        final nearest = steps.reduce(
-                          (a, b) => (a - val).abs() < (b - val).abs() ? a : b,
-                        );
-                        behaviorSettings.animationSpeedMultiplier = nearest;
-                      },
-                    ),
-                  if (_matches(tr('disablePageTransitions'), isAdvanced: true))
-                    _buildFeatureToggle(
-                      context,
-                      icon: Icons.animation_outlined,
-                      title: tr('disablePageTransitions'),
-                      subtitle: tr('disablePageTransitionsDescription'),
-                      value: (s) => s.disablePageTransitions,
-                      onChanged: (s, v) => s.disablePageTransitions = v,
-                    ),
-                  if (_matches(tr('reversePageTransitions')) &&
-                      !behaviorSettings.disablePageTransitions)
-                    _buildFeatureToggle(
-                      context,
-                      icon: Icons.swap_horizontal_circle_outlined,
-                      title: tr('reversePageTransitions'),
-                      subtitle: tr('reversePageTransitionsDescription'),
-                      value: (s) => s.reversePageTransitions,
-                      onChanged: (s, v) => s.reversePageTransitions = v,
-                    ),
-                  if (_matches(tr('highlightTouchTargets')))
-                    _buildFeatureToggle(
-                      context,
-                      icon: Icons.touch_app_outlined,
-                      title: tr('highlightTouchTargets'),
-                      subtitle: tr('highlightTouchTargetsDescription'),
-                      value: (s) => s.highlightTouchTargets,
-                      onChanged: (s, v) => s.highlightTouchTargets = v,
-                    ),
-                ],
-              );
-            },
-          ),
-
-        // 4. Discovery & Safety Group
+        // 3. Discovery & Safety Group
         _buildDiscoverySafetyGroup(context, isSearching),
       ],
     );

@@ -144,15 +144,6 @@ class ThemeSettingsSection extends StatelessWidget {
         _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
-      if (_matches(tr('plusUseCompactSettings')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.density_small_rounded,
-          title: tr('plusUseCompactSettings'),
-          subtitle: tr('plusUseCompactSettingsDescription'),
-          value: (s) => s.plusUseCompactSettings,
-          onChanged: (s, v) => s.plusUseCompactSettings = v,
-        ),
       if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
       if (_matches(tr('language'))) _buildLanguagePicker(context),
 
@@ -246,15 +237,6 @@ class ThemeSettingsSection extends StatelessWidget {
           subtitle: tr('reversePageTransitionsDescription'),
           value: (s) => s.reversePageTransitions,
           onChanged: (s, v) => s.reversePageTransitions = v,
-        ),
-      if (_matches(tr('highlightTouchTargets')))
-        buildFeatureToggle<BehaviorSettingsProvider>(
-          context,
-          icon: Icons.touch_app_outlined,
-          title: tr('highlightTouchTargets'),
-          subtitle: tr('highlightTouchTargetsDescription'),
-          value: (s) => s.highlightTouchTargets,
-          onChanged: (s, v) => s.highlightTouchTargets = v,
         ),
       if (_matches(tr('animationSpeed')))
         Consumer<BehaviorSettingsProvider>(

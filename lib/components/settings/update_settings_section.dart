@@ -463,47 +463,49 @@ class UpdateSettingsSection extends StatelessWidget {
                 },
               ),
             if (plusSettings.enableAllPlusFeatures &&
-                _matches(tr('plusEnableUpdateSchedule')))
+                (_matches(tr('plusEnableUpdateSchedule')) ||
+                    _matches(tr('updateSchedule')))) ...[
               SwitchListTile.adaptive(
                 secondary: buildSettingsIconBadge(
-                  context,
-                  Icons.schedule_outlined,
-                  active: plusSettings.plusEnableUpdateSchedule,
-                ),
-                title: Text(
-                  tr('plusEnableUpdateSchedule'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                subtitle: Text(tr('plusEnableUpdateScheduleDescription')),
-                value: plusSettings.plusEnableUpdateSchedule,
-                onChanged: (v) {
-                  v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                  plusSettings.plusEnableUpdateSchedule = v;
-                },
-              ),
-            if (plusSettings.enableAllPlusFeatures &&
-                _matches(tr('updateSchedule')) &&
-                plusSettings.plusEnableUpdateSchedule)
-              ListTile(
-                leading: buildSettingsIconBadge(
                   context,
                   Icons.schedule_outlined,
                   active: updateSettings.useUpdateSchedule,
                 ),
                 title: Text(
-                  tr('updateSchedule'),
+                  tr('plusEnableUpdateSchedule'),
                   style: Theme.of(context).textTheme.bodyLarge,
                 ),
-                subtitle: Text(updateSettings.getScheduleDescription()),
-                trailing: Switch(
-                  value: updateSettings.useUpdateSchedule,
-                  onChanged: (value) {
-                    value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    updateSettings.useUpdateSchedule = value;
-                  },
+                subtitle: Text(
+                  updateSettings.useUpdateSchedule
+                      ? updateSettings.getScheduleDescription()
+                      : tr('plusEnableUpdateScheduleDescription'),
                 ),
-                onTap: () => _showScheduleDialog(context, updateSettings),
+                value: updateSettings.useUpdateSchedule,
+                onChanged: (v) {
+                  v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                  plusSettings.plusEnableUpdateSchedule = v;
+                  updateSettings.useUpdateSchedule = v;
+                },
               ),
+              if (updateSettings.useUpdateSchedule)
+                Padding(
+                  padding: const EdgeInsets.only(left: 16.0),
+                  child: ListTile(
+                    leading: buildSettingsIconBadge(
+                      context,
+                      Icons.edit_calendar_rounded,
+                      active: true,
+                    ),
+                    title: Text(
+                      tr('updateSchedule'),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    subtitle: Text(updateSettings.getScheduleDescription()),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => _showScheduleDialog(context, updateSettings),
+                  ),
+                ),
+            ],
           ],
         );
       },
@@ -679,21 +681,25 @@ class UpdateSettingsSection extends StatelessWidget {
                   if (plusSettings.enableAllPlusFeatures &&
                       plusSettings.plusEnableAutoUpdateRules &&
                       _matches(tr('autoUpdateRules')))
-                    ListTile(
-                      leading: buildSettingsIconBadge(
-                        context,
-                        Icons.rule_outlined,
-                        active: true,
-                      ),
-                      title: Text(
-                        tr('autoUpdateRules'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      subtitle: Text(tr('autoUpdateRulesDescription')),
-                      onTap: () => _showAutoUpdateRulesDialog(
-                        context,
-                        updateSettings,
-                        viewSettings,
+                    Padding(
+                      padding: const EdgeInsets.only(left: 16.0),
+                      child: ListTile(
+                        leading: buildSettingsIconBadge(
+                          context,
+                          Icons.tune_rounded,
+                          active: true,
+                        ),
+                        title: Text(
+                          tr('autoUpdateRules'),
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        subtitle: Text(tr('autoUpdateRulesDescription')),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                        onTap: () => _showAutoUpdateRulesDialog(
+                          context,
+                          updateSettings,
+                          viewSettings,
+                        ),
                       ),
                     ),
                 ],

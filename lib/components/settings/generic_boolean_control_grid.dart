@@ -44,7 +44,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
             ? 5
             : (screenWidth >= 800
                   ? 4
-                  : (screenWidth > 550 ? 3 : (isCompact ? 3 : 2)));
+                  : (screenWidth >= 600 ? 3 : 2));
         final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
             ? plusSettings.plusSettingsCornerRadius
             : plusSettings.plusGlobalCornerRadius;
@@ -327,15 +327,17 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
               value ? AppHaptics.toggleOff() : AppHaptics.toggleOn();
               setting.setValue(provider, !value);
             },
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 8 : 10,
-                vertical: isCompact ? 6 : 10,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: isCompact ? 56 : 68),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isCompact ? 8 : 10,
+                  vertical: isCompact ? 6 : 10,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
                   // Icon + checkmark overlay
                   Stack(
                     alignment: Alignment.center,
@@ -423,6 +425,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),
