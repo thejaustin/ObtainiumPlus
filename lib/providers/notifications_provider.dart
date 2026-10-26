@@ -544,6 +544,8 @@ class NotificationsProvider {
           priority:
               importanceToPriority[importance] ?? Priority.defaultPriority,
           groupKey: '$obtainiumId.$channelCode',
+          icon: 'ic_notification',
+          color: const Color(0xFF7C4DFF),
           progress: progPercent ?? 0,
           maxProgress: 100,
           showProgress: progPercent != null,

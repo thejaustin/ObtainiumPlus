@@ -7,6 +7,24 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-26 — Antigravity: ObtainiumPlus icon upgrade (Plus icon, Samsung One UI notification vector, Material Monet theming design)
+
+- **Adaptive icon foreground (`ic_launcher_foreground.xml`):**
+  - Rebuilt as a `<layer-list>` combining base Obtainium loop artwork (`ic_launcher_foreground_base.xml`) and the dedicated "+" badge vector.
+  - Positioned and scaled so all load-bearing content sits inside the 66dp adaptive-icon safe zone (radius <= 30.5dp from center (54,54)), leaving safety margin for squircle masks (Samsung One UI).
+  - Plus badge in brand primary violet (`#9B58DC`) centered above the top-right loop crown at (69.0, 36.5).
+- **Monochrome & Material Monet Theming (`ic_launcher_monochrome.xml`):**
+  - Replaced flat unbadged vector with full compound silhouette containing the Obtainium loop ribbon and the "+" badge with clean negative-space separation.
+  - Sized for Android 13+ dynamic Monet palette theming (`android:tint="?attr/colorControlNormal"` and `fillColor="#FFFFFFFF"`).
+  - Fixed `mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` which previously pointed `<monochrome>` incorrectly at `@drawable/ic_launcher_foreground` (breaking themed icons).
+- **Samsung One UI & Android Notification Icon (`ic_notification.xml`):**
+  - Replaced legacy blurry 72x72 raster PNG (`ic_notification.png`) with clean 24dp x 24dp vector drawable.
+  - Exact traced silhouette of loop and "+" badge cropped tight to 24dp grid ([1.76, 22.25] on X, [1.39, 22.37] on Y) with 1.6dp standard notification padding.
+  - Untinted solid `@android:color/white` so Samsung One UI notification shade and dynamic Android Monet tinting render crisp, anti-aliased vectors at native display DPI.
+  - `AndroidNotificationDetails` now sets `icon: 'ic_notification'` and `color: const Color(0xFF7C4DFF)` brand accent.
+
+---
+
 ## 2026-10-23 — Claude Code (Opus 5.5): timeline changelog, grid update badge, settings dock
 
 **Commits (not pushed):** `9caa65c7` settings dock/bottom insets (includes pre-existing uncommitted WIP of unknown origin: scrubber gutter, `paddingOf(bottom)` insets), `8efec19e` timeline changelog, `c6ad91b6` grid update badge.
