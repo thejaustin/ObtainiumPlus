@@ -51,7 +51,7 @@ class UpdateSettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
 
-    List<Widget> children = [
+    final List<Widget> scheduleChildren = [
       if (_matches(tr('runBgCheckNow')))
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -73,12 +73,35 @@ class UpdateSettingsSection extends StatelessWidget {
           onTap: () => NavHelper.pushUpdateHealthPage(context),
         ),
       if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
+      if (_matches(tr('checkOnStart')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, updateSettings, _) => SwitchListTile.adaptive(
+            secondary: buildSettingsIconBadge(
+              context,
+              Icons.power_settings_new_outlined,
+              active: updateSettings.checkOnStart,
+            ),
+            title: Text(
+              tr('checkOnStart'),
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            subtitle: Text(tr('checkOnStartDescription')),
+            value: updateSettings.checkOnStart,
+            onChanged: (val) {
+              val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              updateSettings.checkOnStart = val;
+            },
+          ),
+        ),
+      _buildScheduleOptions(context),
+    ];
+
+    final List<Widget> constraintsChildren = [
       if (_matches(tr('bgUpdateRequiresWifi')) ||
           _matches(tr('bgUpdateRequiresCharging')) ||
-          _matches(tr('checkOnStart')) ||
           _matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
         GenericBooleanControlGrid<UpdateSettingsProvider>(
-          title: tr('updates'),
+          title: tr('sectionDeviceOptions'),
           embedded: true,
           settings: [
             if (_matches(tr('bgUpdateRequiresWifi')))
@@ -97,14 +120,6 @@ class UpdateSettingsSection extends StatelessWidget {
                 getValue: (s) => s.bgUpdateRequiresCharging,
                 setValue: (s, v) => s.bgUpdateRequiresCharging = v,
               ),
-            if (_matches(tr('checkOnStart')))
-              (
-                icon: Icons.power_settings_new_outlined,
-                label: tr('checkOnStart'),
-                description: tr('checkOnStartDescription'),
-                getValue: (s) => s.checkOnStart,
-                setValue: (s, v) => s.checkOnStart = v,
-              ),
             if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
               (
                 icon: Icons.check_circle_outline,
@@ -118,99 +133,153 @@ class UpdateSettingsSection extends StatelessWidget {
       _buildForegroundServiceSection(context),
       if (_matches(tr('xiaomiBatteryTroubleshooting')))
         _buildXiaomiTroubleshooting(context),
-
-      // Concurrency Limit settings
-      if (_matches(tr('plusUpdateCheckConcurrency'), isAdvanced: true))
-        Consumer<SettingsProvider>(
-          builder: (context, settings, _) {
-            // Steps: 1, 2, 3, 5, 10 → mapped to index 0–4
-            const steps = [1, 2, 3, 5, 10];
-            final idx = steps.indexOf(settings.updateCheckConcurrencyLimit);
-            final sliderVal = (idx < 0 ? 2 : idx).toDouble();
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Text(
-                    tr('plusUpdateCheckConcurrencyDescription'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                SettingsSliderTile(
-                  icon: Icons.speed_outlined,
-                  title: tr('plusUpdateCheckConcurrency'),
-                  value: sliderVal,
-                  defaultValue: 2.0,
-                  min: 0,
-                  max: 4,
-                  divisions: 4,
-                  labelBuilder: (v) => steps[v.round().clamp(0, 4)].toString(),
-                  onChanged: (val) {
-                    settings.updateCheckConcurrencyLimit =
-                        steps[val.round().clamp(0, 4)];
-                  },
-                ),
-              ],
-            );
-          },
-        ),
-
-      if (_matches(tr('plusDownloadConcurrency'), isAdvanced: true))
-        Consumer<SettingsProvider>(
-          builder: (context, settings, _) => Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Text(
-                  tr('plusDownloadConcurrencyDescription'),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              SettingsSliderTile(
-                icon: Icons.download_for_offline_outlined,
-                title: tr('plusDownloadConcurrency'),
-                value: (settings.updateDownloadConcurrencyLimit - 1)
-                    .toDouble()
-                    .clamp(0, 4),
-                defaultValue: 0.0,
-                min: 0,
-                max: 4,
-                divisions: 4,
-                labelBuilder: (v) => (v.round() + 1).toString(),
-                onChanged: (val) {
-                  settings.updateDownloadConcurrencyLimit = val.round() + 1;
-                },
-              ),
-            ],
-          ),
-        ),
-
-      _buildAdditionalUpdateSettings(context),
     ];
 
-    if (children.every((w) => w is SizedBox && w.child == null))
-      return const SizedBox.shrink();
+    final List<Widget> performanceChildren = [
+      _buildConcurrencyLimitTile(context),
+      _buildDownloadConcurrencyTile(context),
+      _buildPerformanceAndSources(context),
+    ];
 
-    return ExpressiveSettingsGroup(
-      title: isSearching ? null : tr('updates'),
-      description: isSearching ? null : tr('updatesGroupDesc'),
-      persistKey: 'updates',
-      icon: Icons.update_rounded,
-      isExpandable: !isSearching,
-      initiallyExpanded: true,
-      children: children,
+    final hasSchedule = scheduleChildren.any(
+      (w) => !(w is SizedBox && w.child == null),
+    );
+    final hasConstraints = constraintsChildren.any(
+      (w) => !(w is SizedBox && w.child == null),
+    );
+    final hasPerformance = performanceChildren.any(
+      (w) => !(w is SizedBox && w.child == null),
+    );
+
+    if (!hasSchedule && !hasConstraints && !hasPerformance) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (hasSchedule)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('updateSchedule'),
+            description: isSearching ? null : tr('updatesGroupDesc'),
+            persistKey: 'updates_schedule',
+            icon: Icons.schedule_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: true,
+            children: scheduleChildren,
+          ),
+        if (hasSchedule && (hasConstraints || hasPerformance))
+          const SizedBox(height: 12),
+        if (hasConstraints)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('sectionDeviceOptions'),
+            description: isSearching ? null : tr('bgUpdateRequiresWifiDescription'),
+            persistKey: 'updates_constraints',
+            icon: Icons.battery_charging_full_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: true,
+            children: constraintsChildren,
+          ),
+        if (hasConstraints && hasPerformance)
+          const SizedBox(height: 12),
+        if (hasPerformance)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('sectionUpdateOptions'),
+            description: isSearching
+                ? null
+                : tr('plusUpdateCheckConcurrencyDescription'),
+            persistKey: 'updates_performance',
+            icon: Icons.speed_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: true,
+            children: performanceChildren,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildConcurrencyLimitTile(BuildContext context) {
+    if (!_matches(tr('plusUpdateCheckConcurrency'), isAdvanced: true)) {
+      return const SizedBox.shrink();
+    }
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) {
+        const steps = [1, 2, 3, 5, 10];
+        final idx = steps.indexOf(settings.updateCheckConcurrencyLimit);
+        final sliderVal = (idx < 0 ? 2 : idx).toDouble();
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(
+                tr('plusUpdateCheckConcurrencyDescription'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            SettingsSliderTile(
+              icon: Icons.speed_outlined,
+              title: tr('plusUpdateCheckConcurrency'),
+              value: sliderVal,
+              defaultValue: 2.0,
+              min: 0,
+              max: 4,
+              divisions: 4,
+              labelBuilder: (v) => steps[v.round().clamp(0, 4)].toString(),
+              onChanged: (val) {
+                settings.updateCheckConcurrencyLimit =
+                    steps[val.round().clamp(0, 4)];
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDownloadConcurrencyTile(BuildContext context) {
+    if (!_matches(tr('plusDownloadConcurrency'), isAdvanced: true)) {
+      return const SizedBox.shrink();
+    }
+    return Consumer<SettingsProvider>(
+      builder: (context, settings, _) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: Text(
+              tr('plusDownloadConcurrencyDescription'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          SettingsSliderTile(
+            icon: Icons.download_for_offline_outlined,
+            title: tr('plusDownloadConcurrency'),
+            value: (settings.updateDownloadConcurrencyLimit - 1)
+                .toDouble()
+                .clamp(0, 4),
+            defaultValue: 0.0,
+            min: 0,
+            max: 4,
+            divisions: 4,
+            labelBuilder: (v) => (v.round() + 1).toString(),
+            onChanged: (val) {
+              settings.updateDownloadConcurrencyLimit = val.round() + 1;
+            },
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildForegroundServiceSection(BuildContext context) {
-    if (!_matches(tr('foregroundServiceExplanation')))
+    if (!_matches(tr('foregroundServiceExplanation'))) {
       return const SizedBox.shrink();
+    }
     return Consumer<UpdateSettingsProvider>(
       builder: (context, settings, child) {
         return SwitchListTile.adaptive(
@@ -238,8 +307,8 @@ class UpdateSettingsSection extends StatelessWidget {
       future: androidInfoFuture,
       builder: (ctx, snapshot) {
         if (snapshot.hasData) {
-          var device = snapshot.data!;
-          var isXiaomi =
+          final device = snapshot.data!;
+          final isXiaomi =
               [
                 'xiaomi',
                 'poco',
@@ -350,13 +419,9 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildAdditionalUpdateSettings(BuildContext context) {
-    return Consumer3<
-      UpdateSettingsProvider,
-      ViewSettingsProvider,
-      PlusSettingsProvider
-    >(
-      builder: (context, updateSettings, viewSettings, plusSettings, child) {
+  Widget _buildScheduleOptions(BuildContext context) {
+    return Consumer2<UpdateSettingsProvider, PlusSettingsProvider>(
+      builder: (context, updateSettings, plusSettings, child) {
         return Column(
           children: [
             if (_matches(tr('checkUpdateOnDetailPage')))
@@ -395,54 +460,6 @@ class UpdateSettingsSection extends StatelessWidget {
                 onChanged: (value) {
                   value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                   updateSettings.allowAddingAppsWithoutCheck = value;
-                },
-              ),
-            if (plusSettings.enableAllPlusFeatures &&
-                _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
-              SwitchListTile.adaptive(
-                secondary: buildSettingsIconBadge(
-                  context,
-                  Icons.system_update_alt_rounded,
-                  active: plusSettings.plusEnableSystemUpdateScanner,
-                ),
-                title: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        tr('plusSystemUpdateScanner'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.tertiaryContainer,
-                        borderRadius: BorderRadius.circular(
-                          plusSettings.plusGlobalCornerRadius.clamp(0.0, 12.0),
-                        ),
-                      ),
-                      child: Text(
-                        tr('beta'),
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onTertiaryContainer,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                subtitle: Text(tr('plusSystemUpdateScannerDescription')),
-                value: plusSettings.plusEnableSystemUpdateScanner,
-                onChanged: (v) {
-                  v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                  plusSettings.plusEnableSystemUpdateScanner = v;
                 },
               ),
             if (plusSettings.enableAllPlusFeatures &&
@@ -487,6 +504,21 @@ class UpdateSettingsSection extends StatelessWidget {
                 ),
                 onTap: () => _showScheduleDialog(context, updateSettings),
               ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildPerformanceAndSources(BuildContext context) {
+    return Consumer3<
+      UpdateSettingsProvider,
+      ViewSettingsProvider,
+      PlusSettingsProvider
+    >(
+      builder: (context, updateSettings, viewSettings, plusSettings, child) {
+        return Column(
+          children: [
             if (_matches(tr('releaseChannel'), isAdvanced: true))
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -568,6 +600,61 @@ class UpdateSettingsSection extends StatelessWidget {
                 children: [
                   if (_matches(tr('preferredUpdateSource')))
                     _buildSourceChipGrid(context, behaviorSettings),
+                  if (plusSettings.enableAllPlusFeatures &&
+                      _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
+                    SwitchListTile.adaptive(
+                      secondary: buildSettingsIconBadge(
+                        context,
+                        Icons.system_update_alt_rounded,
+                        active: plusSettings.plusEnableSystemUpdateScanner,
+                      ),
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              tr('plusSystemUpdateScanner'),
+                              style: Theme.of(context).textTheme.bodyLarge,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(left: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.tertiaryContainer,
+                              borderRadius: BorderRadius.circular(
+                                plusSettings.plusGlobalCornerRadius.clamp(
+                                  0.0,
+                                  12.0,
+                                ),
+                              ),
+                            ),
+                            child: Text(
+                              tr('beta'),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.labelSmall?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onTertiaryContainer,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(tr('plusSystemUpdateScannerDescription')),
+                      value: plusSettings.plusEnableSystemUpdateScanner,
+                      onChanged: (v) {
+                        v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                        plusSettings.plusEnableSystemUpdateScanner = v;
+                      },
+                    ),
                   if (plusSettings.enableAllPlusFeatures &&
                       _matches(tr('plusEnableAutoUpdateRules')))
                     SwitchListTile.adaptive(

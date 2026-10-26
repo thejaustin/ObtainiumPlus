@@ -113,7 +113,24 @@ class _InstallationSectionState extends State<InstallationSection>
 
     return Consumer<BehaviorSettingsProvider>(
       builder: (context, behaviorSettings, child) {
-        List<Widget> children = [
+        final List<Widget> methodChildren = [
+          // Installer method selector — unified radio picker
+          if (_matches(tr('useShizuku')) ||
+              _matches(tr('rootInstaller')) ||
+              _matches(tr('installMethod')) ||
+              _matches(tr('installerMethodLabel')) ||
+              _matches(tr('shizukuPretendToBeGooglePlay')) ||
+              _matches(tr('shizukuFallbackToSystem')) ||
+              _matches('binder') ||
+              !isSearching)
+            _buildInstallerMethodSelector(
+              context,
+              behaviorSettings,
+              plusSettings,
+            ),
+        ];
+
+        final List<Widget> optionsChildren = [
           // Device Compatibility & Performance
           if (_matches(tr('devicePerformanceAndCompatibility')) ||
               _matches('compatibility') ||
@@ -195,85 +212,24 @@ class _InstallationSectionState extends State<InstallationSection>
                 showDeviceOptimizationSheet(context: context);
               },
             ),
-          // Parallel Downloads
-          if (_matches(tr('parallelDownloads'), isAdvanced: true))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.file_download_outlined,
-                active: behaviorSettings.parallelDownloads,
-              ),
-              title: Text(
-                tr('parallelDownloads'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('parallelDownloadsDescription')),
-              value: behaviorSettings.parallelDownloads,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.parallelDownloads = v;
-              },
-            ),
 
-          // App Verifier
-          if (_matches(tr('beforeNewInstallsShareToAppVerifier')))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
+          // Import Installed Apps
+          if (_matches(tr('importInstalledApps')))
+            ListTile(
+              leading: buildSettingsIconBadge(
                 context,
-                Icons.verified_user_outlined,
-                active: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+                Icons.install_mobile_rounded,
+                active: true,
               ),
               title: Text(
-                tr('beforeNewInstallsShareToAppVerifier'),
+                tr('importInstalledApps'),
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
-              subtitle: Text(
-                tr('beforeNewInstallsShareToAppVerifierDescription'),
-              ),
-              value: behaviorSettings.beforeNewInstallsShareToAppVerifier,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.beforeNewInstallsShareToAppVerifier = v;
-              },
-            ),
-
-          // Use Play Store App Links
-          if (_matches(tr('usePlayStoreAppLinks')))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.storefront_outlined,
-                active: behaviorSettings.usePlayStoreAppLinks,
-              ),
-              title: Text(
-                tr('usePlayStoreAppLinks'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('usePlayStoreAppLinksDescription')),
-              value: behaviorSettings.usePlayStoreAppLinks,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.usePlayStoreAppLinks = v;
-              },
-            ),
-
-          // Allow Third-Party Sources
-          if (_matches(tr('allowThirdPartySources')))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.source_outlined,
-                active: behaviorSettings.allowThirdPartySources,
-              ),
-              title: Text(
-                tr('allowThirdPartySources'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('allowThirdPartySourcesDescription')),
-              value: behaviorSettings.allowThirdPartySources,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.allowThirdPartySources = v;
+              subtitle: Text(tr('importInstalledAppsDescription')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                AppHaptics.selectionClick();
+                showSystemAppSelectorSheet(context: context);
               },
             ),
 
@@ -304,24 +260,15 @@ class _InstallationSectionState extends State<InstallationSection>
               },
             ),
 
-          // Import Installed Apps
-          if (_matches(tr('importInstalledApps')))
-            ListTile(
-              leading: buildSettingsIconBadge(
-                context,
-                Icons.install_mobile_rounded,
-                active: true,
-              ),
-              title: Text(
-                tr('importInstalledApps'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('importInstalledAppsDescription')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                AppHaptics.selectionClick();
-                showSystemAppSelectorSheet(context: context);
-              },
+          // Standalone Installer
+          if (_matches(tr('plusEnableStandaloneInstaller')))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.install_mobile_outlined,
+              title: tr('plusEnableStandaloneInstaller'),
+              subtitle: tr('plusEnableStandaloneInstallerDescription'),
+              value: (s) => s.plusEnableStandaloneInstaller,
+              onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
             ),
 
           // Smart Retries & Caching
@@ -333,28 +280,6 @@ class _InstallationSectionState extends State<InstallationSection>
               subtitle: tr('plusSmartRetriesDescription'),
               value: (s) => s.plusEnableSmartRetries,
               onChanged: (s, v) => s.plusEnableSmartRetries = v,
-            ),
-
-          // MicroG Compat Hub
-          if (_matches(tr('plusEnableMicroGHub'), isAdvanced: true))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.hub_outlined,
-              title: tr('plusEnableMicroGHub'),
-              subtitle: tr('plusEnableMicroGHubDescription'),
-              value: (s) => s.plusEnableMicroGHub,
-              onChanged: (s, v) => s.plusEnableMicroGHub = v,
-            ),
-
-          // Standalone Installer
-          if (_matches(tr('plusEnableStandaloneInstaller')))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.install_mobile_outlined,
-              title: tr('plusEnableStandaloneInstaller'),
-              subtitle: tr('plusEnableStandaloneInstallerDescription'),
-              value: (s) => s.plusEnableStandaloneInstaller,
-              onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
             ),
 
           // Update Ownership (Android 14+)
@@ -399,31 +324,138 @@ class _InstallationSectionState extends State<InstallationSection>
               },
             ),
 
-          // Installer method selector — unified radio picker replacing the old
-          // separate Shizuku and Root switches.
-          if (_matches(tr('useShizuku')) ||
-              _matches(tr('rootInstaller')) ||
-              _matches(tr('installMethod')) ||
-              _matches(tr('installerMethodLabel')) ||
-              _matches(tr('shizukuPretendToBeGooglePlay')) ||
-              _matches(tr('shizukuFallbackToSystem')) ||
-              _matches('binder') ||
-              !isSearching)
-            _buildInstallerMethodSelector(
+          // App Verifier
+          if (_matches(tr('beforeNewInstallsShareToAppVerifier')))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.verified_user_outlined,
+                active: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+              ),
+              title: Text(
+                tr('beforeNewInstallsShareToAppVerifier'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                tr('beforeNewInstallsShareToAppVerifierDescription'),
+              ),
+              value: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.beforeNewInstallsShareToAppVerifier = v;
+              },
+            ),
+
+          // MicroG Compat Hub
+          if (_matches(tr('plusEnableMicroGHub'), isAdvanced: true))
+            buildFeatureToggle<PlusSettingsProvider>(
               context,
-              behaviorSettings,
-              plusSettings,
+              icon: Icons.hub_outlined,
+              title: tr('plusEnableMicroGHub'),
+              subtitle: tr('plusEnableMicroGHubDescription'),
+              value: (s) => s.plusEnableMicroGHub,
+              onChanged: (s, v) => s.plusEnableMicroGHub = v,
+            ),
+
+          // Allow Third-Party Sources
+          if (_matches(tr('allowThirdPartySources')))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.source_outlined,
+                active: behaviorSettings.allowThirdPartySources,
+              ),
+              title: Text(
+                tr('allowThirdPartySources'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('allowThirdPartySourcesDescription')),
+              value: behaviorSettings.allowThirdPartySources,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.allowThirdPartySources = v;
+              },
+            ),
+
+          // Use Play Store App Links
+          if (_matches(tr('usePlayStoreAppLinks')))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.storefront_outlined,
+                active: behaviorSettings.usePlayStoreAppLinks,
+              ),
+              title: Text(
+                tr('usePlayStoreAppLinks'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('usePlayStoreAppLinksDescription')),
+              value: behaviorSettings.usePlayStoreAppLinks,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.usePlayStoreAppLinks = v;
+              },
+            ),
+
+          // Parallel Downloads
+          if (_matches(tr('parallelDownloads'), isAdvanced: true))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.file_download_outlined,
+                active: behaviorSettings.parallelDownloads,
+              ),
+              title: Text(
+                tr('parallelDownloads'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('parallelDownloadsDescription')),
+              value: behaviorSettings.parallelDownloads,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.parallelDownloads = v;
+              },
             ),
         ];
 
-        return ExpressiveSettingsGroup(
-          title: isSearching ? null : tr('installation'),
-          description: isSearching ? null : tr('installationGroupDesc'),
-          persistKey: 'installation',
-          icon: Icons.install_mobile_rounded,
-          isExpandable: !isSearching,
-          initiallyExpanded: true,
-          children: children,
+        final hasMethod = methodChildren.any(
+          (w) => !(w is SizedBox && w.child == null),
+        );
+        final hasOptions = optionsChildren.any(
+          (w) => !(w is SizedBox && w.child == null),
+        );
+
+        if (!hasMethod && !hasOptions) {
+          return const SizedBox.shrink();
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (hasMethod)
+              ExpressiveSettingsGroup(
+                title: isSearching ? null : tr('installerMethodLabel'),
+                description: isSearching ? null : tr('installationGroupDesc'),
+                persistKey: 'installation_method',
+                icon: Icons.install_mobile_rounded,
+                isExpandable: !isSearching,
+                initiallyExpanded: true,
+                children: methodChildren,
+              ),
+            if (hasMethod && hasOptions) const SizedBox(height: 12),
+            if (hasOptions)
+              ExpressiveSettingsGroup(
+                title: isSearching ? null : tr('installation'),
+                description: isSearching
+                    ? null
+                    : tr('devicePerformanceAndCompatibilitySubtitle'),
+                persistKey: 'installation_options',
+                icon: Icons.security_rounded,
+                isExpandable: !isSearching,
+                initiallyExpanded: true,
+                children: optionsChildren,
+              ),
+          ],
         );
       },
     );

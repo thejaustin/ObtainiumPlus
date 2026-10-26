@@ -314,6 +314,30 @@ void main() {
     await pumpCapturingErrors(tester, app);
     expect(find.byType(SettingsPage), findsOneWidget);
   }, timeout: const Timeout(Duration(minutes: 1)));
+
+  testWidgets(
+    'settings page displays organized layout and Obtainium+ chip without banner clutter',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({
+        'plusSettingsBottomNavBar': false,
+      });
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(0);
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+
+      // Verify Obtainium+ action chip in app bar
+      expect(find.text('Obtainium+'), findsOneWidget);
+
+      // Verify no redundant uppercase or banner duplication
+      expect(find.text('APPEARANCE'), findsNothing);
+      expect(find.text('UPDATES & INSTALL'), findsNothing);
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
 }
 
 class _MemoryAssetLoader extends AssetLoader {

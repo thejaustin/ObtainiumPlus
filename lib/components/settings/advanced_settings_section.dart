@@ -20,6 +20,8 @@ import 'package:http/http.dart' as http;
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/settings/plus_features_section.dart';
+import 'package:obtainium/components/settings/settings_layout_selector.dart';
 
 /// Advanced / warnings settings section
 class AdvancedSettingsSection extends StatelessWidget {
@@ -46,76 +48,35 @@ class AdvancedSettingsSection extends StatelessWidget {
       (s) => s.enableAllPlusFeatures,
     );
 
-    List<Widget> children = [
-      if (_matches(tr('showAdvancedSettings')))
-        Consumer<PlusSettingsProvider>(
-          builder: (context, plusSettings, child) {
-            return SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.settings_suggest_outlined,
-                active: plusSettings.plusShowAdvancedSettings,
-              ),
-              title: Text(
-                tr('showAdvancedSettings'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-              subtitle: Text(tr('showAdvancedSettingsDescription')),
-              value: plusSettings.plusShowAdvancedSettings,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                plusSettings.plusShowAdvancedSettings = v;
-              },
-            );
+    final List<Widget> plusGroup = [
+      PlusFeaturesSection(
+        searchQuery: searchQuery,
+        showAdvancedSettings: showAdvancedSettings,
+      ),
+      if (searchQuery == null || searchQuery!.isEmpty)
+        const SettingsLayoutSelector(),
+    ];
+
+    final List<Widget> dataGroup = [
+      if (_matches(tr('importExport')))
+        ListTile(
+          leading: buildSettingsIconBadge(
+            context,
+            Icons.import_export_rounded,
+            active: true,
+          ),
+          title: Text(
+            tr('importExport'),
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          subtitle: const Text(
+            'Backup, restore, import, or export settings and apps',
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+          onTap: () {
+            AppHaptics.selectionClick();
+            pushRoute(context, const ImportExportPage());
           },
-        ),
-      if (_matches(tr('dontShowTrackOnlyWarnings')))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.report_off_outlined,
-          title: tr('dontShowTrackOnlyWarnings'),
-          subtitle: tr('dontShowTrackOnlyWarningsDescription'),
-          value: (s) => s.hideTrackOnlyWarning,
-          onChanged: (s, v) => s.hideTrackOnlyWarning = v,
-        ),
-      if (_matches(tr('dontShowAPKOriginWarnings')))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.security_outlined,
-          title: tr('dontShowAPKOriginWarnings'),
-          subtitle: tr('dontShowAPKOriginWarningsDescription'),
-          value: (s) => s.hideAPKOriginWarning,
-          onChanged: (s, v) => s.hideAPKOriginWarning = v,
-        ),
-      if (_matches(tr('enableDeepLogging')))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.bug_report_outlined,
-          title: tr('enableDeepLogging'),
-          subtitle: tr('enableDeepLoggingDescription'),
-          value: (s) => s.enableDeepLogging,
-          onChanged: (s, v) => s.enableDeepLogging = v,
-        ),
-      if (_matches(tr('enableContextualTips')))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.lightbulb_outline,
-          title: tr('enableContextualTips'),
-          subtitle: tr('enableContextualTipsDescription'),
-          value: (s) => s.enableContextualTips,
-          onChanged: (s, v) {
-            s.enableContextualTips = v;
-            if (v) s.resetTips();
-          },
-        ),
-      if (_matches(tr('highlightTouchTargets'), isAdvanced: true))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.touch_app_outlined,
-          title: tr('highlightTouchTargets'),
-          subtitle: tr('highlightTouchTargetsDescription'),
-          value: (s) => s.highlightTouchTargets,
-          onChanged: (s, v) => s.highlightTouchTargets = v,
         ),
       if (_matches(tr('autoExportOnChanges'), isAdvanced: true))
         _buildSettingsToggle(
@@ -159,6 +120,40 @@ class AdvancedSettingsSection extends StatelessWidget {
             );
           },
         ),
+    ];
+
+    final List<Widget> devGroup = [
+      if (_matches(tr('showAdvancedSettings')))
+        Consumer<PlusSettingsProvider>(
+          builder: (context, plusSettings, child) {
+            return SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.settings_suggest_outlined,
+                active: plusSettings.plusShowAdvancedSettings,
+              ),
+              title: Text(
+                tr('showAdvancedSettings'),
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              subtitle: Text(tr('showAdvancedSettingsDescription')),
+              value: plusSettings.plusShowAdvancedSettings,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                plusSettings.plusShowAdvancedSettings = v;
+              },
+            );
+          },
+        ),
+      if (_matches(tr('enableDeepLogging')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.bug_report_outlined,
+          title: tr('enableDeepLogging'),
+          subtitle: tr('enableDeepLoggingDescription'),
+          value: (s) => s.enableDeepLogging,
+          onChanged: (s, v) => s.enableDeepLogging = v,
+        ),
       _buildTokenConfigTile(
         context,
         icon: Icons.login_outlined,
@@ -179,27 +174,46 @@ class AdvancedSettingsSection extends StatelessWidget {
             'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
         visible: _matches(tr('plusGitlabToken')),
       ),
-      if (_matches(tr('importExport')))
-        ListTile(
-          leading: buildSettingsIconBadge(
-            context,
-            Icons.import_export_rounded,
-            active: true,
-          ),
-          title: Text(
-            tr('importExport'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          subtitle: const Text(
-            'Backup, restore, import, or export settings and apps',
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-          onTap: () {
-            AppHaptics.selectionClick();
-            pushRoute(context, const ImportExportPage());
+      if (_matches(tr('dontShowTrackOnlyWarnings')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.report_off_outlined,
+          title: tr('dontShowTrackOnlyWarnings'),
+          subtitle: tr('dontShowTrackOnlyWarningsDescription'),
+          value: (s) => s.hideTrackOnlyWarning,
+          onChanged: (s, v) => s.hideTrackOnlyWarning = v,
+        ),
+      if (_matches(tr('dontShowAPKOriginWarnings')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.security_outlined,
+          title: tr('dontShowAPKOriginWarnings'),
+          subtitle: tr('dontShowAPKOriginWarningsDescription'),
+          value: (s) => s.hideAPKOriginWarning,
+          onChanged: (s, v) => s.hideAPKOriginWarning = v,
+        ),
+      if (_matches(tr('enableContextualTips')))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.lightbulb_outline,
+          title: tr('enableContextualTips'),
+          subtitle: tr('enableContextualTipsDescription'),
+          value: (s) => s.enableContextualTips,
+          onChanged: (s, v) {
+            s.enableContextualTips = v;
+            if (v) s.resetTips();
           },
         ),
-      if (_matches(tr('factoryReset'))) ...[
+      if (_matches(tr('highlightTouchTargets'), isAdvanced: true))
+        _buildSettingsToggle(
+          context,
+          icon: Icons.touch_app_outlined,
+          title: tr('highlightTouchTargets'),
+          subtitle: tr('highlightTouchTargetsDescription'),
+          value: (s) => s.highlightTouchTargets,
+          onChanged: (s, v) => s.highlightTouchTargets = v,
+        ),
+      if (_matches(tr('factoryReset')))
         ListTile(
           leading: buildSettingsIconBadge(
             context,
@@ -216,19 +230,56 @@ class AdvancedSettingsSection extends StatelessWidget {
           subtitle: Text(tr('factoryResetDescription')),
           onTap: () => _showResetConfirmation(context),
         ),
-      ],
     ];
 
-    if (children.isEmpty) return const SizedBox.shrink();
+    final hasPlus =
+        !isSearching ||
+        plusGroup.any((w) => !(w is SizedBox && w.child == null));
+    final hasData = dataGroup.any((w) => !(w is SizedBox && w.child == null));
+    final hasDev = devGroup.any((w) => !(w is SizedBox && w.child == null));
 
-    return ExpressiveSettingsGroup(
-      title: isSearching ? null : tr('advanced'),
-      description: isSearching ? null : tr('advancedGroupDesc'),
-      persistKey: 'advanced',
-      icon: Icons.settings_applications_rounded,
-      isExpandable: !isSearching,
-      initiallyExpanded: true,
-      children: children,
+    if (!hasPlus && !hasData && !hasDev) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (hasPlus)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : 'Obtainium+ & Interface',
+            description: isSearching
+                ? null
+                : 'Configure Obtainium+ enhancements and settings layout',
+            persistKey: 'advanced_plus',
+            icon: Icons.stars_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: true,
+            children: plusGroup,
+          ),
+        if (hasPlus && (hasData || hasDev)) const SizedBox(height: 12),
+        if (hasData)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('importExport'),
+            description: isSearching
+                ? null
+                : 'Backup, restore, and data management',
+            persistKey: 'advanced_data',
+            icon: Icons.backup_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: true,
+            children: dataGroup,
+          ),
+        if (hasData && hasDev) const SizedBox(height: 12),
+        if (hasDev)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('advanced'),
+            description: isSearching ? null : tr('advancedGroupDesc'),
+            persistKey: 'advanced_system',
+            icon: Icons.settings_applications_rounded,
+            isExpandable: !isSearching,
+            initiallyExpanded: true,
+            children: devGroup,
+          ),
+      ],
     );
   }
 
