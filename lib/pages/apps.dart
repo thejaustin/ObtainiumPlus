@@ -913,7 +913,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       appsProvider
           .downloadAndInstallLatestApps([
             listedApps[appIndex].app.id,
-          ], globalNavigatorKey.currentContext)
+          ], globalNavigatorKey.currentContext ?? context)
           .then((res) {
             if (res.isNotEmpty && context.mounted) {
               var np = context.read<NotificationsProvider>();
@@ -1483,7 +1483,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                   appsProvider
                       .downloadAndInstallLatestApps(
                         toInstall,
-                        globalNavigatorKey.currentContext,
+                        globalNavigatorKey.currentContext ?? context,
                       )
                       .then((value) {
                         if (value.isNotEmpty && context.mounted) {

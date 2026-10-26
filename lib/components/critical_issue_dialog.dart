@@ -7,6 +7,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -218,11 +219,19 @@ class CriticalIssueDialog extends StatelessWidget {
                     label: Text(tr('followIssue')),
                     onPressed: () async {
                       final url = Uri.parse(issue.githubIssueUrl);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(
+                      try {
+                        final launched = await launchUrl(
                           url,
                           mode: LaunchMode.externalApplication,
                         );
+                        if (!launched) {
+                          await launchUrl(
+                            url,
+                            mode: LaunchMode.platformDefault,
+                          );
+                        }
+                      } catch (e) {
+                        AppLogger.error(e, message: 'Could not launch URL: $url');
                       }
                     },
                   ),
