@@ -7,6 +7,29 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-26 — Antigravity: In-App Updater Download Fix on Launch & ForceUpdateDialog Modernization
+
+- **Diagnosis of In-App Updater Launch Dialog:**
+  - Diagnosed user issue: "clicking download on upside dialog didn't work for the in app updater at launch".
+  - Identified "upside dialog" as phonetic speech-to-text transcription for the launch `ForceUpdateDialog` / "update dialog" pushed by `_showKnownIssues()` in `HomePage`.
+  - Root causes:
+    1. **Missing Intent Queries:** `AndroidManifest.xml` lacked `<intent>` declarations for `https` and `http` schemes under `<queries>`. On Android 11+ (API 30+), `canLaunchUrl(uri)` returned `false`, causing `_openReleasesPage()` to silently drop user clicks without doing anything.
+    2. **Missing In-App Updater Integration:** `ForceUpdateDialog` only attempted to launch an external browser release page instead of executing the in-app update/download through `AppsProvider`.
+    3. **ListTile Ink Splash Assertion:** `CheckboxListTile.adaptive` was wrapped in a decorated container without a `Material` ancestor, triggering Flutter assertion warnings.
+    4. **String Interpolation Error:** Fixed version string was concatenated as `'${tr('fixedIn')} ${widget.issue.fixedInVersion}'` which duplicated placeholders because `fixedIn` is defined as `'Fixed in {}'`.
+- **Implementations & Fixes:**
+  - **In-App Updater Flow in `ForceUpdateDialog`:** Integrated `AppsProvider.checkUpdates([obtainiumId])` and `AppsProvider.downloadAndInstallLatestApps([obtainiumId], scaffoldContext)`. When the user clicks "Update" / "Download", Obtainium+ registers itself if not already tracked, fetches latest metadata, closes the dialog, displays a download notification, and initiates in-app download and installation.
+  - **Fallback & Browser Action:** Fixed `_openReleasesPage()` to use direct `launchUrl(uri, mode: LaunchMode.externalApplication)` with `LaunchMode.platformDefault` fallback and `AppLogger.error` logging. Added a dedicated `IconButton.outlined` with `Icons.open_in_new_rounded` and tooltip `tr('openReleasePage')` so users can also open releases directly.
+  - **Package Visibility Queries:** Added `VIEW` intent filters for `https` and `http` inside `<queries>` in `android/app/src/main/AndroidManifest.xml`.
+  - **Context Fallbacks in `AppsPage`:** Added `?? context` fallbacks for `globalNavigatorKey.currentContext` in `startUpdate` and mass obtain callbacks to prevent unmounted or null contexts from dropping interactive installers.
+  - **CriticalIssueDialog URL Fix:** Updated `CriticalIssueDialog` "Follow Issue" action to use robust `launchUrl` handling.
+- **Verification:**
+  - Created `test/force_update_dialog_test.dart` verifying dialog rendering, issue information, action buttons, and `dontShowAgain` toggle.
+  - Ran full test suite: 28/28 tests passed (100%).
+  - Pushed all commits cleanly to `origin/main` (branch up to date).
+
+---
+
 ## 2026-10-26 — Antigravity: Subpage Non-Uniform Border Fixes, Omnibar & Search Download Flow
 
 - **Subpage Non-Uniform Border Crash Resolutions:**
