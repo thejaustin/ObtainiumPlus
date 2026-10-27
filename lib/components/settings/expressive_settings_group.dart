@@ -139,7 +139,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             duration: Duration(
               milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0,
             ),
-            curve: Curves.easeOutCubic,
+            curve: Easing.emphasizedDecelerate,
             width: badgeSize,
             height: badgeSize,
             decoration: ShapeDecoration(
@@ -280,7 +280,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             duration: Duration(
               milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
             ),
-            curve: Curves.easeOutCubic,
+            curve: Easing.emphasizedDecelerate,
             child: Card(
               elevation: 0,
               margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 6),

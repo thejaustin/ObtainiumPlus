@@ -10,6 +10,7 @@ import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/plus_features_sheet.dart';
+import 'package:obtainium/components/settings/settings_tab_masthead.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
@@ -279,8 +280,9 @@ class SettingsPageState extends State<SettingsPage> {
                             style: Theme.of(context).textTheme.labelSmall
                                 ?.copyWith(
                                   fontWeight: FontWeight.w700,
-                                  color:
-                                      Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
                           ),
                           shape: CardMetrics.shape(
@@ -296,8 +298,9 @@ class SettingsPageState extends State<SettingsPage> {
                                   .withValues(alpha: 0.35),
                             ),
                           ),
-                          backgroundColor:
-                              Theme.of(context).colorScheme.surfaceContainerLow,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerLow,
                           onPressed: () {
                             AppHaptics.selectionClick();
                             showPlusFeaturesSheet(context: context);
@@ -502,22 +505,22 @@ class SettingsPageState extends State<SettingsPage> {
                     child: AnimatedSwitcher(
                       duration: Duration(
                         milliseconds: plusSettings.plusEnableEnhancedAnimations
-                            ? 260
+                            ? 280
                             : 0,
                       ),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
+                      switchInCurve: Easing.emphasizedDecelerate,
+                      switchOutCurve: Easing.emphasizedAccelerate,
                       transitionBuilder:
                           (Widget child, Animation<double> animation) {
                             final bool isForward =
                                 _selectedSectionIndex >= _previousSectionIndex;
                             final beginOffset = _searchQuery.isNotEmpty
                                 ? const Offset(0.0, 0.03)
-                                : Offset(isForward ? 0.05 : -0.05, 0.0);
+                                : Offset(isForward ? 0.04 : -0.04, 0.0);
                             return FadeTransition(
                               opacity: CurvedAnimation(
                                 parent: animation,
-                                curve: Curves.easeOutCubic,
+                                curve: Easing.emphasizedDecelerate,
                               ),
                               child: SlideTransition(
                                 position:
@@ -527,10 +530,19 @@ class SettingsPageState extends State<SettingsPage> {
                                     ).animate(
                                       CurvedAnimation(
                                         parent: animation,
-                                        curve: Curves.easeOutCubic,
+                                        curve: Easing.emphasizedDecelerate,
                                       ),
                                     ),
-                                child: child,
+                                child: ScaleTransition(
+                                  scale: Tween<double>(begin: 0.985, end: 1.0)
+                                      .animate(
+                                        CurvedAnimation(
+                                          parent: animation,
+                                          curve: Easing.emphasizedDecelerate,
+                                        ),
+                                      ),
+                                  child: child,
+                                ),
                               ),
                             );
                           },
@@ -605,24 +617,32 @@ class SettingsPageState extends State<SettingsPage> {
                                       searchQuery: _searchQuery,
                                       androidInfoFuture: _androidInfoFuture,
                                       colorsNameMap:
-                                          const <
-                                            ColorSwatch<Object>,
-                                            String
-                                          >{},
-                                      showAdvancedSettings: plusSettings
-                                          .plusShowAdvancedSettings,
+                                          const <ColorSwatch<Object>, String>{},
+                                      showAdvancedSettings:
+                                          plusSettings.plusShowAdvancedSettings,
                                     ),
                                     const SizedBox(height: 12),
                                     AppsViewSettingsSection(
                                       searchQuery: _searchQuery,
                                       onSetState: (fn) => setState(fn),
-                                      showAdvancedSettings: plusSettings
-                                          .plusShowAdvancedSettings,
+                                      showAdvancedSettings:
+                                          plusSettings.plusShowAdvancedSettings,
                                     ),
                                   ],
                                 ],
                                 if (_searchQuery.isNotEmpty ||
                                     _selectedSectionIndex == 1) ...[
+                                  if (_searchQuery.isEmpty)
+                                    SettingsTabMasthead(
+                                      icon: Icons.system_update_alt_rounded,
+                                      title: tr('settingsTabUpdatesInstall'),
+                                      description: tr(
+                                        'settingsTabUpdatesInstallDesc',
+                                      ),
+                                      accentColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                                   UpdateSettingsSection(
                                     searchQuery: _searchQuery,
                                     showIntervalLabel: _showIntervalLabel,
@@ -641,21 +661,56 @@ class SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ],
                                 if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 2)
+                                    _selectedSectionIndex == 2) ...[
+                                  if (_searchQuery.isEmpty)
+                                    SettingsTabMasthead(
+                                      icon: Icons.notifications_active_rounded,
+                                      title: tr('settingsTabNotifications'),
+                                      description: tr(
+                                        'settingsTabNotificationsDesc',
+                                      ),
+                                      accentColor: Theme.of(
+                                        context,
+                                      ).colorScheme.tertiary,
+                                    ),
                                   NotificationSettingsSection(
                                     searchQuery: _searchQuery,
                                     showAdvancedSettings:
                                         plusSettings.plusShowAdvancedSettings,
                                   ),
+                                ],
                                 if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 3)
+                                    _selectedSectionIndex == 3) ...[
+                                  if (_searchQuery.isEmpty)
+                                    SettingsTabMasthead(
+                                      icon: Icons.tune_rounded,
+                                      title: tr('settingsTabBehavior'),
+                                      description: tr(
+                                        'settingsTabBehaviorDesc',
+                                      ),
+                                      accentColor: Theme.of(
+                                        context,
+                                      ).colorScheme.secondary,
+                                    ),
                                   AppBehaviorSection(
                                     searchQuery: _searchQuery,
                                     showAdvancedSettings:
                                         plusSettings.plusShowAdvancedSettings,
                                   ),
+                                ],
                                 if (_searchQuery.isNotEmpty ||
                                     _selectedSectionIndex == 4) ...[
+                                  if (_searchQuery.isEmpty)
+                                    SettingsTabMasthead(
+                                      icon: Icons.code_rounded,
+                                      title: tr('settingsTabAdvancedDebug'),
+                                      description: tr(
+                                        'settingsTabAdvancedDebugDesc',
+                                      ),
+                                      accentColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                                   AdvancedSettingsSection(
                                     searchQuery: _searchQuery,
                                     showAdvancedSettings:
@@ -1104,9 +1159,9 @@ class _SettingsFloatingSectionDock extends StatelessWidget {
                       onTap: () => onSelect(i),
                       child: AnimatedContainer(
                         duration: Duration(
-                          milliseconds: animsEnabled ? 220 : 0,
+                          milliseconds: animsEnabled ? 240 : 0,
                         ),
-                        curve: Curves.easeOutCubic,
+                        curve: Easing.emphasizedDecelerate,
                         constraints: const BoxConstraints(minHeight: 40),
                         padding: const EdgeInsets.symmetric(
                           vertical: 8,

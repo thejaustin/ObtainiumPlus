@@ -7,6 +7,32 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Fluid M3E Tab Transitions, Section Hero Mastheads & Expressive Polish
+
+- **Material 3 Expressive (M3E) Tab Motion & Organic Transitions (`SettingsPage`):**
+  - **Fluid Easing Curves:** Upgraded `AnimatedSwitcher` section tab transitions to use Google's M3 `Easing.emphasizedDecelerate` for forward transitions and `Easing.emphasizedAccelerate` for exit transitions.
+  - **Spatial Scale & Slide Transition:** Integrated a subtle spatial scale animation (`0.985 -> 1.0`) layered alongside directional horizontal slide (`Offset(±0.04, 0.0) -> Offset.zero`) and opacity crossfade, creating an organic physical sense of depth and fluid settling when switching between settings sections.
+- **Settings Section Hero Mastheads (`SettingsTabMasthead`):**
+  - **New Component (`lib/components/settings/settings_tab_masthead.dart`):** Created a dedicated, reusable M3 Expressive masthead card featuring:
+    - Accent-tinted squircle badge container (`CardMetrics.inner`) with prominent category icon.
+    - Radial gradient ambient aura glow in the top-right corner matching the section's theme accent.
+    - Bold section typography (`titleMedium`, `w700`, `-0.2` letter spacing) and multi-line descriptive summary.
+    - Adaptive surface container low coloring with glassmorphism support (`plusEnableGlassmorphism`).
+  - **Full Section Identity across Tabs 1–4:**
+    - *Updates & Installation (Tab 1):* `Icons.system_update_alt_rounded` with `settingsTabUpdatesInstall` & `settingsTabUpdatesInstallDesc`.
+    - *Notifications (Tab 2):* `Icons.notifications_active_rounded` with `settingsTabNotifications` & `settingsTabNotificationsDesc` (tertiary accent).
+    - *Behavior (Tab 3):* `Icons.tune_rounded` with `settingsTabBehavior` & `settingsTabBehaviorDesc` (secondary accent).
+    - *Advanced & Debug (Tab 4):* `Icons.code_rounded` with `settingsTabAdvancedDebug` & `settingsTabAdvancedDebugDesc`.
+  - **Clean Search Mode Focus:** When searching (`_searchQuery.isNotEmpty`), mastheads are automatically hidden to maximize screen real estate and immediately highlight matched settings.
+- **Expressive Settings Groups & Floating Dock Polish:**
+  - **Fluid Group Header Animations (`ExpressiveSettingsGroup`):** Upgraded expanding group icon and container animations to `Easing.emphasizedDecelerate` for a tactile, responsive feel.
+  - **Fluid Floating Dock Expansion (`_SettingsFloatingSectionDock`):** Upgraded dock item width expansion to 240ms with `Easing.emphasizedDecelerate`.
+- **Verification & Test Suite:**
+  - Ran full test suite across `settings_page_test.dart`, `search_and_download_test.dart`, `plus_settings_test.dart`, and `translation_keys_used_test.dart`.
+  - 100% passing rate (28/28 tests passing). Formatted all modified files with `dart format`.
+
+---
+
 ## 2026-10-27 — Antigravity: Settings Submenu Architecture, Subpages Modernization, App Grid Design Language & Wiring Audit
 
 - **Settings Architecture & Submenu Modernization:**
