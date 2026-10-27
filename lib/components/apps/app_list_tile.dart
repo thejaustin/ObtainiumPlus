@@ -899,19 +899,21 @@ class _AppListTileState extends State<AppListTile>
                                                 ),
                                               ),
                                             if (showAuthor && showVersion)
-                                              Text(
-                                                ' • ',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      color: colorScheme
-                                                          .onSurfaceVariant
-                                                          .withValues(
-                                                            alpha: 0.6,
+                                              hasUpdate
+                                                  ? const SizedBox(width: 6)
+                                                  : Text(
+                                                      ' • ',
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .bodySmall
+                                                          ?.copyWith(
+                                                            color: colorScheme
+                                                                .onSurfaceVariant
+                                                                .withValues(
+                                                                  alpha: 0.6,
+                                                                ),
                                                           ),
                                                     ),
-                                              ),
                                             if (showVersion)
                                               Flexible(
                                                 child: hasUpdate
@@ -1369,6 +1371,11 @@ class _AppListTileState extends State<AppListTile>
     VoidCallback? onTriggerUpdate,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final hasDiff = inst.isNotEmpty && inst != '?' && inst != latest;
+    final versionDisplay = hasDiff
+        ? '$inst → $latest'
+        : (latest.isNotEmpty && latest != '?' ? latest : tr('update'));
+
     final pill = Container(
       padding: EdgeInsets.symmetric(
         horizontal: expressiveAction ? 9 : 7,
@@ -1410,7 +1417,7 @@ class _AppListTileState extends State<AppListTile>
           const SizedBox(width: 3),
           Flexible(
             child: Text(
-              '$inst → $latest',
+              versionDisplay,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
@@ -1428,22 +1435,19 @@ class _AppListTileState extends State<AppListTile>
       ),
     );
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: expressiveAction && onTriggerUpdate != null
-          ? ScaleTouchWrapper(
-              scaleDownFactor: 0.92,
-              hapticOnPressDown: true,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  AppHaptics.mediumImpact();
-                  onTriggerUpdate();
-                },
-                child: pill,
-              ),
-            )
-          : pill,
-    );
+    return expressiveAction && onTriggerUpdate != null
+        ? ScaleTouchWrapper(
+            scaleDownFactor: 0.92,
+            hapticOnPressDown: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                AppHaptics.mediumImpact();
+                onTriggerUpdate();
+              },
+              child: pill,
+            ),
+          )
+        : pill;
   }
 }

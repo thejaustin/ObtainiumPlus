@@ -7,6 +7,19 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: App Grid & List Tile Hierarchy Polish & Zero-Overlap Refinements
+
+- **App Grid Tile Hierarchy & Elimination of Redundant Author (`AppGridTile`):**
+  - **Eliminated Double-Author Bug:** Fixed duplicate author rendering on compact tiles where author appeared both under the title and inside the bottom status pill. Now on compact tiles, the upper title has dedicated vertical breathing room while the author is cleanly joined in the footer pill.
+  - **Clean Version Transition Text:** In `_buildUpdateVersionLine`, replaced stray leading `→ ` arrow with clean latest version rendering when `installed` is null, empty, or equal to `latest`.
+- **App List Tile Spacing & Pill Refinements (`AppListTile`):**
+  - **Bullet Point Collision Guard:** Removed awkward `' • '` bullet colliding immediately before the version update pill when both author and version update pill are shown, replacing with clean `SizedBox(width: 6)` spacing.
+  - **Version Transition Simplification:** Simplified `_buildVersionUpdatePill` to only show `inst → latest` when a real installed difference exists, eliminating `? → 1.2.0` or identical versions in favor of clean single version display with the update icon.
+- **Verification:**
+  - Full test suite verified and all unit tests passing. Code formatted cleanly with `dart format`.
+
+---
+
 ## 2026-10-27 — Antigravity: Full Upstream 1.7.2 & 1.7.3 Merge, Shizuku Ownership, Version Regex & Store Overhaul
 
 - **Full Parity with Upstream 1.7.2 & 1.7.3 (`fcd1807c`):**

@@ -635,6 +635,7 @@ class _AppGridTileState extends State<AppGridTile>
               ),
               if (viewSettings.displayShowAuthor &&
                   widget.appInMemory.author.isNotEmpty &&
+                  !isCompactTile &&
                   !isUltraCompactTile &&
                   !isDownloading) ...[
                 const SizedBox(height: 1.5),
@@ -644,7 +645,7 @@ class _AppGridTileState extends State<AppGridTile>
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: isCompactTile ? 9.5 : 10.5,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w500,
                     letterSpacing: -0.1,
                     color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
@@ -1010,6 +1011,11 @@ class _AppGridTileState extends State<AppGridTile>
     final app = widget.appInMemory.app;
     final latest = app.latestVersion;
     final installed = app.installedVersion;
+    final hasDiff =
+        installed != null &&
+        installed.isNotEmpty &&
+        installed != latest &&
+        installed != '?';
     final accent = widget.isAmbiguous
         ? colorScheme.tertiary
         : colorScheme.primary;
@@ -1023,17 +1029,18 @@ class _AppGridTileState extends State<AppGridTile>
       TextSpan(
         style: mono,
         children: [
-          if (installed != null && installed.isNotEmpty && installed != latest)
+          if (hasDiff) ...[
             TextSpan(
               text: '$installed ',
               style: TextStyle(
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ),
-          TextSpan(
-            text: '→ ',
-            style: TextStyle(color: accent.withValues(alpha: 0.8)),
-          ),
+            TextSpan(
+              text: '→ ',
+              style: TextStyle(color: accent.withValues(alpha: 0.8)),
+            ),
+          ],
           TextSpan(
             text: latest.isNotEmpty ? latest : tr('update'),
             style: TextStyle(color: accent, fontWeight: FontWeight.w700),
