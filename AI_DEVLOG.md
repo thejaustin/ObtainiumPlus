@@ -19,6 +19,7 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - **Dynamic Chip Grid Adaptability:** On wide screens ($\ge 540\,\text{dp}$), connected items flow into a responsive 2-column squircle grid; on compact devices, renders a clean, accessible list with tactile scale touches (`AppHaptics.selectionClick`).
 - **Visually Connected Dependent Settings (`lib/components/settings/connected_setting_container.dart`):**
   - **Nested Setting Hierarchy Rail:** Created `ConnectedSettingContainer` featuring a prominent leading vertical accent rail ($3.5\,\text{dp}$ width in primary/tertiary accent), soft container tint, squircle rounding (`CardMetrics.inner`), and optional subsection routing label (`subdirectory_arrow_right_rounded`).
+  - **Stack Layout Architecture (Intrinsic Dimensions Fix):** Built using an unconstrained `Stack` with `Positioned.fill` background and `Positioned(top: 0, bottom: 0, width: 3.5)` leading rail rather than `IntrinsicHeight`, preventing assertion failures when child sub-settings contain `LayoutBuilder`.
   - **Notification Enhancements:** Wrapped notification digest, quiet hours, and schedule settings in a connected container anchored to `plusEnableNotificationEnhancements`.
   - **Swipe Gestures & Ban Warnings:** Connected swipe right/left action dropdowns directly to `enableSwipeGestures`, and anchored the threshold slider to `plusEnableBanWarnings`.
 - **Search Empty State Connected Quick Jumps (`lib/pages/settings.dart`):**

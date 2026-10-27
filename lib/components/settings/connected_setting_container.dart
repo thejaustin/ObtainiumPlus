@@ -48,79 +48,91 @@ class ConnectedSettingContainer extends StatelessWidget {
             isCompact ? 12.0 : 16.0,
             isCompact ? 6.0 : 8.0,
           ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: isGlass
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.35)
-              : colorScheme.surfaceContainerHighest.withValues(
-                  alpha: isM3E ? 0.45 : 0.30,
+      child: Stack(
+        children: [
+          // Background container with rounded corners and subtle border
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: isGlass
+                    ? colorScheme.surfaceContainerHighest.withValues(
+                        alpha: 0.35,
+                      )
+                    : colorScheme.surfaceContainerHighest.withValues(
+                        alpha: isM3E ? 0.45 : 0.30,
+                      ),
+                borderRadius: BorderRadius.circular(cardRadius),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.25 : 0.45,
+                  ),
+                  width: 0.8,
                 ),
-          borderRadius: BorderRadius.circular(cardRadius),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(
-              alpha: theme.brightness == Brightness.dark ? 0.25 : 0.45,
+              ),
             ),
-            width: 0.8,
           ),
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(cardRadius),
-          child: IntrinsicHeight(
-            child: Row(
+          // Leading accent connector rail clipped to container's left radius
+          Positioned(
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: 3.5,
+            child: ClipRRect(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(cardRadius),
+                bottomLeft: Radius.circular(cardRadius),
+              ),
+              child: ColoredBox(
+                color: resolvedAccent.withValues(alpha: isM3E ? 0.80 : 0.60),
+              ),
+            ),
+          ),
+          // Foreground content
+          Padding(
+            padding: const EdgeInsets.only(left: 3.5),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Leading accent connector rail
-                Container(
-                  width: 3.5,
-                  color: resolvedAccent.withValues(alpha: isM3E ? 0.80 : 0.60),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (label != null)
-                        Padding(
-                          padding: EdgeInsets.fromLTRB(
-                            isCompact ? 12.0 : 14.0,
-                            isCompact ? 6.0 : 8.0,
-                            isCompact ? 12.0 : 14.0,
-                            2.0,
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.subdirectory_arrow_right_rounded,
-                                size: 14,
-                                color: resolvedAccent,
-                              ),
-                              const SizedBox(width: 6),
-                              Expanded(
-                                child: Text(
-                                  label!,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: resolvedAccent,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ),
-                            ],
+                if (label != null)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      isCompact ? 12.0 : 14.0,
+                      isCompact ? 6.0 : 8.0,
+                      isCompact ? 12.0 : 14.0,
+                      2.0,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.subdirectory_arrow_right_rounded,
+                          size: 14,
+                          color: resolvedAccent,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            label!,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: resolvedAccent,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.3,
+                            ),
                           ),
                         ),
-                      Padding(
-                        padding: padding ?? EdgeInsets.zero,
-                        child: child,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                Padding(
+                  padding: padding ?? EdgeInsets.zero,
+                  child: child,
                 ),
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
