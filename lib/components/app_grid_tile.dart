@@ -635,7 +635,6 @@ class _AppGridTileState extends State<AppGridTile>
               ),
               if (viewSettings.displayShowAuthor &&
                   widget.appInMemory.author.isNotEmpty &&
-                  !isCompactTile &&
                   !isUltraCompactTile &&
                   !isDownloading) ...[
                 const SizedBox(height: 1.5),
@@ -645,7 +644,7 @@ class _AppGridTileState extends State<AppGridTile>
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10.5,
+                    fontSize: isCompactTile ? 9.5 : 10.5,
                     fontWeight: FontWeight.w500,
                     letterSpacing: -0.1,
                     color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
@@ -671,7 +670,7 @@ class _AppGridTileState extends State<AppGridTile>
                   colorScheme,
                   viewSettings,
                   plusSettings,
-                  includeAuthor: isCompactTile,
+                  includeAuthor: false,
                 ),
               ],
             ],

@@ -1,14 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:easy_localization/src/localization.dart';
 import 'package:easy_localization/src/translations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
-import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -117,5 +115,58 @@ void main() {
     // Verify App Three and App One exist
     expect(find.text('App Three'), findsOneWidget);
     expect(find.text('App One'), findsOneWidget);
+
+    // Verify Reorder button exists for pinned section with > 1 pinned apps
+    expect(find.text('Reorder'), findsOneWidget);
+
+    // Tap Reorder button to enter reorder mode
+    await tester.tap(find.text('Reorder'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Verify button switches to "Done"
+    expect(find.text('Done'), findsOneWidget);
+
+    // Tap Done to exit reorder mode
+    await tester.tap(find.text('Done'));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    // Verify button switches back to "Reorder"
+    expect(find.text('Reorder'), findsOneWidget);
+
+    // Verify author display when enabled
+    viewSettings.displayShowAuthor = true;
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AppsProvider>.value(
+            value: _TestAppsProvider(),
+          ),
+          ChangeNotifierProvider<PlusSettingsProvider>.value(
+            value: plusSettings,
+          ),
+          ChangeNotifierProvider<ViewSettingsProvider>.value(
+            value: viewSettings,
+          ),
+          Provider<SourceProvider>.value(value: SourceProvider()),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: CustomScrollView(
+              slivers: [
+                AppGridView(
+                  apps: apps,
+                  onAppTap: (_) {},
+                  selectedAppIds: const {},
+                  onToggleSelected: (_) {},
+                  updateAppIds: const {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('Author'), findsWidgets);
   });
 }

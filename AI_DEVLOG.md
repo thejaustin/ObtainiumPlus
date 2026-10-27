@@ -7,6 +7,24 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Modal Details Sheet Fix, 1-Tap Tag Editing & Grid Drag Reorder Polish
+
+- **Modal App Details Sheet Bounce Dismissal Fix (`lib/utils/modal_utils.dart`, `lib/pages/app.dart` — Issue #330):**
+  - **Clamping Modal Physics:** Replaced `BouncingScrollPhysics` with `ClampingScrollPhysics` when `widget.isModal` is active in `AppPage`. Overscroll bounces on iOS/smooth-scroll devices were producing negative scroll deltas at the top of the sheet, which `DraggableScrollableSheet` misread as downward drag dismissal, immediately popping the bottom sheet.
+  - **Sheet Snapping Geometry:** Added `snap: true` and `snapSizes: [minChildSize, initialChildSize]` to `showDraggableModalBottomSheet`, preventing micro-touch jitter or release velocity from falsely closing the sheet.
+  - **Hero Mode Isolation:** Wrapped app icon in `HeroMode(enabled: !widget.isModal)` inside `AppPage` to prevent hero flight assertions and tag collisions during modal bottom sheet presentations.
+- **1-Tap Quick Tag Management (`lib/pages/app.dart` — Issue #340):**
+  - **Header Tag Strip:** Added interactive Material 3 Expressive chip strip directly into the `AppPage` header underneath the app ID/URL badge. Displays all assigned tags as stadium pills, followed by an immediate `+ Tag` or `+ Edit Tags` `ActionChip`. Users can edit tags in 1 tap without scrolling through changelogs, hashes, or technical metadata.
+  - **Overflow Menu Option:** Added `editTags` with `Icons.label_outline_rounded` to the 3-dots action bar menu.
+- **Home Grid Reorder Mode & Typography Polish (`lib/components/apps/app_grid_view.dart`, `lib/components/app_grid_tile.dart`):**
+  - **Dedicated Reorder Mode:** Added `_isReordering` state toggle ("Reorder" ⇄ "Done" stadium pill) in the pinned section header. In normal mode, long press triggers `AppActionsContextMenu` instantly with zero gesture arena competition. In reorder mode, tiles render with accent borders, circular drag indicator badges, and 80ms draggable responsiveness.
+  - **Compact Tile Metadata Visibility:** Ensured author metadata remains visible (9.5sp font with ellipsis) on compact tiles even when an update is available, rather than being omitted. Eliminated redundant author duplication in the up-to-date pill.
+- **Translations & Test Suite:**
+  - Synchronized `"reorder"` translation key across all 32 locale JSON files (`ar.json`, `de.json`, `en.json`, `es.json`, `zh.json`, etc.).
+  - Updated `test/app_grid_view_test.dart` to verify reorder toggling, drag states, and metadata rendering. All 531 tests pass cleanly.
+
+---
+
 ## 2026-10-27 — Antigravity: Connected Settings Hub & Expressive Nested Containers
 
 - **Material 3 Expressive Connected Settings Bar (`lib/components/settings/connected_settings_bar.dart`):**

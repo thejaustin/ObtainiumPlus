@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
@@ -35,7 +36,7 @@ class AppGridView extends StatefulWidget {
 }
 
 class _AppGridViewState extends State<AppGridView> {
-  String? _draggingAppId;
+  bool _isReordering = false;
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +97,7 @@ class _AppGridViewState extends State<AppGridView> {
       required IconData icon,
       required String title,
       required int count,
+      Widget? trailingAction,
       IconData? trailingHintIcon,
       String? tooltip,
     }) {
@@ -139,7 +141,9 @@ class _AppGridViewState extends State<AppGridView> {
               ),
             ),
             const Spacer(),
-            if (trailingHintIcon != null)
+            if (trailingAction != null)
+              trailingAction
+            else if (trailingHintIcon != null)
               Tooltip(
                 message: tooltip ?? tr('pin'),
                 child: Icon(
@@ -193,8 +197,8 @@ class _AppGridViewState extends State<AppGridView> {
         },
       );
 
-      // In multi-selection mode, disable dragging so selection taps are instant
-      if (widget.selectedAppIds.isNotEmpty || !isPinned) {
+      // In multi-selection mode or when not in reorder mode, disable dragging so selection taps and context menu long presses are instant
+      if (widget.selectedAppIds.isNotEmpty || !isPinned || !_isReordering) {
         return RepaintBoundary(key: ValueKey(app.app.id), child: tile);
       }
 
@@ -236,35 +240,48 @@ class _AppGridViewState extends State<AppGridView> {
                 curve: Curves.easeOutCubic,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(cardBorderRadius),
-                  border: isTarget
-                      ? Border.all(color: colorScheme.primary, width: 2.5)
-                      : null,
+                  border: Border.all(
+                    color: isTarget
+                        ? colorScheme.primary
+                        : colorScheme.primary.withValues(alpha: 0.45),
+                    width: isTarget ? 2.5 : 1.2,
+                  ),
                 ),
-                child: tile,
+                child: Stack(
+                  children: [
+                    tile,
+                    Positioned(
+                      top: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.drag_indicator_rounded,
+                          size: 13,
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             );
 
             return LongPressDraggable<AppInMemory>(
               data: app,
-              delay: const Duration(milliseconds: 260),
+              delay: const Duration(milliseconds: 80),
               onDragStarted: () {
                 AppHaptics.mediumImpact();
-                setState(() => _draggingAppId = app.app.id);
-              },
-              onDragEnd: (_) {
-                setState(() => _draggingAppId = null);
-              },
-              onDraggableCanceled: (velocity, offset) {
-                setState(() => _draggingAppId = null);
-                // If canceled without significant motion, treat as normal long press context menu
-                if (velocity.pixelsPerSecond.distance < 60) {
-                  AppHaptics.heavyImpact();
-                  AppActionsContextMenu.show(
-                    context,
-                    app,
-                    onEnterMultiSelect: () => widget.onToggleSelected(app.app),
-                  );
-                }
               },
               feedback: Material(
                 elevation: 12,
@@ -328,8 +345,44 @@ class _AppGridViewState extends State<AppGridView> {
               icon: Icons.star_rounded,
               title: tr('pin'),
               count: pinnedApps.length,
-              trailingHintIcon: pinnedApps.length > 1
-                  ? Icons.drag_indicator_rounded
+              trailingAction: pinnedApps.length > 1
+                  ? ScaleTouchWrapper(
+                      scaleDownFactor: 0.94,
+                      child: FilledButton.tonalIcon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          setState(() => _isReordering = !_isReordering);
+                        },
+                        icon: Icon(
+                          _isReordering
+                              ? Icons.check_circle_rounded
+                              : Icons.drag_indicator_rounded,
+                          size: 15,
+                        ),
+                        label: Text(
+                          _isReordering ? tr('done') : tr('reorder'),
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: FilledButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 9,
+                            vertical: 0,
+                          ),
+                          backgroundColor: _isReordering
+                              ? colorScheme.primaryContainer
+                              : colorScheme.surfaceContainerHighest.withValues(
+                                  alpha: 0.65,
+                                ),
+                          foregroundColor: _isReordering
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    )
                   : null,
             ),
           ),

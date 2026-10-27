@@ -34,6 +34,8 @@ Future<T?> showDraggableModalBottomSheet<T>({
         minChildSize: minChildSize,
         maxChildSize: maxChildSize,
         expand: false,
+        snap: true,
+        snapSizes: [minChildSize, initialChildSize],
         builder: (context, scrollController) {
           return ClipRRect(
             borderRadius: BorderRadius.vertical(top: sheetRadius),

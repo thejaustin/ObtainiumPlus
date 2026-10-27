@@ -1477,9 +1477,11 @@ class _AppPageState extends State<AppPage> {
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Hero(
-                  tag: 'app_icon_${widget.appId}',
-                  child: Container(
+                HeroMode(
+                  enabled: !widget.isModal,
+                  child: Hero(
+                    tag: 'app_icon_${widget.appId}',
+                    child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: app?.icon != null
@@ -1538,7 +1540,8 @@ class _AppPageState extends State<AppPage> {
                         : AppIconShimmer(size: iconSize, borderRadius: 24),
                   ),
                 ),
-              ],
+              ),
+            ],
             );
           },
         ),
@@ -1656,6 +1659,78 @@ class _AppPageState extends State<AppPage> {
             ),
           ),
         ),
+        if (plusSettings.plusEnableTags && app != null) ...[
+          const SizedBox(height: 10),
+          Center(
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                ...app.app.tags.map(
+                  (tag) => Chip(
+                    label: Text(
+                      tag,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color:
+                            Theme.of(context).colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    avatar: Icon(
+                      Icons.label_rounded,
+                      size: 13,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    backgroundColor: Theme.of(context)
+                        .colorScheme
+                        .secondaryContainer
+                        .withValues(alpha: 0.5),
+                    side: BorderSide(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .secondary
+                          .withValues(alpha: 0.25),
+                      width: 0.8,
+                    ),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.add_rounded, size: 14),
+                  label: Text(
+                    app.app.tags.isEmpty ? tr('editTags') : tr('add'),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  shape: const StadiumBorder(),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  onPressed: () async {
+                    AppHaptics.selectionClick();
+                    final allTags = getAllTagsFromApps(
+                      appsProvider.apps.entries.toList(),
+                    );
+                    final result = await showTagEditor(
+                      context: context,
+                      currentTags: app.app.tags,
+                      allTags: allTags,
+                    );
+                    if (result != null && mounted) {
+                      app.app.tags = result;
+                      appsProvider.saveApps([app.app]);
+                      setState(() {});
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
         getInfoColumn(),
         if (app != null) AppVersionHistoryWidget(app: app!.app),
 
@@ -2146,6 +2221,24 @@ class _AppPageState extends State<AppPage> {
                             setState(() {});
                           }
                           break;
+                        case 'editTags':
+                          if (app != null) {
+                            AppHaptics.selectionClick();
+                            final allTags = getAllTagsFromApps(
+                              appsProvider.apps.entries.toList(),
+                            );
+                            final result = await showTagEditor(
+                              context: context,
+                              currentTags: app.app.tags,
+                              allTags: allTags,
+                            );
+                            if (result != null && mounted) {
+                              app.app.tags = result;
+                              appsProvider.saveApps([app.app]);
+                              setState(() {});
+                            }
+                          }
+                          break;
                         case 'remove':
                           appsProvider
                               .removeAppsWithModal(
@@ -2245,6 +2338,16 @@ class _AppPageState extends State<AppPage> {
                                     ? tr('enableApp')
                                     : tr('disableApp'),
                               ),
+                              dense: true,
+                            ),
+                          ),
+                        if (plusSettings.plusEnableTags && app != null)
+                          PopupMenuItem(
+                            value: 'editTags',
+                            enabled: !isUpdating,
+                            child: ListTile(
+                              leading: const Icon(Icons.label_outline_rounded),
+                              title: Text(tr('editTags')),
                               dense: true,
                             ),
                           ),
@@ -2394,7 +2497,7 @@ class _AppPageState extends State<AppPage> {
               key: PageStorageKey<String>('app_page_scroll_${widget.appId}'),
               controller: widget.scrollController,
               physics: widget.isModal
-                  ? const BouncingScrollPhysics()
+                  ? const ClampingScrollPhysics()
                   : plusSettings.scrollPhysics,
               slivers: [
                 SliverToBoxAdapter(
