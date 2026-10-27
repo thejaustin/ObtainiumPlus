@@ -59,10 +59,12 @@ $_badge
     expect(byKind[ChangeKind.docs], ['Wiki links']);
     expect(byKind[ChangeKind.feature], ['Scroll-morphing FAB']);
     // Sections come out in enum order.
-    expect(
-      sections.map((s) => s.kind).toList(),
-      [ChangeKind.feature, ChangeKind.fix, ChangeKind.ui, ChangeKind.docs],
-    );
+    expect(sections.map((s) => s.kind).toList(), [
+      ChangeKind.feature,
+      ChangeKind.fix,
+      ChangeKind.ui,
+      ChangeKind.docs,
+    ]);
   });
 
   test('"build" or "guide" in a heading is not mistaken for UI', () {

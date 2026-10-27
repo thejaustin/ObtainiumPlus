@@ -898,8 +898,7 @@ class _AppListTileState extends State<AppListTile>
                                                       ),
                                                 ),
                                               ),
-                                            if (showAuthor &&
-                                                showVersion)
+                                            if (showAuthor && showVersion)
                                               Text(
                                                 ' • ',
                                                 style: Theme.of(context)
@@ -997,16 +996,16 @@ class _AppListTileState extends State<AppListTile>
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                   style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      fontSize: 11,
-                                                      color: colorScheme
-                                                          .onSurfaceVariant
-                                                          .withValues(
-                                                            alpha: 0.75,
-                                                          ),
-                                                    ),
+                                                      .textTheme
+                                                      .bodySmall
+                                                      ?.copyWith(
+                                                        fontSize: 11,
+                                                        color: colorScheme
+                                                            .onSurfaceVariant
+                                                            .withValues(
+                                                              alpha: 0.75,
+                                                            ),
+                                                      ),
                                                 ),
                                               ),
                                           ],

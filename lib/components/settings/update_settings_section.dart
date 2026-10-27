@@ -173,15 +173,16 @@ class UpdateSettingsSection extends StatelessWidget {
         if (hasConstraints)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('sectionDeviceOptions'),
-            description: isSearching ? null : tr('bgUpdateRequiresWifiDescription'),
+            description: isSearching
+                ? null
+                : tr('bgUpdateRequiresWifiDescription'),
             persistKey: 'updates_constraints',
             icon: Icons.battery_charging_full_rounded,
             isExpandable: !isSearching,
             initiallyExpanded: true,
             children: constraintsChildren,
           ),
-        if (hasConstraints && hasPerformance)
-          const SizedBox(height: 12),
+        if (hasConstraints && hasPerformance) const SizedBox(height: 12),
         if (hasPerformance)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('sectionUpdateOptions'),
@@ -637,15 +638,14 @@ class UpdateSettingsSection extends StatelessWidget {
                             ),
                             child: Text(
                               tr('beta'),
-                              style: Theme.of(
-                                context,
-                              ).textTheme.labelSmall?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onTertiaryContainer,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onTertiaryContainer,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                  ),
                             ),
                           ),
                         ],

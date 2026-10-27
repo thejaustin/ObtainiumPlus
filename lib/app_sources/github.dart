@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:obtainium/utils/min_update_age.dart';
-import 'package:obtainium/utils/source_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/utils/string_compare.dart';
@@ -34,6 +33,14 @@ DateTime? newestAssetDateFromRelease(dynamic release) {
   dates.sort((a, b) => b.compareTo(a));
   return dates.first;
 }
+
+bool isReleaseExcluded(
+  dynamic release, {
+  required bool includePrereleases,
+  required bool includeDrafts,
+}) =>
+    (!includePrereleases && release['prerelease'] == true) ||
+    (!includeDrafts && release['draft'] == true);
 
 class GitHub extends AppSource {
   static const int _fallbackCacheSeconds = 3600;
@@ -95,6 +102,13 @@ class GitHub extends AppSource {
       GeneratedFormSwitch(
         'includePrereleases',
         label: tr('includePrereleases'),
+        value: false,
+      ),
+    ],
+    [
+      GeneratedFormSwitch(
+        'includeDrafts',
+        label: tr('includeDrafts'),
         value: false,
       ),
     ],
@@ -609,11 +623,11 @@ class GitHub extends AppSource {
         additionalSettings['invertReleaseNotesFilter'] == true;
     for (int i = 0; i < releases.length; i++) {
       if (!fallbackToOlderReleases && i > releaseSkipped) break;
-      if (!includePrereleases && releases[i]['prerelease'] == true) {
-        releaseSkipped++;
-        continue;
-      }
-      if (releases[i]['draft'] == true) {
+      if (isReleaseExcluded(
+        releases[i],
+        includePrereleases: includePrereleases,
+        includeDrafts: additionalSettings['includeDrafts'] == true,
+      )) {
         releaseSkipped++;
         continue;
       }

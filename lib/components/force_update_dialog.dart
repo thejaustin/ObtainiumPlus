@@ -83,12 +83,14 @@ class _ForceUpdateDialogState extends State<ForceUpdateDialog> {
       showMessage(tr('downloadingX', args: ['Obtainium+']), scaffoldContext);
 
       // Trigger download and install in-app
-      await appsProvider.downloadAndInstallLatestApps(
-        [obtainiumId],
-        scaffoldContext,
-      );
+      await appsProvider.downloadAndInstallLatestApps([
+        obtainiumId,
+      ], scaffoldContext);
     } catch (e) {
-      AppLogger.error(e, message: 'In-app update failed, opening releases page');
+      AppLogger.error(
+        e,
+        message: 'In-app update failed, opening releases page',
+      );
       if (mounted) {
         setState(() => _isUpdating = false);
       }

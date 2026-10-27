@@ -27,9 +27,6 @@ void main() {
       ),
       'Documents/obtainium-export.json',
     );
-    expect(
-      readableTreeUri(Uri.parse('file:///sdcard/x')),
-      'file:///sdcard/x',
-    );
+    expect(readableTreeUri(Uri.parse('file:///sdcard/x')), 'file:///sdcard/x');
   });
 }

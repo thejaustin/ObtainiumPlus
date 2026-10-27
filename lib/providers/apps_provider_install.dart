@@ -1574,6 +1574,7 @@ extension AppsProviderInstall on AppsProvider {
               needsBGWorkaround: true,
               installOptions: {
                 'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+                'requestUpdateOwnership': appEntry.installedInfo == null,
               },
             ),
             failureLogPrefix: 'Background install threw for $id',
@@ -1589,6 +1590,7 @@ extension AppsProviderInstall on AppsProvider {
             installContext,
             installOptions: {
               'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+              'requestUpdateOwnership': appEntry.installedInfo == null,
             },
           );
         }
@@ -1611,6 +1613,7 @@ extension AppsProviderInstall on AppsProvider {
             installContext,
             installOptions: {
               'shizukuPretendToBeGooglePlay': shizukuPretendToBeGooglePlay,
+              'requestUpdateOwnership': appEntry.installedInfo == null,
             },
           );
         }

@@ -56,11 +56,17 @@ class AppInfoDialog extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            app.app.url,
-            style: textTheme.labelSmall?.copyWith(
-              decoration: TextDecoration.underline,
-              color: colorScheme.primary,
+          Tooltip(
+            message: tr('copyToClipboard'),
+            child: GestureDetector(
+              onLongPress: () {
+                copyToClipboard(context, app.app.url);
+              },
+              child: LinkText(
+                text: app.app.url,
+                url: app.app.url,
+                style: textTheme.labelSmall,
+              ),
             ),
           ),
           Text(

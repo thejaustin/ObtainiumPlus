@@ -17,6 +17,7 @@ import 'package:html/dom.dart';
 import 'package:http/http.dart';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/models/app.dart';
+import 'package:obtainium/models/typed_settings.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/version_history_entry.dart';
@@ -200,6 +201,19 @@ String? extractVersion(
   versionExtractionRegEx,
   matchGroupString,
   stringToCheck,
+);
+
+/// Delegates to [VersionService.extractVersionWithGlobalDefault].
+String? extractVersionWithGlobalDefault(
+  Map<String, dynamic> additionalSettings,
+  SettingsProvider settingsProvider,
+  String stringToCheck, {
+  bool allowGlobalDefault = true,
+}) => VersionService().extractVersionWithGlobalDefault(
+  additionalSettings,
+  settingsProvider,
+  stringToCheck,
+  allowGlobalDefault: allowGlobalDefault,
 );
 
 /// Delegates to [ApkFilterService.filterApks].
@@ -474,11 +488,16 @@ class SourceProvider {
       };
     }
 
+    final settingsProvider = SettingsProvider();
+    await settingsProvider.initializeSettings();
     if (!source.suppressStandardVersionExtraction) {
-      final String? extractedVersion = extractVersion(
-        additionalSettings['versionExtractionRegEx'] as String?,
-        additionalSettings['matchGroupToUse'] as String?,
+      final String? extractedVersion = extractVersionWithGlobalDefault(
+        additionalSettings,
+        settingsProvider,
         apk.version,
+        allowGlobalDefault: !source.excludeCommonSettingKeys.contains(
+          'versionExtractionRegEx',
+        ),
       );
       if (extractedVersion != null) {
         apk = apk.copyWith(version: extractedVersion);
@@ -491,12 +510,10 @@ class SourceProvider {
         version: apk.releaseDate!.microsecondsSinceEpoch.toString(),
       );
     }
-    final settingsProvider = SettingsProvider();
-    await settingsProvider.initializeSettings();
     apk = apk.copyWith(
       apkUrls: filterApks(
         apk.apkUrls,
-        additionalSettings['apkFilterRegEx'] ??
+        TypedSettings(additionalSettings).getStringOrNull('apkFilterRegEx') ??
             settingsProvider.globalApkFilterRegEx,
         additionalSettings['invertAPKFilter'],
       ),
@@ -756,6 +773,31 @@ class VersionService {
       }
       return version!;
     } else {
+      return null;
+    }
+  }
+
+  String? extractVersionWithGlobalDefault(
+    Map<String, dynamic> additionalSettings,
+    SettingsProvider settingsProvider,
+    String stringToCheck, {
+    bool allowGlobalDefault = true,
+  }) {
+    final regEx = additionalSettings['versionExtractionRegEx'] as String?;
+    if (regEx?.isNotEmpty == true || !allowGlobalDefault) {
+      return extractVersion(
+        regEx,
+        additionalSettings['matchGroupToUse'] as String?,
+        stringToCheck,
+      );
+    }
+    try {
+      return extractVersion(
+        settingsProvider.globalVersionExtractionRegEx,
+        settingsProvider.globalMatchGroupToUse,
+        stringToCheck,
+      );
+    } on NoVersionError {
       return null;
     }
   }

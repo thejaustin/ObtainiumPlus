@@ -4,6 +4,26 @@
 
 ---
 
+## [1.7.3-p1] — 2026-10-27
+
+### 🔄 Upstream 1.7.2 & 1.7.3 Full Feature Parity
+- **Complete Upstream Integration** — Audited, ported, and verified all upstream features and bugfixes across commits through `v1.7.3` (`fcd1807c`).
+- **Shizuku Android 14+ Update Ownership** — Set update ownership exclusively during initial installs (`appEntry.installedInfo == null`) to avoid update failures and silent package manager rejections on Android 14+. Pinned `shizuku_apk_installer` ref `447d88a`.
+- **Global Version Trimming RegEx** — Configure a global fallback regular expression (`globalVersionExtractionRegEx` & `globalMatchGroupToUse`) in Settings to extract clean version strings across all sources without needing per-app configuration.
+- **Icon Cache Directory Resilience** — Ensured the app icon cache directory is created safely on disk, with resilient image loading and decoding fallbacks against corrupt or missing icon files.
+- **Store Source Overhauls (Samsung, Vivo, Huawei, Tencent)** — Ported metadata parsing, rate-limiting, and regional China ODS configurations across major store sources.
+- **Single-ABI F-Droid Filter** — Improved ABI filtering for F-Droid repositories with single native architecture assets.
+- **GitHub Draft Releases & RuStore Fixes** — Fixed handling of GitHub draft releases, Uptodown locale date parsing, and RuStore package downloads.
+- **App Market Discovery Intent** — Registered Android launcher market intent filters (`market://details?id=`, `market://search?q=`) for handling store URLs.
+- **Greek (el) Localization** — Added full Greek translation strings.
+
+### 🎨 Material 3 Expressive (M3E) & UX Enhancements
+- **Settings Fluid Transitions & Hero Mastheads** — Added organic M3 emphasized easing curves, subtle spatial scale transitions, and expressive header masthead cards across all settings subpages.
+- **Home & App Tile Polish** — Unified app tile typography, ensured badges, author names, and version badges never overlap, and smoothed out omnibar progress indicators.
+- **Tag Management & Modal Fixes** — Added tag editing to app context menus and the Add/Edit App flow (#340), and fixed null-safety crash during dialog dismissals (#338, #330).
+
+---
+
 ## [1.7.1-p4] — 2026-10-19
 
 ### 🔄 Upstream 1.7.0 & 1.7.1 Full Feature Parity

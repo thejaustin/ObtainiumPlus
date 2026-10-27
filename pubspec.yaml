@@ -2,7 +2,7 @@ name: obtainium
 description: Get Android app updates straight from the source.
 publish_to: 'none'
 
-version: 1.7.1-p31+2513
+version: 1.7.3-p1+2514
 
 environment:
   sdk: ^3.12.0
@@ -65,7 +65,7 @@ dependencies:
   shizuku_apk_installer: # Forked dependency; watch upstream for releases
     git:
       url: https://github.com/ImranR98/shizuku_apk_installer
-      ref: 9777a8bc78dd19300b4647e34e9d52bca772d8e1
+      ref: 447d88a0d134ec80d986064fdf458b55644d2ab3
   markdown: ^7.3.1
   flutter_typeahead: ^6.0.0
   battery_plus: ^7.1.1

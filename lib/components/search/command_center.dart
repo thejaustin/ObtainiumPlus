@@ -81,8 +81,9 @@ class _CommandCenterState extends State<CommandCenter> {
           setState(() {
             _successfulAddUrls.add(url);
           });
-          final newApp =
-              ap.apps.values.where((a) => a.app.url == url).firstOrNull;
+          final newApp = ap.apps.values
+              .where((a) => a.app.url == url)
+              .firstOrNull;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(tr('appAdded')),
@@ -90,10 +91,9 @@ class _CommandCenterState extends State<CommandCenter> {
                   ? SnackBarAction(
                       label: tr('install'),
                       onPressed: () {
-                        ap.downloadAndInstallLatestApps(
-                          [newApp.app.id],
-                          context,
-                        );
+                        ap.downloadAndInstallLatestApps([
+                          newApp.app.id,
+                        ], context);
                       },
                     )
                   : null,
@@ -682,9 +682,7 @@ class _CommandCenterState extends State<CommandCenter> {
                                       : tr('installing');
                                   return Text(
                                     progressText,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
+                                    style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
                                           color: cs.primary,
                                           fontWeight: FontWeight.w700,

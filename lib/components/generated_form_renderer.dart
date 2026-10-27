@@ -364,6 +364,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
         for (final item in row)
           if (item is! GeneratedFormHeader) item.key: item.value,
     };
+    _normalizeExclusiveSwitches();
     for (final row in widget.items) {
       for (final item in row) {
         if (item is GeneratedFormSubForm) {
@@ -371,6 +372,20 @@ class _GeneratedFormState extends State<GeneratedForm> {
         }
       }
     }
+  }
+
+  bool _normalizeExclusiveSwitches() {
+    var changed = false;
+    for (final item in widget.items.expand((row) => row).toList().reversed) {
+      if (item is! GeneratedFormSwitch || values[item.key] != true) continue;
+      for (final key in item.mutuallyExclusiveWith) {
+        if (values[key] == true) {
+          values[key] = false;
+          changed = true;
+        }
+      }
+    }
+    return changed;
   }
 
   @override
@@ -421,6 +436,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
         }
       }
     }
+    changed = _normalizeExclusiveSwitches() || changed;
     if (changed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
@@ -627,6 +643,11 @@ class _GeneratedFormState extends State<GeneratedForm> {
             : hapticSwitchOnChanged(context, (value) {
                 setState(() {
                   values[item.key] = value;
+                  if (value) {
+                    for (final key in item.mutuallyExclusiveWith) {
+                      if (values[key] is bool) values[key] = false;
+                    }
+                  }
                   notifyFormChange();
                 });
               }),

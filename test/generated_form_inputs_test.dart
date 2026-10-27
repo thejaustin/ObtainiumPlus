@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -15,15 +14,8 @@ void main() {
   ) async {
     Map<String, dynamic> values = {};
     await tester.pumpWidget(
-      MultiProvider(
-        providers: [
-          ChangeNotifierProvider<SettingsProvider>(
-            create: (_) => SettingsProvider(),
-          ),
-          ChangeNotifierProvider<PlusSettingsProvider>(
-            create: (_) => PlusSettingsProvider(),
-          ),
-        ],
+      ChangeNotifierProvider<SettingsProvider>(
+        create: (_) => SettingsProvider(),
         child: MaterialApp(
           home: Scaffold(
             body: GeneratedForm(
@@ -46,6 +38,41 @@ void main() {
     await tester.tap(find.byType(Switch));
     await tester.pump();
     expect(values()['flag'], isTrue);
+  });
+
+  testWidgets('exclusive switches turn each other off and survive cloning', (
+    tester,
+  ) async {
+    final values = await pumpForm(
+      tester,
+      cloneFormItems([
+        [
+          GeneratedFormSwitch(
+            'play',
+            label: 'Google Play',
+            value: true,
+            mutuallyExclusiveWith: ['galaxy'],
+          ),
+        ],
+        [
+          GeneratedFormSwitch(
+            'galaxy',
+            label: 'Samsung Galaxy Store',
+            mutuallyExclusiveWith: ['play'],
+          ),
+        ],
+        [GeneratedFormSwitch('unrelated', label: 'Unrelated', value: true)],
+      ]),
+    );
+    await tester.tap(find.byType(Switch).at(1));
+    await tester.pump();
+    expect(values(), {'play': false, 'galaxy': true, 'unrelated': true});
+    await tester.tap(find.byType(Switch).at(0));
+    await tester.pump();
+    expect(values(), {'play': true, 'galaxy': false, 'unrelated': true});
+    await tester.tap(find.byType(Switch).at(0));
+    await tester.pump();
+    expect(values(), {'play': false, 'galaxy': false, 'unrelated': true});
   });
 
   testWidgets('text field writes through', (tester) async {

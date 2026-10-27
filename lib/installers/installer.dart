@@ -1,9 +1,34 @@
+import 'package:obtainium/app_sources/samsunggalaxystore.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/installers/stock_installer.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+
+String installerPackageNameForApp(App app, {required bool googlePlayDefault}) {
+  var isGalaxyStore = false;
+  if (app.settings.getBool('shizukuPretendToBeGalaxyStore')) {
+    try {
+      isGalaxyStore =
+          SourceProvider().getSource(
+                app.url,
+                overrideSource: app.overrideSource,
+              )
+              is SamsungGalaxyStore;
+    } catch (_) {
+      isGalaxyStore = false;
+    }
+  }
+  if (isGalaxyStore) {
+    return 'com.sec.android.app.samsungapps';
+  }
+  return googlePlayDefault ||
+          app.settings.getBool('shizukuPretendToBeGooglePlay')
+      ? 'com.android.vending'
+      : '';
+}
 
 /// Android PackageInstaller status codes: 0 = success, 3 = cancelled / pending.
 const int _installSuccessCode = 0;

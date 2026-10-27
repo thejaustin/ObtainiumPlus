@@ -32,6 +32,7 @@ import 'package:obtainium/services/app_search_service.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/components/ui_widgets.dart';
+import 'package:obtainium/app_sources/samsunggalaxystore.dart';
 
 class AddAppPage extends StatefulWidget {
   final int? initialTab;
@@ -1025,7 +1026,10 @@ class AddAppPageState extends State<AddAppPage> {
                               }
                               if (item.key == 'shizukuPretendToBeGooglePlay' &&
                                   settingsProvider
-                                      .shizukuPretendToBeGooglePlay) {
+                                      .shizukuPretendToBeGooglePlay &&
+                                  !(pickedSource is SamsungGalaxyStore &&
+                                      additionalSettings['shizukuPretendToBeGalaxyStore'] ==
+                                          true)) {
                                 item.value = true;
                               }
                             }

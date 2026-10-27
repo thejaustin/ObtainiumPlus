@@ -51,12 +51,9 @@ class _LogsPageState extends State<LogsPage> {
       // show both, in time order.
       final results = await Future.wait([
         AppLogger.getLogs(after: after),
-        LogsProvider(runDefaultClear: false)
-            .get(after: after)
-            .then(
-              (l) => l,
-              onError: (Object _) => <Log>[],
-            ),
+        LogsProvider(
+          runDefaultClear: false,
+        ).get(after: after).then((l) => l, onError: (Object _) => <Log>[]),
       ]);
       value = mergeLogStores(
         results[0] as List<LogEntry>,

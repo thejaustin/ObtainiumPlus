@@ -7,6 +7,24 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Full Upstream 1.7.2 & 1.7.3 Merge, Shizuku Ownership, Version Regex & Store Overhaul
+
+- **Full Parity with Upstream 1.7.2 & 1.7.3 (`fcd1807c`):**
+  - **Shizuku Android 14+ Update Ownership:** Guarded `requestUpdateOwnership` so it is requested strictly on initial installations (`appEntry.installedInfo == null`). Pinned `shizuku_apk_installer` ref `447d88a0d134ec80d986064fdf458b55644d2ab3`.
+  - **Global Version Trimming RegEx:** Added `globalVersionExtractionRegEx` and `globalMatchGroupToUse` in `SettingsProvider` and UI inputs in `UpdateSettingsSection`. Implemented fallback version extraction in `VersionService` and `SourceProvider`.
+  - **Icon Cache Robustness:** Implemented `loadAppIconSafely`, `readCachedAppIconSafely`, and `writeCachedAppIconSafely` with automatic directory creation and corrupted image handling in `AppsProviderLifecycle`.
+  - **App Store Sources Overhaul:** Ported metadata parsing, rate-limiting, and regional China ODS endpoints across Samsung Galaxy Store, Huawei AppGallery, Tencent, and Vivo App Store. Maintained compatibility re-export shim in `samsung_galaxy_store.dart`.
+  - **Single-ABI F-Droid Filter:** Ported single-architecture APK filtering in `fdroidrepo.dart`.
+  - **GitHub Draft Releases & RuStore:** Handled draft release exclusion and resolved URL download parsing in RuStore.
+  - **Market Intent Handling:** Added intent filters for `market://` and `package:` URI schemes to `AndroidManifest.xml`.
+  - **Greek (el) Localization:** Added complete upstream Greek translation `assets/translations/el.json`.
+  - **Version Bump:** Bumped base version to `1.7.3-p1+2514` adhering to the strict rule that all upstream commits must be merged before bumping base version.
+- **Verification:**
+  - Ran full test suites: 133/133 unit/widget tests passing.
+  - Formatted entire repository cleanly with `dart format`. All translation keys verified in `translation_keys_used_test.dart`.
+
+---
+
 ## 2026-10-27 — Antigravity: Fix Modal Dismiss Crash (#338/#330) & Comprehensive Tag Management (#340)
 
 - **Crash Fix for `MaterialLocalizations.of` Null Check (#338, #330):**

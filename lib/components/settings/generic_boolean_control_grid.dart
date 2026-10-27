@@ -42,9 +42,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
         final screenWidth = MediaQuery.of(context).size.width;
         final crossAxisCount = screenWidth >= 1100
             ? 5
-            : (screenWidth >= 800
-                  ? 4
-                  : (screenWidth >= 600 ? 3 : 2));
+            : (screenWidth >= 800 ? 4 : (screenWidth >= 600 ? 3 : 2));
         final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
             ? plusSettings.plusSettingsCornerRadius
             : plusSettings.plusGlobalCornerRadius;
@@ -338,94 +336,94 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                  // Icon + checkmark overlay
-                  Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      AnimatedContainer(
-                        duration: Duration(
-                          milliseconds: animsEnabled ? 200 : 0,
+                    // Icon + checkmark overlay
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: Duration(
+                            milliseconds: animsEnabled ? 200 : 0,
+                          ),
+                          curve: Curves.easeOutCubic,
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: value
+                                ? colorScheme.primary.withValues(alpha: 0.15)
+                                : colorScheme.onSurface.withValues(alpha: 0.06),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            setting.icon,
+                            size: 18,
+                            color: value
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
+                          ),
                         ),
-                        curve: Curves.easeOutCubic,
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: value
-                              ? colorScheme.primary.withValues(alpha: 0.15)
-                              : colorScheme.onSurface.withValues(alpha: 0.06),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          setting.icon,
-                          size: 18,
-                          color: value
-                              ? colorScheme.primary
-                              : colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      // Animated checkmark badge when active
-                      if (value)
-                        Positioned(
-                          right: 0,
-                          bottom: 0,
-                          child: AnimatedScale(
-                            scale: value ? 1.0 : 0.0,
-                            duration: Duration(
-                              milliseconds: animsEnabled ? 200 : 0,
-                            ),
-                            curve: Curves.easeOutBack,
-                            child: Container(
-                              width: 14,
-                              height: 14,
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: colorScheme.surface,
-                                  width: 1.5,
-                                ),
+                        // Animated checkmark badge when active
+                        if (value)
+                          Positioned(
+                            right: 0,
+                            bottom: 0,
+                            child: AnimatedScale(
+                              scale: value ? 1.0 : 0.0,
+                              duration: Duration(
+                                milliseconds: animsEnabled ? 200 : 0,
                               ),
-                              child: Icon(
-                                Icons.check_rounded,
-                                size: 8,
-                                color: colorScheme.onPrimary,
+                              curve: Curves.easeOutBack,
+                              child: Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: colorScheme.surface,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  size: 8,
+                                  color: colorScheme.onPrimary,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  SizedBox(height: isCompact ? 4 : 6),
-                  Text(
-                    setting.label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontWeight: value ? FontWeight.bold : FontWeight.w500,
-                      color: value
-                          ? colorScheme.primary
-                          : colorScheme.onSurface,
-                      letterSpacing: value ? 0.0 : 0.1,
+                      ],
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (!isCompact && setting.description != null) ...[
-                    const SizedBox(height: 3),
+                    SizedBox(height: isCompact ? 4 : 6),
                     Text(
-                      setting.description!,
+                      setting.label,
                       style: theme.textTheme.labelSmall?.copyWith(
-                        fontSize: 10,
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.normal,
+                        fontWeight: value ? FontWeight.bold : FontWeight.w500,
+                        color: value
+                            ? colorScheme.primary
+                            : colorScheme.onSurface,
+                        letterSpacing: value ? 0.0 : 0.1,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (!isCompact && setting.description != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        setting.description!,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontSize: 10,
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
-          ),
           ),
         ),
       ),

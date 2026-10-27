@@ -558,6 +558,16 @@ class FDroidRepo extends AppSource {
         throw NoReleasesError();
       }
       selected = await _filterVersionsByArch(selected);
+      // A repo can publish several builds under one version name. Keep only
+      // the newest build per architecture, otherwise the default APK (the
+      // last one) is an older build.
+      final seenNativecodes = <String>{};
+      selected = selected
+          .where(
+            (v) =>
+                seenNativecodes.add((v.nativecode.toList()..sort()).join(' ')),
+          )
+          .toList();
       if (selected.isEmpty) {
         throw NoReleasesError();
       }

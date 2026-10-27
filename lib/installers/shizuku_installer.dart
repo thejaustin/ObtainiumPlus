@@ -339,6 +339,8 @@ class ShizukuInstaller extends Installer {
         installOptions['shizukuPretendToBeGooglePlay'] == true
         ? 'com.android.vending'
         : '';
+    final requestUpdateOwnership =
+        installOptions['requestUpdateOwnership'] as bool? ?? false;
     final uris = apkFilePaths.map((p) => File(p).uri.toString()).toList();
 
     final completer = Completer<InstallResult>();
@@ -401,11 +403,13 @@ class ShizukuInstaller extends Installer {
         return await ShizukuApkInstaller().installAABSplits(
           uris,
           fakeInstallSource,
+          requestUpdateOwnership: requestUpdateOwnership,
         );
       } else {
         return await ShizukuApkInstaller().installAPK(
           uris.first,
           fakeInstallSource,
+          requestUpdateOwnership: requestUpdateOwnership,
         );
       }
     }

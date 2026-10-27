@@ -38,17 +38,15 @@ class SettingsSubpage extends StatelessWidget {
     final resolvedAccent = accentColor ?? colorScheme.primary;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final double hPadding =
-        screenWidth > 840 ? ((screenWidth - 840) / 2) + 16.0 : 16.0;
+    final double hPadding = screenWidth > 840
+        ? ((screenWidth - 840) / 2) + 16.0
+        : 16.0;
 
     return Scaffold(
       body: CustomScrollView(
         physics: plusSettings.scrollPhysics,
         slivers: [
-          CustomAppBar(
-            title: title,
-            subtitle: subtitle,
-          ),
+          CustomAppBar(title: title, subtitle: subtitle),
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
             sliver: SliverToBoxAdapter(
@@ -61,8 +59,9 @@ class SettingsSubpage extends StatelessWidget {
                       elevation: 0,
                       margin: EdgeInsets.only(bottom: isCompact ? 8 : 12),
                       color: plusSettings.plusEnableGlassmorphism
-                          ? colorScheme.surfaceContainerLow
-                              .withValues(alpha: 0.75)
+                          ? colorScheme.surfaceContainerLow.withValues(
+                              alpha: 0.75,
+                            )
                           : colorScheme.surfaceContainerLow,
                       shape: CardMetrics.shape(
                         cardRadius,
@@ -104,8 +103,9 @@ class SettingsSubpage extends StatelessWidget {
                                   width: isCompact ? 38 : 46,
                                   height: isCompact ? 38 : 46,
                                   decoration: ShapeDecoration(
-                                    color:
-                                        resolvedAccent.withValues(alpha: 0.16),
+                                    color: resolvedAccent.withValues(
+                                      alpha: 0.16,
+                                    ),
                                     shape: CardMetrics.shape(
                                       innerRadius,
                                       expressive: isM3E,
@@ -161,9 +161,7 @@ class SettingsSubpage extends StatelessWidget {
             ),
           ),
           SliverToBoxAdapter(
-            child: SizedBox(
-              height: MediaQuery.paddingOf(context).bottom + 36,
-            ),
+            child: SizedBox(height: MediaQuery.paddingOf(context).bottom + 36),
           ),
         ],
       ),

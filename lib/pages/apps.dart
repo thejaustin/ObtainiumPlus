@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -398,8 +399,18 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     refresh() {
       AppHaptics.lightImpact();
       var refreshFailed = false;
+      final np = context.read<NotificationsProvider>();
       return appsProvider
           .checkUpdates()
+          .then((updates) {
+            unawaited(
+              clearStaleUpdateNotification(
+                np,
+                appsProvider.findAppIdsWithPendingUpdates(installedOnly: true),
+              ),
+            );
+            return updates;
+          })
           .catchError((e) {
             refreshFailed = true;
             if (context.mounted) showError(e is Map ? e['errors'] : e, context);

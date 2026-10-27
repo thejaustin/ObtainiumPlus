@@ -231,7 +231,10 @@ class CriticalIssueDialog extends StatelessWidget {
                           );
                         }
                       } catch (e) {
-                        AppLogger.error(e, message: 'Could not launch URL: $url');
+                        AppLogger.error(
+                          e,
+                          message: 'Could not launch URL: $url',
+                        );
                       }
                     },
                   ),

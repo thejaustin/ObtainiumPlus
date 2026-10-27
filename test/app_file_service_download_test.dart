@@ -19,7 +19,9 @@ void main() {
     server.listen((socket) async {
       // Read the request head, then answer by hand so the body can be cut
       // short while Content-Length still promises all of it.
-      await socket.firstWhere((chunk) => utf8.decode(chunk).contains('\r\n\r\n'));
+      await socket.firstWhere(
+        (chunk) => utf8.decode(chunk).contains('\r\n\r\n'),
+      );
       socket.add(
         utf8.encode(
           'HTTP/1.1 200 OK\r\n'

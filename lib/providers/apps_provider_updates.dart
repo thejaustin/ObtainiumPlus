@@ -11,6 +11,25 @@ import 'package:obtainium/services/version_service.dart' show isAppUpdateable;
 import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/update_health.dart';
 
+/// Stamps when [newApp]'s latest version changed. With the
+/// `detectionDateAsReleaseDate` setting on, that time also stands in for the
+/// release date when the source gives none (direct APK links, most HTML pages).
+App recordLatestVersionChange(App currentApp, App newApp, {DateTime? now}) {
+  final changedAt =
+      newApp.latestVersion != currentApp.latestVersion ||
+          currentApp.latestVersionChangedAt == null
+      ? (now ?? DateTime.now())
+      : currentApp.latestVersionChangedAt;
+  return newApp.copyWith(
+    latestVersionChangedAt: changedAt,
+    releaseDate:
+        newApp.releaseDate == null &&
+            newApp.additionalSettings['detectionDateAsReleaseDate'] == true
+        ? changedAt
+        : newApp.releaseDate,
+  );
+}
+
 /// Update checking and pending-update bookkeeping for [AppsProvider].
 extension AppsProviderUpdates on AppsProvider {
   /// Fetches the latest [App] metadata from its source WITHOUT persisting it.
@@ -44,15 +63,10 @@ extension AppsProviderUpdates on AppsProvider {
     } else if (newApp.apkUrls.isNotEmpty) {
       newApp.preferredApkIndex = 0;
     }
-    newApp = newApp.copyWith(
-      consecutiveFailedChecks: 0,
-      latestVersionChangedAt:
-          newApp.latestVersion != currentApp.latestVersion ||
-              currentApp.latestVersionChangedAt == null
-          ? DateTime.now()
-          : currentApp.latestVersionChangedAt,
+    return recordLatestVersionChange(
+      currentApp,
+      newApp.copyWith(consecutiveFailedChecks: 0),
     );
-    return newApp;
   }
 
   /// Fetches [appId] with a short retry for transient TLS handshake failures.

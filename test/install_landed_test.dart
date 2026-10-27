@@ -113,10 +113,13 @@ void main() {
       return p;
     }
 
-    test('migrated prefs (installMethod only) still count as Shizuku', () async {
-      final p = await provider({'installMethod': 'shizuku'});
-      expect(p.useShizuku, isTrue);
-    });
+    test(
+      'migrated prefs (installMethod only) still count as Shizuku',
+      () async {
+        final p = await provider({'installMethod': 'shizuku'});
+        expect(p.useShizuku, isTrue);
+      },
+    );
 
     test('the old bool alone still selects Shizuku', () async {
       final p = await provider({'useShizuku': true});

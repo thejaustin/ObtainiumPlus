@@ -69,9 +69,7 @@ void main() {
                 context.localizationDelegates,
               ),
               supportedLocales: const [locale],
-              home: const Scaffold(
-                body: ForceUpdateDialog(issue: testIssue),
-              ),
+              home: const Scaffold(body: ForceUpdateDialog(issue: testIssue)),
             ),
           ),
         ),
@@ -126,9 +124,7 @@ void main() {
                 context.localizationDelegates,
               ),
               supportedLocales: const [locale],
-              home: const Scaffold(
-                body: ForceUpdateDialog(issue: testIssue),
-              ),
+              home: const Scaffold(body: ForceUpdateDialog(issue: testIssue)),
             ),
           ),
         ),

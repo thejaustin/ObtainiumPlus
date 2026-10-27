@@ -53,6 +53,37 @@ bool isIconCacheUsable({
   return cacheModified.millisecondsSinceEpoch >= packageLastUpdateTime;
 }
 
+Future<Uint8List?> loadAppIconSafely(
+  Future<Uint8List?> Function()? load, {
+  Uint8List? fallback,
+}) async {
+  if (load == null) return fallback;
+  try {
+    return await load();
+  } catch (e) {
+    AppLogger.warn('Failed to load app icon: $e', error: e);
+    return fallback;
+  }
+}
+
+Future<Uint8List?> readCachedAppIconSafely(File file) async {
+  try {
+    return await file.readAsBytes();
+  } catch (e) {
+    AppLogger.warn('Failed to read cached app icon: $e', error: e);
+    return null;
+  }
+}
+
+Future<void> writeCachedAppIconSafely(File file, Uint8List bytes) async {
+  try {
+    await file.parent.create(recursive: true);
+    await file.writeAsBytes(bytes);
+  } catch (e) {
+    AppLogger.warn('Failed to write cached app icon: $e', error: e);
+  }
+}
+
 /// Uses [bulk] when it contains [key], otherwise confirms with [lookup].
 ///
 /// The bulk package list can be incomplete (for example when the platform
@@ -404,20 +435,16 @@ extension AppsProviderLifecycle on AppsProvider {
     );
     if (app?.icon == null || !alreadyCached) {
       Uint8List? icon;
+      var needsCacheWrite = false;
       if (alreadyCached) {
-        try {
-          icon = await cachedIcon.readAsBytes();
-        } catch (_) {
-          // File deleted between existsSync and readAsBytes (cache clear / low storage).
-          // Fall through to re-fetch from the installed package.
-        }
+        icon = await readCachedAppIconSafely(cachedIcon);
+        needsCacheWrite = icon == null;
       }
-      icon ??= await app?.installedInfo?.applicationInfo?.getAppIcon();
-      if (icon != null && !alreadyCached) {
-        if (!cachedIcon.parent.existsSync()) {
-          cachedIcon.parent.createSync(recursive: true);
-        }
-        unawaited(cachedIcon.writeAsBytes(icon));
+      icon ??= await loadAppIconSafely(
+        app?.installedInfo?.applicationInfo?.getAppIcon,
+      );
+      if (icon != null && (!alreadyCached || needsCacheWrite)) {
+        unawaited(writeCachedAppIconSafely(cachedIcon, icon));
       }
       if (icon != null) {
         apps.update(
@@ -457,7 +484,10 @@ extension AppsProviderLifecycle on AppsProvider {
             : await getInstalledInfo(app.id);
         final Uint8List? icon = canReuse
             ? this.apps[app.id]!.icon
-            : await info?.applicationInfo?.getAppIcon();
+            : await loadAppIconSafely(
+                info?.applicationInfo?.getAppIcon,
+                fallback: this.apps[app.id]?.icon,
+              );
         if (!canReuse) {
           app = app.copyWith(
             name: await (info?.applicationInfo?.getAppLabel()) ?? app.name,
@@ -484,7 +514,10 @@ extension AppsProviderLifecycle on AppsProvider {
         } else if (!canReuse && icon != null) {
           // Persist the freshly fetched icon so future cold starts can reuse
           // it (and so a changed icon replaces the stale cached one).
-          await File('${iconsCacheDir.path}/${app.id}.png').writeAsBytes(icon);
+          await writeCachedAppIconSafely(
+            File('${iconsCacheDir.path}/${app.id}.png'),
+            icon,
+          );
         }
       }),
     );

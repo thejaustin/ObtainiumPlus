@@ -13,6 +13,20 @@ import 'package:obtainium/utils/update_health.dart';
 
 const List<int> minimumUpdateAgeOptions = [0, 1, 2, 3, 5, 7, 14, 30];
 
+class SourceSearchProfile {
+  final String id;
+  final String name;
+  final Map<String, dynamic> querySettings;
+  final Map<String, dynamic> appSettings;
+
+  const SourceSearchProfile({
+    required this.id,
+    required this.name,
+    this.querySettings = const {},
+    this.appSettings = const {},
+  });
+}
+
 abstract class AppSource {
   List<String> hosts = [];
   bool hostChanged = false;
@@ -382,6 +396,12 @@ abstract class AppSource {
         label: tr('refreshBeforeDownload'),
       ),
     ],
+    [
+      GeneratedFormSwitch(
+        'detectionDateAsReleaseDate',
+        label: tr('detectionDateAsReleaseDate'),
+      ),
+    ],
   ];
 
   List<List<GeneratedFormItem>> get _appAppSettingFormItems => [
@@ -614,6 +634,9 @@ abstract class AppSource {
   }
 
   bool canSearch = false;
+  List<SourceSearchProfile> get searchProfiles => [
+    SourceSearchProfile(id: name, name: name),
+  ];
   bool includeAdditionalOptsInMainSearch = false;
   List<GeneratedFormItem> searchQuerySettingFormItems = [];
   Future<Map<String, List<String>>> search(
