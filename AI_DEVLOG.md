@@ -7,6 +7,23 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Draggable Home Grid Organizing, Pinned Sections & Layout Comfort
+
+- **Sectioned Home Grid (`AppGridView` in `lib/components/apps/app_grid_view.dart`):**
+  - **Pinned vs Main Apps Architecture:** Replaced flat `SliverGrid` in `AppsPage` with `AppGridView`, creating visual and architectural parity between the grid view and list view.
+  - **M3E Section Headers:** Added dedicated Material 3 Expressive squircle category badges and app count indicators for the "Pin" section and "Apps" section with comfortable padding and layout rhythm.
+- **Draggable Drag-and-Drop Grid Organization:**
+  - **2D Long-Press Reordering:** Implemented long-press drag-and-drop reordering for pinned apps using `LongPressDraggable<AppInMemory>` and `DragTarget<AppInMemory>` with live hover drop targets and haptic feedback (`AppHaptics.mediumImpact`).
+  - **Real-Time Order Persistence:** Reordered items directly update `plusSettings.plusPinnedAppsOrder`, seamlessly saving across app restarts.
+  - **Gesture Hierarchy:** In regular mode, single tap navigates to `AppPage` details, long-press without dragging triggers `AppActionsContextMenu`, and dragging allows fluid positional rearrangement. In multi-select mode, dragging is disabled to ensure instant selection toggles.
+- **Visual Comfort & Zero-Overlap Spacing:**
+  - Integrated `GridMetrics.adaptiveColumns` and `GridMetrics.childAspectRatio` to guarantee comfortable spacing, generous tap targets, and no text truncation or overlapping on any display density.
+- **Verification:**
+  - Added comprehensive unit test in `test/app_grid_view_test.dart` verifying section header rendering, count badges, and grid tile presence.
+  - Full unit test suites passed. Formatted with `dart format`.
+
+---
+
 ## 2026-10-27 — Antigravity: App Grid & List Tile Hierarchy Polish & Zero-Overlap Refinements
 
 - **App Grid Tile Hierarchy & Elimination of Redundant Author (`AppGridTile`):**

@@ -4,6 +4,7 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/sideloading_notice.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
+import 'package:obtainium/components/apps/app_grid_view.dart';
 import 'package:obtainium/components/apps/category_filter_bar.dart';
 import 'package:obtainium/components/apps/niagara_alphabet_scrubber.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
@@ -2036,89 +2037,23 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       }
 
       if (isGrid) {
-        final columnCount = GridMetrics.adaptiveColumns(
-          context,
-          preferred: viewSettings.gridColumnCount,
-        );
-        final bool showDetails =
-            viewSettings.displayShowVersion ||
-            viewSettings.displayShowAuthor ||
-            viewSettings.displayShowDate ||
-            plusSettings.plusShowTagsInList;
-        final double aspectRatio = GridMetrics.childAspectRatio(
-          columnCount: columnCount,
-          hasExtraDetails: showDetails,
-          squareTiles: plusSettings.plusGridSquareTiles,
-        );
-        return SliverPadding(
-          padding: EdgeInsets.fromLTRB(12, 6, 12 + scrubberGutter, 6),
-          sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, index) {
-                final app = listedApps[index];
-                final categoryColor =
-                    app.app.categories.isNotEmpty &&
-                        viewSettings.categories[app.app.categories.first] !=
-                            null
-                    ? Color(viewSettings.categories[app.app.categories.first]!)
-                    : null;
-                return RepaintBoundary(
-                  key: ValueKey(app.app.id),
-                  child: AppGridTile(
-                    appInMemory: app,
-                    isSelected: selectedAppIds.contains(app.app.id),
-                    hasUpdate: existingUpdates.contains(app.app.id),
-                    isAmbiguous:
-                        existingUpdates.contains(app.app.id) &&
-                        app.app.additionalSettings['isAmbiguousUpdate'] == true,
-                    categoryColor: categoryColor,
-                    entranceDelay: plusSettings.plusEnableEnhancedAnimations
-                        ? Duration(milliseconds: index < 10 ? index * 35 : 0)
-                        : Duration.zero,
-                    onTap: () {
-                      if (selectedAppIds.isNotEmpty) {
-                        toggleAppSelected(app.app);
-                      } else {
-                        AppHaptics.selectionClick();
-                        showAdaptiveDetailSheet(
-                          context: context,
-                          builder: (context, controller) => AppPage(
-                            appId: app.app.id,
-                            isModal: true,
-                            scrollController: controller,
-                          ),
-                        );
-                      }
-                    },
-                    onLongPress: () {
-                      if (selectedAppIds.isNotEmpty) {
-                        AppHaptics.selectionClick();
-                        toggleAppSelected(app.app);
-                      } else {
-                        AppHaptics.heavyImpact();
-                        AppActionsContextMenu.show(
-                          context,
-                          app,
-                          onEnterMultiSelect: () {
-                            toggleAppSelected(app.app);
-                          },
-                        );
-                      }
-                    },
-                  ),
-                );
-              },
-              childCount: listedApps.length,
-              addRepaintBoundaries: false,
-              addAutomaticKeepAlives: false,
-            ),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columnCount,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: aspectRatio,
-            ),
-          ),
+        return AppGridView(
+          apps: listedApps,
+          endInset: scrubberGutter,
+          selectedAppIds: selectedAppIds,
+          onToggleSelected: toggleAppSelected,
+          updateAppIds: existingUpdates,
+          onAppTap: (app) {
+            AppHaptics.selectionClick();
+            showAdaptiveDetailSheet(
+              context: context,
+              builder: (context, controller) => AppPage(
+                appId: app.id,
+                isModal: true,
+                scrollController: controller,
+              ),
+            );
+          },
         );
       }
 
