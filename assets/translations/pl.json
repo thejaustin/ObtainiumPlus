@@ -1590,5 +1590,18 @@
     "storeSetDefault": "Set as default",
     "storeClearDefault": "Clear default store",
     "installFailedWithCode": "Installation failed (code {})",
-    "noExportDirChosen": "No export folder chosen yet"
+    "noExportDirChosen": "No export folder chosen yet",
+    "globalVersionExtractionRegEx": "Global version trimming regex",
+    "filteringAndVersions": "Filtering & versions",
+    "includeDrafts": "Include drafts (needs a token with write access to the repository)",
+    "detectionDateAsReleaseDate": "Use update detection date as release date",
+    "samsungGalaxyStoreCN": "Samsung Galaxy Store (CN)",
+    "shizukuPretendToBeGalaxyStore": "Set Samsung Galaxy Store as the installation source (if Shizuku or Root is used)",
+    "plusHideBottomBarOnScroll": "Hide Navigation Bar on Scroll",
+    "plusHideBottomBarOnScrollDescription": "Automatically collapse the bottom navigation bar when scrolling down and restore it when scrolling up",
+    "activeDownloads": "Active Downloads",
+    "activeDownloadsDescription": "View in-flight downloads and installations in CommandCenter",
+    "searchOnlineViaCommandCenter": "Search online repositories via CommandCenter",
+    "clearFilter": "Clear Filter",
+    "loading": "Loading..."
 }

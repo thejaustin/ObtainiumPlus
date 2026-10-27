@@ -18,8 +18,9 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - **Gesture Hierarchy:** In regular mode, single tap navigates to `AppPage` details, long-press without dragging triggers `AppActionsContextMenu`, and dragging allows fluid positional rearrangement. In multi-select mode, dragging is disabled to ensure instant selection toggles.
 - **Visual Comfort & Zero-Overlap Spacing:**
   - Integrated `GridMetrics.adaptiveColumns` and `GridMetrics.childAspectRatio` to guarantee comfortable spacing, generous tap targets, and no text truncation or overlapping on any display density.
-- **Verification:**
+- **Verification & CI Test Alignment:**
   - Added comprehensive unit test in `test/app_grid_view_test.dart` verifying section header rendering, count badges, and grid tile presence.
+  - Backfilled missing translation keys across all 31 non-English locale files (`el.json`, `ar.json`, `de.json`, etc.) ensuring 100% template shape conformity for `test/translation_shape_test.dart` and enabling green CI APK builds.
   - Full unit test suites passed. Formatted with `dart format`.
 
 ---
