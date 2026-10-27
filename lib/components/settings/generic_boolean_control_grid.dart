@@ -36,207 +36,217 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
     if (settings.isEmpty) return const SizedBox.shrink();
     return Consumer2<T, PlusSettingsProvider>(
       builder: (context, provider, plusSettings, child) {
-        final colorScheme = Theme.of(context).colorScheme;
-        final isCompact = plusSettings.plusUseCompactSettings;
-        final isM3E = plusSettings.plusEnableMaterialExpressive;
-        final screenWidth = MediaQuery.of(context).size.width;
-        final crossAxisCount = screenWidth >= 1100
-            ? 5
-            : (screenWidth >= 800 ? 4 : (screenWidth >= 600 ? 3 : 2));
-        final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-            ? plusSettings.plusSettingsCornerRadius
-            : plusSettings.plusGlobalCornerRadius;
-        final cardRadius = CardMetrics.card(baseRadius);
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            final colorScheme = Theme.of(context).colorScheme;
+            final isCompact = plusSettings.plusUseCompactSettings;
+            final isM3E = plusSettings.plusEnableMaterialExpressive;
+            final availableWidth = constraints.maxWidth;
+            final crossAxisCount = availableWidth >= 900
+                ? 4
+                : (availableWidth >= 600 ? 3 : (availableWidth >= 320 ? 2 : 1));
+            final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+                ? plusSettings.plusSettingsCornerRadius
+                : plusSettings.plusGlobalCornerRadius;
+            final cardRadius = CardMetrics.card(baseRadius);
 
-        if (!plusSettings.plusSettingsUseGridToggles) {
-          final listColumn = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!embedded)
-                Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    isCompact ? 14 : 16,
-                    isCompact ? 8 : 12,
-                    isCompact ? 14 : 16,
-                    4,
-                  ),
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: colorScheme.primary,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                ),
-              ...settings.asMap().entries.map((entry) {
-                final idx = entry.key;
-                final s = entry.value;
-                final val = s.getValue(provider);
-                return Column(
-                  children: [
-                    SwitchListTile.adaptive(
-                      dense: isCompact,
-                      visualDensity: isCompact ? VisualDensity.compact : null,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 14 : 16,
-                        vertical: isCompact ? 0 : 2,
+            if (!plusSettings.plusSettingsUseGridToggles) {
+              final listColumn = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!embedded)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        isCompact ? 14 : 16,
+                        isCompact ? 8 : 12,
+                        isCompact ? 14 : 16,
+                        4,
                       ),
-                      secondary: buildSettingsIconBadge(
-                        context,
-                        s.icon,
-                        active: val,
-                      ),
-                      title: Text(
-                        s.label,
-                        style: isCompact
-                            ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              )
-                            : Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      subtitle:
-                          (s.description != null && s.description!.isNotEmpty)
-                          ? Text(
-                              s.description!,
-                              maxLines: isCompact ? 1 : 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    fontSize: isCompact ? 11.5 : null,
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                            )
-                          : null,
-                      value: val,
-                      onChanged: (v) {
-                        v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                        s.setValue(provider, v);
-                      },
-                    ),
-                    if (idx < settings.length - 1)
-                      Divider(
-                        height: 1,
-                        indent: isCompact ? 58 : 66,
-                        endIndent: isCompact ? 14 : 16,
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.2,
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: colorScheme.primary,
+                          letterSpacing: 0.3,
                         ),
                       ),
-                  ],
-                );
-              }),
-            ],
-          );
-
-          if (embedded) return listColumn;
-          return Padding(
-            padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
-            child: Material(
-              color: colorScheme.surfaceContainerLow.withValues(
-                alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
-              ),
-              shape: CardMetrics.shape(
-                cardRadius,
-                expressive: isM3E,
-                side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: listColumn,
-            ),
-          );
-        }
-
-        final gridBody = Padding(
-          padding: EdgeInsets.fromLTRB(
-            isCompact ? 12 : 16,
-            isCompact ? 8 : 12,
-            isCompact ? 12 : 16,
-            isCompact ? 10 : 14,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!embedded || title.isNotEmpty) ...[
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colorScheme.primary,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-                SizedBox(height: isCompact ? 6 : 10),
-              ],
-              Column(
-                children: [
-                  for (int i = 0; i < settings.length; i += crossAxisCount) ...[
-                    if (i > 0) SizedBox(height: isCompact ? 6 : 8),
-                    IntrinsicHeight(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          for (int j = 0; j < crossAxisCount; j++) ...[
-                            if (j > 0) SizedBox(width: isCompact ? 6 : 8),
-                            Expanded(
-                              child: (i + j < settings.length)
-                                  ? _GridToggleItem<T>(
-                                      setting: settings[i + j],
-                                      provider: provider,
-                                      isCompact: isCompact,
-                                      cardRadius: cardRadius,
-                                      isM3E: isM3E,
-                                    )
-                                  : const SizedBox.shrink(),
+                    ),
+                  ...settings.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final s = entry.value;
+                    final val = s.getValue(provider);
+                    return Column(
+                      children: [
+                        SwitchListTile.adaptive(
+                          dense: isCompact,
+                          visualDensity: isCompact
+                              ? VisualDensity.compact
+                              : null,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 14 : 16,
+                            vertical: isCompact ? 0 : 2,
+                          ),
+                          secondary: buildSettingsIconBadge(
+                            context,
+                            s.icon,
+                            active: val,
+                          ),
+                          title: Text(
+                            s.label,
+                            style: isCompact
+                                ? Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(fontWeight: FontWeight.w500)
+                                : Theme.of(context).textTheme.bodyLarge,
+                          ),
+                          subtitle:
+                              (s.description != null &&
+                                  s.description!.isNotEmpty)
+                              ? Text(
+                                  s.description!,
+                                  maxLines: isCompact ? 1 : 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontSize: isCompact ? 11.5 : null,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                )
+                              : null,
+                          value: val,
+                          onChanged: (v) {
+                            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                            s.setValue(provider, v);
+                          },
+                        ),
+                        if (idx < settings.length - 1)
+                          Divider(
+                            height: 1,
+                            indent: isCompact ? 58 : 66,
+                            endIndent: isCompact ? 14 : 16,
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.2,
                             ),
-                          ],
-                        ],
+                          ),
+                      ],
+                    );
+                  }),
+                ],
+              );
+
+              if (embedded) return listColumn;
+              return Padding(
+                padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
+                child: Material(
+                  color: colorScheme.surfaceContainerLow.withValues(
+                    alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                  ),
+                  shape: CardMetrics.shape(
+                    cardRadius,
+                    expressive: isM3E,
+                    side: BorderSide(
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: Theme.of(context).brightness == Brightness.dark
+                            ? 0.35
+                            : 0.65,
                       ),
                     ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: listColumn,
+                ),
+              );
+            }
+
+            final gridBody = Padding(
+              padding: EdgeInsets.fromLTRB(
+                isCompact ? 12 : 16,
+                isCompact ? 8 : 12,
+                isCompact ? 12 : 16,
+                isCompact ? 10 : 14,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (!embedded || title.isNotEmpty) ...[
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.primary,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                    SizedBox(height: isCompact ? 6 : 10),
                   ],
+                  Column(
+                    children: [
+                      for (
+                        int i = 0;
+                        i < settings.length;
+                        i += crossAxisCount
+                      ) ...[
+                        if (i > 0) SizedBox(height: isCompact ? 6 : 8),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              for (int j = 0; j < crossAxisCount; j++) ...[
+                                if (j > 0) SizedBox(width: isCompact ? 6 : 8),
+                                Expanded(
+                                  child: (i + j < settings.length)
+                                      ? _GridToggleItem<T>(
+                                          setting: settings[i + j],
+                                          provider: provider,
+                                          isCompact: isCompact,
+                                          cardRadius: cardRadius,
+                                          isM3E: isM3E,
+                                        )
+                                      : const SizedBox.shrink(),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
-            ],
-          ),
-        );
+            );
 
-        if (embedded) return gridBody;
+            if (embedded) return gridBody;
 
-        return Padding(
-          padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
-          child: ClipPath(
-            clipper: ShapeBorderClipper(
-              shape: CardMetrics.shape(cardRadius, expressive: isM3E),
-            ),
-            child: ConditionalBlur(
-              sigma: 10,
-              enabled: plusSettings.plusEnableGlassmorphism,
-              child: Material(
-                color: colorScheme.surfaceContainerLow.withValues(
-                  alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
+            return Padding(
+              padding: EdgeInsets.symmetric(vertical: isCompact ? 3.0 : 6.0),
+              child: ClipPath(
+                clipper: ShapeBorderClipper(
+                  shape: CardMetrics.shape(cardRadius, expressive: isM3E),
                 ),
-                shape: CardMetrics.shape(
-                  cardRadius,
-                  expressive: isM3E,
-                  side: BorderSide(
-                    color: colorScheme.outlineVariant.withValues(
-                      alpha: Theme.of(context).brightness == Brightness.dark
-                          ? 0.35
-                          : 0.65,
+                child: ConditionalBlur(
+                  sigma: 10,
+                  enabled: plusSettings.plusEnableGlassmorphism,
+                  child: Material(
+                    color: colorScheme.surfaceContainerLow.withValues(
+                      alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
                     ),
+                    shape: CardMetrics.shape(
+                      cardRadius,
+                      expressive: isM3E,
+                      side: BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                      ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: gridBody,
                   ),
                 ),
-                clipBehavior: Clip.antiAlias,
-                child: gridBody,
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

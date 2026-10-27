@@ -7,6 +7,27 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Material 3 Expressive Settings Polish & Natural Adaptability Overhaul
+
+- **Adaptive Multi-Column Layout Architecture (`lib/pages/settings.dart`):**
+  - **Dynamic Tablet & Wide-Screen Split View:** Re-engineered settings subpages with responsive `LayoutBuilder` boundaries. On displays with width >= 720dp (tablets, foldables unfolded, landscape orientation), logically distinct card groups adapt into clean side-by-side two-column grids:
+    - **Updates & Installation:** `UpdateSettingsSection` and `InstallationSection` render side-by-side instead of in a stretched, single-column vertical stack.
+    - **Advanced & Debug:** `AdvancedSettingsSection` and `TroubleshootingSection` render in parallel dual columns.
+    - **Appearance Fallback:** `ThemeSettingsSection` and `AppsViewSettingsSection` render in responsive columns when visual picker is disabled.
+  - **Adaptive Maximum Clamped Width:** Raised the adaptive margin clamp limit from 840dp to 1040dp on wide screens (`screenWidth > 1040`), creating ~500dp column widths—the exact Material 3 specification sweet spot for card comfort and typography rhythm.
+- **Section 0 Hero Masthead Alignment (`lib/pages/settings.dart`):**
+  - Added hero `SettingsTabMasthead` for Section 0 (Appearance & Theme) with palette icon, localized title (`settingsTabAppearance`), description (`settingsTabAppearanceDesc`), and radial primary accent glow, achieving 100% architectural cohesion across all 5 settings sections.
+- **Natural Container Adaptability (`AppearanceHub` & `GenericBooleanControlGrid`):**
+  - **Appearance Hub 2x2 Responsive Card Grid (`lib/components/settings/appearance_hub.dart`):** When container width is >= 560dp, the 4 hub cards (Theme & Dynamic Color, App Tile Styling, Layout & Navigation, Motion & Physics) adapt into a 2-column squircle grid (`Wrap`) instead of a tall 4-row list.
+  - **Responsive Toggle Chips (`lib/components/settings/generic_boolean_control_grid.dart`):** Replaced static physical screen checks with container-aware `LayoutBuilder` constraints, ensuring embedded grids inside dual-column layouts compute optimal 2-across column counts without squishing cards or clipping text labels.
+- **Behavior Section Dual-Column Grid (`lib/components/settings/app_behavior_section.dart`):**
+  - When container width is >= 720dp, separated Interaction & Feedback / Swipe Gestures into the left column and Discovery & Safety Group into the right column.
+- **Verification:**
+  - Added `test/adaptive_settings_test.dart` verifying dynamic single-to-multi-column adaptation in `AppearanceHub` and container-based cross-axis counts in `GenericBooleanControlGrid`.
+  - All 7 tests passed cleanly. Code verified with `dart analyze` (0 issues).
+
+---
+
 ## 2026-10-27 — Antigravity: Home Screen Multi-Select Dock, Tag Pill Redesign & Filter State Flow
 
 - **Synchronized Global Multi-Selection (`AppsProvider` & `AppsPage`):**

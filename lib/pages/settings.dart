@@ -183,8 +183,8 @@ class SettingsPageState extends State<SettingsPage> {
     _scheduleEmptyCheck();
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? ((screenWidth - 840) / 2).clamp(16.0, double.infinity)
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
 
     final hasMainBottomNavBar =
@@ -566,6 +566,16 @@ class SettingsPageState extends State<SettingsPage> {
                                 if (_searchQuery.isNotEmpty ||
                                     _selectedSectionIndex == 0) ...[
                                   if (_searchQuery.isEmpty) ...[
+                                    SettingsTabMasthead(
+                                      icon: Icons.palette_rounded,
+                                      title: tr('settingsTabAppearance'),
+                                      description: tr(
+                                        'settingsTabAppearanceDesc',
+                                      ),
+                                      accentColor: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                    ),
                                     if (plusSettings
                                         .plusSettingsUseVisualThemePicker)
                                       const VisualThemeSelector(),
@@ -613,20 +623,52 @@ class SettingsPageState extends State<SettingsPage> {
                                           ),
                                     ),
                                   ] else ...[
-                                    ThemeSettingsSection(
-                                      searchQuery: _searchQuery,
-                                      androidInfoFuture: _androidInfoFuture,
-                                      colorsNameMap:
-                                          const <ColorSwatch<Object>, String>{},
-                                      showAdvancedSettings:
-                                          plusSettings.plusShowAdvancedSettings,
-                                    ),
-                                    const SizedBox(height: 12),
-                                    AppsViewSettingsSection(
-                                      searchQuery: _searchQuery,
-                                      onSetState: (fn) => setState(fn),
-                                      showAdvancedSettings:
-                                          plusSettings.plusShowAdvancedSettings,
+                                    LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final isWide =
+                                            constraints.maxWidth >= 720 &&
+                                            _searchQuery.isEmpty;
+                                        final themeSection =
+                                            ThemeSettingsSection(
+                                              searchQuery: _searchQuery,
+                                              androidInfoFuture:
+                                                  _androidInfoFuture,
+                                              colorsNameMap:
+                                                  const <
+                                                    ColorSwatch<Object>,
+                                                    String
+                                                  >{},
+                                              showAdvancedSettings: plusSettings
+                                                  .plusShowAdvancedSettings,
+                                            );
+                                        final appsViewSection =
+                                            AppsViewSettingsSection(
+                                              searchQuery: _searchQuery,
+                                              onSetState: (fn) => setState(fn),
+                                              showAdvancedSettings: plusSettings
+                                                  .plusShowAdvancedSettings,
+                                            );
+                                        if (isWide) {
+                                          return Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(child: themeSection),
+                                              const SizedBox(width: 14),
+                                              Expanded(child: appsViewSection),
+                                            ],
+                                          );
+                                        }
+                                        return Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            themeSection,
+                                            const SizedBox(height: 12),
+                                            appsViewSection,
+                                          ],
+                                        );
+                                      },
                                     ),
                                   ],
                                 ],
@@ -643,21 +685,53 @@ class SettingsPageState extends State<SettingsPage> {
                                         context,
                                       ).colorScheme.primary,
                                     ),
-                                  UpdateSettingsSection(
-                                    searchQuery: _searchQuery,
-                                    showIntervalLabel: _showIntervalLabel,
-                                    onIntervalLabelChange: (val) => setState(
-                                      () => _showIntervalLabel = val,
-                                    ),
-                                    androidInfoFuture: _androidInfoFuture,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  InstallationSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final isWide =
+                                          constraints.maxWidth >= 720 &&
+                                          _searchQuery.isEmpty;
+                                      final updateSection =
+                                          UpdateSettingsSection(
+                                            searchQuery: _searchQuery,
+                                            showIntervalLabel:
+                                                _showIntervalLabel,
+                                            onIntervalLabelChange: (val) =>
+                                                setState(
+                                                  () =>
+                                                      _showIntervalLabel = val,
+                                                ),
+                                            androidInfoFuture:
+                                                _androidInfoFuture,
+                                            showAdvancedSettings: plusSettings
+                                                .plusShowAdvancedSettings,
+                                          );
+                                      final installSection =
+                                          InstallationSection(
+                                            searchQuery: _searchQuery,
+                                            showAdvancedSettings: plusSettings
+                                                .plusShowAdvancedSettings,
+                                          );
+                                      if (isWide) {
+                                        return Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(child: updateSection),
+                                            const SizedBox(width: 14),
+                                            Expanded(child: installSection),
+                                          ],
+                                        );
+                                      }
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          updateSection,
+                                          const SizedBox(height: 12),
+                                          installSection,
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
                                 if (_searchQuery.isNotEmpty ||
@@ -711,16 +785,46 @@ class SettingsPageState extends State<SettingsPage> {
                                         context,
                                       ).colorScheme.primary,
                                     ),
-                                  AdvancedSettingsSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                  const SizedBox(height: 12),
-                                  TroubleshootingSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
+                                  LayoutBuilder(
+                                    builder: (context, constraints) {
+                                      final isWide =
+                                          constraints.maxWidth >= 720 &&
+                                          _searchQuery.isEmpty;
+                                      final advancedSection =
+                                          AdvancedSettingsSection(
+                                            searchQuery: _searchQuery,
+                                            showAdvancedSettings: plusSettings
+                                                .plusShowAdvancedSettings,
+                                          );
+                                      final troubleshootingSection =
+                                          TroubleshootingSection(
+                                            searchQuery: _searchQuery,
+                                            showAdvancedSettings: plusSettings
+                                                .plusShowAdvancedSettings,
+                                          );
+                                      if (isWide) {
+                                        return Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(child: advancedSection),
+                                            const SizedBox(width: 14),
+                                            Expanded(
+                                              child: troubleshootingSection,
+                                            ),
+                                          ],
+                                        );
+                                      }
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          advancedSection,
+                                          const SizedBox(height: 12),
+                                          troubleshootingSection,
+                                        ],
+                                      );
+                                    },
                                   ),
                                 ],
                               ],

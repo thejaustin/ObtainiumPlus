@@ -1,7 +1,6 @@
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -233,32 +232,75 @@ class AppearanceHub extends StatelessWidget {
               ),
             ),
           ),
-          ...hubCards.map((card) {
-            return Padding(
-              padding: EdgeInsets.only(bottom: isCompact ? 6 : 10),
-              child: _HubCard(
-                icon: card.icon,
-                title: card.title,
-                desc: card.desc,
-                summary: card.summary,
-                accentColor: card.color,
-                isCompact: isCompact,
-                onTap: () {
-                  AppHaptics.selectionClick();
-                  pushRoute(
-                    context,
-                    SettingsSubpage(
-                      title: card.title,
-                      subtitle: card.desc,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final bool useTwoColumns = constraints.maxWidth >= 560;
+              final spacing = isCompact ? 8.0 : 12.0;
+
+              if (useTwoColumns) {
+                final cardWidth = (constraints.maxWidth - spacing) / 2;
+                return Wrap(
+                  spacing: spacing,
+                  runSpacing: isCompact ? 6 : 10,
+                  children: hubCards.map((card) {
+                    return SizedBox(
+                      width: cardWidth,
+                      child: _HubCard(
+                        icon: card.icon,
+                        title: card.title,
+                        desc: card.desc,
+                        summary: card.summary,
+                        accentColor: card.color,
+                        isCompact: isCompact,
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          pushRoute(
+                            context,
+                            SettingsSubpage(
+                              title: card.title,
+                              subtitle: card.desc,
+                              icon: card.icon,
+                              accentColor: card.color,
+                              child: card.content,
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }).toList(),
+                );
+              }
+
+              return Column(
+                children: hubCards.map((card) {
+                  return Padding(
+                    padding: EdgeInsets.only(bottom: isCompact ? 6 : 10),
+                    child: _HubCard(
                       icon: card.icon,
+                      title: card.title,
+                      desc: card.desc,
+                      summary: card.summary,
                       accentColor: card.color,
-                      child: card.content,
+                      isCompact: isCompact,
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        pushRoute(
+                          context,
+                          SettingsSubpage(
+                            title: card.title,
+                            subtitle: card.desc,
+                            icon: card.icon,
+                            accentColor: card.color,
+                            child: card.content,
+                          ),
+                        );
+                      },
                     ),
                   );
-                },
-              ),
-            );
-          }),
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -344,6 +386,8 @@ class _HubCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style:
                             (isCompact
                                     ? theme.textTheme.bodyMedium

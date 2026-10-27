@@ -43,88 +43,125 @@ class AppBehaviorSection extends StatelessWidget {
         _matches(tr('swipeRightAction')) ||
         _matches(tr('swipeLeftAction'));
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // 1. Interaction & Feedback Grid
-        if (hasHaptics)
-          GenericBooleanControlGrid<BehaviorSettingsProvider>(
-            title: tr('interactionAndHaptics'),
-            settings: [
-              if (_matches(tr('enableHapticFeedback')))
-                (
-                  icon: Icons.vibration_outlined,
-                  label: tr('enableHapticFeedback'),
-                  description: tr('enableHapticFeedbackDescription'),
-                  getValue: (s) => s.enableHapticFeedback,
-                  setValue: (s, v) => s.enableHapticFeedback = v,
-                ),
-              if (_matches(tr('enableUndoForAppRemoval')))
-                (
-                  icon: Icons.undo_outlined,
-                  label: tr('enableUndoForAppRemoval'),
-                  description: tr('enableUndoForAppRemovalDescription'),
-                  getValue: (s) => s.enableUndoForAppRemoval,
-                  setValue: (s, v) => s.enableUndoForAppRemoval = v,
-                ),
-            ],
-          ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isWide = constraints.maxWidth >= 720 && !isSearching;
 
-        // 2. Swipe Gestures Group
-        if (hasSwipe)
-          ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('swipeGestures'),
-            description: isSearching ? null : tr('swipeGesturesGroupDesc'),
-            persistKey: 'swipeGestures',
-            icon: Icons.gesture_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
+        final hapticsWidget = hasHaptics
+            ? GenericBooleanControlGrid<BehaviorSettingsProvider>(
+                title: tr('interactionAndHaptics'),
+                settings: [
+                  if (_matches(tr('enableHapticFeedback')))
+                    (
+                      icon: Icons.vibration_outlined,
+                      label: tr('enableHapticFeedback'),
+                      description: tr('enableHapticFeedbackDescription'),
+                      getValue: (s) => s.enableHapticFeedback,
+                      setValue: (s, v) => s.enableHapticFeedback = v,
+                    ),
+                  if (_matches(tr('enableUndoForAppRemoval')))
+                    (
+                      icon: Icons.undo_outlined,
+                      label: tr('enableUndoForAppRemoval'),
+                      description: tr('enableUndoForAppRemovalDescription'),
+                      getValue: (s) => s.enableUndoForAppRemoval,
+                      setValue: (s, v) => s.enableUndoForAppRemoval = v,
+                    ),
+                ],
+              )
+            : null;
+
+        final swipeWidget = hasSwipe
+            ? ExpressiveSettingsGroup(
+                title: isSearching ? null : tr('swipeGestures'),
+                description: isSearching ? null : tr('swipeGesturesGroupDesc'),
+                persistKey: 'swipeGestures',
+                icon: Icons.gesture_rounded,
+                isExpandable: !isSearching,
+                initiallyExpanded: true,
+                children: [
+                  if (_matches(tr('enableSwipeGestures')))
+                    _buildFeatureToggle(
+                      context,
+                      icon: Icons.swipe_outlined,
+                      title: tr('enableSwipeGestures'),
+                      subtitle: tr('enableSwipeGesturesDescription'),
+                      value: (s) => s.enableSwipeGestures,
+                      onChanged: (s, v) => s.enableSwipeGestures = v,
+                    ),
+                  if (_matches(tr('swipeRightAction')) ||
+                      _matches(tr('swipeLeftAction')))
+                    Consumer<BehaviorSettingsProvider>(
+                      builder: (context, settings, child) {
+                        return AnimatedSize(
+                          duration: Duration(
+                            milliseconds:
+                                plusSettings.plusEnableEnhancedAnimations
+                                ? 250
+                                : 0,
+                          ),
+                          curve: Curves.easeInOutCubic,
+                          child: settings.enableSwipeGestures
+                              ? Column(
+                                  children: [
+                                    if (_matches(tr('swipeRightAction')))
+                                      _buildSwipeActionDropdown(
+                                        context,
+                                        isRight: true,
+                                      ),
+                                    if (_matches(tr('swipeLeftAction')))
+                                      _buildSwipeActionDropdown(
+                                        context,
+                                        isRight: false,
+                                      ),
+                                  ],
+                                )
+                              : const SizedBox.shrink(),
+                        );
+                      },
+                    ),
+                ],
+              )
+            : null;
+
+        final discoverySafetyWidget = _buildDiscoverySafetyGroup(
+          context,
+          isSearching,
+        );
+
+        if (isWide) {
+          final leftChildren = [
+            ?hapticsWidget,
+            if (hapticsWidget != null && swipeWidget != null)
+              const SizedBox(height: 12),
+            ?swipeWidget,
+          ];
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (_matches(tr('enableSwipeGestures')))
-                _buildFeatureToggle(
-                  context,
-                  icon: Icons.swipe_outlined,
-                  title: tr('enableSwipeGestures'),
-                  subtitle: tr('enableSwipeGesturesDescription'),
-                  value: (s) => s.enableSwipeGestures,
-                  onChanged: (s, v) => s.enableSwipeGestures = v,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: leftChildren,
                 ),
-              if (_matches(tr('swipeRightAction')) ||
-                  _matches(tr('swipeLeftAction')))
-                Consumer<BehaviorSettingsProvider>(
-                  builder: (context, settings, child) {
-                    return AnimatedSize(
-                      duration: Duration(
-                        milliseconds: plusSettings.plusEnableEnhancedAnimations
-                            ? 250
-                            : 0,
-                      ),
-                      curve: Curves.easeInOutCubic,
-                      child: settings.enableSwipeGestures
-                          ? Column(
-                              children: [
-                                if (_matches(tr('swipeRightAction')))
-                                  _buildSwipeActionDropdown(
-                                    context,
-                                    isRight: true,
-                                  ),
-                                if (_matches(tr('swipeLeftAction')))
-                                  _buildSwipeActionDropdown(
-                                    context,
-                                    isRight: false,
-                                  ),
-                              ],
-                            )
-                          : const SizedBox.shrink(),
-                    );
-                  },
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [discoverySafetyWidget],
                 ),
+              ),
             ],
-          ),
+          );
+        }
 
-        // 3. Discovery & Safety Group
-        _buildDiscoverySafetyGroup(context, isSearching),
-      ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [?hapticsWidget, ?swipeWidget, discoverySafetyWidget],
+        );
+      },
     );
   }
 
@@ -209,8 +246,9 @@ class AppBehaviorSection extends StatelessWidget {
                               Builder(
                                 builder: (context) {
                                   final idx = row * 3 + col;
-                                  if (idx >= AppSwipeAction.values.length)
+                                  if (idx >= AppSwipeAction.values.length) {
                                     return const SizedBox.shrink();
+                                  }
                                   final action = AppSwipeAction.values[idx];
                                   final isSelected = action == currentAction;
                                   final chipShape = CardMetrics.shape(
