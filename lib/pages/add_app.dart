@@ -13,6 +13,7 @@ import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form_renderer.dart';
 import 'package:obtainium/components/selection_modal.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
+import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
@@ -72,6 +73,7 @@ class AddAppPageState extends State<AddAppPage> {
   bool additionalSettingsValid = true;
   bool inferAppIdIfOptional = true;
   List<String> pickedCategories = [];
+  List<String> pickedTags = [];
   int urlInputKey = 0;
   SourceProvider sourceProvider = SourceProvider();
   Timer? _searchDebounce;
@@ -97,6 +99,7 @@ class AddAppPageState extends State<AddAppPage> {
               previousPickedSourceOverride = app.overrideSource;
               additionalSettings = Map.from(app.additionalSettings);
               pickedCategories = List.from(app.categories);
+              pickedTags = List.from(app.tags);
               inferAppIdIfOptional = false;
             });
             try {
@@ -473,6 +476,7 @@ class AddAppPageState extends State<AddAppPage> {
             }
           }
           app.categories = pickedCategories;
+          app.tags = pickedTags;
           await appsProvider.saveApps([app], onlyIfExists: false);
         }
         if (app != null) {
@@ -875,10 +879,82 @@ class AddAppPageState extends State<AddAppPage> {
           const SizedBox(height: 16),
           CategoryEditorSelector(
             alignment: WrapAlignment.start,
+            preselected: pickedCategories.toSet(),
             onSelected: (categories) {
               pickedCategories = categories;
             },
           ),
+          if (plusSettings.plusEnableTags) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              alignment: WrapAlignment.start,
+              spacing: 8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ...pickedTags.map(
+                  (tag) => Chip(
+                    label: Text(
+                      tag,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                    avatar: Icon(
+                      Icons.label_rounded,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.secondaryContainer.withValues(alpha: 0.5),
+                    side: BorderSide(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.25),
+                      width: 0.8,
+                    ),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 0,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    deleteIcon: const Icon(Icons.close_rounded, size: 14),
+                    onDeleted: () {
+                      setState(() {
+                        pickedTags.remove(tag);
+                      });
+                    },
+                  ),
+                ),
+                ActionChip(
+                  avatar: const Icon(Icons.add, size: 16),
+                  label: Text(tr('editTags')),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: () async {
+                    final appsProvider = context.read<AppsProvider>();
+                    final allTags = getAllTagsFromApps(
+                      appsProvider.apps.entries.toList(),
+                    );
+                    final result = await showTagEditor(
+                      context: context,
+                      currentTags: pickedTags,
+                      allTags: allTags,
+                    );
+                    if (result != null) {
+                      setState(() {
+                        pickedTags = result;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 24),
           Card(
             elevation: 0,

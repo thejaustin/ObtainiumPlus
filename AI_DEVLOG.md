@@ -7,6 +7,19 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Fix Modal Dismiss Crash (#338/#330) & Comprehensive Tag Management (#340)
+
+- **Crash Fix for `MaterialLocalizations.of` Null Check (#338, #330):**
+  - In `lib/utils/modal_utils.dart`, replaced unchecked `MaterialLocalizations.of(context).modalBarrierDismissLabel` with `Localizations.of<MaterialLocalizations>(context, MaterialLocalizations)?.modalBarrierDismissLabel ?? 'Dismiss'`.
+  - Fixes Sentry `OBTAINIUMPLUS-38` (`TypeError: Null check operator used on a null value`) and prevents sudden dialog/sheet dismissals on adaptive screens.
+- **Full Tag Management across Context Menus & Add/Edit App (#340):**
+  - **Context Menu Action (`AppActionsContextMenu`):** Added an "Edit Tags" action tile when `plusEnableTags` is active, allowing users to modify an app's tags directly from the app tile long-press menu without navigating deep into app details.
+  - **Add/Edit App Tag Support (`AddAppPage`):** Integrated full tag management into `AddAppPage`. Users can now preview, add, delete, and edit tags via `showTagEditor` during initial app addition or when editing an existing app via `showAddAppSheet`.
+- **Verification:**
+  - 100% test pass rate across all unit and widget tests. All code formatted with `dart format`.
+
+---
+
 ## 2026-10-27 — Antigravity: Fluid M3E Tab Transitions, Section Hero Mastheads & Expressive Polish
 
 - **Material 3 Expressive (M3E) Tab Motion & Organic Transitions (`SettingsPage`):**

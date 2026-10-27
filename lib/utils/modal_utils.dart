@@ -51,8 +51,7 @@ Future<T?> showDraggableModalBottomSheet<T>({
                   border: Border.all(
                     color: Theme.of(context).colorScheme.outlineVariant
                         .withValues(
-                          alpha:
-                              Theme.of(context).brightness == Brightness.dark
+                          alpha: Theme.of(context).brightness == Brightness.dark
                               ? 0.35
                               : 0.65,
                         ),
@@ -97,7 +96,12 @@ Future<T?> showAdaptiveDetailSheet<T>({
   return showGeneralDialog<T>(
     context: context,
     barrierDismissible: true,
-    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    barrierLabel:
+        Localizations.of<MaterialLocalizations>(
+          context,
+          MaterialLocalizations,
+        )?.modalBarrierDismissLabel ??
+        'Dismiss',
     barrierColor: Theme.of(
       context,
     ).colorScheme.scrim.withValues(alpha: AppOpacity.medium),

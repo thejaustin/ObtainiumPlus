@@ -7,6 +7,7 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
+import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/device_utils.dart';
@@ -140,6 +141,42 @@ class AppActionsContextMenu {
                     },
                   ),
                 ),
+                if (plusSettings.plusEnableTags)
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.97,
+                    child: ListTile(
+                      leading: const Icon(Icons.label_outline_rounded),
+                      title: Text(tr('editTags')),
+                      subtitle: appInMemory.app.tags.isNotEmpty
+                          ? Text(
+                              appInMemory.app.tags.join(', '),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            )
+                          : null,
+                      onTap: () async {
+                        AppHaptics.selectionClick();
+                        Navigator.pop(context);
+                        final appsProvider = context.read<AppsProvider>();
+                        final allTags = getAllTagsFromApps(
+                          appsProvider.apps.entries.toList(),
+                        );
+                        final result = await showTagEditor(
+                          context: context,
+                          currentTags: appInMemory.app.tags,
+                          allTags: allTags,
+                        );
+                        if (result != null) {
+                          appInMemory.app.tags = result;
+                          appsProvider.saveApps([appInMemory.app]);
+                        }
+                      },
+                    ),
+                  ),
                 ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   scaleDownFactor: 0.97,
