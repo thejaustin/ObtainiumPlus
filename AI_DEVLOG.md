@@ -7,6 +7,29 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Home Screen Multi-Select Dock, Tag Pill Redesign & Filter State Flow
+
+- **Synchronized Global Multi-Selection (`AppsProvider` & `AppsPage`):**
+  - **Full State Unification:** Added `selectApps(Iterable<String>)` to `AppsProvider` and synchronized `AppsPageState.selectedAppIds` with `appsProvider.selectedAppIds` in `toggleAppSelected`, `clearSelected()`, and `selectThese()`.
+  - **Fluid Bottom Nav & FAB Interaction:** When any app is selected, `appsProvider.isSelectionMode` cleanly hides the bottom nav bar and the FAB, avoiding visual collisions with the bottom action bar.
+  - **Reactive Batch Actions Hub:** Enables `AppDashboard`'s `_buildBatchActionsHub` to react immediately to tile selections with live count and batch actions.
+- **Expressive Multi-Select Action Dock (`AppsPage`):**
+  - Transformed the selection footer into a Material 3 Expressive floating dock with pill shape (`CardMetrics.pill`), surface elevation, subtle primary border glow, selected count badge, and clean action spacing (Download/Update, Categorize, Delete, More).
+  - Hid redundant filter and grid/list view mode switches while in active selection mode to prevent clutter and misclicks.
+- **M3E Tag Filter Pill Modernization (`TagFilterBar`):**
+  - Overhauled `TagFilterBar` to match the exact visual architecture of `CategoryFilterBar`: compact 40dp height, squircle pill geometry with `CardMetrics.shape`, semantic tag icons (`Icons.tag_rounded`), and live app count badges.
+  - Interactive tap toggles selected tag on and off with tactile feedback (`AppHaptics.selectionClick`).
+- **Empty & Active Filter State Flow:**
+  - Resolved empty filter state: whenever any filter is active (name, tag, category, status), a dedicated "Clear Filter" button is displayed to immediately restore all apps.
+  - Replaced hardcoded string with localized `tr('onboardingAddAppsSubtitle')`.
+- **Drag Feedback Dimensions in `AppGridView`:**
+  - Fixed drag feedback tile width calculation by subtracting `widget.endInset` so the dragged tile feedback precisely matches on-screen tile dimensions when the Niagara alphabet scrubber is present.
+- **Verification:**
+  - Added unit test in `test/tag_filter_bar_test.dart` verifying pill rendering, app counts, and selection callbacks.
+  - Full unit test suites passed. Formatted with `dart format`.
+
+---
+
 ## 2026-10-27 — Antigravity: Draggable Home Grid Organizing, Pinned Sections & Layout Comfort
 
 - **Sectioned Home Grid (`AppGridView` in `lib/components/apps/app_grid_view.dart`):**

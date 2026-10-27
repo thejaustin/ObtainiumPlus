@@ -876,6 +876,12 @@ class AppsProvider with ChangeNotifier {
     _notifyUiOnly();
   }
 
+  void selectApps(Iterable<String> appIds) {
+    selectedAppIds = appIds.toSet();
+    isSelectionMode = selectedAppIds.isNotEmpty;
+    _notifyUiOnly();
+  }
+
   void selectAll() {
     selectedAppIds = apps.keys.toSet();
     isSelectionMode = true;

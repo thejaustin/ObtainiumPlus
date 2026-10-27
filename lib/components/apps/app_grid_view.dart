@@ -274,8 +274,9 @@ class _AppGridViewState extends State<AppGridView> {
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final width = MediaQuery.sizeOf(context).width;
-                    final tileWidth =
-                        (width - 24 - (columnCount - 1) * 12) / columnCount;
+                    final availableWidth =
+                        width - 24 - widget.endInset - (columnCount - 1) * 12;
+                    final tileWidth = availableWidth / columnCount;
                     final tileHeight = tileWidth / aspectRatio;
                     return SizedBox(
                       width: tileWidth,

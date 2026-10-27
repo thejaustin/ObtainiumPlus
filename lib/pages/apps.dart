@@ -194,19 +194,24 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   /// whether to treat the back gesture as "clear selection" or fall through
   /// to normal back-navigation behavior.
   bool clearSelected() {
-    final hadSelection = selectedAppIds.isNotEmpty;
+    final ap = context.read<AppsProvider>();
+    final hadSelection =
+        selectedAppIds.isNotEmpty || ap.selectedAppIds.isNotEmpty;
     setState(() {
       selectedAppIds.clear();
+      ap.clearSelection();
     });
     return hadSelection;
   }
 
   void selectThese(List<App> apps) {
     if (selectedAppIds.isEmpty) {
+      final ap = context.read<AppsProvider>();
       setState(() {
         for (var a in apps) {
           selectedAppIds.add(a.id);
         }
+        ap.selectApps(selectedAppIds);
       });
     }
   }
@@ -262,6 +267,10 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   void initState() {
     super.initState();
     scrollController.addListener(_onScroll);
+    final ap = context.read<AppsProvider>();
+    if (ap.selectedAppIds.isNotEmpty) {
+      selectedAppIds = ap.selectedAppIds.toSet();
+    }
   }
 
   void _onScroll() {
@@ -724,12 +733,14 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     selectedAppIds = selectedAppIds.where(listedAppIdSet.contains).toSet();
 
     toggleAppSelected(App app) {
+      final ap = context.read<AppsProvider>();
       setState(() {
         if (selectedAppIds.contains(app.id)) {
           selectedAppIds.remove(app.id);
         } else {
           selectedAppIds.add(app.id);
         }
+        ap.toggleAppSelection(app.id);
       });
     }
 
@@ -885,44 +896,50 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                     if (appsProvider.apps.isEmpty) ...[
                       const SizedBox(height: 12),
                       Text(
-                        'Tap the + button to add your first app',
+                        tr('onboardingAddAppsSubtitle'),
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    ] else if (filter.nameFilter.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        tr('searchOnlineViaCommandCenter'),
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ] else ...[
+                      if (filter.nameFilter.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          tr('searchOnlineViaCommandCenter'),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                              ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
+                      ],
                       const SizedBox(height: 20),
                       Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 12,
                         runSpacing: 10,
                         children: [
-                          ScaleTouchWrapper(
-                            hapticOnPressDown: true,
-                            scaleDownFactor: 0.96,
-                            child: FilledButton.icon(
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                CommandCenter.show(
-                                  context,
-                                  initialQuery: filter.nameFilter,
-                                );
-                              },
-                              icon: const Icon(Icons.travel_explore_rounded),
-                              label: Text(
-                                '${tr('search')} "${filter.nameFilter}"',
+                          if (filter.nameFilter.isNotEmpty)
+                            ScaleTouchWrapper(
+                              hapticOnPressDown: true,
+                              scaleDownFactor: 0.96,
+                              child: FilledButton.icon(
+                                onPressed: () {
+                                  AppHaptics.selectionClick();
+                                  CommandCenter.show(
+                                    context,
+                                    initialQuery: filter.nameFilter,
+                                  );
+                                },
+                                icon: const Icon(Icons.travel_explore_rounded),
+                                label: Text(
+                                  '${tr('search')} "${filter.nameFilter}"',
+                                ),
                               ),
                             ),
-                          ),
                           ScaleTouchWrapper(
                             hapticOnPressDown: true,
                             scaleDownFactor: 0.96,
@@ -930,10 +947,12 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                               onPressed: () {
                                 AppHaptics.selectionClick();
                                 setState(() {
-                                  filter.nameFilter = '';
+                                  filter = AppsFilter();
+                                  activeTag = null;
+                                  _clearDiscoverResults();
                                 });
                               },
-                              icon: const Icon(Icons.clear_rounded),
+                              icon: const Icon(Icons.filter_alt_off_rounded),
                               label: Text(tr('clearFilter')),
                             ),
                           ),
@@ -1928,10 +1947,65 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     }
 
     getFilterButtonsRow() {
-      var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
-      final isGrid = viewSettings.globalViewMode == ViewMode.grid;
       final bool hasSelection = selectedAppIds.isNotEmpty;
       final colorScheme = Theme.of(context).colorScheme;
+
+      if (hasSelection) {
+        return AnimatedContainer(
+          duration: Duration(
+            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 250 : 0,
+          ),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: ShapeDecoration(
+            color: colorScheme.surfaceContainerHigh.withValues(
+              alpha: plusSettings.plusEnableGlassmorphism ? 0.85 : 0.96,
+            ),
+            shape: CardMetrics.shape(
+              CardMetrics.pill(plusSettings.plusGlobalCornerRadius),
+              expressive: plusSettings.plusEnableMaterialExpressive,
+              side: BorderSide(
+                color: colorScheme.primary.withValues(alpha: 0.35),
+                width: 1.2,
+              ),
+            ),
+            shadows: [
+              BoxShadow(
+                color: colorScheme.primary.withValues(alpha: 0.16),
+                blurRadius: 14,
+                spreadRadius: 1,
+                offset: const Offset(0, 3),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              getSelectAllButton(),
+              const SizedBox(width: 4),
+              Container(
+                width: 1,
+                height: 22,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: getMainBottomButtons(),
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+
+      var isFilterOff = filter.isIdenticalTo(neutralFilter, settingsProvider);
+      final isGrid = viewSettings.globalViewMode == ViewMode.grid;
 
       return AnimatedContainer(
         duration: Duration(
@@ -1940,16 +2014,8 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
         decoration: BoxDecoration(
-          color: hasSelection
-              ? colorScheme.primaryContainer.withValues(alpha: 0.22)
-              : Colors.transparent,
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: hasSelection
-                ? colorScheme.primary.withValues(alpha: 0.35)
-                : Colors.transparent,
-            width: 1.0,
-          ),
         ),
         child: Row(
           children: [
