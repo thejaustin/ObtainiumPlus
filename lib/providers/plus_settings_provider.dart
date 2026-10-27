@@ -540,6 +540,12 @@ class PlusSettingsProvider with ChangeNotifier {
       _getBool('plusFloatingNavBar', defaultValue: false);
   set plusFloatingNavBar(bool val) => _setBool('plusFloatingNavBar', val);
 
+  /// Auto-hide the bottom navigation bar when scrolling down and restore it when scrolling up.
+  bool get plusHideBottomBarOnScroll =>
+      _getBool('plusHideBottomBarOnScroll', defaultValue: false);
+  set plusHideBottomBarOnScroll(bool val) =>
+      _setBool('plusHideBottomBarOnScroll', val);
+
   /// Always show labels on all nav-bar destinations (vs. selected-only).
   bool get plusNavBarAlwaysShowLabels =>
       _getBool('plusNavBarAlwaysShowLabels', defaultValue: false);

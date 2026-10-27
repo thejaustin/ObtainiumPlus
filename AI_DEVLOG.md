@@ -7,6 +7,32 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Omnibar Downloads Progress, FAB Quick Actions, & Navbar Options Modernization
+
+- **Omnibar Determinate Download Progress & Instant Paste:**
+  - **Aggregate Determinate Progress:** Added aggregate download progress computation across all in-flight downloads (`determinateSum / determinateCount`). When determinate progress is available, Omnibar displays a live determinate `LinearProgressIndicator(value: aggregateProgress)`.
+  - **Live Percent & Count Download Pill:** The ambient download pill now displays live aggregate percentage and active download count (e.g. `2 • 45%` or `45%`), with 1-tap jump to `CommandCenter` active downloads hub.
+  - **1-Tap Clipboard URL Paste Button:** Added an animated `IconButton(icon: Icons.content_paste_rounded, tooltip: tr('paste'))` to `Omnibar` when the input is empty and not a URL. Tapping reads plaintext from the system clipboard, populates the Omnibar, and immediately triggers input validation.
+  - **Omnibar & Filter Bidirectional Sync:** Implemented `didUpdateWidget` in `Omnibar` and added `searchQuery: filter.nameFilter` to `AppDashboard`.
+- **AppsPage Empty Local Search Expressive Card:**
+  - When local search filter yields 0 apps, replaced plain text with a Material 3 Expressive recommendation card showing `"Search online repositories via CommandCenter"` and action buttons:
+    - Primary button: `"Search "$query""` (`Icons.travel_explore_rounded`) jumping directly to `CommandCenter`.
+    - Secondary button: `"Clear Filter"` (`Icons.clear_rounded`) clearing the filter and instantly clearing the Omnibar query.
+- **FAB Functionality (`AppActionsFAB`) & Action Sheet:**
+  - **Active Downloading State & Badging:** When downloads are in-flight, `AppActionsFAB` shows an animated `Icons.downloading_rounded` icon and badge counter with active downloads count.
+  - **Active Downloads Card in FAB Menu:** Added an "Active Downloads" card in `showAddAppMenu` with a live determinate progress bar, percentage, and 1-tap navigation to `CommandCenter`.
+  - **Check for Updates Action Tile:** Added "Check for Updates" action tile (`Icons.sync_rounded`) in `showAddAppMenu` with haptic feedback that directly invokes `AppsProvider.checkUpdates()`.
+  - **Ink Splash Compliance:** Wrapped `ListTile` items in `Material(type: MaterialType.transparency)` across all bottom sheet cards, eradicating DecoratedBox ink splash assertions.
+- **Navbar Options & Scroll Auto-Hide:**
+  - **Hide Navigation Bar on Scroll:** Added `plusHideBottomBarOnScroll` setting in `PlusSettingsProvider` with user toggle in `AppsViewSettingsSection` under `settingsAppearanceLayoutNav`.
+  - **Smooth M3 Expressive Auto-Hide:** Implemented `NotificationListener<UserScrollNotification>` on `HomePage` to smoothly slide the bottom navigation bar away when scrolling down and restore it when scrolling up or switching tabs.
+- **Verification:**
+  - Expanded `test/search_and_download_test.dart` to cover Omnibar determinate progress calculation, 42% download pill text, clipboard paste affordance, FAB download state & badging, `showAddAppMenu` active downloads & updates tiles, and `plusHideBottomBarOnScroll` preference.
+  - Verified `test/translation_keys_used_test.dart` ensuring 100% of translation keys are present in `en.json`.
+  - All tests passed cleanly.
+
+---
+
 ## 2026-10-26 — Antigravity: In-App Updater Download Fix on Launch & ForceUpdateDialog Modernization
 
 - **Diagnosis of In-App Updater Launch Dialog:**

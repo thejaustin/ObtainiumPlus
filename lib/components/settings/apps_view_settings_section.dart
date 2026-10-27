@@ -185,6 +185,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           plusFeaturesEnabled &&
           (_matches(tr('plusEnableBottomNavBar')) ||
               _matches(tr('plusFloatingNavBar')) ||
+              _matches(tr('plusHideBottomBarOnScroll')) ||
               _matches(tr('plusSettingsBottomNavBar')) ||
               _matches(tr('plusEnableFAB')) ||
               _matches(tr('plusFloatingActionBar')) ||
@@ -209,6 +210,15 @@ class AppsViewSettingsSection extends StatelessWidget {
                 description: tr('plusFloatingNavBarDescription'),
                 getValue: (s) => s.plusFloatingNavBar,
                 setValue: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
+              ),
+            if (_matches(tr('plusHideBottomBarOnScroll')))
+              (
+                icon: Icons.unfold_more_rounded,
+                label: tr('plusHideBottomBarOnScroll'),
+                description: tr('plusHideBottomBarOnScrollDescription'),
+                getValue: (s) => s.plusHideBottomBarOnScroll,
+                setValue: (s, v) =>
+                    onSetState(() => s.plusHideBottomBarOnScroll = v),
               ),
             if (_matches(tr('plusEnableFAB')))
               (
@@ -1256,10 +1266,7 @@ class AppsViewSettingsSection extends StatelessWidget {
               visualDensity: isCompact
                   ? VisualDensity.compact
                   : VisualDensity.standard,
-              leading: buildSettingsIconBadge(
-                context,
-                Icons.push_pin_outlined,
-              ),
+              leading: buildSettingsIconBadge(context, Icons.push_pin_outlined),
               title: Text(
                 tr('updatesPlacement'),
                 style: Theme.of(

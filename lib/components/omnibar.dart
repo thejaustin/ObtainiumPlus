@@ -146,6 +146,16 @@ class _OmnibarState extends State<Omnibar> {
     _focusNode.addListener(_onFocusChange);
   }
 
+  @override
+  void didUpdateWidget(Omnibar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialQuery != oldWidget.initialQuery &&
+        widget.initialQuery != _controller.text) {
+      _controller.text = widget.initialQuery ?? '';
+      _checkInputType(_controller.text);
+    }
+  }
+
   void _onFocusChange() {
     if (mounted) {
       setState(() {
@@ -235,6 +245,23 @@ class _OmnibarState extends State<Omnibar> {
         : plusSettings.plusGlobalCornerRadius;
     final pillRadius = CardMetrics.pill(radius);
     final isFocusedOrHasText = _isFocused || _controller.text.isNotEmpty;
+
+    // Aggregate determinate download progress across in-flight tasks
+    final activeDownloads = appsProvider.apps.values
+        .where((e) => e.downloadProgress != null)
+        .toList();
+    double determinateSum = 0;
+    int determinateCount = 0;
+    for (final d in activeDownloads) {
+      final p = d.downloadProgress;
+      if (p != null && p >= 0) {
+        determinateSum += (p / 100.0).clamp(0.0, 1.0);
+        determinateCount++;
+      }
+    }
+    final double? aggregateProgress = determinateCount > 0
+        ? determinateSum / determinateCount
+        : null;
     // Material 3 Expressive Shape Shifting:
     // Resting: full capsule pill (28dp)
     // Active/Focused: expressive squircle morphing (18-20dp) with primary glow and elevation!
@@ -432,12 +459,12 @@ class _OmnibarState extends State<Omnibar> {
                     ),
                   ),
 
-                  // Clear button
-                  AnimatedSize(
-                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-                    curve: Curves.easeOutCubic,
+                  // Clear or Paste action button
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                     child: _controller.text.isNotEmpty
                         ? ScaleTouchWrapper(
+                            key: const ValueKey('clear_btn'),
                             hapticOnPressDown: true,
                             scaleDownFactor: 0.88,
                             child: Semantics(
@@ -454,15 +481,44 @@ class _OmnibarState extends State<Omnibar> {
                               ),
                             ),
                           )
-                        : const SizedBox.shrink(),
+                        : (!_isUrl
+                              ? ScaleTouchWrapper(
+                                  key: const ValueKey('paste_btn'),
+                                  hapticOnPressDown: true,
+                                  scaleDownFactor: 0.88,
+                                  child: Semantics(
+                                    label: tr('paste'),
+                                    button: true,
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.content_paste_rounded,
+                                        size: 19,
+                                      ),
+                                      tooltip: tr('paste'),
+                                      onPressed: () async {
+                                        final data = await Clipboard.getData(
+                                          Clipboard.kTextPlain,
+                                        );
+                                        final text = data?.text?.trim() ?? '';
+                                        if (text.isNotEmpty) {
+                                          AppHaptics.selectionClick();
+                                          _controller.text = text;
+                                          _handleInput(text);
+                                        }
+                                      },
+                                      padding: const EdgeInsets.only(right: 6),
+                                    ),
+                                  ),
+                                )
+                              : const SizedBox.shrink(key: ValueKey('empty'))),
                   ),
 
                   // Action button: Add for URLs, or Search Online for text queries
-                  AnimatedSize(
-                    duration: Duration(milliseconds: animsEnabled ? 300 : 0),
-                    curve: Curves.easeOutCubic,
+                  AnimatedSwitcher(
+                    duration: Duration(milliseconds: animsEnabled ? 200 : 0),
                     child: _isUrl
                         ? Container(
+                            key: const ValueKey('url_action_btn'),
                             margin: const EdgeInsets.only(
                               right: 6,
                               top: 6,
@@ -525,6 +581,7 @@ class _OmnibarState extends State<Omnibar> {
                           )
                         : (_controller.text.trim().isNotEmpty
                               ? Container(
+                                  key: const ValueKey('search_action_btn'),
                                   margin: const EdgeInsets.only(
                                     right: 6,
                                     top: 6,
@@ -567,7 +624,9 @@ class _OmnibarState extends State<Omnibar> {
                                     ),
                                   ),
                                 )
-                              : const SizedBox.shrink()),
+                              : const SizedBox.shrink(
+                                  key: ValueKey('no_action'),
+                                )),
                   ),
 
                   // Ambient active download indicator pill when idle
@@ -606,7 +665,11 @@ class _OmnibarState extends State<Omnibar> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  tr('installing'),
+                                  aggregateProgress != null
+                                      ? (activeDownloads.length > 1
+                                            ? '${activeDownloads.length} • ${(aggregateProgress * 100).toInt()}%'
+                                            : '${(aggregateProgress * 100).toInt()}%')
+                                      : tr('installing'),
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
@@ -630,7 +693,10 @@ class _OmnibarState extends State<Omnibar> {
                     borderRadius: BorderRadius.vertical(
                       bottom: Radius.circular(currentRadius),
                     ),
-                    child: const LinearProgressIndicator(minHeight: 2.5),
+                    child: LinearProgressIndicator(
+                      value: aggregateProgress,
+                      minHeight: 2.5,
+                    ),
                   ),
                 ),
             ],
@@ -671,6 +737,7 @@ class AppActionsFAB extends StatelessWidget {
 
   static void showAddAppMenu(BuildContext context) {
     final plusSettings = context.read<PlusSettingsProvider>();
+    final appsProvider = context.read<AppsProvider>();
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final isM3E = plusSettings.plusEnableMaterialExpressive;
     final colorScheme = Theme.of(context).colorScheme;
@@ -679,6 +746,9 @@ class AppActionsFAB extends StatelessWidget {
         : plusSettings.plusGlobalCornerRadius;
     final sheetRadius = radius.clamp(24.0, 48.0);
     final clipboardUrlFuture = _readClipboardUrl();
+    final activeDownloads = appsProvider.apps.values
+        .where((e) => e.downloadProgress != null)
+        .toList();
 
     showModalBottomSheet(
       context: context,
@@ -774,70 +844,192 @@ class AppActionsFAB extends StatelessWidget {
                                       ),
                                     ),
                                   ),
-                                  child: ListTile(
-                                    dense: true,
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 2,
-                                    ),
-                                    shape: CardMetrics.shape(
-                                      itemRadius,
-                                      expressive: isM3E,
-                                    ),
-                                    leading: Container(
-                                      width: 38,
-                                      height: 38,
-                                      decoration: ShapeDecoration(
-                                        color: colorScheme.primary.withValues(
-                                          alpha: 0.16,
-                                        ),
-                                        shape: CardMetrics.shape(
-                                          itemRadius,
-                                          expressive: isM3E,
-                                        ),
-                                      ),
-                                      child: Icon(
-                                        Icons.content_paste_go_rounded,
-                                        size: 20,
-                                        color: colorScheme.primary,
-                                      ),
-                                    ),
-                                    title: Text(
-                                      tr('addAppByUrl'),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w700,
-                                            color: colorScheme.primary,
+                                  child: Material(
+                                    type: MaterialType.transparency,
+                                    child: ListTile(
+                                      dense: true,
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 2,
                                           ),
+                                      shape: CardMetrics.shape(
+                                        itemRadius,
+                                        expressive: isM3E,
+                                      ),
+                                      leading: Container(
+                                        width: 38,
+                                        height: 38,
+                                        decoration: ShapeDecoration(
+                                          color: colorScheme.primary.withValues(
+                                            alpha: 0.16,
+                                          ),
+                                          shape: CardMetrics.shape(
+                                            itemRadius,
+                                            expressive: isM3E,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          Icons.content_paste_go_rounded,
+                                          size: 20,
+                                          color: colorScheme.primary,
+                                        ),
+                                      ),
+                                      title: Text(
+                                        tr('addAppByUrl'),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: colorScheme.primary,
+                                            ),
+                                      ),
+                                      subtitle: Text(
+                                        clipUrl,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
+                                      ),
+                                      trailing: Icon(
+                                        Icons.add_circle_rounded,
+                                        color: colorScheme.primary,
+                                        size: 22,
+                                      ),
+                                      onTap: () {
+                                        AppHaptics.selectionClick();
+                                        Navigator.pop(context);
+                                        showAddAppSheet(
+                                          context: context,
+                                          initialUrl: clipUrl,
+                                        );
+                                      },
                                     ),
-                                    subtitle: Text(
-                                      clipUrl,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                    trailing: Icon(
-                                      Icons.add_circle_rounded,
-                                      color: colorScheme.primary,
-                                      size: 22,
-                                    ),
-                                    onTap: () {
-                                      AppHaptics.selectionClick();
-                                      Navigator.pop(context);
-                                      showAddAppSheet(
-                                        context: context,
-                                        initialUrl: clipUrl,
-                                      );
-                                    },
                                   ),
                                 ),
                               );
                             },
                           ),
+
+                          // In-flight active downloads card with live progress
+                          if (activeDownloads.isNotEmpty)
+                            Builder(
+                              builder: (ctx) {
+                                double sum = 0;
+                                int determinateCount = 0;
+                                for (final d in activeDownloads) {
+                                  final p = d.downloadProgress;
+                                  if (p != null && p >= 0) {
+                                    sum += (p / 100.0).clamp(0.0, 1.0);
+                                    determinateCount++;
+                                  }
+                                }
+                                final double? fraction = determinateCount > 0
+                                    ? sum / determinateCount
+                                    : null;
+                                final itemRadius = CardMetrics.inner(
+                                  CardMetrics.card(radius),
+                                );
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Container(
+                                    decoration: ShapeDecoration(
+                                      color: colorScheme.primaryContainer
+                                          .withValues(alpha: 0.35),
+                                      shape: CardMetrics.shape(
+                                        itemRadius,
+                                        expressive: isM3E,
+                                        side: BorderSide(
+                                          color: colorScheme.primary.withValues(
+                                            alpha: 0.45,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Material(
+                                          type: MaterialType.transparency,
+                                          child: ListTile(
+                                            dense: true,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 12,
+                                                  vertical: 2,
+                                                ),
+                                            shape: CardMetrics.shape(
+                                              itemRadius,
+                                              expressive: isM3E,
+                                            ),
+                                            leading: Container(
+                                              width: 38,
+                                              height: 38,
+                                              decoration: ShapeDecoration(
+                                                color: colorScheme.primary
+                                                    .withValues(alpha: 0.16),
+                                                shape: CardMetrics.shape(
+                                                  itemRadius,
+                                                  expressive: isM3E,
+                                                ),
+                                              ),
+                                              child: Icon(
+                                                Icons.downloading_rounded,
+                                                size: 20,
+                                                color: colorScheme.primary,
+                                              ),
+                                            ),
+                                            title: Text(
+                                              '${activeDownloads.length} ${tr('activeDownloads')}',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleSmall
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.w700,
+                                                    color: colorScheme.primary,
+                                                  ),
+                                            ),
+                                            subtitle: Text(
+                                              fraction != null
+                                                  ? '${(fraction * 100).toInt()}% · ${tr('activeDownloadsDescription')}'
+                                                  : tr(
+                                                      'activeDownloadsDescription',
+                                                    ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(
+                                                context,
+                                              ).textTheme.bodySmall,
+                                            ),
+                                            trailing: Icon(
+                                              Icons.arrow_forward_rounded,
+                                              color: colorScheme.primary,
+                                              size: 20,
+                                            ),
+                                            onTap: () {
+                                              AppHaptics.selectionClick();
+                                              Navigator.pop(context);
+                                              CommandCenter.show(context);
+                                            },
+                                          ),
+                                        ),
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.vertical(
+                                            bottom: Radius.circular(itemRadius),
+                                          ),
+                                          child: LinearProgressIndicator(
+                                            value: fraction,
+                                            minHeight: 3,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
 
                           // Search & Discover (CommandCenter)
                           _buildMenuItem(
@@ -851,6 +1043,22 @@ class AppActionsFAB extends StatelessWidget {
                             onTap: () {
                               Navigator.pop(context);
                               CommandCenter.show(context);
+                            },
+                          ),
+
+                          // Check for Updates
+                          _buildMenuItem(
+                            context,
+                            icon: Icons.sync_rounded,
+                            title: tr('checkForUpdates'),
+                            subtitle: tr('checkUpdates'),
+                            containerColor: colorScheme.tertiaryContainer
+                                .withValues(alpha: 0.55),
+                            iconColor: colorScheme.tertiary,
+                            onTap: () {
+                              AppHaptics.mediumImpact();
+                              Navigator.pop(context);
+                              appsProvider.checkUpdates();
                             },
                           ),
 
@@ -1019,33 +1227,48 @@ class AppActionsFAB extends StatelessWidget {
 
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: ShapeDecoration(
-            color:
-                containerColor ??
-                colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
-            shape: CardMetrics.shape(itemRadius, expressive: isM3E),
+      child: Material(
+        type: MaterialType.transparency,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 2,
           ),
-          child: Icon(icon, size: 20, color: iconColor ?? colorScheme.primary),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: ShapeDecoration(
+              color:
+                  containerColor ??
+                  colorScheme.primaryContainer.withValues(
+                    alpha: AppOpacity.half,
+                  ),
+              shape: CardMetrics.shape(itemRadius, expressive: isM3E),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: iconColor ?? colorScheme.primary,
+            ),
+          ),
+          title: Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(
+            subtitle,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          trailing: Icon(
+            Icons.chevron_right_rounded,
+            size: 20,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+          ),
+          onTap: handleTap,
+          shape: CardMetrics.shape(itemRadius, expressive: isM3E),
         ),
-        title: Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-        trailing: Icon(
-          Icons.chevron_right_rounded,
-          size: 20,
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-        ),
-        onTap: handleTap,
-        shape: CardMetrics.shape(itemRadius, expressive: isM3E),
       ),
     );
   }
@@ -1053,11 +1276,16 @@ class AppActionsFAB extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final appsProvider = context.watch<AppsProvider>();
     final isM3E = plusSettings.plusEnableMaterialExpressive;
     final fabRadius = CardMetrics.pill(plusSettings.plusGlobalCornerRadius);
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
     final colorScheme = Theme.of(context).colorScheme;
     final animEnabled = plusSettings.plusEnableEnhancedAnimations;
+    final areDownloadsRunning = appsProvider.areDownloadsRunning();
+    final activeDownloads = appsProvider.apps.values
+        .where((e) => e.downloadProgress != null)
+        .toList();
 
     Widget buildFabStack({
       required bool isCollapsed,
@@ -1177,10 +1405,49 @@ class AppActionsFAB extends StatelessWidget {
                             },
                             child: Padding(
                               padding: const EdgeInsets.all(15),
-                              child: Icon(
-                                Icons.add_rounded,
-                                color: onPrimary,
-                                size: 24,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Icon(
+                                    areDownloadsRunning
+                                        ? Icons.downloading_rounded
+                                        : Icons.add_rounded,
+                                    color: onPrimary,
+                                    size: 24,
+                                  ),
+                                  if (areDownloadsRunning &&
+                                      activeDownloads.length > 1)
+                                    Positioned(
+                                      top: -5,
+                                      right: -7,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 4,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colorScheme.error,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        constraints: const BoxConstraints(
+                                          minWidth: 16,
+                                          minHeight: 16,
+                                        ),
+                                        child: Text(
+                                          '${activeDownloads.length}',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: colorScheme.onError,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           )
@@ -1211,13 +1478,17 @@ class AppActionsFAB extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
-                                        Icons.add_rounded,
+                                        areDownloadsRunning
+                                            ? Icons.downloading_rounded
+                                            : Icons.add_rounded,
                                         color: onPrimary,
                                         size: 22,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        tr('addApp'),
+                                        areDownloadsRunning
+                                            ? '${activeDownloads.length} ${tr('installing')}'
+                                            : tr('addApp'),
                                         style: TextStyle(
                                           color: onPrimary,
                                           fontWeight: FontWeight.w700,

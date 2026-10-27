@@ -22,6 +22,7 @@ class AppDashboard extends StatefulWidget {
   final Function(String) onUrlInput;
   final Function(String)? onDiscoverSearch;
   final VoidCallback onCheckUpdates;
+  final String? searchQuery;
 
   const AppDashboard({
     super.key,
@@ -31,6 +32,7 @@ class AppDashboard extends StatefulWidget {
     required this.onUrlInput,
     this.onDiscoverSearch,
     required this.onCheckUpdates,
+    this.searchQuery,
   });
 
   @override
@@ -223,6 +225,7 @@ class _AppDashboardState extends State<AppDashboard>
               onSearchQuery: widget.onSearchQuery,
               onUrlInput: widget.onUrlInput,
               onDiscoverSearch: widget.onDiscoverSearch,
+              initialQuery: widget.searchQuery,
             ),
 
           if (pinnedApps.isNotEmpty || !appsProvider.isSelectionMode)

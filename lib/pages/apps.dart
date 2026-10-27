@@ -880,21 +880,52 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                         textAlign: TextAlign.center,
                       ),
                     ] else if (filter.nameFilter.isNotEmpty) ...[
-                      const SizedBox(height: 16),
-                      ScaleTouchWrapper(
-                        hapticOnPressDown: true,
-                        scaleDownFactor: 0.96,
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            AppHaptics.selectionClick();
-                            CommandCenter.show(
-                              context,
-                              initialQuery: filter.nameFilter,
-                            );
-                          },
-                          icon: const Icon(Icons.travel_explore_rounded),
-                          label: Text('${tr('search')} "${filter.nameFilter}"'),
+                      const SizedBox(height: 8),
+                      Text(
+                        tr('searchOnlineViaCommandCenter'),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 12,
+                        runSpacing: 10,
+                        children: [
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.96,
+                            child: FilledButton.icon(
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                CommandCenter.show(
+                                  context,
+                                  initialQuery: filter.nameFilter,
+                                );
+                              },
+                              icon: const Icon(Icons.travel_explore_rounded),
+                              label: Text(
+                                '${tr('search')} "${filter.nameFilter}"',
+                              ),
+                            ),
+                          ),
+                          ScaleTouchWrapper(
+                            hapticOnPressDown: true,
+                            scaleDownFactor: 0.96,
+                            child: OutlinedButton.icon(
+                              onPressed: () {
+                                AppHaptics.selectionClick();
+                                setState(() {
+                                  filter.nameFilter = '';
+                                });
+                              },
+                              icon: const Icon(Icons.clear_rounded),
+                              label: Text(tr('clearFilter')),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ],
@@ -2283,6 +2314,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                     if (plusSettings.plusEnableHomeDashboard)
                       SliverToBoxAdapter(
                         child: AppDashboard(
+                          searchQuery: filter.nameFilter,
                           currentFilterMode: filter.statusFilter.isEmpty
                               ? 'all'
                               : filter.statusFilter.first,
@@ -2377,9 +2409,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                           });
                         },
                       ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(key: _listStartKey),
-                    ),
+                    SliverToBoxAdapter(child: SizedBox(key: _listStartKey)),
                     ...getLoadingWidgets(),
                     if (_activeDiscoverQuery != null)
                       ..._buildDiscoverResultsSlivers(context, plusSettings)

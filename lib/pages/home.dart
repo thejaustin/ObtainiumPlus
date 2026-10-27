@@ -14,6 +14,7 @@ import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/utils/motion.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/rendering.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/components/omnibar.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -61,6 +62,22 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   bool isReversing = false;
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+
+  /// When plusHideBottomBarOnScroll is enabled, tracks whether the navigation bar is visible.
+  final ValueNotifier<bool> _navBarVisible = ValueNotifier(true);
+
+  bool _onUserScroll(UserScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false;
+    if (n.direction == ScrollDirection.reverse &&
+        n.metrics.pixels > 24 &&
+        n.metrics.extentAfter > 0) {
+      _navBarVisible.value = false;
+    } else if (n.direction == ScrollDirection.forward ||
+        n.metrics.pixels <= 24) {
+      _navBarVisible.value = true;
+    }
+    return false;
+  }
 
   final GlobalKey<AppsPageState> _appsPageKey = GlobalKey<AppsPageState>();
   final GlobalKey<SettingsPageState> _settingsPageKey =
@@ -451,6 +468,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Future<void> switchToPage(int index) async {
+    _navBarVisible.value = true;
     final currentTab = selectedIndexHistory.isEmpty
         ? 0
         : selectedIndexHistory.last;
@@ -611,7 +629,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 )
               : null,
           floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-          body: pageBody,
+          body: NotificationListener<UserScrollNotification>(
+            onNotification: _onUserScroll,
+            child: pageBody,
+          ),
         ),
       );
     }
@@ -652,48 +673,51 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               )
             : null,
         floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        body: settingsProvider.isTV && showNavBar
-            ? Row(
-                children: [
-                  FocusTraversalGroup(
-                    child: NavigationRail(
-                      destinations: pages
-                          .asMap()
-                          .entries
-                          .map(
-                            (entry) => NavigationRailDestination(
-                              icon: entry.key == 0 && updateCount > 0
-                                  ? Badge.count(
-                                      count: updateCount,
-                                      child: Icon(entry.value.icon),
-                                    )
-                                  : Icon(entry.value.icon),
-                              selectedIcon: entry.key == 0 && updateCount > 0
-                                  ? Badge.count(
-                                      count: updateCount,
-                                      child: Icon(
+        body: NotificationListener<UserScrollNotification>(
+          onNotification: _onUserScroll,
+          child: settingsProvider.isTV && showNavBar
+              ? Row(
+                  children: [
+                    FocusTraversalGroup(
+                      child: NavigationRail(
+                        destinations: pages
+                            .asMap()
+                            .entries
+                            .map(
+                              (entry) => NavigationRailDestination(
+                                icon: entry.key == 0 && updateCount > 0
+                                    ? Badge.count(
+                                        count: updateCount,
+                                        child: Icon(entry.value.icon),
+                                      )
+                                    : Icon(entry.value.icon),
+                                selectedIcon: entry.key == 0 && updateCount > 0
+                                    ? Badge.count(
+                                        count: updateCount,
+                                        child: Icon(
+                                          entry.value.selectedIcon ??
+                                              entry.value.icon,
+                                        ),
+                                      )
+                                    : Icon(
                                         entry.value.selectedIcon ??
                                             entry.value.icon,
                                       ),
-                                    )
-                                  : Icon(
-                                      entry.value.selectedIcon ??
-                                          entry.value.icon,
-                                    ),
-                              label: Text(tr(entry.value.title)),
-                            ),
-                          )
-                          .toList(),
-                      selectedIndex: currentIndex,
-                      onDestinationSelected: switchToPage,
-                      labelType: NavigationRailLabelType.all,
+                                label: Text(tr(entry.value.title)),
+                              ),
+                            )
+                            .toList(),
+                        selectedIndex: currentIndex,
+                        onDestinationSelected: switchToPage,
+                        labelType: NavigationRailLabelType.all,
+                      ),
                     ),
-                  ),
-                  const VerticalDivider(thickness: 1, width: 1),
-                  Expanded(child: pageBody),
-                ],
-              )
-            : pageBody,
+                    const VerticalDivider(thickness: 1, width: 1),
+                    Expanded(child: pageBody),
+                  ],
+                )
+              : pageBody,
+        ),
         bottomNavigationBar: settingsProvider.isTV || !showNavBar
             ? null
             : _buildBottomNavBar(
@@ -714,8 +738,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final isFloating = plusSettings.plusFloatingNavBar;
-    final labelBehavior = context.select<ViewSettingsProvider,
-        NavigationDestinationLabelBehavior>((s) => s.navigationLabelBehavior);
+    final labelBehavior = context
+        .select<ViewSettingsProvider, NavigationDestinationLabelBehavior>(
+          (s) => s.navigationLabelBehavior,
+        );
 
     // Shared keyboard focus handler
     Widget wrapWithFocus(Widget child) => FocusTraversalGroup(
@@ -793,131 +819,154 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       animationsEnabled: AppMotion.enabled(context),
       alwaysShowLabels:
           labelBehavior == NavigationDestinationLabelBehavior.alwaysShow,
-      hideLabels: labelBehavior == NavigationDestinationLabelBehavior.alwaysHide,
+      hideLabels:
+          labelBehavior == NavigationDestinationLabelBehavior.alwaysHide,
       badges: {if (updateCount > 0) 0: updateCount},
     );
 
     final enableGlass = plusSettings.plusEnableGlassmorphism;
 
-    if (isFloating) {
-      // Floating pill dock — frosted when glassmorphism is on, solid otherwise.
-      return RepaintBoundary(
-        key: _bottomNavBarKey,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            // Shadows outside ClipRRect so they aren't clipped.
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(32),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 36,
-                    spreadRadius: 0,
-                    offset: const Offset(0, 4),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.14),
-                    blurRadius: 14,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 10),
-                  ),
-                  if (enableGlass)
-                    BoxShadow(
-                      color: colorScheme.primary.withValues(alpha: 0.06),
-                      blurRadius: 28,
-                      spreadRadius: 2,
-                      offset: Offset.zero,
-                    ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(32),
-                child: ConditionalBlur(
-                  enabled: enableGlass,
-                  sigma: 20,
-                  child: Container(
-                    decoration: ShapeDecoration(
-                      color: colorScheme.surfaceContainerHigh.withValues(
-                        alpha: enableGlass ? 0.72 : 1.0,
+    final Widget bar = isFloating
+        ? RepaintBoundary(
+            key: _bottomNavBarKey,
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                // Shadows outside ClipRRect so they aren't clipped.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 36,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 4),
                       ),
-                      shape: CardMetrics.shape(
-                        32,
-                        expressive: isM3E,
-                        side: BorderSide(
-                          color: enableGlass
-                              ? colorScheme.primary.withValues(alpha: 0.18)
-                              : colorScheme.outlineVariant.withValues(
-                                  alpha: 0.18,
-                                ),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.14),
+                        blurRadius: 14,
+                        spreadRadius: -4,
+                        offset: const Offset(0, 10),
+                      ),
+                      if (enableGlass)
+                        BoxShadow(
+                          color: colorScheme.primary.withValues(alpha: 0.06),
+                          blurRadius: 28,
+                          spreadRadius: 2,
+                          offset: Offset.zero,
                         ),
-                      ),
-                    ),
-                    child: Stack(
-                      children: [
-                        // Inner top-edge highlight beneath nav content
-                        Positioned.fill(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  colorScheme.primaryContainer.withValues(
-                                    alpha: enableGlass ? 0.10 : 0.04,
-                                  ),
-                                  Colors.transparent,
-                                ],
-                                stops: const [0.0, 0.45],
-                              ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: ConditionalBlur(
+                      enabled: enableGlass,
+                      sigma: 20,
+                      child: Container(
+                        decoration: ShapeDecoration(
+                          color: colorScheme.surfaceContainerHigh.withValues(
+                            alpha: enableGlass ? 0.72 : 1.0,
+                          ),
+                          shape: CardMetrics.shape(
+                            32,
+                            expressive: isM3E,
+                            side: BorderSide(
+                              color: enableGlass
+                                  ? colorScheme.primary.withValues(alpha: 0.18)
+                                  : colorScheme.outlineVariant.withValues(
+                                      alpha: 0.18,
+                                    ),
                             ),
                           ),
                         ),
-                        wrapWithFocus(plusNavBar),
+                        child: Stack(
+                          children: [
+                            // Inner top-edge highlight beneath nav content
+                            Positioned.fill(
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      colorScheme.primaryContainer.withValues(
+                                        alpha: enableGlass ? 0.10 : 0.04,
+                                      ),
+                                      Colors.transparent,
+                                    ],
+                                    stops: const [0.0, 0.45],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            wrapWithFocus(plusNavBar),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          )
+        : RepaintBoundary(
+            key: _bottomNavBarKey,
+            child: ClipRRect(
+              child: ConditionalBlur(
+                enabled: enableGlass,
+                sigma: 16,
+                child: Container(
+                  color: colorScheme.surface.withValues(
+                    alpha: enableGlass ? 0.78 : 1.0,
+                  ),
+                  child: wrapWithFocus(
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
+                          ),
+                        ),
+                        navBar,
                       ],
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-      );
-    }
+          );
 
-    // Classic flat-edge bar — frosted when glassmorphism is on, solid otherwise.
-    return RepaintBoundary(
-      key: _bottomNavBarKey,
-      child: ClipRRect(
-        child: ConditionalBlur(
-          enabled: enableGlass,
-          sigma: 16,
-          child: Container(
-            color: colorScheme.surface.withValues(
-              alpha: enableGlass ? 0.78 : 1.0,
-            ),
-            child: wrapWithFocus(
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                  ),
-                  navBar,
-                ],
-              ),
-            ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: _navBarVisible,
+      builder: (context, visible, child) {
+        if (!plusSettings.plusHideBottomBarOnScroll) {
+          return child!;
+        }
+        final anims = plusSettings.plusEnableEnhancedAnimations;
+        return AnimatedSlide(
+          offset: visible ? Offset.zero : const Offset(0, 1.4),
+          duration: Duration(milliseconds: anims ? 280 : 0),
+          curve: visible
+              ? Easing.emphasizedDecelerate
+              : Easing.emphasizedAccelerate,
+          child: AnimatedOpacity(
+            opacity: visible ? 1.0 : 0.0,
+            duration: Duration(milliseconds: anims ? 200 : 0),
+            child: IgnorePointer(ignoring: !visible, child: child),
           ),
-        ),
-      ),
+        );
+      },
+      child: bar,
     );
   }
 
   @override
   void dispose() {
+    _navBarVisible.dispose();
     _tabController.dispose();
     _linkSubscription?.cancel();
     super.dispose();
