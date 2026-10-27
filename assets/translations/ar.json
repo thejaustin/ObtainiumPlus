@@ -1569,5 +1569,8 @@
     "activeDownloadsDescription": "View in-flight downloads and installations in CommandCenter",
     "searchOnlineViaCommandCenter": "Search online repositories via CommandCenter",
     "clearFilter": "Clear Filter",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "relatedSettings": "Related Settings",
+    "relatedSettingsDesc": "Quickly jump to similar and connected settings",
+    "connectedSettingsSubheader": "Configured Actions & Rules"
 }

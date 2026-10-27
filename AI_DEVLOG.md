@@ -7,6 +7,29 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Connected Settings Hub & Expressive Nested Containers
+
+- **Material 3 Expressive Connected Settings Bar (`lib/components/settings/connected_settings_bar.dart`):**
+  - **Interconnected Section Architecture:** Added an expressive contextual jump hub (`ConnectedSettingsBar`) at the base of every settings section, linking logically related preferences, tools, and subpages:
+    - **Appearance:** Connected directly to App Layout & Density, Update Notifications, Motion & Bouncy Physics, and Theme Import/Export.
+    - **Updates & Installation:** Connected directly to Notification Alerts, Update Health & API Rate Limits, Battery Optimization Bypass, and System App Management.
+    - **Notifications:** Connected directly to Background Update Check Frequency, Interaction & Haptics, Update Health, and System App Notifications.
+    - **Behavior:** Connected directly to Home Grid Appearance, API Ban Warnings, Theme Backup, and Advanced Debugging.
+    - **Advanced & Debug:** Connected directly to Real-time App Logs, MicroG Services Hub, Developer Playground, and System OTA Updates.
+  - **Dynamic Chip Grid Adaptability:** On wide screens ($\ge 540\,\text{dp}$), connected items flow into a responsive 2-column squircle grid; on compact devices, renders a clean, accessible list with tactile scale touches (`AppHaptics.selectionClick`).
+- **Visually Connected Dependent Settings (`lib/components/settings/connected_setting_container.dart`):**
+  - **Nested Setting Hierarchy Rail:** Created `ConnectedSettingContainer` featuring a prominent leading vertical accent rail ($3.5\,\text{dp}$ width in primary/tertiary accent), soft container tint, squircle rounding (`CardMetrics.inner`), and optional subsection routing label (`subdirectory_arrow_right_rounded`).
+  - **Notification Enhancements:** Wrapped notification digest, quiet hours, and schedule settings in a connected container anchored to `plusEnableNotificationEnhancements`.
+  - **Swipe Gestures & Ban Warnings:** Connected swipe right/left action dropdowns directly to `enableSwipeGestures`, and anchored the threshold slider to `plusEnableBanWarnings`.
+- **Search Empty State Connected Quick Jumps (`lib/pages/settings.dart`):**
+  - Augmented `_SettingsEmptyState` with interconnected category chips for all 5 settings sections, enabling users to jump directly to any major section with one tap when search yields no matches.
+- **Verification:**
+  - Added unit test suite in `test/connected_settings_test.dart` verifying connected chip rendering, tap dispatching, and container accent rail hierarchy.
+  - Synchronized translation keys across all 32 locale JSON files (`ar.json`, `de.json`, `en.json`, `es.json`, etc.).
+  - All 9 unit, widget, and translation shape tests passed. `dart analyze` reported zero issues.
+
+---
+
 ## 2026-10-27 — Antigravity: Material 3 Expressive Settings Polish & Natural Adaptability Overhaul
 
 - **Adaptive Multi-Column Layout Architecture (`lib/pages/settings.dart`):**

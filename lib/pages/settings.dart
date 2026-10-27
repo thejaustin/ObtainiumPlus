@@ -2,10 +2,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/advanced_settings_section.dart';
 import 'package:obtainium/components/settings/appearance_hub.dart';
 import 'package:obtainium/components/settings/app_behavior_section.dart';
 import 'package:obtainium/components/settings/apps_view_settings_section.dart';
+import 'package:obtainium/components/settings/connected_settings_bar.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
@@ -16,7 +18,16 @@ import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
 import 'package:obtainium/components/settings/update_settings_section.dart';
 import 'package:obtainium/pages/changelog.dart';
+import 'package:obtainium/pages/developer_settings.dart';
+import 'package:obtainium/pages/import_export.dart';
+import 'package:obtainium/pages/logs.dart';
+import 'package:obtainium/pages/microg_hub.dart';
+import 'package:obtainium/pages/settings_subpage.dart';
+import 'package:obtainium/pages/system_app_selector.dart';
+import 'package:obtainium/pages/system_updates.dart';
+import 'package:obtainium/pages/update_health.dart';
 import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -558,6 +569,10 @@ class SettingsPageState extends State<SettingsPage> {
                             if (_searchQuery.isNotEmpty && _noResults)
                               _SettingsEmptyState(
                                 onClear: _searchController.clear,
+                                onSelectSection: (index) {
+                                  _searchController.clear();
+                                  _selectSection(index);
+                                },
                               ),
                             Column(
                               key: _resultsKey,
@@ -829,6 +844,12 @@ class SettingsPageState extends State<SettingsPage> {
                                 ],
                               ],
                             ),
+                            if (_searchQuery.isEmpty)
+                              _buildConnectedSettingsForSection(
+                                context,
+                                _selectedSectionIndex,
+                                isCompact,
+                              ),
                             const SizedBox(height: 24),
                             _buildFooter(context),
                             SizedBox(
@@ -948,6 +969,220 @@ class SettingsPageState extends State<SettingsPage> {
       ],
     );
   }
+
+  Widget _buildConnectedSettingsForSection(
+    BuildContext context,
+    int sectionIndex,
+    bool isCompact,
+  ) {
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    List<ConnectedSettingItem> items = [];
+
+    switch (sectionIndex) {
+      case 0: // Appearance
+        items = [
+          ConnectedSettingItem(
+            icon: Icons.dashboard_customize_outlined,
+            title: tr('settingsAppearanceLayoutNav'),
+            subtitle: tr('settingsAppearanceLayoutNavDesc'),
+            accentColor: colorScheme.tertiary,
+            onTap: () {
+              pushRoute(
+                context,
+                SettingsSubpage(
+                  title: tr('settingsAppearanceLayoutNav'),
+                  subtitle: tr('settingsAppearanceLayoutNavDesc'),
+                  icon: Icons.dashboard_customize_outlined,
+                  accentColor: colorScheme.tertiary,
+                  child: AppsViewSettingsSection(
+                    searchQuery: _searchQuery,
+                    onSetState: (fn) => setState(fn),
+                    showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+                    subCategory: 'layout',
+                  ),
+                ),
+              );
+            },
+          ),
+          ConnectedSettingItem(
+            icon: Icons.notifications_active_outlined,
+            title: tr('settingsTabNotifications'),
+            subtitle: tr('settingsTabNotificationsDesc'),
+            accentColor: colorScheme.primary,
+            onTap: () => _selectSection(2),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.auto_awesome_motion_rounded,
+            title: tr('settingsAppearanceMotionPhysics'),
+            subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
+            accentColor: colorScheme.secondary,
+            onTap: () {
+              pushRoute(
+                context,
+                SettingsSubpage(
+                  title: tr('settingsAppearanceMotionPhysics'),
+                  subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
+                  icon: Icons.auto_awesome_motion_rounded,
+                  accentColor: colorScheme.secondary,
+                  child: ThemeSettingsSection(
+                    searchQuery: _searchQuery,
+                    androidInfoFuture: _androidInfoFuture,
+                    colorsNameMap: const <ColorSwatch<Object>, String>{},
+                    showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+                    subCategory: 'motion',
+                  ),
+                ),
+              );
+            },
+          ),
+          ConnectedSettingItem(
+            icon: Icons.import_export_rounded,
+            title: tr('importExport'),
+            subtitle: 'Backup, export, or restore settings and apps',
+            accentColor: colorScheme.tertiary,
+            onTap: () => pushRoute(context, const ImportExportPage()),
+          ),
+        ];
+        break;
+
+      case 1: // Updates & Install
+        items = [
+          ConnectedSettingItem(
+            icon: Icons.notifications_active_outlined,
+            title: tr('settingsTabNotifications'),
+            subtitle: tr('settingsTabNotificationsDesc'),
+            accentColor: colorScheme.tertiary,
+            onTap: () => _selectSection(2),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.healing_outlined,
+            title: tr('updateHealth'),
+            subtitle: tr('updateHealthSubtitle'),
+            accentColor: colorScheme.primary,
+            onTap: () => pushRoute(context, const UpdateHealthPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.battery_charging_full_rounded,
+            title: tr('disableBatteryOptimisation'),
+            subtitle: 'Manage background restrictions and OEM limits',
+            accentColor: colorScheme.secondary,
+            onTap: () => showDeviceOptimizationSheet(context: context),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.apps_rounded,
+            title: tr('showSystemApps'),
+            subtitle: 'Configure tracked packages and system apps',
+            accentColor: colorScheme.primary,
+            onTap: () => pushRoute(context, const SystemAppSelector()),
+          ),
+        ];
+        break;
+
+      case 2: // Notifications
+        items = [
+          ConnectedSettingItem(
+            icon: Icons.schedule_rounded,
+            title: tr('settingsTabUpdatesInstall'),
+            subtitle: tr('settingsTabUpdatesInstallDesc'),
+            accentColor: colorScheme.primary,
+            onTap: () => _selectSection(1),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.tune_rounded,
+            title: tr('settingsTabBehavior'),
+            subtitle: tr('settingsTabBehaviorDesc'),
+            accentColor: colorScheme.secondary,
+            onTap: () => _selectSection(3),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.healing_outlined,
+            title: tr('updateHealth'),
+            subtitle: tr('updateHealthSubtitle'),
+            accentColor: colorScheme.tertiary,
+            onTap: () => pushRoute(context, const UpdateHealthPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.apps_rounded,
+            title: tr('showSystemApps'),
+            subtitle: 'Configure tracked packages and system apps',
+            accentColor: colorScheme.primary,
+            onTap: () => pushRoute(context, const SystemAppSelector()),
+          ),
+        ];
+        break;
+
+      case 3: // Behavior
+        items = [
+          ConnectedSettingItem(
+            icon: Icons.palette_outlined,
+            title: tr('settingsTabAppearance'),
+            subtitle: tr('settingsTabAppearanceDesc'),
+            accentColor: colorScheme.primary,
+            onTap: () => _selectSection(0),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.shield_outlined,
+            title: tr('updateHealth'),
+            subtitle: tr('updateHealthSubtitle'),
+            accentColor: colorScheme.tertiary,
+            onTap: () => pushRoute(context, const UpdateHealthPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.import_export_rounded,
+            title: tr('importExport'),
+            subtitle: 'Backup, export, or restore settings and apps',
+            accentColor: colorScheme.secondary,
+            onTap: () => pushRoute(context, const ImportExportPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.code_rounded,
+            title: tr('settingsTabAdvancedDebug'),
+            subtitle: tr('settingsTabAdvancedDebugDesc'),
+            accentColor: colorScheme.primary,
+            onTap: () => _selectSection(4),
+          ),
+        ];
+        break;
+
+      case 4: // Advanced & Debug
+        items = [
+          ConnectedSettingItem(
+            icon: Icons.receipt_long_rounded,
+            title: tr('logs'),
+            subtitle: 'Real-time diagnostic logs and traces',
+            accentColor: colorScheme.primary,
+            onTap: () => pushRoute(context, const LogsPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.extension_rounded,
+            title: tr('microGHub'),
+            subtitle: tr('microGHubDescription'),
+            accentColor: colorScheme.secondary,
+            onTap: () => pushRoute(context, const MicroGHubPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.developer_mode_rounded,
+            title: tr('developerAndDiagnostics'),
+            subtitle: 'Experimental developer preferences and tools',
+            accentColor: colorScheme.tertiary,
+            onTap: () => pushRoute(context, const DeveloperSettingsPage()),
+          ),
+          ConnectedSettingItem(
+            icon: Icons.system_update_rounded,
+            title: tr('systemUpdates'),
+            subtitle: 'OTA system package updates and sources',
+            accentColor: colorScheme.primary,
+            onTap: () => pushRoute(context, const SystemUpdatesPage()),
+          ),
+        ];
+        break;
+    }
+
+    return ConnectedSettingsBar(items: items, isCompact: isCompact);
+  }
 }
 
 class _SettingsLink {
@@ -971,30 +1206,37 @@ Future<void> _openSettingsUrl(String url) async {
 
 class _SettingsEmptyState extends StatelessWidget {
   final VoidCallback onClear;
+  final ValueChanged<int>? onSelectSection;
 
-  const _SettingsEmptyState({required this.onClear});
+  const _SettingsEmptyState({required this.onClear, this.onSelectSection});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final isCompact = plusSettings.plusUseCompactSettings;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 64.0, horizontal: 24.0),
+      padding: EdgeInsets.symmetric(
+        vertical: isCompact ? 32.0 : 48.0,
+        horizontal: 20.0,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(isCompact ? 18 : 24),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.search_off_rounded,
-              size: 64,
+              size: isCompact ? 48 : 64,
               color: colorScheme.primary.withValues(alpha: 0.8),
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: isCompact ? 16 : 24),
           Text(
             tr('noResults'),
             style: Theme.of(
@@ -1010,7 +1252,7 @@ class _SettingsEmptyState extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           ScaleTouchWrapper(
             hapticOnPressDown: true,
             scaleDownFactor: 0.94,
@@ -1023,8 +1265,80 @@ class _SettingsEmptyState extends StatelessWidget {
               label: Text(tr('clearSearch')),
             ),
           ),
+          if (onSelectSection != null) ...[
+            const SizedBox(height: 28),
+            Text(
+              tr('relatedSettings'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.primary,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                _buildQuickCategoryChip(
+                  context,
+                  0,
+                  Icons.palette_outlined,
+                  tr('settingsTabAppearance'),
+                ),
+                _buildQuickCategoryChip(
+                  context,
+                  1,
+                  Icons.system_update_outlined,
+                  tr('settingsTabUpdatesInstall'),
+                ),
+                _buildQuickCategoryChip(
+                  context,
+                  2,
+                  Icons.notifications_outlined,
+                  tr('settingsTabNotifications'),
+                ),
+                _buildQuickCategoryChip(
+                  context,
+                  3,
+                  Icons.tune_outlined,
+                  tr('settingsTabBehavior'),
+                ),
+                _buildQuickCategoryChip(
+                  context,
+                  4,
+                  Icons.code_rounded,
+                  tr('settingsTabAdvancedDebug'),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
+    );
+  }
+
+  Widget _buildQuickCategoryChip(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final radius = CardMetrics.pill(plusSettings.plusGlobalCornerRadius);
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+
+    return ActionChip(
+      avatar: Icon(icon, size: 16, color: cs.primary),
+      label: Text(label),
+      shape: CardMetrics.shape(radius, expressive: isM3E),
+      backgroundColor: cs.surfaceContainerHigh,
+      onPressed: () {
+        AppHaptics.selectionClick();
+        onSelectSection?.call(index);
+      },
     );
   }
 }

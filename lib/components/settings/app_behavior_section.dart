@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
@@ -102,19 +103,22 @@ class AppBehaviorSection extends StatelessWidget {
                           ),
                           curve: Curves.easeInOutCubic,
                           child: settings.enableSwipeGestures
-                              ? Column(
-                                  children: [
-                                    if (_matches(tr('swipeRightAction')))
-                                      _buildSwipeActionDropdown(
-                                        context,
-                                        isRight: true,
-                                      ),
-                                    if (_matches(tr('swipeLeftAction')))
-                                      _buildSwipeActionDropdown(
-                                        context,
-                                        isRight: false,
-                                      ),
-                                  ],
+                              ? ConnectedSettingContainer(
+                                  label: tr('connectedSettingsSubheader'),
+                                  child: Column(
+                                    children: [
+                                      if (_matches(tr('swipeRightAction')))
+                                        _buildSwipeActionDropdown(
+                                          context,
+                                          isRight: true,
+                                        ),
+                                      if (_matches(tr('swipeLeftAction')))
+                                        _buildSwipeActionDropdown(
+                                          context,
+                                          isRight: false,
+                                        ),
+                                    ],
+                                  ),
                                 )
                               : const SizedBox.shrink(),
                         );
@@ -478,18 +482,22 @@ class AppBehaviorSection extends StatelessWidget {
                     ),
                     curve: Curves.easeInOutCubic,
                     child: settings.plusEnableBanWarnings
-                        ? SettingsSliderTile(
-                            icon: Icons.warning_amber_outlined,
-                            title: tr('plusBanWarningThreshold'),
-                            value: settings.plusBanWarningThreshold.toDouble(),
-                            defaultValue: 10.0,
-                            min: 1,
-                            max: 50,
-                            divisions: 49,
-                            labelBuilder: (v) => v.toInt().toString(),
-                            onChanged: (val) {
-                              settings.plusBanWarningThreshold = val.round();
-                            },
+                        ? ConnectedSettingContainer(
+                            accentColor: Theme.of(context).colorScheme.tertiary,
+                            child: SettingsSliderTile(
+                              icon: Icons.warning_amber_outlined,
+                              title: tr('plusBanWarningThreshold'),
+                              value: settings.plusBanWarningThreshold
+                                  .toDouble(),
+                              defaultValue: 10.0,
+                              min: 1,
+                              max: 50,
+                              divisions: 49,
+                              labelBuilder: (v) => v.toInt().toString(),
+                              onChanged: (val) {
+                                settings.plusBanWarningThreshold = val.round();
+                              },
+                            ),
                           )
                         : const SizedBox.shrink(),
                   ),

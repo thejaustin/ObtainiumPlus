@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
@@ -109,77 +110,83 @@ class NotificationSettingsSection extends StatelessWidget {
                         ),
                       ),
                     )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_matches(tr('enableNotificationDigest')) ||
-                            _matches(tr('enableQuietHours')))
-                          GenericBooleanControlGrid<PlusSettingsProvider>(
-                            title: tr('settingsTabNotifications'),
-                            embedded: true,
-                            settings: [
-                              if (_matches(tr('enableNotificationDigest')))
-                                (
-                                  icon: Icons.mark_email_unread_outlined,
-                                  label: tr('enableNotificationDigest'),
-                                  description: tr(
-                                    'notificationDigestDescription',
+                  : ConnectedSettingContainer(
+                      label: tr('connectedSettingsSubheader'),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_matches(tr('enableNotificationDigest')) ||
+                              _matches(tr('enableQuietHours')))
+                            GenericBooleanControlGrid<PlusSettingsProvider>(
+                              title: tr('settingsTabNotifications'),
+                              embedded: true,
+                              settings: [
+                                if (_matches(tr('enableNotificationDigest')))
+                                  (
+                                    icon: Icons.mark_email_unread_outlined,
+                                    label: tr('enableNotificationDigest'),
+                                    description: tr(
+                                      'notificationDigestDescription',
+                                    ),
+                                    getValue: (s) =>
+                                        s.plusEnableNotificationDigest,
+                                    setValue: (s, v) =>
+                                        s.plusEnableNotificationDigest = v,
                                   ),
-                                  getValue: (s) =>
-                                      s.plusEnableNotificationDigest,
-                                  setValue: (s, v) =>
-                                      s.plusEnableNotificationDigest = v,
-                                ),
-                              if (_matches(tr('enableQuietHours')))
-                                (
-                                  icon: Icons.do_not_disturb_on_outlined,
-                                  label: tr('enableQuietHours'),
-                                  description: tr('quietHoursDescription'),
-                                  getValue: (s) =>
-                                      s.plusEnableNotificationQuietHours,
-                                  setValue: (s, v) =>
-                                      s.plusEnableNotificationQuietHours = v,
-                                ),
-                            ],
-                          ),
-                        AnimatedSize(
-                          duration: Duration(
-                            milliseconds: settings.plusEnableEnhancedAnimations
-                                ? 200
-                                : 0,
-                          ),
-                          curve: Curves.easeInOutCubic,
-                          child:
-                              settings.plusEnableNotificationQuietHours &&
-                                  _matches(tr('quietHoursSchedule'))
-                              ? ScaleTouchWrapper(
-                                  hapticOnPressDown: true,
-                                  onTap: () =>
-                                      _showQuietHoursDialog(context, settings),
-                                  child: ListTile(
-                                    leading: buildSettingsIconBadge(
+                                if (_matches(tr('enableQuietHours')))
+                                  (
+                                    icon: Icons.do_not_disturb_on_outlined,
+                                    label: tr('enableQuietHours'),
+                                    description: tr('quietHoursDescription'),
+                                    getValue: (s) =>
+                                        s.plusEnableNotificationQuietHours,
+                                    setValue: (s, v) =>
+                                        s.plusEnableNotificationQuietHours = v,
+                                  ),
+                              ],
+                            ),
+                          AnimatedSize(
+                            duration: Duration(
+                              milliseconds:
+                                  settings.plusEnableEnhancedAnimations
+                                  ? 200
+                                  : 0,
+                            ),
+                            curve: Curves.easeInOutCubic,
+                            child:
+                                settings.plusEnableNotificationQuietHours &&
+                                    _matches(tr('quietHoursSchedule'))
+                                ? ScaleTouchWrapper(
+                                    hapticOnPressDown: true,
+                                    onTap: () => _showQuietHoursDialog(
                                       context,
-                                      Icons.schedule_outlined,
-                                      active: true,
+                                      settings,
                                     ),
-                                    title: Text(
-                                      tr('quietHoursSchedule'),
-                                      style: Theme.of(
+                                    child: ListTile(
+                                      leading: buildSettingsIconBadge(
                                         context,
-                                      ).textTheme.bodyLarge,
+                                        Icons.schedule_outlined,
+                                        active: true,
+                                      ),
+                                      title: Text(
+                                        tr('quietHoursSchedule'),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge,
+                                      ),
+                                      subtitle: Text(
+                                        '${_formatHour(settings.plusNotificationQuietHoursStart)} — ${_formatHour(settings.plusNotificationQuietHoursEnd)}',
+                                      ),
+                                      trailing: const Icon(
+                                        Icons.chevron_right_rounded,
+                                        size: 20,
+                                      ),
                                     ),
-                                    subtitle: Text(
-                                      '${_formatHour(settings.plusNotificationQuietHoursStart)} — ${_formatHour(settings.plusNotificationQuietHoursEnd)}',
-                                    ),
-                                    trailing: const Icon(
-                                      Icons.chevron_right_rounded,
-                                      size: 20,
-                                    ),
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        ),
-                      ],
+                                  )
+                                : const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
                     ),
             ),
           ],

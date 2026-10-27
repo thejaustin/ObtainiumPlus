@@ -1569,5 +1569,8 @@
     "storeSetDefault": "Set as default",
     "storeClearDefault": "Clear default store",
     "installFailedWithCode": "Installation failed (code {})",
-    "noExportDirChosen": "No export folder chosen yet"
+    "noExportDirChosen": "No export folder chosen yet",
+    "relatedSettings": "Related Settings",
+    "relatedSettingsDesc": "Quickly jump to similar and connected settings",
+    "connectedSettingsSubheader": "Configured Actions & Rules"
 }
