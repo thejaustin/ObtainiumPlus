@@ -899,8 +899,7 @@ class _AppListTileState extends State<AppListTile>
                                                 ),
                                               ),
                                             if (showAuthor &&
-                                                showVersion &&
-                                                !hasUpdate)
+                                                showVersion)
                                               Text(
                                                 ' • ',
                                                 style: Theme.of(context)
@@ -991,10 +990,13 @@ class _AppListTileState extends State<AppListTile>
                                                     ),
                                               ),
                                             if (showDate)
-                                              Text(
-                                                dateText,
-                                                maxLines: 1,
-                                                style: Theme.of(context)
+                                              Flexible(
+                                                child: Text(
+                                                  dateText,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: Theme.of(context)
                                                     .textTheme
                                                     .bodySmall
                                                     ?.copyWith(
@@ -1005,6 +1007,7 @@ class _AppListTileState extends State<AppListTile>
                                                             alpha: 0.75,
                                                           ),
                                                     ),
+                                                ),
                                               ),
                                           ],
                                         ),

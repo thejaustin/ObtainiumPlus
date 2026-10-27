@@ -633,6 +633,24 @@ class _AppGridTileState extends State<AppGridTile>
                   ),
                 ),
               ),
+              if (viewSettings.displayShowAuthor &&
+                  widget.appInMemory.author.isNotEmpty &&
+                  !isUltraCompactTile &&
+                  !isDownloading) ...[
+                const SizedBox(height: 1.5),
+                Text(
+                  widget.appInMemory.author,
+                  maxLines: 1,
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: isCompactTile ? 9.5 : 10.5,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: -0.1,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -648,7 +666,12 @@ class _AppGridTileState extends State<AppGridTile>
                   viewSettings.displayShowAuthor ||
                   viewSettings.displayShowDate ||
                   plusSettings.plusGridShowSourceBadge) ...[
-                _buildUpToDatePill(colorScheme, viewSettings, plusSettings),
+                _buildUpToDatePill(
+                  colorScheme,
+                  viewSettings,
+                  plusSettings,
+                  includeAuthor: isCompactTile,
+                ),
               ],
             ],
             // Tag chips (shown on roomy square tiles when not actively downloading)
@@ -704,6 +727,20 @@ class _AppGridTileState extends State<AppGridTile>
                   letterSpacing: -0.2,
                 ),
               ),
+              if (viewSettings.displayShowAuthor &&
+                  widget.appInMemory.author.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  widget.appInMemory.author,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
                 _buildUpdateVersionPill(colorScheme, plusSettings),
@@ -712,7 +749,12 @@ class _AppGridTileState extends State<AppGridTile>
                   viewSettings.displayShowDate ||
                   plusSettings.plusGridShowSourceBadge) ...[
                 const SizedBox(height: 3),
-                _buildUpToDatePill(colorScheme, viewSettings, plusSettings),
+                _buildUpToDatePill(
+                  colorScheme,
+                  viewSettings,
+                  plusSettings,
+                  includeAuthor: false,
+                ),
               ],
               _buildProgressIndicator(),
             ],
@@ -916,6 +958,10 @@ class _AppGridTileState extends State<AppGridTile>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (plusSettings.plusGridShowSourceBadge) ...[
+            _buildSourceBadge(context),
+            const SizedBox(width: 4),
+          ],
           if (isExpressivePill) ...[
             Icon(
               widget.isAmbiguous
@@ -1005,13 +1051,15 @@ class _AppGridTileState extends State<AppGridTile>
   Widget _buildUpToDatePill(
     ColorScheme colorScheme,
     ViewSettingsProvider viewSettings,
-    PlusSettingsProvider plusSettings,
-  ) {
+    PlusSettingsProvider plusSettings, {
+    bool includeAuthor = false,
+  }) {
     final parts = <String>[];
     if (viewSettings.displayShowVersion) {
       parts.add(_getVersionText());
     }
-    if (viewSettings.displayShowAuthor &&
+    if (includeAuthor &&
+        viewSettings.displayShowAuthor &&
         widget.appInMemory.author.isNotEmpty) {
       parts.add(
         parts.isEmpty
