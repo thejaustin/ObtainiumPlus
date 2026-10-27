@@ -1123,10 +1123,8 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   void _showLanguagePicker(BuildContext context, SettingsProvider settings) {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
       builder: (context) {
         return GlassDialog(
           title: tr('language'),

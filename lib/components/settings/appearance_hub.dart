@@ -3,9 +3,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
@@ -243,12 +245,15 @@ class AppearanceHub extends StatelessWidget {
                 isCompact: isCompact,
                 onTap: () {
                   AppHaptics.selectionClick();
-                  _showAppearanceSubmenuSheet(
+                  pushRoute(
                     context,
-                    title: card.title,
-                    icon: card.icon,
-                    accentColor: card.color,
-                    child: card.content,
+                    SettingsSubpage(
+                      title: card.title,
+                      subtitle: card.desc,
+                      icon: card.icon,
+                      accentColor: card.color,
+                      child: card.content,
+                    ),
                   );
                 },
               ),
@@ -256,123 +261,6 @@ class AppearanceHub extends StatelessWidget {
           }),
         ],
       ),
-    );
-  }
-
-  void _showAppearanceSubmenuSheet(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color accentColor,
-    required Widget child,
-  }) {
-    final plusSettings = context.read<PlusSettingsProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusSettingsCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final sheetRadius = Radius.circular(radius.clamp(20.0, 36.0));
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 840),
-            child: ClipRRect(
-              borderRadius: BorderRadius.vertical(top: sheetRadius),
-              child: ConditionalBlur(
-                sigma: 16,
-                enabled: plusSettings.plusEnableGlassmorphism,
-                child: Container(
-                  height: MediaQuery.of(context).size.height * 0.88,
-                  decoration: BoxDecoration(
-                    color: plusSettings.plusEnableGlassmorphism
-                        ? colorScheme.surfaceContainerHigh.withValues(
-                            alpha: 0.9,
-                          )
-                        : (Theme.of(context).brightness == Brightness.dark
-                              ? colorScheme.surfaceContainerHigh
-                              : colorScheme.surfaceContainerLow),
-                    borderRadius: BorderRadius.vertical(top: sheetRadius),
-                    border: Border.all(
-                      color: colorScheme.outlineVariant.withValues(
-                        alpha: Theme.of(context).brightness == Brightness.dark
-                            ? 0.35
-                            : 0.65,
-                      ),
-                      width: 1.0,
-                    ),
-                  ),
-                  child: Column(
-                    children: [
-                      // Handle
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 10),
-                        width: 38,
-                        height: 4.5,
-                        decoration: BoxDecoration(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.6,
-                          ),
-                          borderRadius: BorderRadius.circular(2.5),
-                        ),
-                      ),
-                      // Header
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 4, 16, 12),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: ShapeDecoration(
-                                color: accentColor.withValues(alpha: 0.15),
-                                shape: CardMetrics.shape(
-                                  12,
-                                  expressive:
-                                      plusSettings.plusEnableMaterialExpressive,
-                                ),
-                              ),
-                              child: Icon(icon, color: accentColor, size: 22),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: colorScheme.onSurface,
-                                    ),
-                              ),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.close_rounded),
-                              tooltip: tr('close'),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                      // Body
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: child,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/pages/onboarding.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:obtainium/providers/apps_provider.dart';
@@ -335,6 +336,42 @@ void main() {
       // Verify no redundant uppercase or banner duplication
       expect(find.text('APPEARANCE'), findsNothing);
       expect(find.text('UPDATES & INSTALL'), findsNothing);
+    },
+    timeout: const Timeout(Duration(minutes: 1)),
+  );
+
+  testWidgets(
+    'tapping appearance submenu card opens SettingsSubpage with back navigation',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      SharedPreferences.setMockInitialValues({
+        'plusSettingsBottomNavBar': false,
+      });
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(0);
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+
+      final cardFinder = find.text(
+        translations['settingsAppearanceThemesAndColors'] as String,
+      );
+      expect(cardFinder, findsOneWidget);
+
+      await tester.tap(cardFinder);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SettingsSubpage), findsOneWidget);
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      expect(find.byType(SettingsSubpage), findsNothing);
+      expect(find.byType(SettingsPage), findsOneWidget);
     },
     timeout: const Timeout(Duration(minutes: 1)),
   );

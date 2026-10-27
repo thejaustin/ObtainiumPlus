@@ -7,6 +7,24 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-27 — Antigravity: Settings Submenu Architecture, Subpages Modernization, App Grid Design Language & Wiring Audit
+
+- **Settings Architecture & Submenu Modernization:**
+  - **Eliminated Monolithic Long List Fallback:** Permanent first-class submenus in `SettingsPage`. When not searching, the Appearance tab always renders the organized `AppearanceHub` submenus. Removed the overwhelming long list fallback mode and eliminated the obsolete `settingsUseSubmenuHub` toggle from `SettingsLayoutSelector`.
+  - **Eliminated Slide-Up Popup Menus (Bottom Sheets):** Replaced `showModalBottomSheet` in `AppearanceHub` with dedicated Material 3 Expressive full subpages via `pushRoute(context, SettingsSubpage(...))`.
+  - **New `SettingsSubpage` (`lib/pages/settings_subpage.dart`):** Created a reusable subpage component with `CustomAppBar` (supporting One-Handed mode, title, subtitle, back button, glassmorphism blur), adaptive width centering (`maxWidth: 840` for tablets / foldables), and Android predictive back gesture support.
+  - **Clean M3 Language Picker Dialog:** Replaced `showModalBottomSheet` in `ThemeSettingsSection._showLanguagePicker` with standard M3 `showDialog(GlassDialog(...))` dialog.
+- **Home Screen & App Grid Design Language Polish (`AppGridTile`):**
+  - **Responsive Category Accent Ribbon:** Enhanced `plusCategoryAccentRibbon` to intelligently adapt between vertical grid tiles (top edge ribbon) and horizontal cards (left edge indicator pill with rounded corners).
+  - **Crisp Icon Rim Border:** Implemented `foregroundDecoration` in `_buildIconStack` when `plusIconRimBorder` is enabled, guaranteeing a sharp 1.2dp outline drawn cleanly over the icon edge without pixel occlusion.
+  - **Fixed Source Badge Toggle Wiring:** Fixed a bug where `plusGridShowSourceBadge` was skipped if `displayShowVersion`, `author`, and `date` were all false. Now `plusGridShowSourceBadge` independently displays the source badge pill across vertical and horizontal grid modes.
+  - **Card Metrics & Elevation:** Refined card shadow blur and subtle border outline contrast for Material 3 Expressive surfaces.
+- **Verification & Test Suite:**
+  - Added new integration test in `test/settings_page_test.dart` verifying that tapping appearance submenu cards cleanly pushes `SettingsSubpage` and returns to `SettingsPage` via `BackButton`.
+  - Verified 100% test pass rate across `search_and_download_test.dart`, `settings_page_test.dart`, `plus_settings_test.dart`, and `translation_keys_used_test.dart` (28 passing tests).
+
+---
+
 ## 2026-10-27 — Antigravity: Omnibar Downloads Progress, FAB Quick Actions, & Navbar Options Modernization
 
 - **Omnibar Determinate Download Progress & Instant Paste:**

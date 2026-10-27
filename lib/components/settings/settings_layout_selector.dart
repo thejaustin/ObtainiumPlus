@@ -198,14 +198,6 @@ class SettingsLayoutSelector extends StatelessWidget {
                   ),
                   _buildGranularSwitch(
                     context,
-                    title: tr('settingsUseSubmenuHub'),
-                    subtitle: tr('settingsUseSubmenuHubDesc'),
-                    value: plusSettings.plusSettingsUseSubmenuHub,
-                    onChanged: (v) =>
-                        plusSettings.plusSettingsUseSubmenuHub = v,
-                  ),
-                  _buildGranularSwitch(
-                    context,
                     title: tr('settingsUseHeroCards'),
                     subtitle: tr('settingsUseHeroCardsDesc'),
                     value: plusSettings.plusSettingsUseHeroCards,

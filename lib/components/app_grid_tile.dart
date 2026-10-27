@@ -392,29 +392,53 @@ class _AppGridTileState extends State<AppGridTile>
                       // 4. Category Accent Ribbon (M3E)
                       if (plusSettings.plusCategoryAccentRibbon &&
                           resolvedCategoryColor != null)
-                        Positioned(
-                          top: 0,
-                          left: cardBorderRadius * 0.5,
-                          right: cardBorderRadius * 0.5,
-                          child: Container(
-                            height: 3.5,
-                            decoration: BoxDecoration(
-                              color: resolvedCategoryColor,
-                              borderRadius: const BorderRadius.vertical(
-                                bottom: Radius.circular(3),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: resolvedCategoryColor.withValues(
-                                    alpha: 0.4,
+                        isHorizontal
+                            ? Positioned(
+                                top: cardBorderRadius * 0.45,
+                                bottom: cardBorderRadius * 0.45,
+                                left: 0,
+                                child: Container(
+                                  width: 3.5,
+                                  decoration: BoxDecoration(
+                                    color: resolvedCategoryColor,
+                                    borderRadius: const BorderRadius.horizontal(
+                                      right: Radius.circular(3),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: resolvedCategoryColor.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                        blurRadius: 4,
+                                        offset: const Offset(1, 0),
+                                      ),
+                                    ],
                                   ),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 1),
                                 ),
-                              ],
-                            ),
-                          ),
-                        ),
+                              )
+                            : Positioned(
+                                top: 0,
+                                left: cardBorderRadius * 0.45,
+                                right: cardBorderRadius * 0.45,
+                                child: Container(
+                                  height: 3.5,
+                                  decoration: BoxDecoration(
+                                    color: resolvedCategoryColor,
+                                    borderRadius: const BorderRadius.vertical(
+                                      bottom: Radius.circular(3),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: resolvedCategoryColor.withValues(
+                                          alpha: 0.4,
+                                        ),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
 
                       // 5. Main Card Tap Target & Interactive Surface (InkWell)
                       Positioned.fill(
@@ -622,7 +646,8 @@ class _AppGridTileState extends State<AppGridTile>
                 _buildUpdateVersionPill(colorScheme, plusSettings),
               ] else if (viewSettings.displayShowVersion ||
                   viewSettings.displayShowAuthor ||
-                  viewSettings.displayShowDate) ...[
+                  viewSettings.displayShowDate ||
+                  plusSettings.plusGridShowSourceBadge) ...[
                 _buildUpToDatePill(colorScheme, viewSettings, plusSettings),
               ],
             ],
@@ -684,7 +709,8 @@ class _AppGridTileState extends State<AppGridTile>
                 _buildUpdateVersionPill(colorScheme, plusSettings),
               ] else if (viewSettings.displayShowVersion ||
                   viewSettings.displayShowAuthor ||
-                  viewSettings.displayShowDate) ...[
+                  viewSettings.displayShowDate ||
+                  plusSettings.plusGridShowSourceBadge) ...[
                 const SizedBox(height: 3),
                 _buildUpToDatePill(colorScheme, viewSettings, plusSettings),
               ],
@@ -722,14 +748,6 @@ class _AppGridTileState extends State<AppGridTile>
               shape: CardMetrics.shape(
                 iconBorderRadius,
                 expressive: plusSettings.plusEnableMaterialExpressive,
-                side: plusSettings.plusIconRimBorder
-                    ? BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.4,
-                        ),
-                        width: 1.0,
-                      )
-                    : BorderSide.none,
               ),
               shadows: AppShadows.smooth(
                 color: Colors.black,
@@ -737,6 +755,22 @@ class _AppGridTileState extends State<AppGridTile>
                 blurFactor: 0.7,
               ),
             ),
+            foregroundDecoration: plusSettings.plusIconRimBorder
+                ? ShapeDecoration(
+                    shape: CardMetrics.shape(
+                      iconBorderRadius,
+                      expressive: plusSettings.plusEnableMaterialExpressive,
+                      side: BorderSide(
+                        color: colorScheme.outline.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.25,
+                        ),
+                        width: 1.2,
+                      ),
+                    ),
+                  )
+                : null,
             child: AnimatedSwitcher(
               duration: Duration(
                 milliseconds: plusSettings.plusEnableEnhancedAnimations

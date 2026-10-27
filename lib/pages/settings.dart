@@ -553,9 +553,7 @@ class SettingsPageState extends State<SettingsPage> {
                               children: [
                                 if (_searchQuery.isNotEmpty ||
                                     _selectedSectionIndex == 0) ...[
-                                  if (_searchQuery.isEmpty &&
-                                      plusSettings
-                                          .plusSettingsUseSubmenuHub) ...[
+                                  if (_searchQuery.isEmpty) ...[
                                     if (plusSettings
                                         .plusSettingsUseVisualThemePicker)
                                       const VisualThemeSelector(),
