@@ -7,6 +7,23 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-28 — Antigravity: Settings Subpage Lateral Sibling Traversal, Adaptive Alignment & Connected Strip
+
+- **Material 3 Expressive Lateral Sibling Navigation (`lib/pages/settings_subpage.dart`):**
+  - **Fluid Sibling Switcher:** Introduced `SettingsSubpageSibling` support on `SettingsSubpage`. Sibling subpages (e.g., Themes & Colors ⇄ App Tile Styling ⇄ Layout & Navigation ⇄ Motion & Physics) now render an interactive, horizontal scrolling stadium pill switcher immediately beneath the masthead card.
+  - **Silky Route Replacement:** Switching between sibling subpages uses `pushReplacement` with a 240ms cubic fade transition. Users can freely explore related subpages laterally without accumulating deep navigation stacks; pressing Back directly returns to the main Settings hub.
+  - **Connected Settings Strip Integration:** Added `connectedItems: List<ConnectedSettingItem>?` support to `SettingsSubpage`, rendering a contextual `ConnectedSettingsBar` at the footer of subpages for logical cross-hub shortcuts.
+- **Settings Subpage Responsive Layout Alignment (`lib/pages/settings_subpage.dart`):**
+  - Aligned wide-screen horizontal margin calculation to match `SettingsPage` standard: `((screenWidth - 1040) / 2).clamp(16.0, double.infinity)`. Completely eliminates layout shift and width jumping when transitioning between `SettingsPage` and `SettingsSubpage` on large screens, foldables, and tablets.
+- **Appearance Hub Sibling Linking (`lib/components/settings/appearance_hub.dart`):**
+  - Grouped all four Appearance Hub destinations (Themes & Colors, App Tile Styling, Layout & Navigation, Motion & Physics) into cohesive `appearanceSiblings`.
+  - Both 2-column wide layout and single-column mobile layout seamlessly wire sibling context into `SettingsSubpage`, enabling 1-tap lateral jumping across all appearance tools.
+- **Test Suite Verification:**
+  - Added comprehensive test suite `test/settings_subpage_test.dart` verifying masthead, horizontal sibling chip bar, route replacement, `connectedItems` footer, and responsive wide-screen clamp padding.
+  - Full test suite: 535 tests passed cleanly with 0 analyzer issues.
+
+---
+
 ## 2026-10-28 — Antigravity: Universal Command Center Quick Hub, Smart Context Actions & Uninstalled App System Links
 
 - **Universal Command Center Quick Hub (`lib/components/search/command_center.dart`):**

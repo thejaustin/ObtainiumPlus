@@ -109,6 +109,16 @@ class AppearanceHub extends StatelessWidget {
     final innerRadius = CardMetrics.inner(cardRadius);
     final badgeSize = isCompact ? 30.0 : 36.0;
 
+    final appearanceSiblings = hubCards.map((card) {
+      return SettingsSubpageSibling(
+        title: card.title,
+        subtitle: card.desc,
+        icon: card.icon,
+        accentColor: card.color,
+        child: card.content,
+      );
+    }).toList();
+
     return Padding(
       padding: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
       child: Column(
@@ -242,7 +252,9 @@ class AppearanceHub extends StatelessWidget {
                 return Wrap(
                   spacing: spacing,
                   runSpacing: isCompact ? 6 : 10,
-                  children: hubCards.map((card) {
+                  children: hubCards.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final card = entry.value;
                     return SizedBox(
                       width: cardWidth,
                       child: _HubCard(
@@ -261,6 +273,8 @@ class AppearanceHub extends StatelessWidget {
                               subtitle: card.desc,
                               icon: card.icon,
                               accentColor: card.color,
+                              siblings: appearanceSiblings,
+                              currentSiblingIndex: index,
                               child: card.content,
                             ),
                           );
@@ -272,7 +286,9 @@ class AppearanceHub extends StatelessWidget {
               }
 
               return Column(
-                children: hubCards.map((card) {
+                children: hubCards.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final card = entry.value;
                   return Padding(
                     padding: EdgeInsets.only(bottom: isCompact ? 6 : 10),
                     child: _HubCard(
@@ -291,6 +307,8 @@ class AppearanceHub extends StatelessWidget {
                             subtitle: card.desc,
                             icon: card.icon,
                             accentColor: card.color,
+                            siblings: appearanceSiblings,
+                            currentSiblingIndex: index,
                             child: card.content,
                           ),
                         );
