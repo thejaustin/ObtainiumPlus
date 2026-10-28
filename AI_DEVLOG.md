@@ -7,6 +7,27 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-28 — Antigravity: Universal Command Center Quick Hub, Smart Context Actions & Uninstalled App System Links
+
+- **Universal Command Center Quick Hub (`lib/components/search/command_center.dart`):**
+  - **Tag & Category Search Multi-Matching:** Extended `fuzzyMatchMulti` in local search to query `app.app.tags` alongside app names, IDs, authors, URLs, and categories. Users can now search and filter by any tag directly in the Command Center.
+  - **Pending Updates Hero Hub:** When outdated apps exist, `CommandCenter` immediately displays an "UPDATES (N)" hero section with a 1-tap "Update All" tonal button and inline update actions, granting instant update access without browsing the home grid.
+  - **1-Tap Tag & Category Discovery Filters:** Added interactive stadium chip groups for all active tags and categories in the initial search state. Tapping any tag or category chip instantly fills the query and filters local apps.
+  - **Cleaned Unused Imports:** Removed unused imports `add_app.dart` and `custom_errors.dart`.
+- **Context Menu Actions Enhancement (`lib/components/apps/app_actions_context_menu.dart`):**
+  - **Adaptive Install vs Update States:** Intelligently distinguishes between uninstalled (`install`), outdated (`update` with `${installedVersion} → ${latestVersion}` version delta and primary accent styling), and up-to-date (`install` / `upToDate`) apps.
+  - **Direct Share Action:** Integrated 1-tap `Share.share(app.url)` directly in the long-press context menu for rapid app sharing.
+  - **Scrollable Safety & Material Direct Hierarchy:** Converted sheet container to direct `Material` with inner `SingleChildScrollView`, eliminating `ListTile` splash assertions and preventing vertical flex overflows on compact screens.
+- **Universal App Page System Actions (`lib/pages/app.dart`):**
+  - Unlocked `website`, `share`, and `safetyScan` (VirusTotal) system action cards for uninstalled/tracked apps so users can inspect repositories and security scans prior to installation.
+  - Scoped device-specific actions (`appInfo` and `forceStop`) strictly to installed applications.
+  - Cleaned unused imports `pages/apps.dart` and `settings_provider.dart`.
+- **Test Suite Verification:**
+  - Added unit/widget test suites `test/command_center_test.dart` and `test/app_actions_context_menu_test.dart`.
+  - All 533 tests passing with zero errors.
+
+---
+
 ## 2026-10-27 — Antigravity: Modal Details Sheet Fix, 1-Tap Tag Editing & Grid Drag Reorder Polish
 
 - **Modal App Details Sheet Bounce Dismissal Fix (`lib/utils/modal_utils.dart`, `lib/pages/app.dart` — Issue #330):**

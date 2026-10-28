@@ -10,14 +10,12 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/main.dart';
-import 'package:obtainium/pages/apps.dart' hide getChangeLogFn;
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/services/app_update_service.dart';
@@ -1264,8 +1262,9 @@ class _AppPageState extends State<AppPage> {
     }
 
     Widget _buildSystemActions() {
-      if (app?.installedInfo == null) return const SizedBox.shrink();
+      if (app == null) return const SizedBox.shrink();
       final colorScheme = Theme.of(context).colorScheme;
+      final bool isInstalled = app.installedInfo != null;
 
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1285,73 +1284,73 @@ class _AppPageState extends State<AppPage> {
               physics: plusSettings.scrollPhysics,
               child: Row(
                 children: [
-                  _buildActionCard(
-                    icon: Icons.settings_applications_outlined,
-                    label: tr('appInfo'),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      AppInstallService.openAppSettings(app!.app.id);
-                    },
-                    color: colorScheme.secondary,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionCard(
-                    icon: Icons.share_rounded,
-                    label: tr('share'),
-                    onTap: () {
-                      if (app?.app.url != null) {
+                  if (isInstalled) ...[
+                    _buildActionCard(
+                      icon: Icons.settings_applications_outlined,
+                      label: tr('appInfo'),
+                      onTap: () {
                         AppHaptics.selectionClick();
-                        Share.share(app!.app.url);
-                      }
-                    },
-                    color: colorScheme.tertiary,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionCard(
-                    icon: Icons.public_rounded,
-                    label: tr('website'),
-                    onTap: () async {
-                      if (app?.app.url != null) {
+                        AppInstallService.openAppSettings(app.app.id);
+                      },
+                      color: colorScheme.secondary,
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  if (app.app.url.isNotEmpty) ...[
+                    _buildActionCard(
+                      icon: Icons.share_rounded,
+                      label: tr('share'),
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        Share.share(app.app.url);
+                      },
+                      color: colorScheme.tertiary,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildActionCard(
+                      icon: Icons.public_rounded,
+                      label: tr('website'),
+                      onTap: () async {
                         AppHaptics.selectionClick();
                         launchUrlString(
-                          app!.app.url,
+                          app.app.url,
                           mode: LaunchMode.externalApplication,
                         );
-                      }
-                    },
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionCard(
-                    icon: Icons.security_rounded,
-                    label: tr('safetyScan'),
-                    onTap: () async {
-                      if (app?.app.url != null) {
+                      },
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildActionCard(
+                      icon: Icons.security_rounded,
+                      label: tr('safetyScan'),
+                      onTap: () async {
                         AppHaptics.selectionClick();
                         final vtUrl =
-                            'https://www.virustotal.com/gui/search/${Uri.encodeComponent(app!.app.url)}';
+                            'https://www.virustotal.com/gui/search/${Uri.encodeComponent(app.app.url)}';
                         launchUrlString(
                           vtUrl,
                           mode: LaunchMode.externalApplication,
                         );
-                      }
-                    },
-                    color: colorScheme.secondary,
-                  ),
-                  const SizedBox(width: 8),
-                  _buildActionCard(
-                    icon: Icons.block_flipped,
-                    label: tr('forceStop'),
-                    onTap: () async {
-                      try {
-                        AppHaptics.selectionClick();
-                        AppInstallService.openAppSettings(app!.app.id);
-                      } catch (e) {
-                        if (mounted) showError(e, context);
-                      }
-                    },
-                    color: colorScheme.error,
-                  ),
+                      },
+                      color: colorScheme.secondary,
+                    ),
+                  ],
+                  if (isInstalled) ...[
+                    const SizedBox(width: 8),
+                    _buildActionCard(
+                      icon: Icons.block_flipped,
+                      label: tr('forceStop'),
+                      onTap: () async {
+                        try {
+                          AppHaptics.selectionClick();
+                          AppInstallService.openAppSettings(app.app.id);
+                        } catch (e) {
+                          if (mounted) showError(e, context);
+                        }
+                      },
+                      color: colorScheme.error,
+                    ),
+                  ],
                 ],
               ),
             ),

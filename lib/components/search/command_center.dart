@@ -14,14 +14,12 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_search_service.dart';
-import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/pages/app.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/main.dart';
-import 'package:obtainium/custom_errors.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -208,7 +206,8 @@ class _CommandCenterState extends State<CommandCenter> {
             app.app.id,
             app.author,
             app.app.url,
-            ...?app.app.categories,
+            ...app.app.categories,
+            ...app.app.tags,
           ]);
           return MapEntry(app, score);
         })
@@ -1248,12 +1247,22 @@ class _CommandCenterState extends State<CommandCenter> {
 
   Widget _buildInitialState() {
     final appsProvider = context.watch<AppsProvider>();
-    final recentlyAdded = appsProvider
-        .getAppValues()
-        .toList()
-        .reversed
-        .take(5)
-        .toList();
+    final allApps = appsProvider.getAppValues().toList();
+    final appsWithUpdates = allApps.where((a) {
+      final isInstalled = a.installedInfo != null;
+      return isInstalled &&
+          a.app.latestVersion.isNotEmpty &&
+          a.app.installedVersion != null &&
+          a.app.latestVersion != a.app.installedVersion;
+    }).toList();
+    final recentlyAdded = allApps.reversed.take(5).toList();
+
+    final allTags = <String>{};
+    final allCategories = <String>{};
+    for (final a in allApps) {
+      allTags.addAll(a.app.tags);
+      allCategories.addAll(a.app.categories);
+    }
 
     return SingleChildScrollView(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -1261,13 +1270,69 @@ class _CommandCenterState extends State<CommandCenter> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildActiveDownloadsSection(context, appsProvider),
+          if (appsWithUpdates.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Row(
+                children: [
+                  Text(
+                    '${tr('updates').toUpperCase()} (${appsWithUpdates.length})',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.bold,
+                        ),
+                  ),
+                  const Spacer(),
+                  ScaleTouchWrapper(
+                    hapticOnPressDown: true,
+                    scaleDownFactor: 0.94,
+                    child: FilledButton.tonalIcon(
+                      style: FilledButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 0,
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.system_update_alt_rounded,
+                        size: 14,
+                      ),
+                      label: Text(
+                        '${tr('update')} ${tr('all')}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      onPressed: () {
+                        AppHaptics.selectionClick();
+                        appsProvider.downloadAndInstallLatestApps(
+                          appsWithUpdates.map((a) => a.app.id).toList(),
+                          context,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ...appsWithUpdates.map(_buildLocalResult),
+            const SizedBox(height: 16),
+          ],
           if (recentlyAdded.isNotEmpty) ...[
             _buildSectionHeader(tr('recentlyAdded')),
             ...recentlyAdded.map(_buildLocalResult),
             const SizedBox(height: 24),
           ],
           _buildQuickActions(),
-          const SizedBox(height: 48),
+          const SizedBox(height: 16),
+          if (allTags.isNotEmpty)
+            _buildFilterChipGroup(tr('tags'), allTags, isTag: true),
+          if (allCategories.isNotEmpty)
+            _buildFilterChipGroup(tr('categories'), allCategories, isTag: false),
+          const SizedBox(height: 32),
           Center(
             child: Column(
               children: [
@@ -1292,6 +1357,59 @@ class _CommandCenterState extends State<CommandCenter> {
             ),
           ),
           const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChipGroup(
+    String title,
+    Set<String> items, {
+    bool isTag = false,
+  }) {
+    if (items.isEmpty) return const SizedBox.shrink();
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final radius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusHomeCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final chipRadius = CardMetrics.inner(radius);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionHeader(title),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: items.take(12).map((item) {
+              return ScaleTouchWrapper(
+                hapticOnPressDown: true,
+                scaleDownFactor: 0.92,
+                child: ActionChip(
+                  avatar: Icon(
+                    isTag ? Icons.label_rounded : Icons.folder_rounded,
+                    size: 14,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  label: Text(item),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    _controller.text = item;
+                    _onSearchChanged(item);
+                  },
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(chipRadius),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );

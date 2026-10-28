@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -12,6 +11,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:share_plus/share_plus.dart';
 
 class AppActionsContextMenu {
   static void show(
@@ -37,16 +37,17 @@ class AppActionsContextMenu {
         );
         final iconRadius = CardMetrics.inner(sheetRadius);
 
-        return Container(
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
+        return Padding(
+          padding: const EdgeInsets.all(16),
+          child: Material(
             color: theme.colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(sheetRadius),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+            clipBehavior: Clip.antiAlias,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                 // Header
                 Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -109,22 +110,102 @@ class AppActionsContextMenu {
                       },
                     ),
                   ),
-                ScaleTouchWrapper(
-                  hapticOnPressDown: true,
-                  scaleDownFactor: 0.97,
-                  child: ListTile(
-                    leading: const Icon(Icons.download_rounded),
-                    title: Text(tr('update')),
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      Navigator.pop(context);
-                      context.read<AppsProvider>().downloadAndInstallLatestApps(
-                        [appInMemory.app.id],
-                        context,
-                      );
-                    },
-                  ),
-                ),
+                () {
+                  final bool isInstalled =
+                      appInMemory.app.installedVersion != null;
+                  final bool hasUpdate = isInstalled &&
+                      appInMemory.app.latestVersion.isNotEmpty &&
+                      appInMemory.app.latestVersion !=
+                          appInMemory.app.installedVersion;
+
+                  if (hasUpdate) {
+                    return ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.97,
+                      child: ListTile(
+                        leading: Icon(
+                          Icons.system_update_alt_rounded,
+                          color: theme.colorScheme.primary,
+                        ),
+                        title: Text(
+                          tr('update'),
+                          style: TextStyle(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Text(
+                          '${appInMemory.app.installedVersion} → ${appInMemory.app.latestVersion}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          Navigator.pop(context);
+                          context
+                              .read<AppsProvider>()
+                              .downloadAndInstallLatestApps(
+                                [appInMemory.app.id],
+                                context,
+                              );
+                        },
+                      ),
+                    );
+                  } else if (!isInstalled) {
+                    return ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.97,
+                      child: ListTile(
+                        leading: const Icon(Icons.download_rounded),
+                        title: Text(tr('install')),
+                        subtitle: appInMemory.app.latestVersion.isNotEmpty
+                            ? Text(
+                                appInMemory.app.latestVersion,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              )
+                            : null,
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          Navigator.pop(context);
+                          context
+                              .read<AppsProvider>()
+                              .downloadAndInstallLatestApps(
+                                [appInMemory.app.id],
+                                context,
+                              );
+                        },
+                      ),
+                    );
+                  } else {
+                    return ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.97,
+                      child: ListTile(
+                        leading: const Icon(Icons.refresh_rounded),
+                        title: Text(tr('install')),
+                        subtitle: Text(
+                          tr('upToDate'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        onTap: () {
+                          AppHaptics.selectionClick();
+                          Navigator.pop(context);
+                          context
+                              .read<AppsProvider>()
+                              .downloadAndInstallLatestApps(
+                                [appInMemory.app.id],
+                                context,
+                              );
+                        },
+                      ),
+                    );
+                  }
+                }(),
                 ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   scaleDownFactor: 0.97,
@@ -232,6 +313,19 @@ class AppActionsContextMenu {
                     },
                   ),
                 ),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.97,
+                  child: ListTile(
+                    leading: const Icon(Icons.share_rounded),
+                    title: Text(tr('share')),
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      Navigator.pop(context);
+                      Share.share(appInMemory.app.url);
+                    },
+                  ),
+                ),
                 if (appInMemory.installedInfo != null)
                   FutureBuilder<int>(
                     future: sdkIntFuture,
@@ -302,7 +396,9 @@ class AppActionsContextMenu {
               ],
             ),
           ),
-        );
+        ),
+      ),
+    );
       },
     );
   }
