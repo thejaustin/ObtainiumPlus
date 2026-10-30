@@ -311,6 +311,15 @@ class _AppGridViewState extends State<AppGridView> {
       );
     }
 
+    // Match tiles by key so they keep their state when the grid re-sorts.
+    int? indexIn(Key key, List<AppInMemory> list) {
+      if (key is! ValueKey<String>) return null;
+      var id = key.value;
+      if (id.startsWith('draggable_')) id = id.substring('draggable_'.length);
+      final i = list.indexWhere((a) => a.app.id == id);
+      return i < 0 ? null : i;
+    }
+
     final gridDelegate = SliverGridDelegateWithFixedCrossAxisCount(
       crossAxisCount: columnCount,
       mainAxisSpacing: 12,
@@ -326,6 +335,7 @@ class _AppGridViewState extends State<AppGridView> {
           delegate: SliverChildBuilderDelegate(
             (ctx, index) => buildGridTile(unpinnedApps[index], index),
             childCount: unpinnedApps.length,
+            findChildIndexCallback: (key) => indexIn(key, unpinnedApps),
             addRepaintBoundaries: false,
             addAutomaticKeepAlives: false,
           ),
@@ -392,6 +402,7 @@ class _AppGridViewState extends State<AppGridView> {
               (ctx, index) =>
                   buildGridTile(pinnedApps[index], index, isPinned: true),
               childCount: pinnedApps.length,
+              findChildIndexCallback: (key) => indexIn(key, pinnedApps),
               addRepaintBoundaries: false,
               addAutomaticKeepAlives: false,
             ),
@@ -416,6 +427,7 @@ class _AppGridViewState extends State<AppGridView> {
                   index + pinnedApps.length,
                 ),
                 childCount: unpinnedApps.length,
+                findChildIndexCallback: (key) => indexIn(key, unpinnedApps),
                 addRepaintBoundaries: false,
                 addAutomaticKeepAlives: false,
               ),

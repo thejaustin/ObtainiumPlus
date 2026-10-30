@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -17,11 +19,65 @@ import 'package:provider/provider.dart';
 /// A Material 3 Expressive banner displaying live in-flight background operations
 /// (e.g. batch update checks, active app downloads, finishing installations)
 /// with squiggly/wavy progress indicators, eliminating reliance solely on notification center.
-class ActiveOperationsBanner extends StatelessWidget {
+class ActiveOperationsBanner extends StatefulWidget {
   const ActiveOperationsBanner({super.key});
 
   @override
+  State<ActiveOperationsBanner> createState() => _ActiveOperationsBannerState();
+}
+
+class _ActiveOperationsBannerState extends State<ActiveOperationsBanner> {
+  /// Between one app finishing and the next starting (or a check ending and
+  /// its downloads starting) nothing is active for a moment. Holding the last
+  /// banner briefly stops it collapsing and re-expanding in that gap.
+  static const _linger = Duration(milliseconds: 900);
+  Widget? _lastActive;
+  Timer? _hideTimer;
+
+  @override
+  void dispose() {
+    _hideTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final banner = _buildBanner(context);
+    if (banner != null) {
+      _hideTimer?.cancel();
+      _hideTimer = null;
+      _lastActive = banner;
+    } else if (_lastActive != null && _hideTimer == null) {
+      _hideTimer = Timer(_linger, () {
+        if (mounted) setState(() => _lastActive = null);
+      });
+    }
+    final animationsEnabled = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableEnhancedAnimations;
+    final shown = banner ?? _lastActive;
+
+    // Explicit size+fade switch instead of AnimatedSize: AnimatedSize snaps
+    // to the new size when its child resized mid-animation (e.g. the "updates
+    // found" pill appearing), so the banner vanished in one frame when a
+    // check ended right after finding updates.
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: animationsEnabled ? 380 : 0),
+      switchInCurve: Easing.emphasizedDecelerate,
+      switchOutCurve: Easing.emphasizedAccelerate,
+      transitionBuilder: (child, animation) => SizeTransition(
+        sizeFactor: animation,
+        alignment: Alignment.topCenter,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
+      child: shown == null
+          ? const SizedBox.shrink(key: ValueKey('idle'))
+          : KeyedSubtree(key: const ValueKey('active'), child: shown),
+    );
+  }
+
+  /// The banner for the current operations, or null when nothing is running.
+  Widget? _buildBanner(BuildContext context) {
     final appsProvider = context.watch<AppsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
 
@@ -42,206 +98,179 @@ class ActiveOperationsBanner extends StatelessWidget {
     final innerRadius = CardMetrics.inner(radius);
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Outer AnimatedSize animates the banner sliding in/out of the list
-    // Explicit size+fade switch instead of AnimatedSize: AnimatedSize snaps
-    // to the new size when its child resized mid-animation (e.g. the "updates
-    // found" pill appearing), so the banner vanished in one frame when a
-    // check ended right after finding updates.
-    return AnimatedSwitcher(
-      duration: Duration(milliseconds: animationsEnabled ? 380 : 0),
-      switchInCurve: Easing.emphasizedDecelerate,
-      switchOutCurve: Easing.emphasizedAccelerate,
-      transitionBuilder: (child, animation) => SizeTransition(
-        sizeFactor: animation,
-        alignment: Alignment.topCenter,
-        child: FadeTransition(opacity: animation, child: child),
-      ),
-      child: !isActive
-          ? const SizedBox.shrink(key: ValueKey('idle'))
-          : Padding(
-              key: const ValueKey('active'),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 6.0,
+    if (!isActive) return null;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+      child: Card(
+        margin: EdgeInsets.zero,
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        shape: CardMetrics.shape(
+          CardMetrics.card(radius),
+          expressive: plusSettings.plusEnableMaterialExpressive,
+          side: BorderSide(
+            color: glassEnabled
+                ? colorScheme.primary.withValues(alpha: 0.22)
+                : colorScheme.primary.withValues(alpha: 0.30),
+            width: 1,
+          ),
+        ),
+        color: glassEnabled
+            ? colorScheme.surface.withValues(
+                alpha: AppConstants.glassSurfaceAlpha,
+              )
+            : colorScheme.primaryContainer.withValues(alpha: 0.10),
+        child: Stack(
+          children: [
+            // Glass blur layer
+            if (glassEnabled)
+              Positioned.fill(
+                child: ConditionalBlur(
+                  enabled: true,
+                  sigma: AppConstants.glassBlurSigmaSoft,
+                  child: Container(color: Colors.transparent),
+                ),
               ),
-              child: Card(
-                margin: EdgeInsets.zero,
-                elevation: 0,
-                clipBehavior: Clip.antiAlias,
-                shape: CardMetrics.shape(
-                  CardMetrics.card(radius),
-                  expressive: plusSettings.plusEnableMaterialExpressive,
-                  side: BorderSide(
-                    color: glassEnabled
-                        ? colorScheme.primary.withValues(alpha: 0.22)
-                        : colorScheme.primary.withValues(alpha: 0.30),
-                    width: 1,
+            // Glass sheen gradient
+            if (glassEnabled)
+              Positioned.fill(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: isDark
+                          ? [
+                              Colors.white.withValues(alpha: 0.07),
+                              Colors.white.withValues(alpha: 0.02),
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.03),
+                            ]
+                          : [
+                              Colors.white.withValues(alpha: 0.32),
+                              Colors.white.withValues(alpha: 0.08),
+                              Colors.transparent,
+                              Colors.black.withValues(alpha: 0.02),
+                            ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
+                    ),
                   ),
                 ),
-                color: glassEnabled
-                    ? colorScheme.surface.withValues(
-                        alpha: AppConstants.glassSurfaceAlpha,
-                      )
-                    : colorScheme.primaryContainer.withValues(alpha: 0.10),
-                child: Stack(
+              ),
+            // Content (AnimatedSize handles tile count changes)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 12.0,
+              ),
+              child: AnimatedSize(
+                duration: Duration(milliseconds: animationsEnabled ? 300 : 0),
+                curve: Easing.emphasizedDecelerate,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Glass blur layer
-                    if (glassEnabled)
-                      Positioned.fill(
-                        child: ConditionalBlur(
-                          enabled: true,
-                          sigma: AppConstants.glassBlurSigmaSoft,
-                          child: Container(color: Colors.transparent),
-                        ),
+                    // In-Flight Update Checks
+                    if (isCheckingUpdates) ...[
+                      _UpdateCheckProgress(
+                        appsProvider: appsProvider,
+                        animate:
+                            animationsEnabled &&
+                            !MediaQuery.disableAnimationsOf(context),
                       ),
-                    // Glass sheen gradient
-                    if (glassEnabled)
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: isDark
-                                  ? [
-                                      Colors.white.withValues(alpha: 0.07),
-                                      Colors.white.withValues(alpha: 0.02),
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.03),
-                                    ]
-                                  : [
-                                      Colors.white.withValues(alpha: 0.32),
-                                      Colors.white.withValues(alpha: 0.08),
-                                      Colors.transparent,
-                                      Colors.black.withValues(alpha: 0.02),
-                                    ],
-                              stops: const [0.0, 0.3, 0.7, 1.0],
-                            ),
+                      if (activeDownloads.isNotEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 10.0),
+                          child: Divider(height: 1),
+                        ),
+                    ],
+
+                    // Active Downloads & Finishing Installations
+                    if (activeDownloads.length > 2) ...[
+                      _BulkSummaryRow(
+                        total: activeDownloads.length,
+                        bulkTotal: appsProvider.bulkUpdateTotal,
+                        bulkDone: appsProvider.bulkUpdateDone,
+                        onCancelAll: () {
+                          AppHaptics.selectionClick();
+                          appsProvider.cancelAllDownloads();
+                        },
+                        fraction: () {
+                          double sum = 0;
+                          for (final d in activeDownloads) {
+                            final p = d.downloadProgress;
+                            sum += (p == null || p < 0)
+                                ? 1.0
+                                : (p / 100.0).clamp(0.0, 1.0);
+                          }
+                          return sum / activeDownloads.length;
+                        }(),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.0),
+                        child: Divider(height: 1),
+                      ),
+                    ],
+                    for (
+                      int i = 0;
+                      i < activeDownloads.length && i < 2;
+                      i++
+                    ) ...[
+                      if (i > 0)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Divider(height: 1),
+                        ),
+                      ScaleTouchWrapper(
+                        key: ValueKey(activeDownloads[i].app.id),
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.98,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(innerRadius),
+                          onTap: () {
+                            AppHaptics.selectionClick();
+                            final appId = activeDownloads[i].app.id;
+                            showAdaptiveDetailSheet(
+                              context: context,
+                              builder: (context, controller) => AppPage(
+                                appId: appId,
+                                isModal: true,
+                                scrollController: controller,
+                              ),
+                            );
+                          },
+                          child: _ActiveDownloadTile(
+                            appInMemory: activeDownloads[i],
+                            innerRadius: innerRadius,
+                            onCancel: () {
+                              AppHaptics.selectionClick();
+                              appsProvider.cancelDownload(
+                                activeDownloads[i].app.id,
+                              );
+                            },
                           ),
                         ),
                       ),
-                    // Content (AnimatedSize handles tile count changes)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 12.0,
-                      ),
-                      child: AnimatedSize(
-                        duration: Duration(
-                          milliseconds: animationsEnabled ? 300 : 0,
-                        ),
-                        curve: Easing.emphasizedDecelerate,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // In-Flight Update Checks
-                            if (isCheckingUpdates) ...[
-                              _UpdateCheckProgress(
-                                appsProvider: appsProvider,
-                                animate:
-                                    animationsEnabled &&
-                                    !MediaQuery.disableAnimationsOf(context),
-                              ),
-                              if (activeDownloads.isNotEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 10.0),
-                                  child: Divider(height: 1),
-                                ),
-                            ],
-
-                            // Active Downloads & Finishing Installations
-                            if (activeDownloads.length > 2) ...[
-                              _BulkSummaryRow(
-                                total: activeDownloads.length,
-                                bulkTotal: appsProvider.bulkUpdateTotal,
-                                bulkDone: appsProvider.bulkUpdateDone,
-                                onCancelAll: () {
-                                  AppHaptics.selectionClick();
-                                  appsProvider.cancelAllDownloads();
-                                },
-                                fraction: () {
-                                  double sum = 0;
-                                  for (final d in activeDownloads) {
-                                    final p = d.downloadProgress;
-                                    sum += (p == null || p < 0)
-                                        ? 1.0
-                                        : (p / 100.0).clamp(0.0, 1.0);
-                                  }
-                                  return sum / activeDownloads.length;
-                                }(),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.symmetric(vertical: 8.0),
-                                child: Divider(height: 1),
-                              ),
-                            ],
-                            for (
-                              int i = 0;
-                              i < activeDownloads.length && i < 2;
-                              i++
-                            ) ...[
-                              if (i > 0)
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 8.0),
-                                  child: Divider(height: 1),
-                                ),
-                              ScaleTouchWrapper(
-                                hapticOnPressDown: true,
-                                scaleDownFactor: 0.98,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(
-                                    innerRadius,
-                                  ),
-                                  onTap: () {
-                                    AppHaptics.selectionClick();
-                                    final appId = activeDownloads[i].app.id;
-                                    showAdaptiveDetailSheet(
-                                      context: context,
-                                      builder: (context, controller) => AppPage(
-                                        appId: appId,
-                                        isModal: true,
-                                        scrollController: controller,
-                                      ),
-                                    );
-                                  },
-                                  child: _ActiveDownloadTile(
-                                    appInMemory: activeDownloads[i],
-                                    innerRadius: innerRadius,
-                                    onCancel: () {
-                                      AppHaptics.selectionClick();
-                                      appsProvider.cancelDownload(
-                                        activeDownloads[i].app.id,
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                            if (activeDownloads.length > 2)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8.0),
-                                child: Text(
-                                  tr(
-                                    'activeMoreCount',
-                                    args: [
-                                      (activeDownloads.length - 2).toString(),
-                                    ],
-                                  ),
-                                  style: Theme.of(context).textTheme.labelMedium
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                ),
-                              ),
-                          ],
+                    ],
+                    if (activeDownloads.length > 2)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          tr(
+                            'activeMoreCount',
+                            args: [(activeDownloads.length - 2).toString()],
+                          ),
+                          style: Theme.of(context).textTheme.labelMedium
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),
             ),
+          ],
+        ),
+      ),
     );
   }
 }

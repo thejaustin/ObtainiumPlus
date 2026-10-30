@@ -299,6 +299,11 @@ class CategorySections extends StatelessWidget {
               );
             },
             childCount: appsInCategory.length,
+            findChildIndexCallback: (key) {
+              if (key is! ValueKey<String>) return null;
+              final i = appsInCategory.indexWhere((a) => a.app.id == key.value);
+              return i < 0 ? null : i;
+            },
             addRepaintBoundaries: true,
             addAutomaticKeepAlives: false,
           ),

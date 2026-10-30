@@ -17,6 +17,7 @@ import 'package:obtainium/components/app_grid_tile.dart'
     show AppIconActionBadge;
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/apps/tile_entrance.dart';
 
 class AppListTile extends StatefulWidget {
   final AppInMemory appInMemory;
@@ -57,9 +58,16 @@ class _AppListTileState extends State<AppListTile>
   void initState() {
     super.initState();
     _scheduleIconLoadIfNeeded();
+    // Decided up front so a tile that skips the fade is never painted
+    // invisible for a frame.
+    final playEntrance = TileEntrance.shouldPlay(
+      context,
+      widget.appInMemory.app.id,
+    );
     _entranceController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
+      value: playEntrance ? 0.0 : 1.0,
     );
     _entranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
@@ -71,23 +79,14 @@ class _AppListTileState extends State<AppListTile>
             curve: AppConstants.expressiveDecelerate,
           ),
         );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final animsEnabled = context
-          .read<PlusSettingsProvider>()
-          .plusEnableEnhancedAnimations;
-      if (!animsEnabled) {
-        _entranceController.value = 1.0;
-        return;
-      }
-      if (widget.entranceDelay == Duration.zero) {
-        _entranceController.forward();
-      } else {
-        _entranceTimer = Timer(widget.entranceDelay, () {
-          if (mounted) _entranceController.forward();
-        });
-      }
-    });
+    if (!playEntrance) return;
+    if (widget.entranceDelay == Duration.zero) {
+      _entranceController.forward();
+    } else {
+      _entranceTimer = Timer(widget.entranceDelay, () {
+        if (mounted) _entranceController.forward();
+      });
+    }
   }
 
   @override

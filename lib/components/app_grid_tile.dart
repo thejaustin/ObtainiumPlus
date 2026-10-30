@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/apps/tile_entrance.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
@@ -53,9 +54,14 @@ class _AppGridTileState extends State<AppGridTile>
   void initState() {
     super.initState();
     _scheduleIconLoadIfNeeded();
+    final playEntrance = TileEntrance.shouldPlay(
+      context,
+      widget.appInMemory.app.id,
+    );
     _entranceController = AnimationController(
       duration: const Duration(milliseconds: 350),
       vsync: this,
+      value: playEntrance ? 0.0 : 1.0,
     );
     _entranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _entranceController, curve: Curves.easeOut),
@@ -67,23 +73,14 @@ class _AppGridTileState extends State<AppGridTile>
             curve: AppConstants.expressiveDecelerate,
           ),
         );
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final animsEnabled = context
-          .read<PlusSettingsProvider>()
-          .plusEnableEnhancedAnimations;
-      if (!animsEnabled) {
-        _entranceController.value = 1.0;
-        return;
-      }
-      if (widget.entranceDelay == Duration.zero) {
-        _entranceController.forward();
-      } else {
-        _entranceTimer = Timer(widget.entranceDelay, () {
-          if (mounted) _entranceController.forward();
-        });
-      }
-    });
+    if (!playEntrance) return;
+    if (widget.entranceDelay == Duration.zero) {
+      _entranceController.forward();
+    } else {
+      _entranceTimer = Timer(widget.entranceDelay, () {
+        if (mounted) _entranceController.forward();
+      });
+    }
   }
 
   @override

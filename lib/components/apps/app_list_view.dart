@@ -266,38 +266,35 @@ class AppListView extends StatelessWidget {
           }
         },
         child: RepaintBoundary(
-          child: Transform.scale(
-            scale: apps.length <= 2 ? 1.02 : 1.0,
-            child: AppListTile(
-              appInMemory: app,
-              hasUpdate: hasUpdate,
-              selected: selectedAppIds.contains(app.app.id),
-              entranceDelay: plusSettings.plusEnableEnhancedAnimations
-                  ? Duration(milliseconds: index < 12 ? index * 30 : 0)
-                  : Duration.zero,
-              onTap: () {
+          child: AppListTile(
+            appInMemory: app,
+            hasUpdate: hasUpdate,
+            selected: selectedAppIds.contains(app.app.id),
+            entranceDelay: plusSettings.plusEnableEnhancedAnimations
+                ? Duration(milliseconds: index < 12 ? index * 30 : 0)
+                : Duration.zero,
+            onTap: () {
+              AppHaptics.selectionClick();
+              if (selectedAppIds.isNotEmpty) {
+                onToggleSelected(app.app);
+              } else {
+                onAppTap(app.app);
+              }
+            },
+            onLongPress: () {
+              if (selectedAppIds.isNotEmpty) {
                 AppHaptics.selectionClick();
-                if (selectedAppIds.isNotEmpty) {
-                  onToggleSelected(app.app);
-                } else {
-                  onAppTap(app.app);
-                }
-              },
-              onLongPress: () {
-                if (selectedAppIds.isNotEmpty) {
-                  AppHaptics.selectionClick();
-                  onToggleSelected(app.app);
-                } else {
-                  AppHaptics.heavyImpact();
-                  AppActionsContextMenu.show(
-                    context,
-                    app,
-                    onEnterMultiSelect: () => onToggleSelected(app.app),
-                  );
-                }
-              },
-              onShowChanges: getChangeLogFn(context, app.app),
-            ),
+                onToggleSelected(app.app);
+              } else {
+                AppHaptics.heavyImpact();
+                AppActionsContextMenu.show(
+                  context,
+                  app,
+                  onEnterMultiSelect: () => onToggleSelected(app.app),
+                );
+              }
+            },
+            onShowChanges: getChangeLogFn(context, app.app),
           ),
         ),
       );
@@ -310,6 +307,18 @@ class AppListView extends StatelessWidget {
         );
       }
       return child;
+    }
+
+    // Rows move when the list re-sorts (an install finishing, an update
+    // arriving). Matching them by key keeps each row's state instead of
+    // rebuilding it from scratch at its new index.
+    int? indexOfKey(Key key, String prefix, List<AppInMemory> list) {
+      if (key is! ValueKey<String> || !key.value.startsWith(prefix)) {
+        return null;
+      }
+      final id = key.value.substring(prefix.length);
+      final i = list.indexWhere((a) => a.app.id == id);
+      return i < 0 ? null : i;
     }
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -398,6 +407,8 @@ class AppListView extends StatelessWidget {
             ),
             SliverReorderableList(
               itemCount: pinnedApps.length,
+              findChildIndexCallback: (key) =>
+                  indexOfKey(key, 'reorder_', pinnedApps),
               itemBuilder: (context, index) =>
                   _buildAppItem(pinnedApps[index], true, index),
               onReorder: (oldIndex, newIndex) {
@@ -432,6 +443,8 @@ class AppListView extends StatelessWidget {
                   return _buildAppItem(unpinnedApps[index], false, index);
                 },
                 childCount: unpinnedApps.length,
+                findChildIndexCallback: (key) =>
+                    indexOfKey(key, 'dismiss_', unpinnedApps),
                 addAutomaticKeepAlives: false,
                 addRepaintBoundaries: true,
               ),
