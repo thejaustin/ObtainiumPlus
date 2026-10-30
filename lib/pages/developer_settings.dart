@@ -38,9 +38,9 @@ class DeveloperSettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(0.0, double.infinity)
         : 0.0;
     return Scaffold(
       appBar: AppBar(title: Text(tr('developerAndDiagnostics'))),

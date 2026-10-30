@@ -7,6 +7,21 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-28 — Antigravity: Directional Motion Transitions, Active Sibling Auto-Centering & Cross-Hub Standardization
+
+- **Directional Spatial Slide Transitions (`lib/pages/settings_subpage.dart`):**
+  - Upgraded sibling transitions to dynamic M3E shared-axis motion. Navigating forward (left-to-right) subtly glides from `+0.05` offset, while navigating backward glides from `-0.05` offset, delivering immediate spatial awareness between sibling subpages.
+- **Active Sibling Chip Auto-Centering (`lib/pages/settings_subpage.dart`):**
+  - Converted `SettingsSubpage` to a stateful widget managing dedicated `_siblingScrollController` and per-chip `GlobalKey`s.
+  - Automatically centers the active sibling chip post-frame via `Scrollable.ensureVisible`, ensuring highlighted chips are never clipped or hidden on compact screens.
+  - Added support for subpage `actions` and `onReset` in `CustomAppBar`.
+- **Connected Appearance Shortcuts Unification (`lib/pages/settings.dart`):**
+  - Extracted `_getAppearanceSiblings` to wire full sibling context into the `ConnectedSettingsBar` at the footer of the Appearance section, ensuring 1-tap lateral traversal is active whether opening subpages from top hub cards or footer jump links.
+- **Settings Sub-Destinations Responsive Layout Standardization (`lib/pages/update_health.dart`, `lib/pages/import_export.dart`, `lib/pages/developer_settings.dart`):**
+  - Aligned wide-screen clamp to 1040dp standard (`((screenWidth - 1040) / 2).clamp(...)`), eliminating visual width hopping between settings hubs on foldables and tablets.
+
+---
+
 ## 2026-10-28 — Antigravity: Settings Subpage Lateral Sibling Traversal, Adaptive Alignment & Connected Strip
 
 - **Material 3 Expressive Lateral Sibling Navigation (`lib/pages/settings_subpage.dart`):**

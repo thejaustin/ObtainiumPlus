@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
@@ -27,7 +28,7 @@ class SettingsSubpageSibling {
 /// A dedicated Material 3 Expressive subpage for settings sections
 /// (replacing slide-up bottom sheets) with adaptive width centering,
 /// one-handed mode integration, lateral sibling navigation, and native predictive back navigation.
-class SettingsSubpage extends StatelessWidget {
+class SettingsSubpage extends StatefulWidget {
   final String title;
   final String? subtitle;
   final IconData? icon;
@@ -35,6 +36,8 @@ class SettingsSubpage extends StatelessWidget {
   final List<SettingsSubpageSibling>? siblings;
   final int? currentSiblingIndex;
   final List<ConnectedSettingItem>? connectedItems;
+  final List<Widget>? actions;
+  final VoidCallback? onReset;
   final Widget child;
 
   const SettingsSubpage({
@@ -46,8 +49,56 @@ class SettingsSubpage extends StatelessWidget {
     this.siblings,
     this.currentSiblingIndex,
     this.connectedItems,
+    this.actions,
+    this.onReset,
     required this.child,
   });
+
+  @override
+  State<SettingsSubpage> createState() => _SettingsSubpageState();
+}
+
+class _SettingsSubpageState extends State<SettingsSubpage> {
+  late final ScrollController _siblingScrollController;
+  final List<GlobalKey> _siblingKeys = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _siblingScrollController = ScrollController();
+    if (widget.siblings != null && widget.siblings!.isNotEmpty) {
+      _siblingKeys.addAll(
+        List.generate(widget.siblings!.length, (_) => GlobalKey()),
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToActiveSibling();
+      });
+    }
+  }
+
+  void _scrollToActiveSibling() {
+    if (!mounted ||
+        widget.currentSiblingIndex == null ||
+        widget.currentSiblingIndex! >= _siblingKeys.length) {
+      return;
+    }
+    final key = _siblingKeys[widget.currentSiblingIndex!];
+    final targetContext = key.currentContext;
+    if (targetContext != null) {
+      Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _siblingScrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,18 +112,32 @@ class SettingsSubpage extends StatelessWidget {
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
-    final resolvedAccent = accentColor ?? colorScheme.primary;
+    final resolvedAccent = widget.accentColor ?? colorScheme.primary;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final double hPadding = screenWidth > 1040
         ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
 
+    final effectiveActions = <Widget>[
+      if (widget.onReset != null)
+        IconButton(
+          icon: const Icon(Icons.restore_rounded),
+          tooltip: tr('resetToDefault'),
+          onPressed: widget.onReset,
+        ),
+      if (widget.actions != null) ...widget.actions!,
+    ];
+
     return Scaffold(
       body: CustomScrollView(
         physics: plusSettings.scrollPhysics,
         slivers: [
-          CustomAppBar(title: title, subtitle: subtitle),
+          CustomAppBar(
+            title: widget.title,
+            subtitle: widget.subtitle,
+            actions: effectiveActions.isNotEmpty ? effectiveActions : null,
+          ),
           SliverPadding(
             padding: EdgeInsets.symmetric(horizontal: hPadding, vertical: 8),
             sliver: SliverToBoxAdapter(
@@ -80,7 +145,7 @@ class SettingsSubpage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // M3 Expressive Masthead Card
-                  if (icon != null) ...[
+                  if (widget.icon != null) ...[
                     Card(
                       elevation: 0,
                       margin: EdgeInsets.only(bottom: isCompact ? 8 : 12),
@@ -138,7 +203,7 @@ class SettingsSubpage extends StatelessWidget {
                                     ),
                                   ),
                                   child: Icon(
-                                    icon,
+                                    widget.icon,
                                     size: isCompact ? 20 : 24,
                                     color: resolvedAccent,
                                   ),
@@ -150,7 +215,7 @@ class SettingsSubpage extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        title,
+                                        widget.title,
                                         style: theme.textTheme.titleMedium
                                             ?.copyWith(
                                               fontWeight: FontWeight.w700,
@@ -158,11 +223,11 @@ class SettingsSubpage extends StatelessWidget {
                                               color: colorScheme.onSurface,
                                             ),
                                       ),
-                                      if (subtitle != null &&
-                                          subtitle!.isNotEmpty) ...[
+                                      if (widget.subtitle != null &&
+                                          widget.subtitle!.isNotEmpty) ...[
                                         const SizedBox(height: 2),
                                         Text(
-                                          subtitle!,
+                                          widget.subtitle!,
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 color: colorScheme
@@ -182,23 +247,30 @@ class SettingsSubpage extends StatelessWidget {
                     ),
                   ],
                   // Lateral Sibling Navigation Bar
-                  if (siblings != null && siblings!.length > 1) ...[
+                  if (widget.siblings != null && widget.siblings!.length > 1) ...[
                     Padding(
                       padding: EdgeInsets.only(bottom: isCompact ? 8 : 12),
                       child: SingleChildScrollView(
+                        controller: _siblingScrollController,
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         child: Row(
-                          children: List.generate(siblings!.length, (index) {
-                            final sibling = siblings![index];
-                            final isCurrent = index == currentSiblingIndex;
+                          children: List.generate(widget.siblings!.length, (index) {
+                            final sibling = widget.siblings![index];
+                            final isCurrent = index == widget.currentSiblingIndex;
                             final siblingAccent =
                                 sibling.accentColor ?? resolvedAccent;
                             final chipRadius = CardMetrics.inner(cardRadius);
+                            final chipKey = index < _siblingKeys.length
+                                ? _siblingKeys[index]
+                                : null;
 
                             return Padding(
+                              key: chipKey,
                               padding: EdgeInsets.only(
-                                right: index < siblings!.length - 1 ? 8.0 : 0.0,
+                                right: index < widget.siblings!.length - 1
+                                    ? 8.0
+                                    : 0.0,
                               ),
                               child: ScaleTouchWrapper(
                                 hapticOnPressDown: true,
@@ -237,6 +309,8 @@ class SettingsSubpage extends StatelessWidget {
                                         ? null
                                         : () {
                                             AppHaptics.selectionClick();
+                                            final bool slideForward = index >
+                                                (widget.currentSiblingIndex ?? 0);
                                             Navigator.of(context).pushReplacement(
                                               PageRouteBuilder(
                                                 pageBuilder:
@@ -247,9 +321,12 @@ class SettingsSubpage extends StatelessWidget {
                                                   icon: sibling.icon,
                                                   accentColor:
                                                       sibling.accentColor,
-                                                  siblings: siblings,
+                                                  siblings: widget.siblings,
                                                   currentSiblingIndex: index,
-                                                  connectedItems: connectedItems,
+                                                  connectedItems:
+                                                      widget.connectedItems,
+                                                  actions: widget.actions,
+                                                  onReset: widget.onReset,
                                                   child: sibling.child,
                                                 ),
                                                 transitionDuration:
@@ -266,13 +343,25 @@ class SettingsSubpage extends StatelessWidget {
                                                   secondaryAnimation,
                                                   child,
                                                 ) {
-                                                  return FadeTransition(
-                                                    opacity: CurvedAnimation(
-                                                      parent: animation,
-                                                      curve:
-                                                          Curves.easeOutCubic,
+                                                  final curved = CurvedAnimation(
+                                                    parent: animation,
+                                                    curve: Curves.easeOutCubic,
+                                                  );
+                                                  final slide = Tween<Offset>(
+                                                    begin: Offset(
+                                                      slideForward
+                                                          ? 0.05
+                                                          : -0.05,
+                                                      0.0,
                                                     ),
-                                                    child: child,
+                                                    end: Offset.zero,
+                                                  ).animate(curved);
+                                                  return SlideTransition(
+                                                    position: slide,
+                                                    child: FadeTransition(
+                                                      opacity: curved,
+                                                      child: child,
+                                                    ),
                                                   );
                                                 },
                                               ),
@@ -323,12 +412,13 @@ class SettingsSubpage extends StatelessWidget {
                       ),
                     ),
                   ],
-                  child,
+                  widget.child,
                   // Connected Settings Strip at subpage bottom
-                  if (connectedItems != null && connectedItems!.isNotEmpty) ...[
+                  if (widget.connectedItems != null &&
+                      widget.connectedItems!.isNotEmpty) ...[
                     SizedBox(height: isCompact ? 8 : 12),
                     ConnectedSettingsBar(
-                      items: connectedItems!,
+                      items: widget.connectedItems!,
                       isCompact: isCompact,
                     ),
                   ],

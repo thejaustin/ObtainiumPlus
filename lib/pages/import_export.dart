@@ -98,9 +98,9 @@ class _ImportExportPageState extends State<ImportExportPage> {
     var appsProvider = context.watch<AppsProvider>();
     var behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
     final rawRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius

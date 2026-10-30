@@ -164,4 +164,54 @@ void main() {
       expect(padding.right, equals(180.0));
     },
   );
+
+  testWidgets(
+    'SettingsSubpage renders actions and triggers onReset',
+    (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 1920);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final plusSettings = PlusSettingsProvider();
+      bool resetCalled = false;
+      bool actionCalled = false;
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PlusSettingsProvider>.value(
+              value: plusSettings,
+            ),
+          ],
+          child: MaterialApp(
+            home: SettingsSubpage(
+              title: 'App Tile Styling',
+              subtitle: 'Custom tile geometry',
+              icon: Icons.style_rounded,
+              onReset: () => resetCalled = true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.info_outline),
+                  onPressed: () => actionCalled = true,
+                ),
+              ],
+              child: const Text('Tile Settings Body'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.restore_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.info_outline), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.restore_rounded));
+      expect(resetCalled, isTrue);
+
+      await tester.tap(find.byIcon(Icons.info_outline));
+      expect(actionCalled, isTrue);
+    },
+  );
 }

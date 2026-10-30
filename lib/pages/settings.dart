@@ -970,12 +970,69 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  List<SettingsSubpageSibling> _getAppearanceSiblings(BuildContext context) {
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return [
+      SettingsSubpageSibling(
+        title: tr('settingsAppearanceThemesAndColors'),
+        subtitle: tr('settingsAppearanceThemesAndColorsDesc'),
+        icon: Icons.palette_rounded,
+        accentColor: colorScheme.primary,
+        child: ThemeSettingsSection(
+          searchQuery: _searchQuery,
+          androidInfoFuture: _androidInfoFuture,
+          colorsNameMap: const <ColorSwatch<Object>, String>{},
+          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+          subCategory: 'theme',
+        ),
+      ),
+      SettingsSubpageSibling(
+        title: tr('settingsAppearanceAppTileStyling'),
+        subtitle: tr('settingsAppearanceAppTileStylingDesc'),
+        icon: Icons.style_rounded,
+        accentColor: colorScheme.secondary,
+        child: AppsViewSettingsSection(
+          searchQuery: _searchQuery,
+          onSetState: (fn) => setState(fn),
+          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+          subCategory: 'tiles',
+        ),
+      ),
+      SettingsSubpageSibling(
+        title: tr('settingsAppearanceLayoutNav'),
+        subtitle: tr('settingsAppearanceLayoutNavDesc'),
+        icon: Icons.dashboard_customize_outlined,
+        accentColor: colorScheme.tertiary,
+        child: AppsViewSettingsSection(
+          searchQuery: _searchQuery,
+          onSetState: (fn) => setState(fn),
+          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+          subCategory: 'layout',
+        ),
+      ),
+      SettingsSubpageSibling(
+        title: tr('settingsAppearanceMotionPhysics'),
+        subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
+        icon: Icons.auto_awesome_motion_rounded,
+        accentColor: colorScheme.primary,
+        child: ThemeSettingsSection(
+          searchQuery: _searchQuery,
+          androidInfoFuture: _androidInfoFuture,
+          colorsNameMap: const <ColorSwatch<Object>, String>{},
+          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
+          subCategory: 'motion',
+        ),
+      ),
+    ];
+  }
+
   Widget _buildConnectedSettingsForSection(
     BuildContext context,
     int sectionIndex,
     bool isCompact,
   ) {
-    final plusSettings = context.watch<PlusSettingsProvider>();
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -990,6 +1047,7 @@ class SettingsPageState extends State<SettingsPage> {
             subtitle: tr('settingsAppearanceLayoutNavDesc'),
             accentColor: colorScheme.tertiary,
             onTap: () {
+              final siblings = _getAppearanceSiblings(context);
               pushRoute(
                 context,
                 SettingsSubpage(
@@ -997,12 +1055,9 @@ class SettingsPageState extends State<SettingsPage> {
                   subtitle: tr('settingsAppearanceLayoutNavDesc'),
                   icon: Icons.dashboard_customize_outlined,
                   accentColor: colorScheme.tertiary,
-                  child: AppsViewSettingsSection(
-                    searchQuery: _searchQuery,
-                    onSetState: (fn) => setState(fn),
-                    showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-                    subCategory: 'layout',
-                  ),
+                  siblings: siblings,
+                  currentSiblingIndex: 2,
+                  child: siblings[2].child,
                 ),
               );
             },
@@ -1020,6 +1075,7 @@ class SettingsPageState extends State<SettingsPage> {
             subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
             accentColor: colorScheme.secondary,
             onTap: () {
+              final siblings = _getAppearanceSiblings(context);
               pushRoute(
                 context,
                 SettingsSubpage(
@@ -1027,13 +1083,9 @@ class SettingsPageState extends State<SettingsPage> {
                   subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
                   icon: Icons.auto_awesome_motion_rounded,
                   accentColor: colorScheme.secondary,
-                  child: ThemeSettingsSection(
-                    searchQuery: _searchQuery,
-                    androidInfoFuture: _androidInfoFuture,
-                    colorsNameMap: const <ColorSwatch<Object>, String>{},
-                    showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-                    subCategory: 'motion',
-                  ),
+                  siblings: siblings,
+                  currentSiblingIndex: 3,
+                  child: siblings[3].child,
                 ),
               );
             },

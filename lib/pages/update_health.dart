@@ -11,7 +11,6 @@ import 'package:obtainium/pages/app_additional_options.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/theme.dart';
-import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/update_health.dart';
 import 'package:provider/provider.dart';
@@ -31,9 +30,9 @@ class UpdateHealthPage extends StatelessWidget {
           ..sort(_byName);
     final ignored = apps.where(isUpdateHealthIgnored).toList()..sort(_byName);
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
     final contentPadding = EdgeInsets.symmetric(
       horizontal: adaptiveMargin,
