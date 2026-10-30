@@ -7,6 +7,14 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Claude: Download→Install Pipelining
+
+- **`lib/services/download_install_pipeline.dart`:** `runDownloadInstallPipeline` runs N downloads at once. Each finished download is chained onto a one-at-a-time install queue, and `installLast` ids (Shizuku providers, Obtainium+ self ids) install after everything else, in list order. Install errors go to `onInstallError` and never stop the queue.
+- **`AppDownloadService.downloadAndInstallLatestApps`:** both the parallel and sequential modes now use it; sequential means concurrency 1, which still overlaps installs with downloads. Before this, everything downloaded first and then installed in a loop (`skipInstalls` was passed but never read). An `isCancelled` check now runs before each install too. Tests: `download_install_pipeline_test.dart`.
+- **Needs a device test:** prompted (non-silent) installs now appear while downloads continue. Watch for overlapping prompts/foreground waits (`waitForUserToReturnToForeground` runs inside the download step) and bulk-progress counting.
+
+---
+
 ## 2026-10-30 — Claude: Version-Ordering Resolver with Release-Timeline Fallback
 
 - **`lib/services/version_ordering.dart`:** `resolveVersionOrdering(app, installed, latest)` returns `VersionOrdering(order, basis)`, where basis is version, numericCore, releaseDate or unknown. Precedence:

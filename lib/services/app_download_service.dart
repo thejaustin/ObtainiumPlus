@@ -17,6 +17,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/services/download_install_pipeline.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:provider/provider.dart';
@@ -162,118 +163,80 @@ class AppDownloadService {
       'dev.thejaustin.obtainiumplus.fdroid',
     );
 
-    List<Map<String, dynamic>> downloadResults = [];
-    if (!forceParallelDownloads && !behaviorSettings.parallelDownloads) {
-      for (var id in appsToInstall) {
-        downloadResults.add(
-          await _downloadAppWrapper(
-            id: id,
-            apps: apps,
-            settingsProvider: settingsProvider,
-            behaviorSettings: behaviorSettings,
-            plusSettings: plusSettings,
-            updateSettings: updateSettings,
-            logs: logs,
-            APKDir: APKDir,
-            notifyListeners: notifyListeners,
-            canInstallSilently: canInstallSilently,
-            waitForUserToReturnToForeground: waitForUserToReturnToForeground,
-            removeApps: removeApps,
-            saveApps: saveApps,
-            errors: errors,
-            // context may be from a disposed widget by the time this loop
-            // iteration runs; only forward it while still mounted
-            context: context?.mounted == true ? context : null,
-            notificationsProvider: notificationsProvider,
-            useExisting: useExisting,
-            isCancelled: isCancelled,
-          ),
-        );
-      }
-    } else {
-      final List<Map<String, dynamic>> results = List.generate(
-        appsToInstall.length,
-        (_) => <String, dynamic>{},
-      );
-      int index = 0;
-      Future<void> worker() async {
-        while (index < appsToInstall.length) {
-          final current = index;
-          index++;
-          if (current >= appsToInstall.length) break;
-          final id = appsToInstall[current];
-          results[current] = await _downloadAppWrapper(
-            id: id,
-            apps: apps,
-            settingsProvider: settingsProvider,
-            behaviorSettings: behaviorSettings,
-            plusSettings: plusSettings,
-            updateSettings: updateSettings,
-            logs: logs,
-            APKDir: APKDir,
-            notifyListeners: notifyListeners,
-            canInstallSilently: canInstallSilently,
-            waitForUserToReturnToForeground: waitForUserToReturnToForeground,
-            removeApps: removeApps,
-            saveApps: saveApps,
-            errors: errors,
-            context: context,
-            notificationsProvider: notificationsProvider,
-            useExisting: useExisting,
-            skipInstalls: true,
-            isCancelled: isCancelled,
-          );
-        }
-      }
-
-      final limit = settingsProvider.updateDownloadConcurrencyLimit;
-      final actualLimit = limit < appsToInstall.length
-          ? limit
-          : appsToInstall.length;
-      final workers = List.generate(actualLimit, (_) => worker());
-      await Future.wait(workers);
-      downloadResults = results;
-    }
+    // Installing these must wait for every other install (see above).
+    final installLastIds = {
+      ...ShizukuInstaller.providerPackages,
+      'dev.thejaustin.obtainiumplus',
+      'imranr98_obtainium_github.com',
+      'dev.thejaustin.obtainiumplus.fdroid',
+    };
+    final parallel =
+        forceParallelDownloads || behaviorSettings.parallelDownloads;
     final notUpdatedNames = <String>[];
-    for (var res in downloadResults) {
-      final id = res['id'] as String?;
-      if (id == null) continue;
-      final file = res['downloadedFile'] as DownloadedApk?;
-      final dir = res['downloadedDir'] as DownloadedDir?;
-      if (file == null && dir == null) {
+    // Each app installs as soon as its download finishes, while the rest keep
+    // downloading; installs themselves stay one at a time.
+    await runDownloadInstallPipeline<Map<String, dynamic>>(
+      ids: appsToInstall,
+      downloadConcurrency: parallel
+          ? settingsProvider.updateDownloadConcurrencyLimit
+          : 1,
+      installLast: installLastIds.contains,
+      download: (id) => _downloadAppWrapper(
+        id: id,
+        apps: apps,
+        settingsProvider: settingsProvider,
+        behaviorSettings: behaviorSettings,
+        plusSettings: plusSettings,
+        updateSettings: updateSettings,
+        logs: logs,
+        APKDir: APKDir,
+        notifyListeners: notifyListeners,
+        canInstallSilently: canInstallSilently,
+        waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+        removeApps: removeApps,
+        saveApps: saveApps,
+        errors: errors,
+        // context may be from a disposed widget by now; only forward it
+        // while still mounted
+        context: context?.mounted == true ? context : null,
+        notificationsProvider: notificationsProvider,
+        useExisting: useExisting,
+        skipInstalls: true,
+        isCancelled: isCancelled,
+      ),
+      install: (id, res) async {
+        final file = res['downloadedFile'] as DownloadedApk?;
+        final dir = res['downloadedDir'] as DownloadedDir?;
         // Cancelled or failed to download; do not attempt install
-        continue;
-      }
-      if (!errors.appIdNames.containsKey(id)) {
+        if (file == null && dir == null) return;
+        if (isCancelled?.call(id) == true) return;
+        if (errors.appIdNames.containsKey(id)) return;
         final isUpdate = apps[id]?.installedInfo != null;
-        try {
-          var installed = await _installApp(
-            id: id,
-            willBeSilent: (res['willBeSilent'] as bool?) ?? false,
-            downloadedFile: file,
-            downloadedDir: dir,
-            apps: apps,
-            settingsProvider: settingsProvider,
-            behaviorSettings: behaviorSettings,
-            plusSettings: plusSettings,
-            updateSettings: updateSettings,
-            logs: logs,
-            notifyListeners: notifyListeners,
-            saveApps: (appList) => saveApps(appList),
-            notificationsProvider: notificationsProvider,
-            context: context?.mounted == true ? context : null,
-          );
-          if (installed) {
-            installedIds.add(id);
-          } else if (isUpdate) {
-            // New installs already say "cancelled"; updates said nothing.
-            notUpdatedNames.add(apps[id]?.name ?? id);
-          }
-        } catch (e) {
-          errors.add(id, e, appName: apps[id]?.name);
+        final installed = await _installApp(
+          id: id,
+          willBeSilent: (res['willBeSilent'] as bool?) ?? false,
+          downloadedFile: file,
+          downloadedDir: dir,
+          apps: apps,
+          settingsProvider: settingsProvider,
+          behaviorSettings: behaviorSettings,
+          plusSettings: plusSettings,
+          updateSettings: updateSettings,
+          logs: logs,
+          notifyListeners: notifyListeners,
+          saveApps: (appList) => saveApps(appList),
+          notificationsProvider: notificationsProvider,
+          context: context?.mounted == true ? context : null,
+        );
+        if (installed) {
+          installedIds.add(id);
+        } else if (isUpdate) {
+          // New installs already say "cancelled"; updates said nothing.
+          notUpdatedNames.add(apps[id]?.name ?? id);
         }
-      }
-    }
+      },
+      onInstallError: (id, e) => errors.add(id, e, appName: apps[id]?.name),
+    );
 
     if (notUpdatedNames.isNotEmpty && context != null && context.mounted) {
       final n = notUpdatedNames.length;
