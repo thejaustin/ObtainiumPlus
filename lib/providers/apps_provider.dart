@@ -2842,6 +2842,7 @@ class AppsProvider with ChangeNotifier {
     try {
       final App? newApp = await fetchUpdateWithHandshakeRetry(
         appId,
+        includeDisabled: true,
       ).timeout(_updateCheckTimeout);
       if (newApp == null) return null;
       // Reuse cached PackageInfo/icon: installed version doesn't change during
@@ -2925,10 +2926,10 @@ class AppsProvider with ChangeNotifier {
       notify();
       // Finished results waiting for the next periodic save.
       final List<App> fetched = [];
-      // Failed checks still advance the app's check time so background runs
-      // don't retry them every 15 minutes; they become due again after one
-      // full update interval. Value: whether the failure counts toward the
-      // Update Health failed-checks threshold.
+      // Real failures and rate limits still advance the app's check time so
+      // background runs don't retry them every 15 minutes; they become due
+      // again after one full update interval. Value: whether the failure
+      // counts toward the Update Health failed-checks threshold.
       final Map<String, bool> failedIds = {};
       try {
         List<String> appIds = getAppsSortedByUpdateCheckTime(
@@ -3027,7 +3028,10 @@ class AppsProvider with ChangeNotifier {
               await updatePendingRepoRename(appId, e.newUrl);
             } else {
               errors.add(appId, e, appName: apps[appId]?.name);
-              failedIds[appId] = shouldCountFailedCheck(e);
+              // Network blips leave the check time alone so the next run (and
+              // the offline retry queue) picks the app up again.
+              final counts = shouldCountFailedCheck(e);
+              if (counts || e is RateLimitError) failedIds[appId] = counts;
             }
           } finally {
             checkingUpdateIds.remove(appId);

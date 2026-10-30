@@ -34,11 +34,14 @@ extension AppsProviderUpdates on AppsProvider {
   /// Keeping fetch and save separate lets [checkUpdates] batch many checks into
   /// a few [saveApps] calls instead of saving (and triggering a full UI
   /// rebuild) once per app.
-  Future<App?> fetchUpdate(String appId) async {
+  ///
+  /// Disabled apps are skipped unless [includeDisabled] (single-app refreshes,
+  /// e.g. before a manual download, still need fresh metadata).
+  Future<App?> fetchUpdate(String appId, {bool includeDisabled = false}) async {
     final App? currentApp = apps[appId]?.app;
     // Pause update checks until the user resolves a pending repo rename.
     if (currentApp == null ||
-        currentApp.disabled ||
+        (currentApp.disabled && !includeDisabled) ||
         currentApp.hasPendingRepoRename) {
       return null;
     }
@@ -72,16 +75,19 @@ extension AppsProviderUpdates on AppsProvider {
   /// avoid all retries colliding. Any error that is not a handshake failure
   /// (including one raised by a retry) propagates to the caller so it can take
   /// the normal per-app error path instead of aborting the whole batch.
-  Future<App?> fetchUpdateWithHandshakeRetry(String appId) async {
+  Future<App?> fetchUpdateWithHandshakeRetry(
+    String appId, {
+    bool includeDisabled = false,
+  }) async {
     try {
-      return await fetchUpdate(appId);
+      return await fetchUpdate(appId, includeDisabled: includeDisabled);
     } on HandshakeException {
       const maxRetries = 2;
       final rng = Random();
       for (var attempt = 0; attempt < maxRetries; attempt++) {
         await Future.delayed(Duration(milliseconds: 250 + rng.nextInt(501)));
         try {
-          return await fetchUpdate(appId);
+          return await fetchUpdate(appId, includeDisabled: includeDisabled);
         } on HandshakeException {
           if (attempt == maxRetries - 1) rethrow;
         }
