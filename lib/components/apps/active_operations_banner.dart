@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -417,9 +418,9 @@ class _ActiveDownloadTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return ValueListenableBuilder<double?>(
-      valueListenable: appInMemory.downloadProgressNotifier,
-      builder: (context, downloadProgress, _) {
+    return _LatchedProgressBuilder(
+      listenable: appInMemory.downloadProgressNotifier,
+      builder: (context, downloadProgress) {
         final bool isFinishingOrInstalling =
             downloadProgress != null && downloadProgress < 0;
         final double? progressFraction =
@@ -662,6 +663,39 @@ class _BulkSummaryRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Like a ValueListenableBuilder for download progress, but keeps showing the
+/// last non-null value once progress resets to null. When an operation ends
+/// the banner animates out, and this row should leave as it was ("Installing")
+/// rather than flip to "Please wait" while fading.
+class _LatchedProgressBuilder extends StatefulWidget {
+  const _LatchedProgressBuilder({
+    required this.listenable,
+    required this.builder,
+  });
+
+  final ValueListenable<double?> listenable;
+  final Widget Function(BuildContext context, double? progress) builder;
+
+  @override
+  State<_LatchedProgressBuilder> createState() =>
+      _LatchedProgressBuilderState();
+}
+
+class _LatchedProgressBuilderState extends State<_LatchedProgressBuilder> {
+  double? _last;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<double?>(
+      valueListenable: widget.listenable,
+      builder: (context, progress, _) {
+        if (progress != null) _last = progress;
+        return widget.builder(context, progress ?? _last);
+      },
     );
   }
 }

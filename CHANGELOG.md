@@ -5,6 +5,7 @@ All notable changes to Obtainium+ are documented in this file.
 ## [Unreleased]
 
 ### ⚡ Update Checks
+- **Cleaner Finish to Installs**: When an install finishes, the progress text on the app row fades out before the menu button fades in, instead of the two overlapping. The progress banner keeps saying "Installing" as it slides away instead of flipping to "Please wait".
 - **Smoother End of Update Checks**: The progress banner no longer vanishes in a single frame when a check finishes right after finding updates. It fills its bar and slides away.
 - **Faster "Update All"**: Each app now installs as soon as its own download finishes, while the others keep downloading. Before, nothing installed until every download was done. Obtainium+ itself and Shizuku providers still install last.
 - **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 update checks at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.

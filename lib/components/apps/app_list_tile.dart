@@ -1183,16 +1183,23 @@ class _AppListTileState extends State<AppListTile>
                                           ? 300
                                           : 150,
                                     ),
-                                    switchInCurve:
-                                        plusSettings
-                                            .plusEnableEnhancedAnimations
-                                        ? AppConstants.expressiveDecelerate
-                                        : Curves.easeOut,
-                                    switchOutCurve:
-                                        plusSettings
-                                            .plusEnableEnhancedAnimations
-                                        ? AppConstants.expressiveAccelerate
-                                        : Curves.easeIn,
+                                    // Fade through: the outgoing state is gone
+                                    // before the incoming one appears, so the
+                                    // progress text never overlaps the menu.
+                                    switchInCurve: const Interval(
+                                      0.35,
+                                      1.0,
+                                      curve: AppConstants.expressiveDecelerate,
+                                    ),
+                                    switchOutCurve: const Interval(
+                                      0.65,
+                                      1.0,
+                                      curve: AppConstants.expressiveAccelerate,
+                                    ),
+                                    layoutBuilder: (current, previous) => Stack(
+                                      alignment: Alignment.centerRight,
+                                      children: [...previous, ?current],
+                                    ),
                                     transitionBuilder: (child, animation) {
                                       if (!plusSettings
                                           .plusEnableEnhancedAnimations) {

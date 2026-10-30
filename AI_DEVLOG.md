@@ -11,8 +11,10 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 - **`tool/film.sh`** (with `tool/preview/update_flow_film_test.dart`) renders the real list tile, grid tile and `ActiveOperationsBanner` through idle → check → update found → check done → download 0/60/100% → installing → installed. It writes `build/previews/update_flow_sheet.png` (one row per step), and `--zoom 1,4,9` writes full-size crops. It prints `METRIC` lines (banner height and grid tile size per frame). Harness-only noise: the iconsCacheDir StateError and a pending timer.
 - **Fixed:** the banner snapped 108→0 in one frame at the end of a check, because of nested `AnimatedSize` "unstable" snapping after the found-pill resized it. It now uses an `AnimatedSwitcher` + `SizeTransition` + fade, and the exiting copy fills the bar to 100% and hides the counter.
+- **Fixed afterwards:**
+  - The list-tile trailing `AnimatedSwitcher` now uses fade-through (out `Interval(0.65,1)`, in `Interval(0.35,1)`, right-aligned stack), so the progress text no longer overlaps ⋮.
+  - Banner download rows use `_LatchedProgressBuilder` to keep their last state while the banner animates out (it used to flip to "Please wait").
 - **Still noted, not fixed:**
-  - In the list tile, the fading "Installing · size" text overlaps the ⋮ button mid-fade.
   - Version text in tiles rendered as boxes in the harness, because the 'monospace' font isn't loaded in tests.
   - Prompted installs in the pipeline still need a device test.
 
