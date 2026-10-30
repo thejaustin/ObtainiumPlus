@@ -218,6 +218,47 @@ int? compareVersionStrings(String version1, String version2) {
   return result;
 }
 
+/// Orders two versions by their leading numeric core (`1.2.3` in
+/// `v1.2.3-fdroid (45)`), for pairs [compareVersionStrings] can't order
+/// because only one side carries a suffix or label. Installed version names
+/// often do (`-gplay`, ` (123)`, `-arm64-v8a`) while release tags don't.
+///
+/// Conservative: null unless both cores have at least two dotted segments,
+/// only letters (a label like `v` or `release-`) precede them, and both use
+/// the same scheme (not one date-based `2024.10.5` and one `3.2.0`). Equal
+/// cores return 0; the suffix still decides those, so callers treat 0 as
+/// unknown ordering.
+int? compareVersionCores(String version1, String version2) {
+  final core1 = _leadingNumericCore(version1);
+  final core2 = _leadingNumericCore(version2);
+  if (core1 == null || core2 == null) return null;
+  if ((core1.first >= 1000) != (core2.first >= 1000)) return null;
+  final length = core1.length > core2.length ? core1.length : core2.length;
+  for (var i = 0; i < length; i++) {
+    final a = i < core1.length ? core1[i] : 0;
+    final b = i < core2.length ? core2[i] : 0;
+    if (a != b) return a < b ? -1 : 1;
+  }
+  return 0;
+}
+
+final _numericCorePattern = RegExp(r'\d+(?:\.\d+)+');
+final _coreLabelPattern = RegExp(r'^[A-Za-z][A-Za-z _-]*$');
+
+List<int>? _leadingNumericCore(String version) {
+  final match = _numericCorePattern.firstMatch(version.trim());
+  if (match == null) return null;
+  final prefix = version.trim().substring(0, match.start);
+  if (prefix.isNotEmpty && !_coreLabelPattern.hasMatch(prefix)) return null;
+  final parts = <int>[];
+  for (final segment in match.group(0)!.split('.')) {
+    final n = int.tryParse(segment);
+    if (n == null) return null;
+    parts.add(n);
+  }
+  return parts;
+}
+
 String normalizeVersion(String version) {
   // Remove leading 'v' or 'p' (case-insensitive) followed by a digit
   // e.g. v1.2.3 -> 1.2.3, p100 -> 100

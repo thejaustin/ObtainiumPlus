@@ -7,6 +7,17 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-29 — Claude: Downgrades Shown as Updates
+
+- **User report:** many apps show "updates" that are really downgrades.
+- **Cause:** the downgrade guard in `AppUpdateService.areVersionsDifferent` only hides an "update" when `compareVersionStrings` can confidently order the pair. Any non-numeric difference returns null (unknown), and unknown means "offer it". Installed `versionName`s often carry suffixes the tags lack (`-gplay`, ` (123)`, `-fdroid`, `-arm64-v8a`, `-release`) or the tag has a prefix (`release-`, `App-`).
+- **Fix:** `compareVersionCores` (in `version_utils.dart`) is a fallback used only by that guard. It compares the leading dotted numeric core and returns null when either side has fewer than two segments, when there's non-letter text before the numbers, or when the schemes differ (one side ≥1000). Equal cores return 0 and aren't suppressed. Tests are in `version_ordering_test.dart`.
+- **Pre-existing edge (not changed):** pure-numeric scheme changes, such as `2024.10.5` installed vs `3.2.0` latest, are treated as a downgrade by the full comparison, so updates would stay hidden after an app switches from date versions to semver.
+- **To confirm on device:** I had no real app data (the only export, `/sdcard/Backups/ObtainiumPlus/…2026-08-06`, contains no apps). The user should check their list after this build, or share an export.
+- Suite 556/556.
+
+---
+
 ## 2026-10-29 — Claude: Analyzer Warning Cleanup (99 → 5)
 
 - **Mechanical fixes:** `dart fix` for unused/duplicate imports, unnecessary `!`/`?.`/null checks and an unused catch stack. Dead locals/consts/helpers were removed by hand: `_bgUpdate*` consts, `getCategoryCollapsibleTile`, `_smallSpinner`, `_isReleaseYoungerThanMinAge`, and main.dart's `hide bgUpdateCheck` and two unused text consts. Four files that were unformatted at HEAD (`app_actions_context_menu`, `command_center`, `settings_subpage`, `app.dart`) were deliberately **not** reformatted, to keep the diff small.

@@ -164,4 +164,71 @@ void main() {
       );
     });
   });
+
+  group('compareVersionCores', () {
+    test('orders suffixed/labelled versions by their numeric core', () {
+      expect(compareVersionCores('1.2.3-fdroid', '1.2.2'), 1);
+      expect(compareVersionCores('26.1.0-gplay', '26.0.3'), 1);
+      expect(compareVersionCores('1.2.3 (123)', '1.2.2'), 1);
+      expect(compareVersionCores('1.2.3-arm64-v8a', '1.2.2'), 1);
+      expect(compareVersionCores('1.2.3', 'release-1.2.2'), 1);
+      expect(compareVersionCores('1.2.3', 'App-1.2.2'), 1);
+      expect(compareVersionCores('10.4.1', '10.4.0-rc1'), 1);
+      expect(compareVersionCores('1.2.2-beta', '1.2.3'), -1);
+      expect(compareVersionCores('1.2', '1.2.0-foss'), 0);
+    });
+
+    test('refuses pairs it cannot order confidently', () {
+      // Different schemes.
+      expect(compareVersionCores('2024.10.5', '3.2.0'), isNull);
+      expect(compareVersionCores('nightly-2024.10.05', '1.5.0'), isNull);
+      // Bare build numbers.
+      expect(compareVersionCores('45', '1.2.3'), isNull);
+      // Non-label junk before the numbers.
+      expect(compareVersionCores('#12 1.2.3', '1.2.2'), isNull);
+    });
+  });
+
+  group('areVersionsDifferent downgrade guard', () {
+    test(
+      'hides an older release when only the installed side has a suffix',
+      () {
+        expect(
+          AppUpdateService.areVersionsDifferent(
+            makeApp('1.4.0-gplay', '1.3.9'),
+            '1.4.0-gplay',
+            '1.3.9',
+          ),
+          isFalse,
+        );
+        expect(
+          AppUpdateService.areVersionsDifferent(
+            makeApp('2.0.1 (201)', 'v2.0.0'),
+            '2.0.1 (201)',
+            'v2.0.0',
+          ),
+          isFalse,
+        );
+      },
+    );
+
+    test('still offers newer releases and same-core suffix changes', () {
+      expect(
+        AppUpdateService.areVersionsDifferent(
+          makeApp('1.3.9-gplay', '1.4.0'),
+          '1.3.9-gplay',
+          '1.4.0',
+        ),
+        isTrue,
+      );
+      expect(
+        AppUpdateService.areVersionsDifferent(
+          makeApp('1.4.0-rc1', '1.4.0'),
+          '1.4.0-rc1',
+          '1.4.0',
+        ),
+        isTrue,
+      );
+    });
+  });
 }

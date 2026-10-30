@@ -54,7 +54,12 @@ class AppUpdateService {
     // unknown (null) must fall through to the old behavior so apps with
     // unusual versioning schemes still get their updates offered.
     if (!ignoreOrdering) {
-      final ordering = compareVersionStrings(installed, latest);
+      // Fall back to the numeric cores when only one side has a suffix
+      // (`1.4.0-gplay` installed vs a `1.3.9` tag), which the full
+      // comparison can't order.
+      final ordering =
+          compareVersionStrings(installed, latest) ??
+          compareVersionCores(installed, latest);
       if (ordering != null && ordering > 0) {
         _logDowngradeSuppression(app, installed, latest);
         return false;
