@@ -330,8 +330,9 @@ void main() {
       await pumpCapturingErrors(tester, app);
       expect(find.byType(SettingsPage), findsOneWidget);
 
-      // Verify Obtainium+ action chip in app bar
-      expect(find.text('Obtainium+'), findsOneWidget);
+      // Verify Obtainium+ action chip in app bar (the design-style
+      // segmented button also reads "Obtainium+", so match the chip itself)
+      expect(find.widgetWithText(ActionChip, 'Obtainium+'), findsOneWidget);
 
       // Verify no redundant uppercase or banner duplication
       expect(find.text('APPEARANCE'), findsNothing);

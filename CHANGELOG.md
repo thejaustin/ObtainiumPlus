@@ -16,6 +16,8 @@ All notable changes to Obtainium+ are documented in this file.
 - **Matching Shapes in Dialogs**: The time pickers in the update schedule and quiet hours dialogs, and the GitHub token check result, now follow your corner-radius setting and Material 3 Expressive shapes.
 - **Changelog Page Width**: On tablets and unfolded foldables, the changelog page now uses the same width as Settings.
 - **Translatable Plus Features Sheet**: The Shizuku, binder benchmark, OEM guide and battery optimization rows in the Plus Features sheet can now be translated.
+- **No More Cut-Off Theme Labels**: The theme picker's first option now reads "System" instead of a truncated "Follow …", and the design style switch shows "Obtainium+" and "M3 Expressive" on one line (long-press for the full name).
+- **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
 ---
 

@@ -1601,5 +1601,13 @@
   "oemCompatibilityGuides": "OEM Compatibility Guides",
   "oemCompatibilityGuidesDescription": "OneUI 8 AutoBlocker, HyperOS, ColorOS & OxygenOS tuning",
   "batteryOptimizationExemption": "Battery Optimization Exemption",
-  "batteryOptimizationExemptionDescription": "Prevent Android from suspending background update checks"
+  "batteryOptimizationExemptionDescription": "Prevent Android from suspending background update checks",
+  "obtainiumPlusThemeShort": "Obtainium+",
+  "materialExpressiveThemeShort": "M3 Expressive",
+  "verifyToken": "Verify Token",
+  "tokenEmpty": "Please enter or paste a token first",
+  "tokenVerifiedAs": "✓ Verified as @{} ({}/{} requests/hr)",
+  "tokenInvalid": "✗ Invalid token (401 Unauthorized)",
+  "tokenCheckHttpStatus": "Token check returned HTTP {}",
+  "tokenVerificationFailed": "Verification failed: {}"
 }

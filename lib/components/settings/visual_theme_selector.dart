@@ -34,7 +34,8 @@ class VisualThemeSelector extends StatelessWidget {
     final options = [
       (
         mode: _VisualThemeMode.system,
-        label: tr('followSystem'),
+        // Tiles are ~80dp wide on phones; "Follow system" truncated there.
+        label: tr('system'),
         icon: Icons.brightness_auto_rounded,
       ),
       (

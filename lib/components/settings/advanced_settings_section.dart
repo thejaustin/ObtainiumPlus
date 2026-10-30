@@ -445,7 +445,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
     final token = _controller.text.trim();
     if (token.isEmpty) {
       setState(() {
-        _verificationResult = 'Please enter or paste a token first';
+        _verificationResult = tr('tokenEmpty');
         _verificationSuccess = false;
       });
       return;
@@ -475,22 +475,26 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         setState(() {
           _isVerifying = false;
           _verificationSuccess = true;
-          _verificationResult =
-              '✓ Verified as @$login ($remaining/$limit requests/hr)';
+          _verificationResult = tr(
+            'tokenVerifiedAs',
+            args: [login, remaining, limit],
+          );
         });
         AppHaptics.selectionClick();
       } else if (response.statusCode == 401) {
         setState(() {
           _isVerifying = false;
           _verificationSuccess = false;
-          _verificationResult = '✗ Invalid token (401 Unauthorized)';
+          _verificationResult = tr('tokenInvalid');
         });
       } else {
         setState(() {
           _isVerifying = false;
           _verificationSuccess = false;
-          _verificationResult =
-              'Token check returned HTTP ${response.statusCode}';
+          _verificationResult = tr(
+            'tokenCheckHttpStatus',
+            args: [response.statusCode.toString()],
+          );
         });
       }
     } catch (e) {
@@ -498,7 +502,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       setState(() {
         _isVerifying = false;
         _verificationSuccess = false;
-        _verificationResult = 'Verification failed: $e';
+        _verificationResult = tr(
+          'tokenVerificationFailed',
+          args: [e.toString()],
+        );
       });
     }
   }
@@ -841,7 +848,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                 child: TextButton.icon(
                   onPressed: _isVerifying ? null : _verifyToken,
                   icon: const Icon(Icons.verified_outlined, size: 16),
-                  label: const Text('Verify Token'),
+                  label: Text(tr('verifyToken')),
                 ),
               ),
               if (_isVerifying) ...[

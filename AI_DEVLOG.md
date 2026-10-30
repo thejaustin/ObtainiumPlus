@@ -15,10 +15,11 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - The Changelog page `maxWidth` is now 1040. The What's New *sheet* stays at 840, because M3 bottom sheets are capped and shouldn't reach page width.
   - The Plus Features sheet strings are now translation keys (added to all locales).
   - `CardMetrics.innerDecoration` replaces the 12dp/10dp boxes in the schedule, quiet-hours and token-verification UI.
-- **Seen in previews, not fixed yet:**
-  - The "Follow system" label is truncated in the theme picker at 412dp.
-  - The Design System Style segmented labels wrap to two lines.
-  - `advanced_settings_section.dart` `_verifyToken` still has hardcoded English result strings.
+- **Preview-driven fixes:**
+  - The theme picker's system tile uses `tr('system')`.
+  - The design-style segmented buttons use the short keys `obtainiumPlusThemeShort` and `materialExpressiveThemeShort`, with the full names as tooltips.
+  - The token verify button and its results are now translation keys.
+  - `settings_page_test` now matches the app-bar `ActionChip`, since "Obtainium+" also appears in the segmented button.
 - Full suite: 544/544.
 
 ---

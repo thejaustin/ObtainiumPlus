@@ -582,12 +582,14 @@ class ThemeSettingsSection extends StatelessWidget {
                   segments: [
                     ButtonSegment<bool>(
                       value: false,
-                      label: Text(tr('obtainiumPlusTheme')),
+                      label: Text(tr('obtainiumPlusThemeShort')),
+                      tooltip: tr('obtainiumPlusTheme'),
                       icon: const Icon(Icons.auto_awesome_rounded),
                     ),
                     ButtonSegment<bool>(
                       value: true,
-                      label: Text(tr('materialExpressiveTheme')),
+                      label: Text(tr('materialExpressiveThemeShort')),
+                      tooltip: tr('materialExpressiveTheme'),
                       icon: const Icon(Icons.brush_rounded),
                     ),
                   ],
