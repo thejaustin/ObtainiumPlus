@@ -7,6 +7,20 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 (later) — Claude: Scroll Jank, Install-Edge Flicker, Settings Visual Pass
+
+- **Scroll lag root cause:** `AppListTile`/`AppGridTile` ran a fade+slide entrance in every `initState`, including scroll-back and re-sort rebuilds, with index×30 ms delays. They started at opacity 0 and only decided in a post-frame callback. A new `components/apps/tile_entrance.dart` lets the fade play once per app within 1.2 s of the first tile; the decision is made in `initState`. `Scrollable.recommendDeferredLoadingForContext` can't be called in `initState` (it asserts via `View.of`).
+- **"Edge of an operation" flicker:** the slivers had no `findChildIndexCallback`, so a row that moved after an install finished got a fresh State. Callbacks were added in the list (`dismiss_`/`reorder_` keys), grid (plain or `draggable_` id) and category grid. Removed `Transform.scale(1.02)` for lists of 1–2 apps. `ActiveOperationsBanner` is now stateful and holds its last content for 0.9 s when idle, and download rows are keyed.
+- **Settings visual system:**
+  - Group, hub and grid headers are `titleMedium` w600 onSurface. Rows use the list tile theme, now 15/13 sp.
+  - Groups no longer go primary when expanded. The masthead card became one description line. Descriptions allow 2 lines.
+  - Compact mode is applied once in `ExpressiveSettingsGroup._compactTheme`; `buildFeatureToggle` no longer forces `dense`.
+  - `PlusFeaturesSection`/`SettingsLayoutSelector` have a new `embedded` param.
+  - Interval slider badge fix: the label was skipped at startup.
+  - New keys `foregroundServiceTitle` and `foregroundServiceDesc`.
+- **`tool/preview.sh --prefs k=bool,...`** previews compact mode and the other design system.
+- **Open:** Settings still has hard-coded English hub summaries ('Glass', 'Bouncy', 'Square 1:1'). The big centered "Settings" app bar uses a lot of vertical space but is shared with other pages. Verify scroll and installs on a CI release build.
+
 ## 2026-10-30 — Claude: Device Test, Search-Sheet Dupes, Settings Cleanup
 
 - **First on-device run of Cronet phase 1** (debug, F-Droid flavor, installed as `.fdroid.debug`): the build compiled and the user reported checks are fast. Local debug builds work from a `$HOME` worktree (see memory); **profile/release can't build locally** because Flutter ships no linux-arm64 `gen_snapshot`, so release-speed animation testing needs a CI APK.
