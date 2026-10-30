@@ -759,6 +759,9 @@ class ToggleTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final handleToggle = onChanged == null
+        ? null
+        : hapticSwitchOnChanged(context, onChanged!);
     return TvFocusRing(
       child: ListTile(
         contentPadding: noPadding
@@ -766,6 +769,7 @@ class ToggleTile extends StatelessWidget {
             : const EdgeInsets.symmetric(horizontal: 20),
         title: Text(label),
         subtitle: subtitle,
+        onTap: handleToggle == null ? null : () => handleToggle(!value),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -782,13 +786,8 @@ class ToggleTile extends StatelessWidget {
               toggled: value,
               enabled: onChanged != null,
               excludeSemantics: true,
-              onTap: onChanged == null ? null : () => onChanged!(!value),
-              child: Switch(
-                value: value,
-                onChanged: onChanged == null
-                    ? null
-                    : hapticSwitchOnChanged(context, onChanged!),
-              ),
+              onTap: handleToggle == null ? null : () => handleToggle(!value),
+              child: Switch(value: value, onChanged: handleToggle),
             ),
           ],
         ),

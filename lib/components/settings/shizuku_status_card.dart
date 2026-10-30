@@ -8,6 +8,7 @@ import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -158,19 +159,27 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
       leadingIcon = Icons.power_off_rounded;
     }
 
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
+        ? plusSettings.plusSettingsCornerRadius
+        : plusSettings.plusGlobalCornerRadius;
+    final cardRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
+    final cardShape = CardMetrics.shape(
+      cardRadius,
+      expressive: isM3E,
+      side: BorderSide(color: borderColor, width: 1.2),
+    );
+
     return AnimatedContainer(
       duration: Duration(
         milliseconds: plusSettings.plusEnableEnhancedAnimations ? 300 : 0,
       ),
       margin: widget.margin,
-      decoration: BoxDecoration(
-        color: containerColor,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 1.2),
-      ),
+      decoration: ShapeDecoration(color: containerColor, shape: cardShape),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        shape: cardShape,
+        clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Column(

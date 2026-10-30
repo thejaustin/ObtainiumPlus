@@ -7,6 +7,16 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Antigravity: Connected Sub-Setting Surfaces, Full-Row ToggleTile & Sheet/Card M3E Geometry
+
+- **`ConnectedSettingContainer` on a real `Material` surface (`lib/components/settings/connected_setting_container.dart`):** Replaced the `Stack` + `DecoratedBox` background with `Material(shape: CardMetrics.shape(..., expressive: isM3E), clipBehavior: Clip.antiAlias)`. Nested `ListTile`/`SwitchListTile` ink splashes now render on and clip to the container (they used to paint underneath the decoration), and the accent rail is clipped by the squircle instead of a separate `ClipRRect`.
+- **Consistent parent→child nesting:** Changed the manually indented (`Padding(left: 16)`) dependent rows (Update Schedule editor, Auto-Update Rules editor in `update_settings_section.dart`) and the Shizuku sub-options panel (`installation_section.dart`) to use `ConnectedSettingContainer` with a labeled accent rail, so they match the existing nested groups in App Behavior and Notifications.
+- **`ToggleTile` full-row tap target (`lib/components/ui_widgets.dart`):** Tapping anywhere on the row now flips the switch (with haptics). Before, only the small `Switch` responded. This applies to Update Health and every other screen that uses `ToggleTile`. Disabled tiles stay inert.
+- **M3E geometry for `ShizukuStatusCard` & Plus Features sheet:** Replaced the hardcoded `BorderRadius.circular(16)` and `BoxDecoration` cards with `CardMetrics.shape(..., expressive: isM3E)` driven by the user's corner-radius settings. Also wired `plusSettings.scrollPhysics` into the sheet's `ListView`.
+- **Tests:** Added `test/settings_m3e_surfaces_test.dart` (ToggleTile row toggle, disabled tile inert, ConnectedSettingContainer Material/clip). Full suite: 540 / 540 passing.
+
+---
+
 ## 2026-10-30 — Antigravity: M3E Secondary Hub Polish, Direct Material Ancestors & Foldable Margin Clamp Fixes
 
 - **Direct `Material` Ancestors & M3E Squircle Geometry Across Connected Hubs (`lib/pages/plugin_manager.dart`, `lib/pages/microg_hub.dart`, `lib/pages/developer_settings.dart`, `lib/pages/system_updates.dart`):**

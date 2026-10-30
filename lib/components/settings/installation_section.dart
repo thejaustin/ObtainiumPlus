@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
+import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
@@ -724,182 +725,148 @@ class _InstallationSectionState extends State<InstallationSection>
           curve: Curves.easeOutCubic,
           alignment: Alignment.topCenter,
           child: currentMode == 'shizuku'
-              ? Padding(
-                  padding: const EdgeInsets.only(
+              ? ConnectedSettingContainer(
+                  label: shizukuInstalled && isShizukuPlus
+                      ? 'ShizukuPlus'
+                      : tr('installMethodShizuku'),
+                  margin: const EdgeInsets.only(
                     left: 20,
                     right: 16,
                     top: 4,
                     bottom: 8,
                   ),
-                  child: Material(
-                    color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(
-                      (plusSettings.plusSettingsCornerRadius * 0.5).clamp(
-                        8.0,
-                        20.0,
-                      ),
-                    ),
-                    child: Ink(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .surfaceContainerHighest
-                            .withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(
-                          (plusSettings.plusSettingsCornerRadius * 0.5).clamp(
-                            8.0,
-                            20.0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (plusSettings.plusSettingsUseHeroCards)
+                        const ShizukuStatusCard(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 6,
                           ),
                         ),
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary
-                              .withValues(alpha: AppOpacity.moderate),
-                          width: 1.5,
+
+                      SwitchListTile.adaptive(
+                        dense: true,
+                        secondary: const Icon(Icons.shop_outlined, size: 20),
+                        title: Text(
+                          tr('shizukuPretendToBeGooglePlay'),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
                         ),
+                        subtitle: Text(
+                          tr('shizukuPretendToBeGooglePlayDescription'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        value: behaviorSettings.shizukuPretendToBeGooglePlay,
+                        onChanged: (v) {
+                          v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                          behaviorSettings.shizukuPretendToBeGooglePlay = v;
+                        },
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (plusSettings.plusSettingsUseHeroCards)
-                            const ShizukuStatusCard(
-                              margin: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 6,
-                              ),
-                            ),
 
-                          SwitchListTile.adaptive(
-                            dense: true,
-                            secondary: const Icon(
-                              Icons.shop_outlined,
-                              size: 20,
-                            ),
-                            title: Text(
-                              tr('shizukuPretendToBeGooglePlay'),
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
-                            ),
-                            subtitle: Text(
-                              tr('shizukuPretendToBeGooglePlayDescription'),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            value:
-                                behaviorSettings.shizukuPretendToBeGooglePlay,
-                            onChanged: (v) {
-                              v
-                                  ? AppHaptics.toggleOn()
-                                  : AppHaptics.toggleOff();
-                              behaviorSettings.shizukuPretendToBeGooglePlay = v;
-                            },
+                      SwitchListTile.adaptive(
+                        dense: true,
+                        secondary: const Icon(
+                          Icons.swap_horiz_rounded,
+                          size: 20,
+                        ),
+                        title: Text(
+                          tr('shizukuFallbackToSystem'),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w500),
+                        ),
+                        subtitle: Text(
+                          tr('shizukuFallbackToSystemDescription'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        value: behaviorSettings.shizukuFallbackToSystem,
+                        onChanged: (v) {
+                          v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                          behaviorSettings.shizukuFallbackToSystem = v;
+                        },
+                      ),
+
+                      if (_isShizukuGranted)
+                        ListTile(
+                          dense: true,
+                          leading: Icon(
+                            Icons.speed_rounded,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.tertiary,
                           ),
-
-                          SwitchListTile.adaptive(
-                            dense: true,
-                            secondary: const Icon(
-                              Icons.swap_horiz_rounded,
-                              size: 20,
+                          title: AnimatedSwitcher(
+                            duration: Duration(
+                              milliseconds:
+                                  plusSettings.plusEnableEnhancedAnimations
+                                  ? 200
+                                  : 0,
                             ),
-                            title: Text(
-                              tr('shizukuFallbackToSystem'),
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w500),
-                            ),
-                            subtitle: Text(
-                              tr('shizukuFallbackToSystemDescription'),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            value: behaviorSettings.shizukuFallbackToSystem,
-                            onChanged: (v) {
-                              v
-                                  ? AppHaptics.toggleOn()
-                                  : AppHaptics.toggleOff();
-                              behaviorSettings.shizukuFallbackToSystem = v;
-                            },
-                          ),
-
-                          if (_isShizukuGranted)
-                            ListTile(
-                              dense: true,
-                              leading: Icon(
-                                Icons.speed_rounded,
-                                size: 20,
-                                color: Theme.of(context).colorScheme.tertiary,
-                              ),
-                              title: AnimatedSwitcher(
-                                duration: Duration(
-                                  milliseconds:
-                                      plusSettings.plusEnableEnhancedAnimations
-                                      ? 200
-                                      : 0,
-                                ),
-                                child: Text(
-                                  _isTestingBinder
-                                      ? tr('testingBinder')
-                                      : _binderLatencyMs != null
-                                      ? tr(
-                                          'binderLatency',
-                                          args: ['$_binderLatencyMs'],
-                                        )
-                                      : tr('testBinderConnection'),
-                                  key: ValueKey<String>(
-                                    _isTestingBinder
-                                        ? 'testing'
-                                        : _binderLatencyMs != null
-                                        ? 'result_$_binderLatencyMs'
-                                        : 'idle',
-                                  ),
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color:
-                                            _binderLatencyMs != null &&
-                                                !_isTestingBinder
-                                            ? (_binderLatencyMs! < 50
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.primary
-                                                  : _binderLatencyMs! < 120
-                                                  ? Theme.of(
-                                                      context,
-                                                    ).colorScheme.tertiary
-                                                  : Theme.of(
-                                                      context,
-                                                    ).colorScheme.error)
-                                            : null,
-                                      ),
-                                ),
-                              ),
-                              trailing: _isTestingBinder
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child:
-                                          ExpressiveCircularProgressIndicator(
-                                            strokeWidth: 2,
-                                          ),
+                            child: Text(
+                              _isTestingBinder
+                                  ? tr('testingBinder')
+                                  : _binderLatencyMs != null
+                                  ? tr(
+                                      'binderLatency',
+                                      args: ['$_binderLatencyMs'],
                                     )
-                                  : FilledButton.tonal(
-                                      style: FilledButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                        ),
-                                      ),
-                                      onPressed: () {
-                                        AppHaptics.selectionClick();
-                                        _testBinderLatency();
-                                      },
-                                      child: Text(
-                                        _binderLatencyMs != null
-                                            ? 'Retest'
-                                            : 'Test',
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ),
+                                  : tr('testBinderConnection'),
+                              key: ValueKey<String>(
+                                _isTestingBinder
+                                    ? 'testing'
+                                    : _binderLatencyMs != null
+                                    ? 'result_$_binderLatencyMs'
+                                    : 'idle',
+                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        _binderLatencyMs != null &&
+                                            !_isTestingBinder
+                                        ? (_binderLatencyMs! < 50
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.primary
+                                              : _binderLatencyMs! < 120
+                                              ? Theme.of(
+                                                  context,
+                                                ).colorScheme.tertiary
+                                              : Theme.of(
+                                                  context,
+                                                ).colorScheme.error)
+                                        : null,
+                                  ),
                             ),
-                        ],
-                      ),
-                    ),
+                          ),
+                          trailing: _isTestingBinder
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: ExpressiveCircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : FilledButton.tonal(
+                                  style: FilledButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                  ),
+                                  onPressed: () {
+                                    AppHaptics.selectionClick();
+                                    _testBinderLatency();
+                                  },
+                                  child: Text(
+                                    _binderLatencyMs != null
+                                        ? 'Retest'
+                                        : 'Test',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                        ),
+                    ],
                   ),
                 )
               : const SizedBox.shrink(),

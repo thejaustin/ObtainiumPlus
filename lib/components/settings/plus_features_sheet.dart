@@ -89,7 +89,8 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     final colorScheme = theme.colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
-    final radius = plusSettings.plusGlobalCornerRadius.clamp(16.0, 28.0);
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final radius = CardMetrics.card(plusSettings.plusGlobalCornerRadius);
     final innerRadius = CardMetrics.inner(radius);
 
     return Material(
@@ -97,6 +98,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
       borderRadius: BorderRadius.vertical(top: Radius.circular(radius)),
       child: ListView(
         controller: widget.scrollController,
+        physics: plusSettings.scrollPhysics,
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
           // Drag handle
@@ -115,7 +117,7 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
           // Header Banner
           Container(
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -124,10 +126,13 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   colorScheme.tertiaryContainer.withValues(alpha: 0.2),
                 ],
               ),
-              borderRadius: BorderRadius.circular(radius),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.25),
-                width: 1,
+              shape: CardMetrics.shape(
+                radius,
+                expressive: isM3E,
+                side: BorderSide(
+                  color: colorScheme.primary.withValues(alpha: 0.25),
+                  width: 1,
+                ),
               ),
             ),
             child: Row(
@@ -135,10 +140,10 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                 Container(
                   width: 48,
                   height: 48,
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: colorScheme.primary,
-                    borderRadius: BorderRadius.circular(innerRadius),
-                    boxShadow: [
+                    shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                    shadows: [
                       BoxShadow(
                         color: colorScheme.primary.withValues(alpha: 0.3),
                         blurRadius: 10,
@@ -490,19 +495,21 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     required Widget child,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(
+    final isM3E = context
+        .watch<PlusSettingsProvider>()
+        .plusEnableMaterialExpressive;
+    return Material(
+      color: colorScheme.surfaceContainer,
+      shape: CardMetrics.shape(
+        radius,
+        expressive: isM3E,
+        side: BorderSide(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: child,
-      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
     );
   }
 }

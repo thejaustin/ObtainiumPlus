@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
@@ -489,8 +490,8 @@ class UpdateSettingsSection extends StatelessWidget {
                 },
               ),
               if (updateSettings.useUpdateSchedule)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16.0),
+                ConnectedSettingContainer(
+                  label: tr('plusEnableUpdateSchedule'),
                   child: ListTile(
                     leading: buildSettingsIconBadge(
                       context,
@@ -681,8 +682,8 @@ class UpdateSettingsSection extends StatelessWidget {
                   if (plusSettings.enableAllPlusFeatures &&
                       plusSettings.plusEnableAutoUpdateRules &&
                       _matches(tr('autoUpdateRules')))
-                    Padding(
-                      padding: const EdgeInsets.only(left: 16.0),
+                    ConnectedSettingContainer(
+                      label: tr('plusEnableAutoUpdateRules'),
                       child: ListTile(
                         leading: buildSettingsIconBadge(
                           context,
