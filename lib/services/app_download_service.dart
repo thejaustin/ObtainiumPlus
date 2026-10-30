@@ -204,7 +204,10 @@ class AppDownloadService {
         skipInstalls: true,
         isCancelled: isCancelled,
       ),
-      install: (id, res) async {
+      install: (queuedId, res) async {
+        // The download may have moved the app to a new ID (see
+        // _downloadAppWrapper).
+        final id = (res['id'] as String?) ?? queuedId;
         final file = res['downloadedFile'] as DownloadedApk?;
         final dir = res['downloadedDir'] as DownloadedDir?;
         // Cancelled or failed to download; do not attempt install
@@ -949,12 +952,18 @@ class AppDownloadService {
     bool willBeSilent = false;
     DownloadedApk? downloadedFile;
     DownloadedDir? downloadedDir;
+    // The downloaded APK can report a different package than the tracked one
+    // (e.g. Shizuku+'s drop-in build uses stock Shizuku's ID). downloadApp
+    // then re-keys the app under that ID, updating this App in place, so
+    // everything after the download must use app.id, not the original [id].
+    final App? app = apps[id]?.app;
+    var currentId = id;
     try {
-      if (apps[id] == null) {
+      if (app == null) {
         throw ObtainiumError(tr('appNotFound'));
       }
       var downloadedArtifact = await downloadApp(
-        app: apps[id]!.app,
+        app: app,
         apps: apps,
         settingsProvider: settingsProvider,
         logs: logs,
@@ -970,14 +979,15 @@ class AppDownloadService {
         // banner doesn't flicker null→-1 between download and install.
         clearProgressOnComplete: false,
       );
+      currentId = app.id;
       if (downloadedArtifact['isAPK'] == true) {
         downloadedFile = DownloadedApk(
-          id,
+          currentId,
           downloadedArtifact['downloadedFile'] as File,
         );
       } else {
         downloadedDir = DownloadedDir(
-          id,
+          currentId,
           downloadedArtifact['downloadedFile'] as File,
           downloadedArtifact['apkDir'] as Directory,
           downloadedArtifact['isXAPK']
@@ -986,8 +996,8 @@ class AppDownloadService {
         );
       }
 
-      if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
-      willBeSilent = await canInstallSilently(apps[id]!.app);
+      if (apps[currentId] == null) throw ObtainiumError(tr('appNotFound'));
+      willBeSilent = await canInstallSilently(apps[currentId]!.app);
       await _checkInstallPermissions(
         settingsProvider,
         behaviorSettings,
@@ -1002,16 +1012,16 @@ class AppDownloadService {
       }
     } catch (e) {
       if (e is! DownloadCancelledError) {
-        errors.add(id, e, appName: apps[id]?.name);
+        errors.add(currentId, e, appName: apps[currentId]?.name);
       }
       // Clear progress on cancellation
-      if (apps[id] != null) {
-        apps[id]!.downloadProgress = null;
+      if (apps[currentId] != null) {
+        apps[currentId]!.downloadProgress = null;
         notifyListeners();
       }
     }
     return {
-      'id': id,
+      'id': currentId,
       'willBeSilent': willBeSilent,
       'downloadedFile': downloadedFile,
       'downloadedDir': downloadedDir,
