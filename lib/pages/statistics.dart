@@ -3,7 +3,6 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/utils/app_utils.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
@@ -18,11 +17,9 @@ import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/logs_provider.dart';
-import 'package:obtainium/custom_errors.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 
 class StatisticsPage extends StatefulWidget {
@@ -215,9 +212,9 @@ class _StatisticsPageState extends State<StatisticsPage>
               .where((l) => l.timestamp.isAfter(sevenDaysAgo))
               .length;
 
-          final screenWidth = MediaQuery.of(context).size.width;
-          final double adaptiveMargin = screenWidth > 840
-              ? (screenWidth - 840) / 2
+          final screenWidth = MediaQuery.sizeOf(context).width;
+          final double adaptiveMargin = screenWidth > 1040
+              ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
               : 16.0;
 
           return SingleChildScrollView(

@@ -46,6 +46,7 @@ class DeveloperSettingsPage extends StatelessWidget {
       appBar: AppBar(title: Text(tr('developerAndDiagnostics'))),
       body: ListView(
         controller: scrollController,
+        physics: plusSettings.scrollPhysics,
         padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
         children: [
           _buildSection(context, tr('playStoreAndPluginsExperimental'), [
@@ -533,6 +534,9 @@ class DeveloperSettingsPage extends StatelessWidget {
     List<Widget> children,
   ) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -547,24 +551,23 @@ class DeveloperSettingsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
             child: Text(
               title,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
               ),
             ),
           ),
           Card(
             elevation: 0,
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            color: colorScheme.surfaceContainerLow,
             clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(cardRadius),
+            shape: CardMetrics.shape(
+              cardRadius,
+              expressive: isM3E,
               side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant.withValues(
-                  alpha: Theme.of(context).brightness == Brightness.dark
-                      ? 0.35
-                      : 0.65,
+                color: colorScheme.outlineVariant.withValues(
+                  alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
                 ),
                 width: 1.0,
               ),
@@ -724,7 +727,7 @@ class DeveloperSettingsPage extends StatelessWidget {
         allowedExtensions: ['apk'],
       );
 
-      if (result != null && result.isNotEmpty && result.first.path != null) {
+      if (result.isNotEmpty && result.first.path != null) {
         final file = File(result.first.path!);
         if (context.mounted) {
           final plusSettings = context.read<PlusSettingsProvider>();

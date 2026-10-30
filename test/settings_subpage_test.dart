@@ -214,4 +214,45 @@ void main() {
       expect(actionCalled, isTrue);
     },
   );
+
+  testWidgets(
+    'SettingsSubpage prevents foldable margin collapse between 840dp and 1072dp',
+    (WidgetTester tester) async {
+      // At 842dp width, un-clamped 840dp layouts collapsed to 1.0dp margin.
+      // With the 1040dp standard and .clamp(16.0, double.infinity), it stays 16.0dp.
+      tester.view.physicalSize = const Size(842, 1200);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final plusSettings = PlusSettingsProvider();
+
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<PlusSettingsProvider>.value(
+              value: plusSettings,
+            ),
+          ],
+          child: const MaterialApp(
+            home: SettingsSubpage(
+              title: 'Foldable Edge Check',
+              subtitle: 'No margin collapse at 842dp',
+              icon: Icons.devices_fold_rounded,
+              child: Text('Foldable Body'),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      final sliverPaddingFinder = find.byType(SliverPadding);
+      expect(sliverPaddingFinder, findsOneWidget);
+      final sliverPadding = tester.widget<SliverPadding>(sliverPaddingFinder);
+      final padding = sliverPadding.padding as EdgeInsets;
+      expect(padding.left, equals(16.0));
+      expect(padding.right, equals(16.0));
+    },
+  );
 }

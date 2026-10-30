@@ -143,9 +143,9 @@ class _LogsPageState extends State<LogsPage> {
 
   Widget _logTile(LogEntry log) {
     final color = _levelColor(context, log.level);
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
 
     return Padding(

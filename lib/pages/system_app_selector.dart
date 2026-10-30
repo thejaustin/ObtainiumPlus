@@ -11,7 +11,6 @@ import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/empty_state.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/import_error_dialog.dart';
-import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
@@ -465,9 +464,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       hasExtraDetails: true,
     );
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(8.0, double.infinity)
         : 8.0;
 
     final viewWidget = _isLoading
@@ -498,7 +497,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         : GridView.builder(
             controller: widget.scrollController,
             itemCount: filteredApps.length,
-            padding: EdgeInsets.all(adaptiveMargin),
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 8,
+            ),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: gridColumns,
               mainAxisSpacing: 8,
@@ -1588,7 +1590,7 @@ class _EnhancedPackageInfo {
   String? versionName;
   Uint8List? icon;
   bool isSystemApp;
-  bool isSelected;
+  bool isSelected = false;
   int? size;
   int? firstInstallTime;
   int? lastUpdateTime;
@@ -1599,8 +1601,6 @@ class _EnhancedPackageInfo {
     this.versionName,
     this.icon,
     this.isSystemApp = false,
-    this.isSelected = false,
-    this.size,
     this.firstInstallTime,
     this.lastUpdateTime,
   });

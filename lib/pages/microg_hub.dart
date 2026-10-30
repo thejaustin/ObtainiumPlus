@@ -170,31 +170,39 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     }
 
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
 
     return Scaffold(
       appBar: AppBar(title: Text(tr('microGHub'))),
       body: ListView(
+        physics: plusSettings.scrollPhysics,
         padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 16),
         children: [
-          _buildInfoCard(cs, cardRadius),
+          _buildInfoCard(cs, cardRadius, isM3E),
           const SizedBox(height: 24),
-          _buildProviderSection(cs, context, animsEnabled, cardRadius),
+          _buildProviderSection(cs, context, animsEnabled, cardRadius, isM3E),
           const SizedBox(height: 24),
-          _buildComponentsSection(cs, cardRadius),
+          _buildComponentsSection(cs, cardRadius, isM3E),
           const SizedBox(height: 24),
-          _buildOptionsSection(cs, cardRadius),
+          _buildOptionsSection(cs, cardRadius, isM3E),
           const SizedBox(height: 32),
           if (_isDownloading)
-            _buildProgressSection(cs, overallProgress, trackedCount, cardRadius)
+            _buildProgressSection(
+              cs,
+              overallProgress,
+              trackedCount,
+              cardRadius,
+              isM3E,
+            )
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -210,9 +218,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                   label: Text(tr('startDeployment')),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(cardRadius),
-                    ),
+                    shape: CardMetrics.shape(cardRadius, expressive: isM3E),
                     elevation: 4,
                   ),
                 ),
@@ -229,13 +235,12 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     double overallProgress,
     int trackedCount,
     double cardRadius,
+    bool isM3E,
   ) {
     return Card(
       elevation: 0,
       color: cs.primaryContainer.withValues(alpha: 0.3),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cardRadius),
-      ),
+      shape: CardMetrics.shape(cardRadius, expressive: isM3E),
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -272,12 +277,13 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildInfoCard(ColorScheme cs, double cardRadius) {
+  Widget _buildInfoCard(ColorScheme cs, double cardRadius, bool isM3E) {
     return Card(
       elevation: 0,
       color: cs.primaryContainer.withValues(alpha: AppOpacity.medium),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cardRadius),
+      shape: CardMetrics.shape(
+        cardRadius,
+        expressive: isM3E,
         side: BorderSide(color: cs.primary.withValues(alpha: 0.22)),
       ),
       child: Padding(
@@ -320,6 +326,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     BuildContext context,
     bool animsEnabled,
     double cardRadius,
+    bool isM3E,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,21 +345,25 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         const SizedBox(height: 16),
         ..._providers.keys.map((String value) {
           final isSelected = _selectedProvider == value;
+          final tileShape = CardMetrics.shape(
+            cardRadius,
+            expressive: isM3E,
+            side: BorderSide(
+              color: isSelected
+                  ? cs.primary
+                  : cs.outline.withValues(alpha: 0.12),
+              width: isSelected ? 2 : 1,
+            ),
+          );
           return AnimatedContainer(
             duration: Duration(milliseconds: animsEnabled ? 200 : 0),
             margin: const EdgeInsets.only(bottom: 12),
-            decoration: BoxDecoration(
+            decoration: ShapeDecoration(
               color: isSelected
                   ? cs.primaryContainer.withValues(alpha: 0.5)
                   : cs.surfaceContainerHighest.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(cardRadius),
-              border: Border.all(
-                color: isSelected
-                    ? cs.primary
-                    : cs.outline.withValues(alpha: 0.1),
-                width: isSelected ? 2 : 1,
-              ),
-              boxShadow: isSelected
+              shape: tileShape,
+              shadows: isSelected
                   ? [
                       BoxShadow(
                         color: cs.primary.withValues(alpha: 0.1),
@@ -364,9 +375,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             ),
             child: Material(
               type: MaterialType.transparency,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(cardRadius),
-              ),
+              shape: CardMetrics.shape(cardRadius, expressive: isM3E),
               clipBehavior: Clip.antiAlias,
               child: RadioListTile<String>(
                 title: Text(
@@ -399,9 +408,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
                 },
                 controlAffinity: ListTileControlAffinity.trailing,
                 activeColor: cs.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(cardRadius),
-                ),
+                shape: CardMetrics.shape(cardRadius, expressive: isM3E),
               ),
             ),
           );
@@ -410,7 +417,11 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildComponentsSection(ColorScheme cs, double cardRadius) {
+  Widget _buildComponentsSection(
+    ColorScheme cs,
+    double cardRadius,
+    bool isM3E,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -433,6 +444,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           _installGmsCore,
           (v) => setState(() => _installGmsCore = v!),
           cardRadius,
+          isM3E,
         ),
         _buildComponentTile(
           cs,
@@ -441,6 +453,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           _installGsfProxy,
           (v) => setState(() => _installGsfProxy = v!),
           cardRadius,
+          isM3E,
         ),
         _buildComponentTile(
           cs,
@@ -449,6 +462,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           _installFakeStore,
           (v) => setState(() => _installFakeStore = v!),
           cardRadius,
+          isM3E,
         ),
       ],
     );
@@ -461,18 +475,22 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     bool value,
     ValueChanged<bool?> onChanged,
     double cardRadius,
+    bool isM3E,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(cardRadius),
-      ),
-      child: Material(
-        type: MaterialType.transparency,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardRadius),
+    final tileShape = CardMetrics.shape(
+      cardRadius,
+      expressive: isM3E,
+      side: BorderSide(
+        color: cs.outlineVariant.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.35 : 0.65,
         ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: cs.surfaceContainerLow,
+        shape: tileShape,
         clipBehavior: Clip.antiAlias,
         child: CheckboxListTile(
           title: Text(
@@ -491,9 +509,7 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
             horizontal: 16,
             vertical: 4,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(cardRadius),
-          ),
+          shape: tileShape,
           checkboxShape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6),
           ),
@@ -502,7 +518,16 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
     );
   }
 
-  Widget _buildOptionsSection(ColorScheme cs, double cardRadius) {
+  Widget _buildOptionsSection(ColorScheme cs, double cardRadius, bool isM3E) {
+    final tileShape = CardMetrics.shape(
+      cardRadius,
+      expressive: isM3E,
+      side: BorderSide(
+        color: cs.outlineVariant.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.35 : 0.65,
+        ),
+      ),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -518,38 +543,31 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(cardRadius),
-          ),
-          child: Material(
-            type: MaterialType.transparency,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(cardRadius),
+        Material(
+          color: cs.surfaceContainerLow,
+          shape: tileShape,
+          clipBehavior: Clip.antiAlias,
+          child: SwitchListTile.adaptive(
+            title: Text(
+              tr('officialMicroGRoot'),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: SwitchListTile.adaptive(
-              title: Text(
-                tr('officialMicroGRoot'),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                _isRooted ? tr('rootAvailable') : tr('rootNotDetected'),
-              ),
-              value: _isRooted,
-              onChanged: _isRooted ? (val) {} : null,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
-              secondary: Icon(
-                _isRooted
-                    ? Icons.verified_user
-                    : Icons.no_encryption_gmailerrorred,
-                color: _isRooted ? cs.primary : cs.error,
-              ),
+            subtitle: Text(
+              _isRooted ? tr('rootAvailable') : tr('rootNotDetected'),
             ),
+            value: _isRooted,
+            onChanged: _isRooted ? (val) {} : null,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 20,
+              vertical: 8,
+            ),
+            secondary: Icon(
+              _isRooted
+                  ? Icons.verified_user
+                  : Icons.no_encryption_gmailerrorred,
+              color: _isRooted ? cs.primary : cs.error,
+            ),
+            shape: tileShape,
           ),
         ),
       ],

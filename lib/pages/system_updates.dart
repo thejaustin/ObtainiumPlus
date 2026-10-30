@@ -72,10 +72,10 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
         ? 'scanning'
         : (_updates.isEmpty ? 'empty' : 'results');
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
-        : 8.0;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
+        : 16.0;
 
     Widget body;
     if (!_isScanning && _updates.isEmpty) {
@@ -122,6 +122,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
       body = Scaffold(
         key: const ValueKey('results'),
         body: ListView.builder(
+          physics: plusSettings.scrollPhysics,
           padding: EdgeInsets.fromLTRB(
             adaptiveMargin,
             8,
@@ -159,6 +160,9 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
   Widget _buildUpdateCard(ExternalAppUpdate update) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -166,10 +170,17 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
 
     return Card(
       elevation: 0,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      color: cs.surfaceContainerLow,
       margin: const EdgeInsets.only(bottom: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cardRadius),
+      clipBehavior: Clip.antiAlias,
+      shape: CardMetrics.shape(
+        cardRadius,
+        expressive: isM3E,
+        side: BorderSide(
+          color: cs.outlineVariant.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
+          ),
+        ),
       ),
       child: ExpansionTile(
         key: PageStorageKey<String>('system_update:${update.appId}'),

@@ -7,6 +7,22 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Antigravity: M3E Secondary Hub Polish, Direct Material Ancestors & Foldable Margin Clamp Fixes
+
+- **Direct `Material` Ancestors & M3E Squircle Geometry Across Connected Hubs (`lib/pages/plugin_manager.dart`, `lib/pages/microg_hub.dart`, `lib/pages/developer_settings.dart`, `lib/pages/system_updates.dart`):**
+  - Replaced `Container(decoration: BoxDecoration(...))` wrappers around `ListTile`, `CheckboxListTile`, and `SwitchListTile.adaptive` in `PluginManagerPage` (`_buildPluginTile`) and `MicroGHubPage` (`_buildComponentTile`, `_buildOptionsSection`) with direct `Material` surfaces using `CardMetrics.shape(..., expressive: isM3E)` and `clipBehavior: Clip.antiAlias`. Eliminates `ListTile` splash assertions and ensures authentic M3E continuous corner squircles.
+  - Upgraded `_buildSection` cards in `DeveloperSettingsPage`, `_buildUpdateCard` in `SystemUpdatesPage`, and info/install/progress cards in `PluginManagerPage` and `MicroGHubPage` to `CardMetrics.shape(..., expressive: isM3E)`.
+  - Wired `physics: plusSettings.scrollPhysics` across all secondary tool pages for unified scroll physics.
+- **Foldable / Landscape Margin Collapse Fix (`840dp`–`1072dp` Viewports):**
+  - Fixed a responsive edge-case across 7 secondary pages (`plugin_manager.dart`, `microg_hub.dart`, `system_updates.dart`, `system_app_selector.dart`, `app_additional_options.dart`, `logs.dart`, `statistics.dart`) where `(screenWidth - 840) / 2` without `.clamp(16.0, double.infinity)` caused horizontal padding to collapse toward `0dp` (e.g. `1dp` at `842dp` width on unfolded foldables). Standardized all pages to the `1040dp` clamp with guaranteed minimum `16dp` (`8dp` for dense grids) margins.
+- **`SystemAppSelector` GridView Vertical Padding Fix (`lib/pages/system_app_selector.dart`):**
+  - Fixed `GridView.builder` padding bug where `EdgeInsets.all(adaptiveMargin)` applied wide-screen horizontal margins (e.g. `180dp+`) to top and bottom vertical padding; changed to `EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 8)`.
+- **Code Cleanups & Test Coverage:**
+  - Removed unused imports and dead parameters in `statistics.dart`, `system_app_selector.dart`, and `developer_settings.dart`.
+  - Added foldable viewport margin-clamp regression test in `test/settings_subpage_test.dart`.
+
+---
+
 ## 2026-10-28 — Antigravity: Directional Motion Transitions, Active Sibling Auto-Centering & Cross-Hub Standardization
 
 - **Directional Spatial Slide Transitions (`lib/pages/settings_subpage.dart`):**

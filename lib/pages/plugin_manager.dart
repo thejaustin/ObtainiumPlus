@@ -34,14 +34,15 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
 
-    final screenWidth = MediaQuery.of(context).size.width;
-    final double adaptiveMargin = screenWidth > 840
-        ? (screenWidth - 840) / 2
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final double adaptiveMargin = screenWidth > 1040
+        ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
         : 16.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Plugin Manager')),
       body: ListView(
+        physics: plusSettings.scrollPhysics,
         padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 16),
         children: [
           _buildInstallCard(cs, pluginProvider, plusSettings, cardRadius),
@@ -62,8 +63,13 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
             _buildEmptyState(cs)
           else
             ...pluginProvider.plugins.map(
-              (plugin) =>
-                  _buildPluginTile(cs, plugin, pluginProvider, cardRadius),
+              (plugin) => _buildPluginTile(
+                cs,
+                plugin,
+                pluginProvider,
+                plusSettings,
+                cardRadius,
+              ),
             ),
         ],
       ),
@@ -76,12 +82,21 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     PlusSettingsProvider plusSettings,
     double cardRadius,
   ) {
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
     return Card(
       elevation: 0,
-      color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(cardRadius),
-        side: BorderSide(color: cs.outline.withValues(alpha: 0.1)),
+      color: cs.surfaceContainerLow,
+      clipBehavior: Clip.antiAlias,
+      shape: CardMetrics.shape(
+        cardRadius,
+        expressive: isM3E,
+        side: BorderSide(
+          color: cs.outlineVariant.withValues(
+            alpha: Theme.of(context).brightness == Brightness.dark
+                ? 0.35
+                : 0.65,
+          ),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -241,54 +256,66 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
     ColorScheme cs,
     dynamic plugin,
     PluginProvider pluginProvider,
+    PlusSettingsProvider plusSettings,
     double cardRadius,
   ) {
     final innerRadius = CardMetrics.inner(cardRadius);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(cardRadius),
-        border: Border.all(color: cs.outline.withValues(alpha: 0.05)),
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    final tileShape = CardMetrics.shape(
+      cardRadius,
+      expressive: isM3E,
+      side: BorderSide(
+        color: cs.outlineVariant.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.35 : 0.65,
+        ),
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: cs.primaryContainer.withValues(alpha: 0.55),
-            borderRadius: BorderRadius.circular(innerRadius),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: cs.surfaceContainerLow,
+        shape: tileShape,
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 8,
           ),
-          child: Icon(Icons.extension_rounded, color: cs.primary),
-        ),
-        title: Text(
-          plugin.name,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          plugin.description,
-          style: TextStyle(
-            fontSize: 12,
-            color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: ShapeDecoration(
+              color: cs.primaryContainer.withValues(alpha: 0.55),
+              shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+            ),
+            child: Icon(Icons.extension_rounded, color: cs.primary),
           ),
-        ),
-        trailing: ScaleTouchWrapper(
-          hapticOnPressDown: true,
-          scaleDownFactor: 0.88,
-          child: IconButton.filledTonal(
-            icon: Icon(Icons.delete_outline_rounded, color: cs.error),
-            onPressed: () {
-              AppHaptics.heavyImpact();
-              pluginProvider.removePlugin(plugin.id);
-            },
-            style: IconButton.styleFrom(
-              backgroundColor: cs.errorContainer.withValues(alpha: 0.3),
+          title: Text(
+            plugin.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            plugin.description,
+            style: TextStyle(
+              fontSize: 12,
+              color: cs.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(cardRadius),
+          trailing: ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton.filledTonal(
+              icon: Icon(Icons.delete_outline_rounded, color: cs.error),
+              onPressed: () {
+                AppHaptics.heavyImpact();
+                pluginProvider.removePlugin(plugin.id);
+              },
+              style: IconButton.styleFrom(
+                backgroundColor: cs.errorContainer.withValues(alpha: 0.3),
+              ),
+            ),
+          ),
+          shape: tileShape,
         ),
       ),
     );
