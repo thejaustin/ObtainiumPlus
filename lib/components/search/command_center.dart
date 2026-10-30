@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -246,6 +247,12 @@ class _CommandCenterState extends State<CommandCenter> {
     await _handleDiscoverSearch(value);
   }
 
+  static String _urlKey(String url) => url
+      .trim()
+      .toLowerCase()
+      .replaceFirst(RegExp(r'^https?://(www\.)?'), '')
+      .replaceFirst(RegExp(r'/+$'), '');
+
   Future<void> _runDiscoverSearch(String query) async {
     if (!mounted) return;
     setState(() => _isSearching = true);
@@ -259,8 +266,16 @@ class _CommandCenterState extends State<CommandCenter> {
       );
 
       if (mounted && _query == query) {
+        // Apps already added are listed under the local results.
+        final added = {
+          for (final a in context.read<AppsProvider>().apps.values)
+            _urlKey(a.app.url),
+        };
         setState(() {
-          _discoverResults = searchResult.results;
+          _discoverResults = {
+            for (final e in searchResult.results.entries)
+              if (!added.contains(_urlKey(e.key))) e.key: e.value,
+          };
           _discoverSearchFailed = searchResult.allSourcesFailed;
         });
       }
@@ -731,6 +746,19 @@ class _CommandCenterState extends State<CommandCenter> {
     );
   }
 
+  /// Same test as the app list, so a newer-looking but older release
+  /// (a downgrade) isn't offered here either.
+  static bool _hasUpdate(AppInMemory a) =>
+      !a.app.disabled &&
+      a.installedInfo != null &&
+      a.app.installedVersion != null &&
+      a.app.latestVersion.isNotEmpty &&
+      AppUpdateService.areVersionsDifferent(
+        a.app,
+        a.app.installedVersion,
+        a.app.latestVersion,
+      );
+
   Widget _buildLocalResult(AppInMemory app) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final appsProvider = context.watch<AppsProvider>();
@@ -741,11 +769,7 @@ class _CommandCenterState extends State<CommandCenter> {
     final itemRadius = CardMetrics.inner(radius);
 
     final bool isInstalled = app.installedInfo != null;
-    final bool hasUpdate =
-        isInstalled &&
-        app.app.latestVersion.isNotEmpty &&
-        app.app.installedVersion != null &&
-        app.app.latestVersion != app.app.installedVersion;
+    final bool hasUpdate = _hasUpdate(app);
     final bool isDownloading = app.downloadProgress != null;
 
     return Padding(
@@ -1248,14 +1272,20 @@ class _CommandCenterState extends State<CommandCenter> {
   Widget _buildInitialState() {
     final appsProvider = context.watch<AppsProvider>();
     final allApps = appsProvider.getAppValues().toList();
-    final appsWithUpdates = allApps.where((a) {
-      final isInstalled = a.installedInfo != null;
-      return isInstalled &&
-          a.app.latestVersion.isNotEmpty &&
-          a.app.installedVersion != null &&
-          a.app.latestVersion != a.app.installedVersion;
-    }).toList();
-    final recentlyAdded = allApps.reversed.take(5).toList();
+    // Each app is listed once: an app that is downloading shows only under
+    // "Installing", and one with an update is left out of "Recently added".
+    final shownIds = <String>{
+      for (final a in allApps)
+        if (a.downloadProgress != null) a.app.id,
+    };
+    final appsWithUpdates = allApps
+        .where((a) => !shownIds.contains(a.app.id) && _hasUpdate(a))
+        .toList();
+    shownIds.addAll(appsWithUpdates.map((a) => a.app.id));
+    final recentlyAdded = allApps.reversed
+        .where((a) => !shownIds.contains(a.app.id))
+        .take(5)
+        .toList();
 
     final allTags = <String>{};
     final allCategories = <String>{};
@@ -1278,10 +1308,10 @@ class _CommandCenterState extends State<CommandCenter> {
                   Text(
                     '${tr('updates').toUpperCase()} (${appsWithUpdates.length})',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: Theme.of(context).colorScheme.primary,
+                      letterSpacing: 1.2,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const Spacer(),
                   ScaleTouchWrapper(
@@ -1331,7 +1361,11 @@ class _CommandCenterState extends State<CommandCenter> {
           if (allTags.isNotEmpty)
             _buildFilterChipGroup(tr('tags'), allTags, isTag: true),
           if (allCategories.isNotEmpty)
-            _buildFilterChipGroup(tr('categories'), allCategories, isTag: false),
+            _buildFilterChipGroup(
+              tr('categories'),
+              allCategories,
+              isTag: false,
+            ),
           const SizedBox(height: 32),
           Center(
             child: Column(

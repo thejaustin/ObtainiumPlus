@@ -77,10 +77,13 @@ class AppUpdateService {
       }
     }
 
-    // Set ambiguous flag if they are likely identical but have different strings
+    // Set ambiguous flag if they are likely identical but have different
+    // strings. Only write on a change: this runs inside list builders.
     if (isLikelyIdentical(installed, latest)) {
-      app.additionalSettings['isAmbiguousUpdate'] = true;
-    } else {
+      if (app.additionalSettings['isAmbiguousUpdate'] != true) {
+        app.additionalSettings['isAmbiguousUpdate'] = true;
+      }
+    } else if (app.additionalSettings.containsKey('isAmbiguousUpdate')) {
       app.additionalSettings.remove('isAmbiguousUpdate');
     }
 

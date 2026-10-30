@@ -25,6 +25,7 @@ All notable changes to Obtainium+ are documented in this file.
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
 ### 🛡️ Fixes
+- **No More Duplicates in the Search Sheet**: An app that's downloading or has an update is now listed once in the search sheet, instead of again under "Updates" and "Recently added". The sheet's update list also uses the same downgrade check as the apps list, so it no longer offers older releases as updates. Searching online also no longer lists apps you've already added a second time under "Discover".
 - **Release Dates Settle Unclear Updates**: When version numbers can't say which release is newer (for example `1.4.0-rc1` vs `1.4.0`, or an app that switched from date-style versions like `2024.10.5` to `3.2.0`), Obtainium+ now checks when each version came out. Newer releases are offered and older ones are hidden. The app log notes what decided each hidden update.
 - **APK Architecture Labels**: When an F-Droid repo release has several APKs, the APK picker now shows which architecture each one is for, or marks it as universal.
 - **Detection Date Fix**: With "use detection date as release date" on, the first check after adding an app no longer invents a release date for a version that was already out.

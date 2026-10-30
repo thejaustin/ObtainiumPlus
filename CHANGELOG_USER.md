@@ -2,17 +2,31 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
----
-
-## [1.7.3-p11] — 2026-10-30
-
 ### ⚡ Update Checks
 - **Faster, More Compatible Network Requests**: Update checks now go through Android's own network stack (embedded Cronet, no Google Play Services needed). Connections are reused across a check instead of reopened for every request, Android proxy settings apply, and certificates you've installed on the device (for a self-hosted or company server) are trusted. App downloads themselves still use the previous network code for now.
 - **Cleaner Finish to Installs**: When an install finishes, the progress text on the app row fades out before the menu button fades in, instead of the two overlapping. The progress banner keeps saying "Installing" as it slides away instead of flipping to "Please wait".
 - **Smoother End of Update Checks**: The progress banner no longer vanishes in a single frame when a check finishes right after finding updates. It fills its bar and slides away.
 - **Faster "Update All"**: Each app now installs as soon as its own download finishes, while the others keep downloading. Before, nothing installed until every download was done. Obtainium+ itself and Shizuku providers still install last.
-- **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 update checks at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.
 - **Much Less Data for GitHub Checks**: GitHub apps are now checked with conditional requests, so a repo with no new release answers with an empty "not modified" reply instead of resending its whole release list (often hundreds of KB per app). With a GitHub token set, these replies also don't count against your rate limit.
+
+### 🛡️ Fixes
+- **Release Dates Settle Unclear Updates**: When version numbers can't say which release is newer (for example `1.4.0-rc1` vs `1.4.0`, or an app that switched from date-style versions like `2024.10.5` to `3.2.0`), Obtainium+ now checks when each version came out. Newer releases are offered and older ones are hidden. The app log notes what decided each hidden update.
+- **APK Architecture Labels**: When an F-Droid repo release has several APKs, the APK picker now shows which architecture each one is for, or marks it as universal.
+- **Detection Date Fix**: With "use detection date as release date" on, the first check after adding an app no longer invents a release date for a version that was already out.
+- **Silent Updates via Shizuku on Android 14+**: Apps first installed through Shizuku now claim update ownership, so later updates can install without a prompt.
+- **Fewer Fake "Updates" That Are Really Downgrades**: When an app's installed version has an extra label that its releases don't (for example `1.4.0-gplay`, `2.0.1 (201)` or `1.2.3-fdroid` against a `1.3.9` release), Obtainium+ couldn't tell which was newer and listed the older release as an update. It now compares the version numbers and stops offering older releases, and update notifications and background auto-updates skip them too.
+- **Removing an HTML Source Step or Header No Longer Breaks the Form**: Deleting an intermediate link step or a request header from an HTML-source app (Add App or app options) could replace that part of the form with an error box. It now removes just that entry, and the entries after it keep their own values.
+- **Fixed Error Pop-Ups After Failed Updates**: When an update or install started from the apps list failed, a second hidden error could follow the error message. It's gone.
+- **Backups No Longer Include Per-App Tokens Unless Asked**: Exports, including auto-exports, made without the "include credentials" option no longer contain access tokens saved on individual apps (for example, a token for a self-hosted GitHub or GitLab).
+- **Updated App Icons Show Up**: If an app's icon changes in an update, including updates made outside Obtainium+, the new icon is now loaded instead of the old cached one.
+- **No More Duplicates in the Search Sheet**: An app that's downloading or has an update is now listed once in the search sheet, instead of again under "Updates" and "Recently added". The sheet's update list also uses the same downgrade check as the apps list, so it no longer offers older releases as updates. Searching online also no longer lists apps you've already added a second time under "Discover".
+
+---
+
+## [1.7.3-p11] — 2026-10-30
+
+### ⚡ Update Checks
+- **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 update checks at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.
 - **Fewer Wasted GitHub Requests**: Once GitHub's API rate limit is reached, the remaining GitHub apps go straight to the releases feed until the limit resets, instead of each one failing against the API first.
 - **Excluded Categories & Disabled Apps Are Skipped**: Batch update checks now skip apps in categories you excluded from checks, and apps with checking disabled. Before this fix, both were still checked.
 - **Failing Apps Back Off**: An app whose check fails, or that hits a rate limit, waits one full update interval before it's checked again, instead of being retried on every background run. Connection drops don't count, so those apps are retried as usual. Repeated failures now count toward Update Health's failed-checks warning, which previously never triggered.
@@ -25,17 +39,6 @@
 - **Translatable Plus Features Sheet**: The Shizuku, binder benchmark, OEM guide and battery optimization rows in the Plus Features sheet can now be translated.
 - **No More Cut-Off Theme Labels**: The theme picker's first option now reads "System" instead of a truncated "Follow …", and the design style switch shows "Obtainium+" and "M3 Expressive" on one line (long-press for the full name).
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
-
-### 🛡️ Fixes
-- **Release Dates Settle Unclear Updates**: When version numbers can't say which release is newer (for example `1.4.0-rc1` vs `1.4.0`, or an app that switched from date-style versions like `2024.10.5` to `3.2.0`), Obtainium+ now checks when each version came out. Newer releases are offered and older ones are hidden. The app log notes what decided each hidden update.
-- **APK Architecture Labels**: When an F-Droid repo release has several APKs, the APK picker now shows which architecture each one is for, or marks it as universal.
-- **Detection Date Fix**: With "use detection date as release date" on, the first check after adding an app no longer invents a release date for a version that was already out.
-- **Silent Updates via Shizuku on Android 14+**: Apps first installed through Shizuku now claim update ownership, so later updates can install without a prompt.
-- **Fewer Fake "Updates" That Are Really Downgrades**: When an app's installed version has an extra label that its releases don't (for example `1.4.0-gplay`, `2.0.1 (201)` or `1.2.3-fdroid` against a `1.3.9` release), Obtainium+ couldn't tell which was newer and listed the older release as an update. It now compares the version numbers and stops offering older releases, and update notifications and background auto-updates skip them too.
-- **Removing an HTML Source Step or Header No Longer Breaks the Form**: Deleting an intermediate link step or a request header from an HTML-source app (Add App or app options) could replace that part of the form with an error box. It now removes just that entry, and the entries after it keep their own values.
-- **Fixed Error Pop-Ups After Failed Updates**: When an update or install started from the apps list failed, a second hidden error could follow the error message. It's gone.
-- **Backups No Longer Include Per-App Tokens Unless Asked**: Exports, including auto-exports, made without the "include credentials" option no longer contain access tokens saved on individual apps (for example, a token for a self-hosted GitHub or GitLab).
-- **Updated App Icons Show Up**: If an app's icon changes in an update, including updates made outside Obtainium+, the new icon is now loaded instead of the old cached one.
 
 ---
 
