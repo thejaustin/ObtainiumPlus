@@ -83,13 +83,13 @@ dependencies:
   home_widget: ^0.9.3
   logger: ^2.8.0
 
+  xml: ^6.5.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   encrypt: ^5.0.3
-  xml: ^6.5.0
 
 flutter_launcher_icons:
   android: "ic_launcher"
