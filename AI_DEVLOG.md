@@ -7,6 +7,24 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Claude: Device Test, Search-Sheet Dupes, Settings Cleanup
+
+- **First on-device run of Cronet phase 1** (debug, F-Droid flavor, installed as `.fdroid.debug`): the build compiled and the user reported checks are fast. Local debug builds work from a `$HOME` worktree (see memory); **profile/release can't build locally** because Flutter ships no linux-arm64 `gen_snapshot`, so release-speed animation testing needs a CI APK.
+- **Search sheet (`command_center.dart`):** each app is now listed in one section only (Installing > Updates > Recently added). Discover drops URLs already added. The update test now uses `areVersionsDifferent`, which makes downgrades consistent with the list. `areVersionsDifferent` only writes `isAmbiguousUpdate` on a change (it runs in builders; `command_center_test` uses unmodifiable maps).
+- **Settings:**
+  - `listTileTheme` now sets title/subtitle styles; ~45 hard-coded `bodyLarge` titles and `bodySmall` subtitles were removed so rows share them.
+  - Removed labels that repeated their group or toggle (device options grid, notifications grid, update schedule and auto-update rules connected containers).
+  - `SettingsSliderTile` has a new `subtitle` param.
+  - New keys: `deviceOptionsGroupDesc`, `updateOptionsGroupDesc`, `related*Desc`.
+  - Related Settings no longer links to cards on its own tab; `_getAppearanceSiblings` was removed because nothing else used it.
+  - UI strings now use the Obtainium+ and Shizuku+ names.
+- **Changelog:** unreleased entries had been written into the already-released `[1.7.3-p11]` section of CHANGELOG_USER.md; they were moved to `[Upcoming]`.
+- **Open:**
+  - The user reports animation lag. Debug JIT explains part of it; recheck on a CI build.
+  - "Plus settings is a whole other level of different": unclear what they meant; ask them.
+
+---
+
 ## 2026-10-30 — Claude: Cronet Port, Phase 1 (metadata requests)
 
 - **Ported from upstream 80bc82f8 (#3200), adapted to the fork's split HTTP stacks:**
