@@ -64,11 +64,12 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                       ),
                       child: Text(
                         title,
-                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: colorScheme.primary,
-                          letterSpacing: 0.3,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0,
+                              color: colorScheme.onSurface,
+                            ),
                       ),
                     ),
                   ...settings.asMap().entries.map((entry) {
@@ -78,14 +79,6 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                     return Column(
                       children: [
                         SwitchListTile.adaptive(
-                          dense: isCompact,
-                          visualDensity: isCompact
-                              ? VisualDensity.compact
-                              : null,
-                          contentPadding: EdgeInsets.symmetric(
-                            horizontal: isCompact ? 14 : 16,
-                            vertical: isCompact ? 0 : 2,
-                          ),
                           secondary: buildSettingsIconBadge(
                             context,
                             s.icon,
@@ -96,20 +89,27 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                             style: isCompact
                                 ? Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(fontWeight: FontWeight.w500)
-                                : Theme.of(context).listTileTheme.titleTextStyle,
+                                : Theme.of(
+                                    context,
+                                  ).listTileTheme.titleTextStyle,
                           ),
                           subtitle:
                               (s.description != null &&
                                   s.description!.isNotEmpty)
                               ? Text(
                                   s.description!,
-                                  maxLines: isCompact ? 1 : 2,
+                                  maxLines: isCompact ? 1 : 3,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        fontSize: isCompact ? 11.5 : null,
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
+                                  style: isCompact
+                                      ? Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.copyWith(
+                                          fontSize: 11.5,
+                                          color: colorScheme.onSurfaceVariant,
+                                        )
+                                      : Theme.of(
+                                          context,
+                                        ).listTileTheme.subtitleTextStyle,
                                 )
                               : null,
                           value: val,
@@ -170,10 +170,10 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                   if (!embedded || title.isNotEmpty) ...[
                     Text(
                       title,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: colorScheme.primary,
-                        letterSpacing: 0.3,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     SizedBox(height: isCompact ? 6 : 10),
@@ -190,18 +190,22 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              for (int j = 0; j < crossAxisCount; j++) ...[
+                              // A short last row stretches its tiles across
+                              // the width instead of leaving a gap.
+                              for (
+                                int j = 0;
+                                j < crossAxisCount && i + j < settings.length;
+                                j++
+                              ) ...[
                                 if (j > 0) SizedBox(width: isCompact ? 6 : 8),
                                 Expanded(
-                                  child: (i + j < settings.length)
-                                      ? _GridToggleItem<T>(
-                                          setting: settings[i + j],
-                                          provider: provider,
-                                          isCompact: isCompact,
-                                          cardRadius: cardRadius,
-                                          isM3E: isM3E,
-                                        )
-                                      : const SizedBox.shrink(),
+                                  child: _GridToggleItem<T>(
+                                    setting: settings[i + j],
+                                    provider: provider,
+                                    isCompact: isCompact,
+                                    cardRadius: cardRadius,
+                                    isM3E: isM3E,
+                                  ),
                                 ),
                               ],
                             ],
@@ -405,28 +409,32 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                     SizedBox(height: isCompact ? 4 : 6),
                     Text(
                       setting.label,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: value ? FontWeight.bold : FontWeight.w500,
+                      // Same weight on and off: switching weight rewrapped
+                      // the label and made the tile jump when tapped.
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontSize: isCompact ? 12.5 : 13.5,
+                        fontWeight: FontWeight.w600,
                         color: value
                             ? colorScheme.primary
                             : colorScheme.onSurface,
-                        letterSpacing: value ? 0.0 : 0.1,
+                        letterSpacing: 0,
+                        height: 1.25,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                     ),
                     if (!isCompact && setting.description != null) ...[
                       const SizedBox(height: 3),
                       Text(
                         setting.description!,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontSize: 10,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontSize: 11.5,
+                          height: 1.3,
                           color: colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.normal,
                         ),
                         textAlign: TextAlign.center,
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

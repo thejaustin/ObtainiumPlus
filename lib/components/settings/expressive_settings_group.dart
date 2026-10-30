@@ -39,14 +39,12 @@ class ExpressiveSettingsGroup extends StatefulWidget {
 
 class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     with SingleTickerProviderStateMixin {
-  late bool _isExpanded;
   late AnimationController _expandController;
   late Animation<double> _iconTurnAnimation;
 
   @override
   void initState() {
     super.initState();
-    _isExpanded = widget.initiallyExpanded;
     _expandController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -70,7 +68,6 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
 
   void _handleExpansionChange(bool expanded) {
     AppHaptics.selectionClick();
-    setState(() => _isExpanded = expanded);
     final animsEnabled = context
         .read<PlusSettingsProvider>()
         .plusEnableEnhancedAnimations;
@@ -104,12 +101,9 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         return Column(
           children: [
             if (isCompact)
-              Theme(
-                data: Theme.of(
-                  context,
-                ).copyWith(visualDensity: VisualDensity.compact),
-                child: visibleChildren[index],
-              )
+              // Compact applies to every row in the group, including plain
+              // ListTiles that don't check the setting themselves.
+              Theme(data: _compactTheme(context), child: visibleChildren[index])
             else
               visibleChildren[index],
             if (index < visibleChildren.length - 1)
@@ -135,17 +129,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
 
     // Build the leading icon widget (tinted container style)
     Widget? leadingWidget = widget.icon != null
-        ? AnimatedContainer(
-            duration: Duration(
-              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 260 : 0,
-            ),
-            curve: Easing.emphasizedDecelerate,
+        ? Container(
             width: badgeSize,
             height: badgeSize,
             decoration: ShapeDecoration(
-              color: colorScheme.primary.withValues(
-                alpha: _isExpanded ? 0.22 : 0.12,
-              ),
+              color: colorScheme.primary.withValues(alpha: 0.12),
               shape: CardMetrics.shape(
                 innerRadius,
                 expressive: plusSettings.plusEnableMaterialExpressive,
@@ -235,12 +223,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                           children: [
                             Text(
                               widget.title!,
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(
-                                    color: colorScheme.primary,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 0.3,
-                                  ),
+                              style: _headerTitleStyle(context, colorScheme),
                             ),
                             if (!isCompact &&
                                 (widget.description != null ||
@@ -291,14 +274,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                 radius,
                 expressive: plusSettings.plusEnableMaterialExpressive,
                 side: BorderSide(
-                  color: _isExpanded
-                      ? colorScheme.primary.withValues(alpha: 0.5)
-                      : colorScheme.outlineVariant.withValues(
-                          alpha: Theme.of(context).brightness == Brightness.dark
-                              ? 0.35
-                              : 0.65,
-                        ),
-                  width: _isExpanded ? 1.2 : 1.0,
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: Theme.of(context).brightness == Brightness.dark
+                        ? 0.35
+                        : 0.65,
+                  ),
                 ),
               ),
               child: ClipPath(
@@ -328,6 +308,30 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       ],
     );
   }
+
+  ThemeData _compactTheme(BuildContext context) {
+    final theme = Theme.of(context);
+    final tiles = theme.listTileTheme;
+    return theme.copyWith(
+      visualDensity: VisualDensity.compact,
+      listTileTheme: tiles.copyWith(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+        // Badges are 30-36px; a fixed slot keeps every title on one edge.
+        minLeadingWidth: 36,
+        titleTextStyle: tiles.titleTextStyle?.copyWith(fontSize: 14),
+        subtitleTextStyle: tiles.subtitleTextStyle?.copyWith(fontSize: 12),
+      ),
+    );
+  }
+
+  /// Every group header uses this, expandable or not, so section titles read
+  /// as one level above the rows inside them.
+  TextStyle? _headerTitleStyle(BuildContext context, ColorScheme colorScheme) =>
+      Theme.of(context).textTheme.titleMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0,
+        color: colorScheme.onSurface,
+      );
 
   Widget _buildCardContent(
     BuildContext context,
@@ -371,15 +375,12 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         trailing: trailing,
         title: Text(
           widget.title ?? 'Settings',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: _isExpanded ? colorScheme.primary : colorScheme.onSurface,
-          ),
+          style: _headerTitleStyle(context, colorScheme),
         ),
         subtitle: (!isCompact && widget.description != null)
             ? Text(
                 widget.description!,
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,

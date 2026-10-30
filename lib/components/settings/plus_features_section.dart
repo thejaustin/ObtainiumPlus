@@ -18,10 +18,15 @@ class PlusFeaturesSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
+  /// Inside a settings group the row is inset from the group's edges
+  /// instead of drawing a second card flush against them.
+  final bool embedded;
+
   const PlusFeaturesSection({
     super.key,
     this.searchQuery,
     this.showAdvancedSettings,
+    this.embedded = false,
   });
 
   @override
@@ -53,7 +58,10 @@ class PlusFeaturesSection extends StatelessWidget {
             milliseconds: settings.plusEnableEnhancedAnimations ? 300 : 0,
           ),
           curve: Curves.easeOutCubic,
-          margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 4),
+          margin: EdgeInsets.symmetric(
+            horizontal: embedded ? 8 : 0,
+            vertical: embedded ? 8 : (isCompact ? 2 : 4),
+          ),
           decoration: ShapeDecoration(
             color: isEnabled
                 ? colorScheme.primaryContainer.withValues(alpha: 0.25)
@@ -139,14 +147,15 @@ class PlusFeaturesSection extends StatelessWidget {
                               Flexible(
                                 child: Text(
                                   tr('enableAllPlusFeatures'),
-                                  style: Theme.of(context).textTheme.bodyMedium
+                                  style: Theme.of(context)
+                                      .listTileTheme
+                                      .titleTextStyle
                                       ?.copyWith(
                                         fontWeight: FontWeight.w600,
                                         color: isEnabled
                                             ? colorScheme.primary
                                             : colorScheme.onSurface,
                                       ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               if (isEnabled) ...[
@@ -173,10 +182,9 @@ class PlusFeaturesSection extends StatelessWidget {
                           const SizedBox(height: 2),
                           Text(
                             tr('enableAllPlusFeaturesDescription'),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
+                            style: Theme.of(
+                              context,
+                            ).listTileTheme.subtitleTextStyle,
                           ),
                         ],
                       ),

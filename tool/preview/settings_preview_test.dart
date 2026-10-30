@@ -31,6 +31,8 @@ const _dark = bool.fromEnvironment('PREVIEW_DARK');
 const _width = int.fromEnvironment('PREVIEW_WIDTH', defaultValue: 412);
 const _height = int.fromEnvironment('PREVIEW_HEIGHT', defaultValue: 2400);
 const _flutterRoot = String.fromEnvironment('FLUTTER_ROOT_DIR');
+// Extra boolean prefs, e.g. "plusUseCompactSettings=true,foo=false".
+const _prefsArg = String.fromEnvironment('PREVIEW_PREFS');
 
 const _fakeAndroidDeviceInfo = <String, dynamic>{
   'version': {
@@ -114,7 +116,11 @@ void main() {
       .toList();
 
   setUp(() {
-    SharedPreferences.setMockInitialValues({'plusSettingsBottomNavBar': false});
+    SharedPreferences.setMockInitialValues({
+      'plusSettingsBottomNavBar': false,
+      for (final kv in _prefsArg.split(',').where((e) => e.contains('=')))
+        kv.split('=')[0].trim(): kv.split('=')[1].trim() == 'true',
+    });
   });
 
   for (final tab in tabs) {

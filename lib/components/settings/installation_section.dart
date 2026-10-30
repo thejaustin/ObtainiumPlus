@@ -728,12 +728,10 @@ class _InstallationSectionState extends State<InstallationSection>
                       SwitchListTile.adaptive(
                         dense: true,
                         secondary: const Icon(Icons.shop_outlined, size: 20),
-                        title: Text(
-                          tr('shizukuPretendToBeGooglePlay'),
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w500),
+                        title: Text(tr('shizukuPretendToBeGooglePlay')),
+                        subtitle: Text(
+                          tr('shizukuPretendToBeGooglePlayDescription'),
                         ),
-                        subtitle: Text(tr('shizukuPretendToBeGooglePlayDescription')),
                         value: behaviorSettings.shizukuPretendToBeGooglePlay,
                         onChanged: (v) {
                           v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -747,12 +745,10 @@ class _InstallationSectionState extends State<InstallationSection>
                           Icons.swap_horiz_rounded,
                           size: 20,
                         ),
-                        title: Text(
-                          tr('shizukuFallbackToSystem'),
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w500),
+                        title: Text(tr('shizukuFallbackToSystem')),
+                        subtitle: Text(
+                          tr('shizukuFallbackToSystemDescription'),
                         ),
-                        subtitle: Text(tr('shizukuFallbackToSystemDescription')),
                         value: behaviorSettings.shizukuFallbackToSystem,
                         onChanged: (v) {
                           v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();

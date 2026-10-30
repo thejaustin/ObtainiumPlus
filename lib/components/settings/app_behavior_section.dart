@@ -104,7 +104,6 @@ class AppBehaviorSection extends StatelessWidget {
                           curve: Curves.easeInOutCubic,
                           child: settings.enableSwipeGestures
                               ? ConnectedSettingContainer(
-                                  label: tr('connectedSettingsSubheader'),
                                   child: Column(
                                     children: [
                                       if (_matches(tr('swipeRightAction')))

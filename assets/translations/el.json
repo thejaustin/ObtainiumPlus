@@ -1689,5 +1689,7 @@
   "relatedSystemAppsDesc": "Configure tracked packages and system apps",
   "relatedLogsDesc": "Real-time diagnostic logs and traces",
   "relatedDeveloperDesc": "Experimental developer preferences and tools",
-  "relatedSystemUpdatesDesc": "OTA system package updates and sources"
+  "relatedSystemUpdatesDesc": "OTA system package updates and sources",
+  "foregroundServiceTitle": "Reliable background checks",
+  "foregroundServiceDesc": "Run update checks as a foreground service. More reliable, but uses more power"
 }

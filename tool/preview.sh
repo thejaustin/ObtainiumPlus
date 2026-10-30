@@ -6,10 +6,11 @@
 #   tool/preview.sh --tabs 0,3,5    # several tabs
 #   tool/preview.sh --dark --width 840
 #   tool/preview.sh --no-view       # just write build/previews/*.png
+#   tool/preview.sh --prefs plusUseCompactSettings=true,plusEnableMaterialExpressive=false
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-TABS=0 DARK=false WIDTH=412 HEIGHT=2400 VIEW=true COLS=${COLUMNS:-80}
+PREFS= TABS=0 DARK=false WIDTH=412 HEIGHT=2400 VIEW=true COLS=${COLUMNS:-80}
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tabs) TABS=$2; shift 2 ;;
@@ -18,6 +19,7 @@ while [[ $# -gt 0 ]]; do
     --height) HEIGHT=$2; shift 2 ;;
     --cols) COLS=$2; shift 2 ;;
     --no-view) VIEW=false; shift ;;
+    --prefs) PREFS=$2; shift 2 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -31,6 +33,7 @@ flutter test tool/preview/settings_preview_test.dart \
   --dart-define=PREVIEW_DARK="$DARK" \
   --dart-define=PREVIEW_WIDTH="$WIDTH" \
   --dart-define=PREVIEW_HEIGHT="$HEIGHT" \
+  --dart-define=PREVIEW_PREFS="$PREFS" \
   --dart-define=FLUTTER_ROOT_DIR="$FLUTTER_ROOT_DIR" 2>&1 |
   grep -E "PREVIEW |Error|Exception|failed" || true
 

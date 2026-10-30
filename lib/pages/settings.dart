@@ -929,13 +929,13 @@ class SettingsPageState extends State<SettingsPage> {
         icon: Icons.help_outline_rounded,
         label: tr('wiki'),
         url: 'https://wiki.obtainium.imranr.dev/',
-        color: colorScheme.secondary,
+        color: colorScheme.primary,
       ),
       _SettingsLink(
         icon: Icons.apps_rounded,
         label: tr('crowdsourcedConfigsLabel'),
         url: 'https://apps.obtainium.imranr.dev/',
-        color: colorScheme.tertiary,
+        color: colorScheme.primary,
       ),
     ];
   }
@@ -953,7 +953,10 @@ class SettingsPageState extends State<SettingsPage> {
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
         const SizedBox(height: 12),
+        // Top-aligned so a label that wraps doesn't lift its icon above the
+        // others.
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: _links(context).map((link) {
             return Expanded(
               child: _FooterIcon(

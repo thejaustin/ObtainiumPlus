@@ -56,8 +56,10 @@ class AppearanceHub extends StatelessWidget {
         ? tr('plusAppTileStyling')
         : tileDecor.take(3).join(' · ');
 
+    String capitalized(String s) =>
+        s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
     final layoutSummary =
-        '${viewSettings.globalViewMode.name.toUpperCase()} · ${viewSettings.appListDensity.name}${isCompact ? ' · Compact' : ''}';
+        '${capitalized(viewSettings.globalViewMode.name)} · ${capitalized(viewSettings.appListDensity.name)}${isCompact ? ' · Compact' : ''}';
 
     final List<String> motionDecor = [];
     if (plusSettings.plusEnableGlassmorphism) motionDecor.add('Glass');
@@ -81,7 +83,7 @@ class AppearanceHub extends StatelessWidget {
         title: tr('settingsAppearanceAppTileStyling'),
         desc: tr('settingsAppearanceAppTileStylingDesc'),
         summary: tileSummary,
-        color: colorScheme.secondary,
+        color: colorScheme.primary,
         content: appTileContent,
       ),
       (
@@ -89,7 +91,7 @@ class AppearanceHub extends StatelessWidget {
         title: tr('settingsAppearanceLayoutNav'),
         desc: tr('settingsAppearanceLayoutNavDesc'),
         summary: layoutSummary,
-        color: colorScheme.tertiary,
+        color: colorScheme.primary,
         content: layoutNavContent,
       ),
       (
@@ -159,7 +161,7 @@ class AppearanceHub extends StatelessWidget {
                           width: badgeSize,
                           height: badgeSize,
                           decoration: ShapeDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.14),
+                            color: colorScheme.primary.withValues(alpha: 0.12),
                             shape: CardMetrics.shape(
                               innerRadius,
                               expressive: isM3E,
@@ -180,9 +182,10 @@ class AppearanceHub extends StatelessWidget {
                             children: [
                               Text(
                                 tr('designSystemThemeStyle'),
-                                style: Theme.of(context).textTheme.titleSmall
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0,
                                       color: colorScheme.onSurface,
                                     ),
                               ),
@@ -192,12 +195,11 @@ class AppearanceHub extends StatelessWidget {
                                   isM3E
                                       ? tr('materialExpressiveThemeDescription')
                                       : tr('obtainiumPlusThemeDescription'),
-                                  maxLines: 1,
+                                  maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
+                                  style: Theme.of(
+                                    context,
+                                  ).listTileTheme.subtitleTextStyle,
                                 ),
                               ],
                             ],
@@ -390,7 +392,7 @@ class _HubCard extends StatelessWidget {
                   width: badgeSize,
                   height: badgeSize,
                   decoration: ShapeDecoration(
-                    color: accentColor.withValues(alpha: 0.14),
+                    color: accentColor.withValues(alpha: 0.12),
                     shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                   ),
                   child: Icon(
@@ -408,12 +410,14 @@ class _HubCard extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
+                        // Same level as the other settings group headers.
                         style:
                             (isCompact
-                                    ? theme.textTheme.bodyMedium
-                                    : theme.textTheme.bodyLarge)
+                                    ? theme.textTheme.titleSmall
+                                    : theme.textTheme.titleMedium)
                                 ?.copyWith(
                                   fontWeight: FontWeight.w600,
+                                  letterSpacing: 0,
                                   color: colorScheme.onSurface,
                                 ),
                       ),
@@ -421,10 +425,8 @@ class _HubCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           desc,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
+                          style: theme.listTileTheme.subtitleTextStyle,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],

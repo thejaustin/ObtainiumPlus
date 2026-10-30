@@ -94,8 +94,9 @@ class VisualThemeSelector extends StatelessWidget {
               Expanded(
                 child: Text(
                   tr('theme'),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0,
                     color: colorScheme.onSurface,
                   ),
                 ),

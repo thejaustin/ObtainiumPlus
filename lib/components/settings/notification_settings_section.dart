@@ -106,7 +106,6 @@ class NotificationSettingsSection extends StatelessWidget {
                       ),
                     )
                   : ConnectedSettingContainer(
-                      label: tr('connectedSettingsSubheader'),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [

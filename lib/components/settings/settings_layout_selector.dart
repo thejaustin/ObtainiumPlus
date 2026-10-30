@@ -10,7 +10,16 @@ import 'package:provider/provider.dart';
 /// Segmented style switch and granular legacy UI toggles
 class SettingsLayoutSelector extends StatelessWidget {
   final bool isSearching;
-  const SettingsLayoutSelector({super.key, this.isSearching = false});
+
+  /// Inside a settings group: drop the card chrome so it isn't a card
+  /// nested in a card.
+  final bool embedded;
+
+  const SettingsLayoutSelector({
+    super.key,
+    this.isSearching = false,
+    this.embedded = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,17 +39,21 @@ class SettingsLayoutSelector extends StatelessWidget {
     final badgeSize = isCompact ? 30.0 : 36.0;
 
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: isCompact ? 3 : 6),
+      padding: EdgeInsets.symmetric(
+        vertical: embedded ? 0 : (isCompact ? 3 : 6),
+      ),
       child: Material(
-        color: colorScheme.surfaceContainerLow,
+        color: embedded ? Colors.transparent : colorScheme.surfaceContainerLow,
         shape: CardMetrics.shape(
           cardRadius,
           expressive: isM3E,
-          side: BorderSide(
-            color: colorScheme.outlineVariant.withValues(
-              alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
-            ),
-          ),
+          side: embedded
+              ? BorderSide.none
+              : BorderSide(
+                  color: colorScheme.outlineVariant.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
+                  ),
+                ),
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
@@ -61,7 +74,7 @@ class SettingsLayoutSelector extends StatelessWidget {
                         width: badgeSize,
                         height: badgeSize,
                         decoration: ShapeDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.14),
+                          color: colorScheme.primary.withValues(alpha: 0.12),
                           shape: CardMetrics.shape(
                             innerRadius,
                             expressive: isM3E,
@@ -80,17 +93,12 @@ class SettingsLayoutSelector extends StatelessWidget {
                           children: [
                             Text(
                               tr('settingsLayoutMode'),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface,
-                              ),
+                              style: theme.listTileTheme.titleTextStyle,
                             ),
                             if (!isCompact)
                               Text(
                                 tr('settingsLayoutModeDesc'),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                                style: theme.listTileTheme.subtitleTextStyle,
                               ),
                           ],
                         ),
@@ -152,25 +160,29 @@ class SettingsLayoutSelector extends StatelessWidget {
                   isCompact ? 14 : 16,
                   12,
                 ),
-                leading: Icon(
-                  Icons.tune_rounded,
-                  size: isCompact ? 16 : 18,
-                  color: colorScheme.primary,
+                // Same badge as the row above so icons and titles line up.
+                leading: Container(
+                  width: badgeSize,
+                  height: badgeSize,
+                  decoration: ShapeDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.12),
+                    shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+                  ),
+                  child: Icon(
+                    Icons.tune_rounded,
+                    size: isCompact ? 16 : 18,
+                    color: colorScheme.primary,
+                  ),
                 ),
                 title: Text(
                   tr('settingsGranularOldUI'),
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: theme.listTileTheme.titleTextStyle,
                 ),
                 subtitle: isCompact
                     ? null
                     : Text(
                         tr('settingsGranularOldUIDesc'),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                        style: theme.listTileTheme.subtitleTextStyle,
                       ),
                 children: [
                   _buildGranularSwitch(

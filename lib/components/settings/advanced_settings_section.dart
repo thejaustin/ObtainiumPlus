@@ -53,9 +53,10 @@ class AdvancedSettingsSection extends StatelessWidget {
       PlusFeaturesSection(
         searchQuery: searchQuery,
         showAdvancedSettings: showAdvancedSettings,
+        embedded: true,
       ),
       if (searchQuery == null || searchQuery!.isEmpty)
-        const SettingsLayoutSelector(),
+        const SettingsLayoutSelector(embedded: true),
     ];
 
     final List<Widget> dataGroup = [

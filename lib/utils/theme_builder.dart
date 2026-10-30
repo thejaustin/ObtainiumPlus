@@ -507,7 +507,7 @@ class ThemeBuilder {
       // to two or three lines and outweigh the section headers above them.
       titleTextStyle: TextStyle(
         fontFamily: fontFamily,
-        fontSize: 16,
+        fontSize: 15,
         height: 1.3,
         fontWeight: FontWeight.w500,
         letterSpacing: 0,
@@ -515,7 +515,7 @@ class ThemeBuilder {
       ),
       subtitleTextStyle: TextStyle(
         fontFamily: fontFamily,
-        fontSize: 13.5,
+        fontSize: 13,
         height: 1.35,
         letterSpacing: 0.1,
         color: colorScheme.onSurfaceVariant,

@@ -254,7 +254,8 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildForegroundServiceSection(BuildContext context) {
-    if (!_matches(tr('foregroundServiceExplanation'))) {
+    if (!_matches(tr('foregroundServiceExplanation')) &&
+        !_matches(tr('foregroundServiceTitle'))) {
       return const SizedBox.shrink();
     }
     return Consumer<UpdateSettingsProvider>(
@@ -265,7 +266,8 @@ class UpdateSettingsSection extends StatelessWidget {
             Icons.run_circle_outlined,
             active: settings.useFGService,
           ),
-          title: Text(tr('foregroundServiceExplanation')),
+          title: Text(tr('foregroundServiceTitle')),
+          subtitle: Text(tr('foregroundServiceDesc')),
           value: settings.useFGService,
           onChanged: (value) {
             value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -378,7 +380,17 @@ class UpdateSettingsSection extends StatelessWidget {
           min: 0,
           max: updateSettings.updateIntervalNodes.length.toDouble(),
           divisions: updateSettings.updateIntervalNodes.length * 20,
-          labelBuilder: (_) => updateSettings.updateIntervalLabel,
+          labelBuilder: (_) {
+            // Startup skips the label (translations aren't loaded yet), so
+            // the badge stayed blank until the slider was first dragged.
+            if (updateSettings.updateIntervalLabel.isEmpty) {
+              updateSettings.processIntervalSliderValue(
+                updateSettings.updateIntervalSliderVal,
+                notify: false,
+              );
+            }
+            return updateSettings.updateIntervalLabel;
+          },
           onChanged: (value) {
             updateSettings.updateIntervalSliderVal = value;
             updateSettings.processIntervalSliderValue(value);
@@ -1193,15 +1205,31 @@ class _RunBgUpdateCheckNowButtonState
         child: FilledButton.tonal(
           onPressed: _isRunning ? null : _trigger,
           style: FilledButton.styleFrom(
-            textStyle: Theme.of(context).textTheme.bodyLarge,
+            minimumSize: const Size.fromHeight(44),
+            textStyle: Theme.of(
+              context,
+            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
           ),
-          child: _isRunning
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text('runBgCheckNow'.tr()),
+          // Cross-fade so the label and spinner swap without a size jump.
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: _isRunning
+                ? const SizedBox(
+                    key: ValueKey('running'),
+                    width: 20,
+                    height: 20,
+                    child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Row(
+                    key: const ValueKey('idle'),
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.sync_rounded, size: 18),
+                      const SizedBox(width: 8),
+                      Flexible(child: Text('runBgCheckNow'.tr())),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

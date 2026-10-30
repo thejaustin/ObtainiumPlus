@@ -80,12 +80,6 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
       final isCompact = plusSettings.plusUseCompactSettings;
 
       return SwitchListTile.adaptive(
-        dense: isCompact,
-        visualDensity: isCompact ? VisualDensity.compact : null,
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: isCompact ? 14 : 16,
-          vertical: isCompact ? 0 : 2,
-        ),
         secondary: buildSettingsIconBadge(context, icon, active: isEnabled),
         title: Text(
           title,
@@ -98,11 +92,11 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
         subtitle: (subtitle != null && subtitle.isNotEmpty)
             ? Text(
                 subtitle,
-                maxLines: isCompact ? 1 : 2,
+                maxLines: isCompact ? 2 : 3,
                 overflow: TextOverflow.ellipsis,
                 style: isCompact
                     ? Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 11.5,
+                        fontSize: 12,
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                       )
                     : null,
