@@ -22,7 +22,6 @@ import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/pages/logs.dart';
 import 'package:obtainium/pages/microg_hub.dart';
-import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/pages/system_updates.dart';
 import 'package:obtainium/pages/update_health.dart';
@@ -970,64 +969,6 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  List<SettingsSubpageSibling> _getAppearanceSiblings(BuildContext context) {
-    final plusSettings = context.read<PlusSettingsProvider>();
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return [
-      SettingsSubpageSibling(
-        title: tr('settingsAppearanceThemesAndColors'),
-        subtitle: tr('settingsAppearanceThemesAndColorsDesc'),
-        icon: Icons.palette_rounded,
-        accentColor: colorScheme.primary,
-        child: ThemeSettingsSection(
-          searchQuery: _searchQuery,
-          androidInfoFuture: _androidInfoFuture,
-          colorsNameMap: const <ColorSwatch<Object>, String>{},
-          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-          subCategory: 'theme',
-        ),
-      ),
-      SettingsSubpageSibling(
-        title: tr('settingsAppearanceAppTileStyling'),
-        subtitle: tr('settingsAppearanceAppTileStylingDesc'),
-        icon: Icons.style_rounded,
-        accentColor: colorScheme.secondary,
-        child: AppsViewSettingsSection(
-          searchQuery: _searchQuery,
-          onSetState: (fn) => setState(fn),
-          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-          subCategory: 'tiles',
-        ),
-      ),
-      SettingsSubpageSibling(
-        title: tr('settingsAppearanceLayoutNav'),
-        subtitle: tr('settingsAppearanceLayoutNavDesc'),
-        icon: Icons.dashboard_customize_outlined,
-        accentColor: colorScheme.tertiary,
-        child: AppsViewSettingsSection(
-          searchQuery: _searchQuery,
-          onSetState: (fn) => setState(fn),
-          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-          subCategory: 'layout',
-        ),
-      ),
-      SettingsSubpageSibling(
-        title: tr('settingsAppearanceMotionPhysics'),
-        subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
-        icon: Icons.auto_awesome_motion_rounded,
-        accentColor: colorScheme.primary,
-        child: ThemeSettingsSection(
-          searchQuery: _searchQuery,
-          androidInfoFuture: _androidInfoFuture,
-          colorsNameMap: const <ColorSwatch<Object>, String>{},
-          showAdvancedSettings: plusSettings.plusShowAdvancedSettings,
-          subCategory: 'motion',
-        ),
-      ),
-    ];
-  }
-
   Widget _buildConnectedSettingsForSection(
     BuildContext context,
     int sectionIndex,
@@ -1042,27 +983,6 @@ class SettingsPageState extends State<SettingsPage> {
       case 0: // Appearance
         items = [
           ConnectedSettingItem(
-            icon: Icons.dashboard_customize_outlined,
-            title: tr('settingsAppearanceLayoutNav'),
-            subtitle: tr('settingsAppearanceLayoutNavDesc'),
-            accentColor: colorScheme.tertiary,
-            onTap: () {
-              final siblings = _getAppearanceSiblings(context);
-              pushRoute(
-                context,
-                SettingsSubpage(
-                  title: tr('settingsAppearanceLayoutNav'),
-                  subtitle: tr('settingsAppearanceLayoutNavDesc'),
-                  icon: Icons.dashboard_customize_outlined,
-                  accentColor: colorScheme.tertiary,
-                  siblings: siblings,
-                  currentSiblingIndex: 2,
-                  child: siblings[2].child,
-                ),
-              );
-            },
-          ),
-          ConnectedSettingItem(
             icon: Icons.notifications_active_outlined,
             title: tr('settingsTabNotifications'),
             subtitle: tr('settingsTabNotificationsDesc'),
@@ -1070,30 +990,9 @@ class SettingsPageState extends State<SettingsPage> {
             onTap: () => _selectSection(2),
           ),
           ConnectedSettingItem(
-            icon: Icons.auto_awesome_motion_rounded,
-            title: tr('settingsAppearanceMotionPhysics'),
-            subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
-            accentColor: colorScheme.secondary,
-            onTap: () {
-              final siblings = _getAppearanceSiblings(context);
-              pushRoute(
-                context,
-                SettingsSubpage(
-                  title: tr('settingsAppearanceMotionPhysics'),
-                  subtitle: tr('settingsAppearanceMotionPhysicsDesc'),
-                  icon: Icons.auto_awesome_motion_rounded,
-                  accentColor: colorScheme.secondary,
-                  siblings: siblings,
-                  currentSiblingIndex: 3,
-                  child: siblings[3].child,
-                ),
-              );
-            },
-          ),
-          ConnectedSettingItem(
             icon: Icons.import_export_rounded,
             title: tr('importExport'),
-            subtitle: 'Backup, export, or restore settings and apps',
+            subtitle: tr('relatedImportExportDesc'),
             accentColor: colorScheme.tertiary,
             onTap: () => pushRoute(context, const ImportExportPage()),
           ),
@@ -1110,23 +1009,16 @@ class SettingsPageState extends State<SettingsPage> {
             onTap: () => _selectSection(2),
           ),
           ConnectedSettingItem(
-            icon: Icons.healing_outlined,
-            title: tr('updateHealth'),
-            subtitle: tr('updateHealthSubtitle'),
-            accentColor: colorScheme.primary,
-            onTap: () => pushRoute(context, const UpdateHealthPage()),
-          ),
-          ConnectedSettingItem(
             icon: Icons.battery_charging_full_rounded,
             title: tr('disableBatteryOptimisation'),
-            subtitle: 'Manage background restrictions and OEM limits',
+            subtitle: tr('relatedBatteryDesc'),
             accentColor: colorScheme.secondary,
             onTap: () => showDeviceOptimizationSheet(context: context),
           ),
           ConnectedSettingItem(
             icon: Icons.apps_rounded,
             title: tr('showSystemApps'),
-            subtitle: 'Configure tracked packages and system apps',
+            subtitle: tr('relatedSystemAppsDesc'),
             accentColor: colorScheme.primary,
             onTap: () => pushRoute(context, const SystemAppSelector()),
           ),
@@ -1159,7 +1051,7 @@ class SettingsPageState extends State<SettingsPage> {
           ConnectedSettingItem(
             icon: Icons.apps_rounded,
             title: tr('showSystemApps'),
-            subtitle: 'Configure tracked packages and system apps',
+            subtitle: tr('relatedSystemAppsDesc'),
             accentColor: colorScheme.primary,
             onTap: () => pushRoute(context, const SystemAppSelector()),
           ),
@@ -1185,7 +1077,7 @@ class SettingsPageState extends State<SettingsPage> {
           ConnectedSettingItem(
             icon: Icons.import_export_rounded,
             title: tr('importExport'),
-            subtitle: 'Backup, export, or restore settings and apps',
+            subtitle: tr('relatedImportExportDesc'),
             accentColor: colorScheme.secondary,
             onTap: () => pushRoute(context, const ImportExportPage()),
           ),
@@ -1204,7 +1096,7 @@ class SettingsPageState extends State<SettingsPage> {
           ConnectedSettingItem(
             icon: Icons.receipt_long_rounded,
             title: tr('logs'),
-            subtitle: 'Real-time diagnostic logs and traces',
+            subtitle: tr('relatedLogsDesc'),
             accentColor: colorScheme.primary,
             onTap: () => pushRoute(context, const LogsPage()),
           ),
@@ -1218,14 +1110,14 @@ class SettingsPageState extends State<SettingsPage> {
           ConnectedSettingItem(
             icon: Icons.developer_mode_rounded,
             title: tr('developerAndDiagnostics'),
-            subtitle: 'Experimental developer preferences and tools',
+            subtitle: tr('relatedDeveloperDesc'),
             accentColor: colorScheme.tertiary,
             onTap: () => pushRoute(context, const DeveloperSettingsPage()),
           ),
           ConnectedSettingItem(
             icon: Icons.system_update_rounded,
             title: tr('systemUpdates'),
-            subtitle: 'OTA system package updates and sources',
+            subtitle: tr('relatedSystemUpdatesDesc'),
             accentColor: colorScheme.primary,
             onTap: () => pushRoute(context, const SystemUpdatesPage()),
           ),

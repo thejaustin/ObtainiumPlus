@@ -93,7 +93,7 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
               ? Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)
-              : Theme.of(context).textTheme.bodyLarge,
+              : Theme.of(context).listTileTheme.titleTextStyle,
         ),
         subtitle: (subtitle != null && subtitle.isNotEmpty)
             ? Text(

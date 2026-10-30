@@ -66,10 +66,7 @@ class AdvancedSettingsSection extends StatelessWidget {
             Icons.import_export_rounded,
             active: true,
           ),
-          title: Text(
-            tr('importExport'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text(tr('importExport')),
           subtitle: const Text(
             'Backup, restore, import, or export settings and apps',
           ),
@@ -98,10 +95,7 @@ class AdvancedSettingsSection extends StatelessWidget {
                 Icons.enhanced_encryption_outlined,
                 active: plusSettings.backupEncryptionEnabled,
               ),
-              title: Text(
-                tr('backupEncryption'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('backupEncryption')),
               subtitle: Text(tr('backupEncryptionDescription')),
               value: plusSettings.backupEncryptionEnabled,
               onChanged: (v) async {
@@ -133,10 +127,7 @@ class AdvancedSettingsSection extends StatelessWidget {
                 Icons.settings_suggest_outlined,
                 active: plusSettings.plusShowAdvancedSettings,
               ),
-              title: Text(
-                tr('showAdvancedSettings'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('showAdvancedSettings')),
               subtitle: Text(tr('showAdvancedSettingsDescription')),
               value: plusSettings.plusShowAdvancedSettings,
               onChanged: (v) {
@@ -360,7 +351,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         final isConfigured = token != null && token.isNotEmpty;
         return ListTile(
           leading: buildSettingsIconBadge(context, icon, active: isConfigured),
-          title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+          title: Text(title),
           subtitle: Text(isConfigured ? tr('plusTokenConfigStatus') : subtitle),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
           onTap: () => _showTokenConfigDialog(

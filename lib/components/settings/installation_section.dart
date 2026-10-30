@@ -222,10 +222,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 Icons.install_mobile_rounded,
                 active: true,
               ),
-              title: Text(
-                tr('importInstalledApps'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('importInstalledApps')),
               subtitle: Text(tr('importInstalledAppsDescription')),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
@@ -241,10 +238,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 context,
                 Icons.install_mobile_outlined,
               ),
-              title: Text(
-                tr('installUnknownApps'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('installUnknownApps')),
               trailing: const Icon(Icons.open_in_new, size: 18),
               onTap: () async {
                 try {
@@ -313,10 +307,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 Icons.delete_sweep_outlined,
                 active: behaviorSettings.removeOnExternalUninstall,
               ),
-              title: Text(
-                tr('removeOnExternalUninstall'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('removeOnExternalUninstall')),
               subtitle: Text(tr('removeOnExternalUninstallDescription')),
               value: behaviorSettings.removeOnExternalUninstall,
               onChanged: (v) {
@@ -333,10 +324,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 Icons.verified_user_outlined,
                 active: behaviorSettings.beforeNewInstallsShareToAppVerifier,
               ),
-              title: Text(
-                tr('beforeNewInstallsShareToAppVerifier'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('beforeNewInstallsShareToAppVerifier')),
               subtitle: Text(
                 tr('beforeNewInstallsShareToAppVerifierDescription'),
               ),
@@ -366,10 +354,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 Icons.source_outlined,
                 active: behaviorSettings.allowThirdPartySources,
               ),
-              title: Text(
-                tr('allowThirdPartySources'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('allowThirdPartySources')),
               subtitle: Text(tr('allowThirdPartySourcesDescription')),
               value: behaviorSettings.allowThirdPartySources,
               onChanged: (v) {
@@ -386,10 +371,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 Icons.storefront_outlined,
                 active: behaviorSettings.usePlayStoreAppLinks,
               ),
-              title: Text(
-                tr('usePlayStoreAppLinks'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('usePlayStoreAppLinks')),
               subtitle: Text(tr('usePlayStoreAppLinksDescription')),
               value: behaviorSettings.usePlayStoreAppLinks,
               onChanged: (v) {
@@ -406,10 +388,7 @@ class _InstallationSectionState extends State<InstallationSection>
                 Icons.file_download_outlined,
                 active: behaviorSettings.parallelDownloads,
               ),
-              title: Text(
-                tr('parallelDownloads'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('parallelDownloads')),
               subtitle: Text(tr('parallelDownloadsDescription')),
               value: behaviorSettings.parallelDownloads,
               onChanged: (v) {
@@ -754,10 +733,7 @@ class _InstallationSectionState extends State<InstallationSection>
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w500),
                         ),
-                        subtitle: Text(
-                          tr('shizukuPretendToBeGooglePlayDescription'),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                        subtitle: Text(tr('shizukuPretendToBeGooglePlayDescription')),
                         value: behaviorSettings.shizukuPretendToBeGooglePlay,
                         onChanged: (v) {
                           v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -776,10 +752,7 @@ class _InstallationSectionState extends State<InstallationSection>
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(fontWeight: FontWeight.w500),
                         ),
-                        subtitle: Text(
-                          tr('shizukuFallbackToSystemDescription'),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
+                        subtitle: Text(tr('shizukuFallbackToSystemDescription')),
                         value: behaviorSettings.shizukuFallbackToSystem,
                         onChanged: (v) {
                           v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();

@@ -121,6 +121,7 @@ class ThemeBuilder {
         colorScheme,
         plusEnableMaterialExpressive,
         cornerRadius,
+        fontFamily: fontFamily,
       ),
       switchTheme: _buildSwitchTheme(
         colorScheme,
@@ -497,10 +498,28 @@ class ThemeBuilder {
   static ListTileThemeData _buildListTileTheme(
     ColorScheme colorScheme,
     bool expressive,
-    double? cornerRadius,
-  ) {
+    double? cornerRadius, {
+    required String fontFamily,
+  }) {
     return ListTileThemeData(
       iconColor: colorScheme.onSurfaceVariant,
+      // Montserrat runs wide: without tighter tracking, setting titles wrap
+      // to two or three lines and outweigh the section headers above them.
+      titleTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 16,
+        height: 1.3,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0,
+        color: colorScheme.onSurface,
+      ),
+      subtitleTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        fontSize: 13.5,
+        height: 1.35,
+        letterSpacing: 0.1,
+        color: colorScheme.onSurfaceVariant,
+      ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       visualDensity: VisualDensity.standard,
       shape: _shape(

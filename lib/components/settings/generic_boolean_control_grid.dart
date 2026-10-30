@@ -96,7 +96,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                             style: isCompact
                                 ? Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(fontWeight: FontWeight.w500)
-                                : Theme.of(context).textTheme.bodyLarge,
+                                : Theme.of(context).listTileTheme.titleTextStyle,
                           ),
                           subtitle:
                               (s.description != null &&

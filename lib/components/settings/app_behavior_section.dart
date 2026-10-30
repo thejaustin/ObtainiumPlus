@@ -423,10 +423,7 @@ class AppBehaviorSection extends StatelessWidget {
                       active: settings.plusEnableBanWarnings,
                       accentColor: Theme.of(context).colorScheme.tertiary,
                     ),
-                    title: Text(
-                      tr('plusEnableBanWarnings'),
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
+                    title: Text(tr('plusEnableBanWarnings')),
                     subtitle: Text(tr('plusEnableBanWarningsDescription')),
                     value: settings.plusEnableBanWarnings,
                     onChanged: (val) async {

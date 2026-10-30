@@ -60,10 +60,7 @@ class UpdateSettingsSection extends StatelessWidget {
         ),
       if (_matches(tr('updateHealth')))
         ListTile(
-          title: Text(
-            tr('updateHealth'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text(tr('updateHealth')),
           subtitle: Text(tr('updateHealthSubtitle')),
           leading: buildSettingsIconBadge(
             context,
@@ -82,10 +79,7 @@ class UpdateSettingsSection extends StatelessWidget {
               Icons.power_settings_new_outlined,
               active: updateSettings.checkOnStart,
             ),
-            title: Text(
-              tr('checkOnStart'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('checkOnStart')),
             subtitle: Text(tr('checkOnStartDescription')),
             value: updateSettings.checkOnStart,
             onChanged: (val) {
@@ -102,7 +96,8 @@ class UpdateSettingsSection extends StatelessWidget {
           _matches(tr('bgUpdateRequiresCharging')) ||
           _matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
         GenericBooleanControlGrid<UpdateSettingsProvider>(
-          title: tr('sectionDeviceOptions'),
+          // The surrounding group already shows this title, except in search.
+          title: isSearching ? tr('sectionDeviceOptions') : '',
           embedded: true,
           settings: [
             if (_matches(tr('bgUpdateRequiresWifi')))
@@ -174,9 +169,7 @@ class UpdateSettingsSection extends StatelessWidget {
         if (hasConstraints)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('sectionDeviceOptions'),
-            description: isSearching
-                ? null
-                : tr('bgUpdateRequiresWifiDescription'),
+            description: isSearching ? null : tr('deviceOptionsGroupDesc'),
             persistKey: 'updates_constraints',
             icon: Icons.battery_charging_full_rounded,
             isExpandable: !isSearching,
@@ -187,9 +180,7 @@ class UpdateSettingsSection extends StatelessWidget {
         if (hasPerformance)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('sectionUpdateOptions'),
-            description: isSearching
-                ? null
-                : tr('plusUpdateCheckConcurrencyDescription'),
+            description: isSearching ? null : tr('updateOptionsGroupDesc'),
             persistKey: 'updates_performance',
             icon: Icons.speed_rounded,
             isExpandable: !isSearching,
@@ -212,18 +203,10 @@ class UpdateSettingsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-              child: Text(
-                tr('plusUpdateCheckConcurrencyDescription'),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
             SettingsSliderTile(
               icon: Icons.speed_outlined,
               title: tr('plusUpdateCheckConcurrency'),
+              subtitle: tr('plusUpdateCheckConcurrencyDescription'),
               value: sliderVal,
               defaultValue: 2.0,
               min: 0,
@@ -249,18 +232,10 @@ class UpdateSettingsSection extends StatelessWidget {
       builder: (context, settings, _) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-            child: Text(
-              tr('plusDownloadConcurrencyDescription'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
           SettingsSliderTile(
             icon: Icons.download_for_offline_outlined,
             title: tr('plusDownloadConcurrency'),
+            subtitle: tr('plusDownloadConcurrencyDescription'),
             value: (settings.updateDownloadConcurrencyLimit - 1)
                 .toDouble()
                 .clamp(0, 4),
@@ -290,10 +265,7 @@ class UpdateSettingsSection extends StatelessWidget {
             Icons.run_circle_outlined,
             active: settings.useFGService,
           ),
-          title: Text(
-            tr('foregroundServiceExplanation'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text(tr('foregroundServiceExplanation')),
           value: settings.useFGService,
           onChanged: (value) {
             value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -328,10 +300,7 @@ class UpdateSettingsSection extends StatelessWidget {
                   accentColor: Theme.of(ctx).colorScheme.tertiary,
                 ),
               ),
-              title: Text(
-                tr('xiaomiBatteryTroubleshooting'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('xiaomiBatteryTroubleshooting')),
               subtitle: Text(tr('xiaomiBatteryTroubleshootingDescription')),
               onTap: () => showXiaomiTroubleshootingDialog(context),
             );
@@ -433,10 +402,7 @@ class UpdateSettingsSection extends StatelessWidget {
                   Icons.description_outlined,
                   active: updateSettings.checkUpdateOnDetailPage,
                 ),
-                title: Text(
-                  tr('checkUpdateOnDetailPage'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                title: Text(tr('checkUpdateOnDetailPage')),
                 value: updateSettings.checkUpdateOnDetailPage,
                 onChanged: (value) {
                   value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -450,14 +416,8 @@ class UpdateSettingsSection extends StatelessWidget {
                   Icons.add_circle_outline,
                   active: updateSettings.allowAddingAppsWithoutCheck,
                 ),
-                title: Text(
-                  tr('allowAddingAppsWithoutCheck'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-                subtitle: Text(
-                  tr('allowAddingAppsWithoutCheckHelp'),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                title: Text(tr('allowAddingAppsWithoutCheck')),
+                subtitle: Text(tr('allowAddingAppsWithoutCheckHelp')),
                 value: updateSettings.allowAddingAppsWithoutCheck,
                 onChanged: (value) {
                   value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -473,10 +433,7 @@ class UpdateSettingsSection extends StatelessWidget {
                   Icons.schedule_outlined,
                   active: updateSettings.useUpdateSchedule,
                 ),
-                title: Text(
-                  tr('plusEnableUpdateSchedule'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                title: Text(tr('plusEnableUpdateSchedule')),
                 subtitle: Text(
                   updateSettings.useUpdateSchedule
                       ? updateSettings.getScheduleDescription()
@@ -491,17 +448,13 @@ class UpdateSettingsSection extends StatelessWidget {
               ),
               if (updateSettings.useUpdateSchedule)
                 ConnectedSettingContainer(
-                  label: tr('plusEnableUpdateSchedule'),
                   child: ListTile(
                     leading: buildSettingsIconBadge(
                       context,
                       Icons.edit_calendar_rounded,
                       active: true,
                     ),
-                    title: Text(
-                      tr('updateSchedule'),
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
+                    title: Text(tr('updateSchedule')),
                     subtitle: Text(updateSettings.getScheduleDescription()),
                     trailing: const Icon(Icons.chevron_right_rounded),
                     onTap: () => _showScheduleDialog(context, updateSettings),
@@ -532,10 +485,7 @@ class UpdateSettingsSection extends StatelessWidget {
                       context,
                       Icons.history_outlined,
                     ),
-                    title: Text(
-                      tr('releaseChannel'),
-                      style: Theme.of(context).textTheme.bodyLarge,
-                    ),
+                    title: Text(tr('releaseChannel')),
                     subtitle: Text(tr('obtainiumReleaseChannelDescription')),
                   ),
                   Padding(
@@ -617,7 +567,9 @@ class UpdateSettingsSection extends StatelessWidget {
                           Expanded(
                             child: Text(
                               tr('plusSystemUpdateScanner'),
-                              style: Theme.of(context).textTheme.bodyLarge,
+                              style: Theme.of(
+                                context,
+                              ).listTileTheme.titleTextStyle,
                             ),
                           ),
                           Container(
@@ -666,10 +618,7 @@ class UpdateSettingsSection extends StatelessWidget {
                         Icons.rule_outlined,
                         active: plusSettings.plusEnableAutoUpdateRules,
                       ),
-                      title: Text(
-                        tr('plusEnableAutoUpdateRules'),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
+                      title: Text(tr('plusEnableAutoUpdateRules')),
                       subtitle: Text(
                         tr('plusEnableAutoUpdateRulesDescription'),
                       ),
@@ -683,17 +632,13 @@ class UpdateSettingsSection extends StatelessWidget {
                       plusSettings.plusEnableAutoUpdateRules &&
                       _matches(tr('autoUpdateRules')))
                     ConnectedSettingContainer(
-                      label: tr('plusEnableAutoUpdateRules'),
                       child: ListTile(
                         leading: buildSettingsIconBadge(
                           context,
                           Icons.tune_rounded,
                           active: true,
                         ),
-                        title: Text(
-                          tr('autoUpdateRules'),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
+                        title: Text(tr('autoUpdateRules')),
                         subtitle: Text(tr('autoUpdateRulesDescription')),
                         trailing: const Icon(Icons.chevron_right_rounded),
                         onTap: () => _showAutoUpdateRulesDialog(
@@ -746,7 +691,7 @@ class UpdateSettingsSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   tr('preferredUpdateSource'),
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  style: Theme.of(context).listTileTheme.titleTextStyle,
                 ),
               ),
             ],

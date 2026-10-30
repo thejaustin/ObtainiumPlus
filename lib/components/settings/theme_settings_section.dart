@@ -160,10 +160,7 @@ class ThemeSettingsSection extends StatelessWidget {
               duration: const Duration(milliseconds: 280),
             ),
             leading: buildSettingsIconBadge(context, Icons.science_outlined),
-            title: Text(
-              tr('advancedTheming'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('advancedTheming')),
             subtitle: Text(tr('advancedThemingDescription')),
             children: [
               Padding(
@@ -267,10 +264,7 @@ class ThemeSettingsSection extends StatelessWidget {
             Icons.refresh_rounded,
             active: plusSettings.plusDevUseThirdPartyLoadingIndicator,
           ),
-          title: Text(
-            'Use Wavy Loading Spinner',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text('Use Wavy Loading Spinner'),
           subtitle: const Text(
             'Replaces the M3E morphing loading indicator with the wavy ring for comparison.',
           ),
@@ -620,10 +614,7 @@ class ThemeSettingsSection extends StatelessWidget {
           children: [
             ListTile(
               leading: buildSettingsIconBadge(context, Icons.palette_outlined),
-              title: Text(
-                tr('theme'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('theme')),
               subtitle: Text(tr('themeDescription')),
             ),
             Padding(
@@ -689,10 +680,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 context,
                 Icons.color_lens_outlined,
               ),
-              title: Text(
-                tr('themePresets'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('themePresets')),
               subtitle: Text(tr('themePresetsDescription')),
             ),
             SingleChildScrollView(
@@ -745,10 +733,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 context,
                 Icons.label_important_outlined,
               ),
-              title: Text(
-                tr('navigationLabels'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('navigationLabels')),
               subtitle: Text(tr('navigationLabelsDescription')),
             ),
             Padding(
@@ -825,10 +810,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 Icons.auto_awesome_outlined,
                 active: settings.useMaterialYou,
               ),
-              title: Text(
-                tr('useMaterialYou'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('useMaterialYou')),
               value: settings.useMaterialYou,
               onChanged: (value) {
                 value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -853,10 +835,7 @@ class ThemeSettingsSection extends StatelessWidget {
             Icons.settings_suggest_outlined,
             active: settings.matchSystemMaterialStyle,
           ),
-          title: Text(
-            tr('matchSystemMaterialStyle'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text(tr('matchSystemMaterialStyle')),
           subtitle: Text(tr('matchSystemMaterialStyleSubtitle')),
           value: settings.matchSystemMaterialStyle,
           onChanged: (value) {
@@ -879,10 +858,7 @@ class ThemeSettingsSection extends StatelessWidget {
           children: [
             ListTile(
               leading: buildSettingsIconBadge(context, Icons.style_outlined),
-              title: Text(
-                tr('themeStyle'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('themeStyle')),
               subtitle: settings.useMaterialYou
                   ? Text(
                       'Shapes the color palette generated from your system wallpaper',
@@ -950,10 +926,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 context,
                 Icons.color_lens_outlined,
               ),
-              title: Text(
-                tr('selectX', args: [tr('colour').toLowerCase()]),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('selectX', args: [tr('colour').toLowerCase()])),
               subtitle: Text(ColorTools.nameThatColor(settings.themeColor)),
               trailing: ColorIndicator(
                 width: 32,
@@ -1073,10 +1046,7 @@ class ThemeSettingsSection extends StatelessWidget {
                 Icons.font_download_outlined,
                 active: settings.useSystemFont,
               ),
-              title: Text(
-                tr('useSystemFont'),
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              title: Text(tr('useSystemFont')),
               value: settings.useSystemFont,
               onChanged: (useSystemFont) {
                 useSystemFont ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -1110,10 +1080,7 @@ class ThemeSettingsSection extends StatelessWidget {
         );
         return ListTile(
           leading: buildSettingsIconBadge(context, Icons.language_outlined),
-          title: Text(
-            tr('language'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text(tr('language')),
           subtitle: Text(matchedLocaleEntry.value),
           onTap: () {
             AppHaptics.selectionClick();

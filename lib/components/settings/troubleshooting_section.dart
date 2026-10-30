@@ -75,10 +75,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           hapticOnPressDown: true,
           child: ListTile(
             leading: buildSettingsIconBadge(context, Icons.bug_report_outlined),
-            title: Text(
-              tr('appLogs'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('appLogs')),
             subtitle: Text(tr('appLogsDescription')),
             onTap: () {
               AppHaptics.selectionClick();
@@ -91,10 +88,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           hapticOnPressDown: true,
           child: ListTile(
             leading: buildSettingsIconBadge(context, Icons.bar_chart_rounded),
-            title: Text(
-              tr('statistics'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('statistics')),
             subtitle: Text(tr('statisticsDescription')),
             onTap: () {
               AppHaptics.selectionClick();
@@ -107,10 +101,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           hapticOnPressDown: true,
           child: ListTile(
             leading: buildSettingsIconBadge(context, Icons.history_edu_rounded),
-            title: Text(
-              tr('viewChangelog'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('viewChangelog')),
             subtitle: Text(tr('viewChangelogDescription')),
             onTap: () {
               AppHaptics.selectionClick();
@@ -125,10 +116,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             Icons.new_releases_outlined,
             active: plusSettings.plusShowChangelogAfterUpdate,
           ),
-          title: Text(
-            tr('plusShowChangelogAfterUpdate'),
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
+          title: Text(tr('plusShowChangelogAfterUpdate')),
           subtitle: Text(tr('plusShowChangelogAfterUpdateDescription')),
           value: plusSettings.plusShowChangelogAfterUpdate,
           onChanged: (v) {
@@ -145,10 +133,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
               Icons.help_outline,
               active: true,
             ),
-            title: Text(
-              tr('lookingForDevOptions'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('lookingForDevOptions')),
             subtitle: Text(tr('devOptionsHint')),
             onTap: () {
               setState(() {
@@ -184,10 +169,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
               Icons.developer_mode_rounded,
               active: true,
             ),
-            title: Text(
-              tr('developerAndDiagnostics'),
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            title: Text(tr('developerAndDiagnostics')),
             subtitle: const Text(
               'Configure advanced diagnostic tools and Play Store plugins',
             ),
@@ -239,7 +221,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
       onTap: onTap,
       child: ListTile(
         leading: buildSettingsIconBadge(context, icon),
-        title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        title: Text(title),
         subtitle: Text(subtitle),
       ),
     );
@@ -284,7 +266,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
       },
       child: ListTile(
         leading: buildSettingsIconBadge(context, icon),
-        title: Text(title, style: Theme.of(context).textTheme.bodyLarge),
+        title: Text(title),
         trailing: const Icon(Icons.open_in_new, size: 18),
       ),
     );

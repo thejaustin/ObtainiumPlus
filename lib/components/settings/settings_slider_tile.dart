@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 class SettingsSliderTile extends StatefulWidget {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final double value;
   final double min;
   final double max;
@@ -25,6 +26,7 @@ class SettingsSliderTile extends StatefulWidget {
     super.key,
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.value,
     required this.min,
     required this.max,
@@ -108,13 +110,26 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: Text(
-                  widget.title,
-                  style: isCompact
-                      ? Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                        )
-                      : Theme.of(context).textTheme.bodyLarge,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: isCompact
+                          ? Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w500,
+                            )
+                          : Theme.of(context).listTileTheme.titleTextStyle,
+                    ),
+                    if (widget.subtitle != null && !isCompact)
+                      Text(
+                        widget.subtitle!,
+                        style: Theme.of(
+                          context,
+                        ).listTileTheme.subtitleTextStyle,
+                      ),
+                  ],
                 ),
               ),
               if (isModifiedFromDefault)

@@ -65,10 +65,7 @@ class NotificationSettingsSection extends StatelessWidget {
                   Icons.notifications_active_outlined,
                   active: true,
                 ),
-                title: Text(
-                  tr('notificationSettings'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                title: Text(tr('notificationSettings')),
                 trailing: const Icon(Icons.open_in_new_rounded, size: 18),
               ),
             ),
@@ -82,10 +79,7 @@ class NotificationSettingsSection extends StatelessWidget {
                       : Icons.notifications_active_outlined,
                   active: settings.plusEnableNotificationEnhancements,
                 ),
-                title: Text(
-                  tr('plusEnableNotificationEnhancements'),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
+                title: Text(tr('plusEnableNotificationEnhancements')),
                 subtitle: Text(
                   tr('plusEnableNotificationEnhancementsDescription'),
                 ),
@@ -119,7 +113,9 @@ class NotificationSettingsSection extends StatelessWidget {
                           if (_matches(tr('enableNotificationDigest')) ||
                               _matches(tr('enableQuietHours')))
                             GenericBooleanControlGrid<PlusSettingsProvider>(
-                              title: tr('settingsTabNotifications'),
+                              title: isSearching
+                                  ? tr('settingsTabNotifications')
+                                  : '',
                               embedded: true,
                               settings: [
                                 if (_matches(tr('enableNotificationDigest')))
