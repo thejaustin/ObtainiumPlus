@@ -7,6 +7,7 @@
 ## [1.7.3-p11] — 2026-10-30
 
 ### ⚡ Update Checks
+- **Smoother End of Update Checks**: The progress banner no longer vanishes in a single frame when a check finishes right after finding updates. It fills its bar and slides away.
 - **Faster "Update All"**: Each app now installs as soon as its own download finishes, while the others keep downloading. Before, nothing installed until every download was done. Obtainium+ itself and Shizuku providers still install last.
 - **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 update checks at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.
 - **Much Less Data for GitHub Checks**: GitHub apps are now checked with conditional requests, so a repo with no new release answers with an empty "not modified" reply instead of resending its whole release list (often hundreds of KB per app). With a GitHub token set, these replies also don't count against your rate limit.

@@ -42,12 +42,23 @@ class ActiveOperationsBanner extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Outer AnimatedSize animates the banner sliding in/out of the list
-    return AnimatedSize(
+    // Explicit size+fade switch instead of AnimatedSize: AnimatedSize snaps
+    // to the new size when its child resized mid-animation (e.g. the "updates
+    // found" pill appearing), so the banner vanished in one frame when a
+    // check ended right after finding updates.
+    return AnimatedSwitcher(
       duration: Duration(milliseconds: animationsEnabled ? 380 : 0),
-      curve: Easing.emphasizedDecelerate,
+      switchInCurve: Easing.emphasizedDecelerate,
+      switchOutCurve: Easing.emphasizedAccelerate,
+      transitionBuilder: (child, animation) => SizeTransition(
+        sizeFactor: animation,
+        alignment: Alignment.topCenter,
+        child: FadeTransition(opacity: animation, child: child),
+      ),
       child: !isActive
-          ? const SizedBox.shrink()
+          ? const SizedBox.shrink(key: ValueKey('idle'))
           : Padding(
+              key: const ValueKey('active'),
               padding: const EdgeInsets.symmetric(
                 horizontal: 16.0,
                 vertical: 6.0,
@@ -261,9 +272,14 @@ class _UpdateCheckProgress extends StatelessWidget {
         final progress = appsProvider.refreshProgress.value;
         final total = appsProvider.refreshTotal.value;
         final found = appsProvider.refreshFound.value;
-        final determinate = progress != null && progress > 0;
+        // Once the check is over (this copy is fading out), fill the bar
+        // instead of flipping back to an indeterminate wave.
+        final finished = !appsProvider.gettingUpdates;
+        final determinate = finished || (progress != null && progress > 0);
         return TweenAnimationBuilder<double>(
-          tween: Tween<double>(end: determinate ? progress : 0.0),
+          tween: Tween<double>(
+            end: finished ? 1.0 : (determinate ? progress! : 0.0),
+          ),
           duration: duration,
           curve: Easing.emphasizedDecelerate,
           builder: (context, shown, _) {
@@ -291,7 +307,7 @@ class _UpdateCheckProgress extends StatelessWidget {
                         ),
                       ),
                     ),
-                    if (determinate)
+                    if (determinate && !finished)
                       Text(
                         total > 0
                             ? '${(shown * total).round()} / $total'
