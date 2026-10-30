@@ -7,6 +7,7 @@
 ## [1.7.3-p11] — 2026-10-30
 
 ### ⚡ Update Checks
+- **Faster, More Compatible Network Requests**: Update checks now go through Android's own network stack (embedded Cronet, no Google Play Services needed). Connections are reused across a check instead of reopened for every request, Android proxy settings apply, and certificates you've installed on the device (for a self-hosted or company server) are trusted. App downloads themselves still use the previous network code for now.
 - **Cleaner Finish to Installs**: When an install finishes, the progress text on the app row fades out before the menu button fades in, instead of the two overlapping. The progress banner keeps saying "Installing" as it slides away instead of flipping to "Please wait".
 - **Smoother End of Update Checks**: The progress banner no longer vanishes in a single frame when a check finishes right after finding updates. It fills its bar and slides away.
 - **Faster "Update All"**: Each app now installs as soon as its own download finishes, while the others keep downloading. Before, nothing installed until every download was done. Obtainium+ itself and Shizuku providers still install last.

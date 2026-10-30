@@ -19,16 +19,30 @@
     </domain-config>
 
     <!--
+        RuStore serves a chain rooted in the Russian Mintsifry CA, which
+        Android does not trust. Trust it for that domain only.
+    -->
+    <domain-config>
+        <domain includeSubdomains="true">rustore.ru</domain>
+        <trust-anchors>
+            <certificates src="system"/>
+            <certificates src="user"/>
+            <certificates src="@raw/russian_mintsifry_root"/>
+        </trust-anchors>
+    </domain-config>
+
+    <!--
         All other traffic (GitHub, F-Droid, source scrapers, etc.):
         - Cleartext stays permitted: users track self-hosted / LAN sources
           over plain HTTP (per-app "allow insecure" governs this in Dart).
-        - System CAs only (the platform default): Dart's HttpClient, which
-          does all source traffic, ignores this file, so trusting user CAs
-          here would only widen native/WebView trust for no benefit.
+        - System and user CAs: source requests go through Cronet, which
+          verifies with this config, so a private or corporate CA installed
+          on the device works for self-hosted sources.
     -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system"/>
+            <certificates src="user"/>
         </trust-anchors>
     </base-config>
 

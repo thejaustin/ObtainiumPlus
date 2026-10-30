@@ -7,6 +7,24 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Claude: Cronet Port, Phase 1 (metadata requests)
+
+- **Ported from upstream 80bc82f8 (#3200), adapted to the fork's split HTTP stacks:**
+  - `lib/services/http_client_factory.dart` chooses the client: Google Play hosts get the fingerprint-checking `createHttpClient` (dart:io); `allowInsecure` gets dart:io accepting any cert; everything else gets one shared embedded Cronet client (dart:io UA string kept for Cloudflare). There's a dart:io fallback (with the RuStore Mintsifry asset context) if Cronet fails to start. `HttpClientFactory.resolver` is injectable for tests.
+  - `SourceUtils.httpRequest`, the metadata path for every `AppSource.sourceRequest`, now sends through that client. It keeps the fork's retries/backoff (now also on `TimeoutException`/`ClientException`), gains 30s send / 60s body timeouts, resolves relative redirects via `Uri.resolve`, no longer mutates the caller's header map, and keeps the **sent request (with headers)** on the response. Before this, the response request had no headers, so `GitHub.rateLimitErrorCheck` always filed blocks as anonymous.
+  - It used to create a new `HttpClient` per request (a TLS handshake every call). The shared client reuses connections.
+- **Android (UNVERIFIED, no local APK build):**
+  - Adds `cronet_http: ^1.10.0` (minSdk 24; applies kotlin-android, which is fine on the fork's AGP 8.11/KGP 2.2.20).
+  - The upstream `subprojects` block in `android/build.gradle.kts` forces embedded Cronet (`cronetHttpNoPlay`), which is F-Droid-safe.
+  - `network_security_config.xml`: user CAs are added to base-config, and there's a new rustore.ru domain-config with `@raw/russian_mintsifry_root`. The Play endpoints stay system-CA-only.
+  - Expect the APK to grow by a few MB (embedded Cronet).
+  - **AGP 9 is not needed:** upstream's `builtInKotlin=false` and app-level kotlin plugin are AGP 9 workarounds.
+- **A local build attempt failed:** the repo is on FUSE (no exec), and Termux has no /bin/sh for gradlew. A $HOME worktree with `termux-fix-shebang` got further, then hit Maven read timeouts, then filled the phone (0 bytes free). 4GB of `build/` was cleared afterwards.
+- **Phase 2, not done:** downloads (`AppFileService`/`apps_provider.dart` dart:io streams, itch.io header peek) still use dart:io, so user CAs and proxies don't apply to APK downloads yet. Phase 3 (the pins UI: pin_store, pin_set_editor, certificate_bridge) is also not started.
+- Tests: `source_utils_http_test.dart` (headers kept on the response, cross-host auth drop, relative redirect, https→http refused). Suite 597/597.
+
+---
+
 ## 2026-10-30 — Claude: Update-Flow Filmstrip Tool & Banner Snap Fix
 
 - **`tool/film.sh`** (with `tool/preview/update_flow_film_test.dart`) renders the real list tile, grid tile and `ActiveOperationsBanner` through idle → check → update found → check done → download 0/60/100% → installing → installed. It writes `build/previews/update_flow_sheet.png` (one row per step), and `--zoom 1,4,9` writes full-size crops. It prints `METRIC` lines (banner height and grid tile size per frame). Harness-only noise: the iconsCacheDir StateError and a pending timer.

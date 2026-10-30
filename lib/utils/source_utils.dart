@@ -10,6 +10,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/http_client_factory.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
@@ -152,59 +153,66 @@ class SourceUtils {
 
     while (true) {
       try {
-        var httpClient = createHttpClient(allowInsecure: allowInsecure);
         var currentUrl = url;
+        // Copied so dropping auth on a cross-host redirect doesn't mutate the
+        // caller's map.
+        final requestHeaders = {...?headers};
         Response? finalResponse;
 
         for (var i = 0; i <= maxRedirects; i++) {
-          var request = await httpClient.openUrl(method, Uri.parse(currentUrl));
-          request.followRedirects = false;
-          if (headers != null) {
-            headers.forEach((key, value) {
-              request.headers.set(key, value);
-            });
-          }
+          final uri = Uri.parse(currentUrl);
+          final client = await HttpClientFactory.clientFor(
+            uri,
+            allowInsecure: allowInsecure,
+          );
+          final request = http.Request(method, uri)
+            ..followRedirects = false
+            ..headers.addAll(requestHeaders);
           if (body != null) {
-            request.write(body);
+            request.body = body is String ? body : '$body';
           }
-          var response = await request.close();
+          // Cronet has no connection timeout of its own.
+          final response = await client
+              .send(request)
+              .timeout(const Duration(seconds: 30));
           if (followRedirects &&
               (response.statusCode == 301 ||
                   response.statusCode == 302 ||
                   response.statusCode == 303 ||
                   response.statusCode == 307 ||
                   response.statusCode == 308)) {
-            var location = response.headers.value('location');
+            final location = response.headers['location'];
             if (location != null) {
-              String nextUrl;
-              if (location.startsWith('/')) {
-                var uri = Uri.parse(currentUrl);
-                nextUrl = '${uri.scheme}://${uri.host}$location';
-              } else {
-                nextUrl = location;
-              }
-              final currentUri = Uri.parse(currentUrl);
-              final nextUri = Uri.parse(nextUrl);
-              if (currentUri.scheme == 'https' &&
+              final nextUri = uri.resolve(location);
+              await _discard(response);
+              if (uri.scheme == 'https' &&
                   nextUri.scheme == 'http' &&
                   !allowInsecure) {
-                httpClient.close();
                 throw ObtainiumError(tr('insecureRedirect'));
               }
-              if (nextUri.host != currentUri.host && headers != null) {
-                headers.remove(HttpHeaders.authorizationHeader);
-                headers.remove('authorization');
-                headers.remove(HttpHeaders.proxyAuthorizationHeader);
+              if (nextUri.host != uri.host) {
+                requestHeaders.removeWhere(
+                  (k, _) =>
+                      k.toLowerCase() == HttpHeaders.authorizationHeader ||
+                      k.toLowerCase() == HttpHeaders.proxyAuthorizationHeader,
+                );
               }
-              currentUrl = nextUrl;
+              currentUrl = nextUri.toString();
               continue;
             }
           }
-          finalResponse = await httpClientResponseStreamToFinalResponse(
-            httpClient,
-            method,
-            currentUrl,
-            response,
+          // A server that stalls mid-body must not hold the request forever.
+          final bytes = await response.stream.toBytes().timeout(
+            const Duration(seconds: 60),
+          );
+          finalResponse = http.Response.bytes(
+            bytes,
+            response.statusCode,
+            headers: response.headers,
+            reasonPhrase: response.reasonPhrase,
+            // Keep the sent headers: callers inspect them (e.g. whether a
+            // GitHub request carried a token).
+            request: request,
           );
           break;
         }
@@ -262,7 +270,9 @@ class SourceUtils {
             retryCount < maxRetries &&
             (e is SocketException ||
                 e is HttpException ||
-                e is HandshakeException)) {
+                e is HandshakeException ||
+                e is TimeoutException ||
+                e is http.ClientException)) {
           talker.warning(
             'Network error ($e) for $url. Retrying in ${retryDelay.inSeconds}s... ($retryCount/$maxRetries)',
           );
@@ -274,6 +284,12 @@ class SourceUtils {
         rethrow;
       }
     }
+  }
+
+  static Future<void> _discard(http.StreamedResponse response) async {
+    try {
+      await response.stream.listen(null, onError: (_) {}).cancel();
+    } catch (_) {}
   }
 
   static Future<Response> httpClientResponseStreamToFinalResponse(
