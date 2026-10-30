@@ -7,6 +7,19 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Claude: Version-Ordering Resolver with Release-Timeline Fallback
+
+- **`lib/services/version_ordering.dart`:** `resolveVersionOrdering(app, installed, latest)` returns `VersionOrdering(order, basis)`, where basis is version, numericCore, releaseDate or unknown. Precedence:
+  - A confident full compare wins.
+  - A numbers-say-downgrade result across a **scheme switch** (one side's first number ≥1000) is overridden when dates say the release is newer.
+  - Otherwise: the non-equal numeric core, then release dates.
+  - Dates decide only when versions can't be ordered or their cores are equal.
+- **Dates:** the installed version's `versionHistory` entry (matched exactly, then normalized, then by a *unique* equal core) vs the latest's `releaseDate`. Detection dates are used only when neither side has a release date and both are in history, and never when `detectionDateAsReleaseDate` is on. There's a 6h margin. The package install time is never used.
+- **Wiring:** used by the `AppUpdateService.areVersionsDifferent` guard, which also drives `isNewlyFoundUpdate`. Suppression logs include the basis. Tests: `version_ordering_resolver_test.dart`, table-driven.
+- **Limitation:** history keeps the last 5 versions; an installed version older than that has no date signal.
+
+---
+
 ## 2026-10-30 — Claude: Upstream v1.7.3 Gap Check (by upstream tests)
 
 - **Method:** ported every `upstream/main:test/*` file the fork lacked and ran it. `upstream/dev` has nothing beyond `main`.

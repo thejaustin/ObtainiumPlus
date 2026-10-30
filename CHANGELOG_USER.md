@@ -23,6 +23,7 @@
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
 ### 🛡️ Fixes
+- **Release Dates Settle Unclear Updates**: When version numbers can't say which release is newer (for example `1.4.0-rc1` vs `1.4.0`, or an app that switched from date-style versions like `2024.10.5` to `3.2.0`), Obtainium+ now checks when each version came out. Newer releases are offered and older ones are hidden. The app log notes what decided each hidden update.
 - **APK Architecture Labels**: When an F-Droid repo release has several APKs, the APK picker now shows which architecture each one is for, or marks it as universal.
 - **Detection Date Fix**: With "use detection date as release date" on, the first check after adding an app no longer invents a release date for a version that was already out.
 - **Silent Updates via Shizuku on Android 14+**: Apps first installed through Shizuku now claim update ownership, so later updates can install without a prompt.

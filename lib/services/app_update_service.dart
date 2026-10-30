@@ -14,6 +14,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/services/version_ordering.dart';
 import 'package:obtainium/utils/version_utils.dart';
 
 class AppUpdateService {
@@ -67,14 +68,11 @@ class AppUpdateService {
     // unknown (null) must fall through to the old behavior so apps with
     // unusual versioning schemes still get their updates offered.
     if (!ignoreOrdering) {
-      // Fall back to the numeric cores when only one side has a suffix
-      // (`1.4.0-gplay` installed vs a `1.3.9` tag), which the full
-      // comparison can't order.
-      final ordering =
-          compareVersionStrings(installed, latest) ??
-          compareVersionCores(installed, latest);
-      if (ordering != null && ordering > 0) {
-        _logDowngradeSuppression(app, installed, latest);
+      // Version strings first, then numeric cores, then the release
+      // timeline; see resolveVersionOrdering.
+      final ordering = resolveVersionOrdering(app, installed, latest);
+      if (ordering.isDowngrade) {
+        _logDowngradeSuppression(app, installed, latest, ordering.basis);
         return false;
       }
     }
@@ -97,6 +95,7 @@ class AppUpdateService {
     App app,
     String installed,
     String latest,
+    VersionOrderBasis basis,
   ) {
     if (!_loggedDowngradeSuppressions.add('${app.id}|$installed|$latest')) {
       return;
@@ -106,7 +105,7 @@ class AppUpdateService {
     runZonedGuarded(() {
       LogsProvider().add(
         'Not offering $latest as an update for ${app.id}: '
-        'installed version $installed appears newer',
+        'installed version $installed appears newer (by ${basis.name})',
         level: LogLevel.warning,
       );
     }, (_, __) {});
