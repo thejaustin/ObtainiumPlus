@@ -2510,7 +2510,17 @@ class AppsProvider with ChangeNotifier {
     _pendingIconFetches.add(appId);
     try {
       var cachedIcon = File('${iconsCacheDir.path}/$appId.png');
-      var alreadyCached = !ignoreCache && await cachedIcon.exists();
+      // An icon only changes when its app is updated, so the cached PNG is
+      // stale once the package was updated after it was written (#3306).
+      final cacheStat = ignoreCache ? null : await cachedIcon.stat();
+      final cacheExists =
+          cacheStat != null && cacheStat.type != FileSystemEntityType.notFound;
+      var alreadyCached = isIconCacheUsable(
+        ignoreCache: ignoreCache,
+        cacheExists: cacheExists,
+        cacheModified: cacheExists ? cacheStat.modified : null,
+        packageLastUpdateTime: apps[appId]?.installedInfo?.lastUpdateTime,
+      );
       Uint8List? icon;
       if (alreadyCached) {
         try {
@@ -3145,6 +3155,10 @@ class AppsProvider with ChangeNotifier {
     int? overrideExportSettings,
   }) {
     Map<String, dynamic> finalExport = {};
+    int shouldExportSettings = behaviorSettings.exportSettings;
+    if (overrideExportSettings != null) {
+      shouldExportSettings = overrideExportSettings;
+    }
     finalExport['apps'] = apps.values
         .where((e) {
           if (appIds == null) {
@@ -3153,12 +3167,22 @@ class AppsProvider with ChangeNotifier {
             return appIds.contains(e.app.id);
           }
         })
-        .map((e) => e.app.toJson())
+        .map((e) {
+          final json = e.app.toJson();
+          final additionalSettings = e.app.additionalSettings;
+          if (shouldExportSettings < 2 &&
+              additionalSettings.keys.any((k) => k.endsWith('-creds'))) {
+            // Per-app credentials (a token for a custom GitHub/GitLab host)
+            // live in the app's own settings, not prefs, so strip them here
+            // too when the export is not meant to include secrets.
+            json['additionalSettings'] = safeJsonEncode(
+              Map<String, dynamic>.of(additionalSettings)
+                ..removeWhere((k, _) => k.endsWith('-creds')),
+            );
+          }
+          return json;
+        })
         .toList();
-    int shouldExportSettings = behaviorSettings.exportSettings;
-    if (overrideExportSettings != null) {
-      shouldExportSettings = overrideExportSettings;
-    }
     if (shouldExportSettings > 0) {
       var settingsValueKeys = settingsProvider.prefs?.getKeys().toSet();
       if (shouldExportSettings < 2) {

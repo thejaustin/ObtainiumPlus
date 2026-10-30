@@ -21,6 +21,10 @@
 - **No More Cut-Off Theme Labels**: The theme picker's first option now reads "System" instead of a truncated "Follow …", and the design style switch shows "Obtainium+" and "M3 Expressive" on one line (long-press for the full name).
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
+### 🛡️ Fixes
+- **Backups No Longer Include Per-App Tokens Unless Asked**: Exports, including auto-exports, made without the "include credentials" option no longer contain access tokens saved on individual apps (for example, a token for a self-hosted GitHub or GitLab).
+- **Updated App Icons Show Up**: If an app's icon changes in an update, including updates made outside Obtainium+, the new icon is now loaded instead of the old cached one.
+
 ---
 
 ## [1.7.3-p1] — 2026-10-27

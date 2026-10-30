@@ -7,6 +7,19 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-29 — Claude: Shadowed-Extension Audit (lifecycle / install / import-export)
+
+- **Audit:** almost every public method in `apps_provider_lifecycle.dart`, `apps_provider_install.dart` and `apps_provider_import_export.dart` is shadowed by a same-named `AppsProvider` instance method, so the extension copies never run. The fork's live versions delegate to services (AppInstallService, AppDownloadService…). Upstream fixes that were ported into the extensions after the June split were checked against the live path:
+  - Signing-cert verification: **live** (`app_install_service.dart` ~795).
+  - #3298 split URLs in one `apkUrls` entry: **live** (`apk_filter_service.dart`).
+  - Asset download retry: **live** (`downloadFileWithRetry` in the services).
+  - Per-app `-creds` stripping on export: **was missing.** Fixed in `generateExportJSON`; test `export_credentials_test.dart`.
+  - #3306 icon cache invalidation: **was missing.** Ported into live `updateAppIcon` via `isIconCacheUsable`, checked on the disk-cache path only, to keep the in-memory early return and avoid I/O on every tile build.
+- **Not yet audited in detail:** the `downloadApp`, `installApk`/`installApkDir`, `moveObbFile` and `loadApps` diffs. They are large and need device testing. The dead copies should be deleted once they're audited.
+- Full suite: 546/546.
+
+---
+
 ## 2026-10-29 — Claude: Antigravity Follow-ups, Theme Font Fix & Preview Tool
 
 - **Theme font bug (`theme_builder.dart`):** about 21 component-theme `TextStyle`s had no `fontFamily`: buttons, chip, segmented, dialog, snackbar, tooltip, badge, input, slider, nav bar, app bar and search bar. Components apply those styles *instead of* the text theme, so their labels fell back to the platform default font on device. `fontFamily` is now threaded through every `_build*Theme` builder. The preview tool exposed this, because the test renderer draws missing families as boxes.
