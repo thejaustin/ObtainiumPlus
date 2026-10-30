@@ -1662,5 +1662,16 @@
   "relatedSettings": "Related Settings",
   "relatedSettingsDesc": "Quickly jump to similar and connected settings",
   "connectedSettingsSubheader": "Configured Actions & Rules",
-  "reorder": "Reorder"
+  "reorder": "Reorder",
+  "plusShizukuIntegration": "{} Integration",
+  "plusShizukuActive": "Active & authorized for silent installs",
+  "plusShizukuPermissionNeeded": "Permission needed or service stopped",
+  "binderLatencyBenchmark": "Binder IPC Latency Benchmark",
+  "binderLatencyDescription": "Benchmark Android binder transport speed",
+  "binderLatencyResult": "{} ms round-trip latency",
+  "benchmark": "Benchmark",
+  "oemCompatibilityGuides": "OEM Compatibility Guides",
+  "oemCompatibilityGuidesDescription": "OneUI 8 AutoBlocker, HyperOS, ColorOS & OxygenOS tuning",
+  "batteryOptimizationExemption": "Battery Optimization Exemption",
+  "batteryOptimizationExemptionDescription": "Prevent Android from suspending background update checks"
 }

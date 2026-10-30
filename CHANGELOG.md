@@ -11,6 +11,12 @@ All notable changes to Obtainium+ are documented in this file.
 - **Failing Apps Back Off**: An app whose check fails, or that hits a rate limit, waits one full update interval before it's checked again, instead of being retried on every background run. Connection drops don't count, so those apps are retried as usual. Repeated failures now count toward Update Health's failed-checks warning, which previously never triggered.
 - **Smoother Update Progress**: The update-check bar and counter glide between steps instead of jumping, a live "N updates found" pill appears as updates turn up, and the progress strips on app tiles fade in and out. The bulk download bar also eases between steps.
 
+### 🎨 Polish
+- **App Font Everywhere**: Buttons, chips, segmented buttons, dialogs, snackbars, tooltips, badges, input labels, the slider value bubble and the navigation bar now use the app's font (or your chosen system font). Before this fix, they used Android's default font, so they didn't match the rest of the app.
+- **Matching Shapes in Dialogs**: The time pickers in the update schedule and quiet hours dialogs, and the GitHub token check result, now follow your corner-radius setting and Material 3 Expressive shapes.
+- **Changelog Page Width**: On tablets and unfolded foldables, the changelog page now uses the same width as Settings.
+- **Translatable Plus Features Sheet**: The Shizuku, binder benchmark, OEM guide and battery optimization rows in the Plus Features sheet can now be translated.
+
 ---
 
 ## [v1.7.1-p2] - 2026-10-18

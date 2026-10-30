@@ -9,6 +9,7 @@ import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -858,7 +859,11 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
+            decoration: CardMetrics.innerDecoration(
+              base: context.read<PlusSettingsProvider>().plusGlobalCornerRadius,
+              expressive: context
+                  .read<PlusSettingsProvider>()
+                  .plusEnableMaterialExpressive,
               color: _verificationSuccess
                   ? Theme.of(
                       context,
@@ -866,16 +871,9 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                   : Theme.of(
                       context,
                     ).colorScheme.errorContainer.withValues(alpha: 0.5),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: _verificationSuccess
-                    ? Theme.of(
-                        context,
-                      ).colorScheme.primary.withValues(alpha: 0.3)
-                    : Theme.of(
-                        context,
-                      ).colorScheme.error.withValues(alpha: 0.3),
-              ),
+              borderColor: _verificationSuccess
+                  ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+                  : Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
             ),
             child: Text(
               _verificationResult!,

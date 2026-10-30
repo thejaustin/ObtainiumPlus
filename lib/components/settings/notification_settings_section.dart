@@ -7,6 +7,7 @@ import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -238,15 +239,14 @@ class NotificationSettingsSection extends StatelessWidget {
                           horizontal: 12,
                           vertical: 6,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: CardMetrics.innerDecoration(
+                          base: settings.plusGlobalCornerRadius,
+                          expressive: settings.plusEnableMaterialExpressive,
                           color: colorScheme.surfaceContainerHigh.withValues(
                             alpha: 0.5,
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.4,
-                            ),
+                          borderColor: colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
                           ),
                         ),
                         child: Column(
@@ -292,15 +292,14 @@ class NotificationSettingsSection extends StatelessWidget {
                           horizontal: 12,
                           vertical: 6,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: CardMetrics.innerDecoration(
+                          base: settings.plusGlobalCornerRadius,
+                          expressive: settings.plusEnableMaterialExpressive,
                           color: colorScheme.surfaceContainerHigh.withValues(
                             alpha: 0.5,
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.4,
-                            ),
+                          borderColor: colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
                           ),
                         ),
                         child: Column(

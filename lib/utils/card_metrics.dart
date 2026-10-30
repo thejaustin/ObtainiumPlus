@@ -45,6 +45,25 @@ class CardMetrics {
         ? RoundedSuperellipseBorder(borderRadius: borderRadius, side: side)
         : RoundedRectangleBorder(borderRadius: borderRadius, side: side);
   }
+
+  /// Decoration for a tonal box nested inside a dialog or card (time pickers,
+  /// inline status messages): [inner] radius from the user's [base] corner
+  /// setting, squircle when [expressive].
+  static ShapeDecoration innerDecoration({
+    required double base,
+    required bool expressive,
+    required Color color,
+    Color? borderColor,
+  }) => ShapeDecoration(
+    color: color,
+    shape: shape(
+      inner(base),
+      expressive: expressive,
+      side: borderColor == null
+          ? BorderSide.none
+          : BorderSide(color: borderColor),
+    ),
+  );
 }
 
 /// Standardized Material 3 Expressive layout calculations for app grids.

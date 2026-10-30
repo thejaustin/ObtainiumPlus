@@ -7,6 +7,22 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-29 — Claude: Antigravity Follow-ups, Theme Font Fix & Preview Tool
+
+- **Theme font bug (`theme_builder.dart`):** about 21 component-theme `TextStyle`s had no `fontFamily`: buttons, chip, segmented, dialog, snackbar, tooltip, badge, input, slider, nav bar, app bar and search bar. Components apply those styles *instead of* the text theme, so their labels fell back to the platform default font on device. `fontFamily` is now threaded through every `_build*Theme` builder. The preview tool exposed this, because the test renderer draws missing families as boxes.
+- **Preview tool committed:** `tool/preview.sh` and `tool/preview/settings_preview_test.dart` render Settings to `build/previews/*.png`, shown in the terminal via chafa or viewed with Read. They mock `device_info` as a Samsung on Android 16. Usage: `bash tool/preview.sh [--tabs 0,3] [--dark] [--width 840] [--height 1400] [--no-view]`.
+- **Follow-ups done:**
+  - The Changelog page `maxWidth` is now 1040. The What's New *sheet* stays at 840, because M3 bottom sheets are capped and shouldn't reach page width.
+  - The Plus Features sheet strings are now translation keys (added to all locales).
+  - `CardMetrics.innerDecoration` replaces the 12dp/10dp boxes in the schedule, quiet-hours and token-verification UI.
+- **Seen in previews, not fixed yet:**
+  - The "Follow system" label is truncated in the theme picker at 412dp.
+  - The Design System Style segmented labels wrap to two lines.
+  - `advanced_settings_section.dart` `_verifyToken` still has hardcoded English result strings.
+- Full suite: 544/544.
+
+---
+
 ## 2026-10-29 — Claude: Update-Check Consolidation, Host-Aware Scheduling & Progress Motion
 
 - **Dead-code trap fixed:** `AppsProvider` had instance methods `checkUpdate`/`checkUpdates`/`getAppsSortedByUpdateCheckTime` that *shadowed* the same-named members of the `AppsProviderUpdates` extension (instance members always win in Dart). The extension versions (ported from upstream in Sep) never ran, so in production: disabled apps and excluded categories were still checked, `consecutiveFailedChecks` was never incremented (Update Health's failed-check warning could never fire), failed apps weren't backed off (#3187), the TLS-handshake retry and APKMirror `prefetchUpdateInfo` never ran, and every app was saved and notified individually. The extension copies are deleted. The live class methods now call the extension's `fetchUpdate`/`fetchUpdateWithHandshakeRetry`.

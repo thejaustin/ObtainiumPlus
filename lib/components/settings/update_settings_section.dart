@@ -916,15 +916,18 @@ class UpdateSettingsSection extends StatelessWidget {
                           horizontal: 12,
                           vertical: 6,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: CardMetrics.innerDecoration(
+                          base: context
+                              .read<PlusSettingsProvider>()
+                              .plusGlobalCornerRadius,
+                          expressive: context
+                              .read<PlusSettingsProvider>()
+                              .plusEnableMaterialExpressive,
                           color: colorScheme.surfaceContainerHigh.withValues(
                             alpha: 0.5,
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.4,
-                            ),
+                          borderColor: colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
                           ),
                         ),
                         child: Column(
@@ -967,15 +970,18 @@ class UpdateSettingsSection extends StatelessWidget {
                           horizontal: 12,
                           vertical: 6,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: CardMetrics.innerDecoration(
+                          base: context
+                              .read<PlusSettingsProvider>()
+                              .plusGlobalCornerRadius,
+                          expressive: context
+                              .read<PlusSettingsProvider>()
+                              .plusEnableMaterialExpressive,
                           color: colorScheme.surfaceContainerHigh.withValues(
                             alpha: 0.5,
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.4,
-                            ),
+                          borderColor: colorScheme.outlineVariant.withValues(
+                            alpha: 0.4,
                           ),
                         ),
                         child: Column(

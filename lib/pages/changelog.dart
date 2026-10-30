@@ -85,7 +85,9 @@ class _ChangelogPageState extends State<ChangelogPage> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 840),
+          // Same content width as Settings so the page doesn't jump in width
+          // when opened from there.
+          constraints: const BoxConstraints(maxWidth: 1040),
           child: ChangelogTimeline(
             installedVersion:
                 widget.targetVersion ?? currentObtainiumPlusVersion,

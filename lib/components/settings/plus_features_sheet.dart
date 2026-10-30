@@ -204,15 +204,15 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                         : colorScheme.onSurfaceVariant,
                   ),
                   title: Text(
-                    '$_shizukuProvider Integration',
+                    tr('plusShizukuIntegration', args: [_shizukuProvider]),
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
                     !_isShizukuInstalled
-                        ? 'Not installed'
+                        ? tr('notInstalled')
                         : _isShizukuGranted
-                        ? 'Active & authorized for silent installs'
-                        : 'Permission needed or service stopped',
+                        ? tr('plusShizukuActive')
+                        : tr('plusShizukuPermissionNeeded'),
                   ),
                   trailing: _isShizukuInstalled
                       ? TextButton(
@@ -232,16 +232,19 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                     Icons.speed_rounded,
                     color: colorScheme.tertiary,
                   ),
-                  title: const Text(
-                    'Binder IPC Latency Benchmark',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  title: Text(
+                    tr('binderLatencyBenchmark'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
                     _isBenchmarking
                         ? tr('benchmarkRunning')
                         : _binderLatencyMs != null
-                        ? '$_binderLatencyMs ms round-trip latency'
-                        : 'Benchmark Android binder transport speed',
+                        ? tr(
+                            'binderLatencyResult',
+                            args: [_binderLatencyMs.toString()],
+                          )
+                        : tr('binderLatencyDescription'),
                   ),
                   trailing: _isBenchmarking
                       ? const SizedBox(
@@ -262,7 +265,9 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                               ),
                             ),
                             child: Text(
-                              _binderLatencyMs != null ? 'Retest' : 'Benchmark',
+                              _binderLatencyMs != null
+                                  ? tr('retest')
+                                  : tr('benchmark'),
                               style: const TextStyle(fontSize: 12),
                             ),
                           ),
@@ -378,13 +383,11 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
               children: [
                 ListTile(
                   leading: const Icon(Icons.phonelink_setup_rounded),
-                  title: const Text(
-                    'OEM Compatibility Guides',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  title: Text(
+                    tr('oemCompatibilityGuides'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'OneUI 8 AutoBlocker, HyperOS, ColorOS & OxygenOS tuning',
-                  ),
+                  subtitle: Text(tr('oemCompatibilityGuidesDescription')),
                   trailing: const Icon(Icons.chevron_right_rounded),
                   onTap: () {
                     AppHaptics.selectionClick();
@@ -394,13 +397,11 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.battery_charging_full_rounded),
-                  title: const Text(
-                    'Battery Optimization Exemption',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                  title: Text(
+                    tr('batteryOptimizationExemption'),
+                    style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text(
-                    'Prevent Android from suspending background update checks',
-                  ),
+                  subtitle: Text(tr('batteryOptimizationExemptionDescription')),
                   trailing: const Icon(Icons.open_in_new_rounded, size: 18),
                   onTap: () {
                     AppHaptics.lightImpact();

@@ -40,6 +40,9 @@ class ThemeBuilder {
       );
     }
     final tvFocus = _TvFocus(isTV, colorScheme);
+    // Component themes (buttons, chips, dialogs...) apply their text styles
+    // in place of the text theme, so each needs the family set explicitly.
+    final fontFamily = useSystemFont ? 'SystemFont' : 'Montserrat';
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
@@ -68,6 +71,7 @@ class ThemeBuilder {
           ),
         ),
         textStyle: TextStyle(
+          fontFamily: fontFamily,
           color: colorScheme.onInverseSurface,
           fontSize: 12,
           fontWeight: plusEnableMaterialExpressive
@@ -79,13 +83,14 @@ class ThemeBuilder {
         backgroundColor: colorScheme.error,
         textColor: colorScheme.onError,
         textStyle: TextStyle(
+          fontFamily: fontFamily,
           fontSize: 11,
           fontWeight: plusEnableMaterialExpressive
               ? FontWeight.w700
               : FontWeight.w600,
         ),
       ),
-      fontFamily: useSystemFont ? 'SystemFont' : 'Montserrat',
+      fontFamily: fontFamily,
       // M3 sparkle ripple is the expressive touch feedback; shader-based, so
       // it also avoids the clipped-ripple artifacts of the legacy ink splash
       splashFactory: plusEnableMaterialExpressive
@@ -95,10 +100,12 @@ class ThemeBuilder {
         colorScheme,
         plusEnableMaterialExpressive,
         cornerRadius,
+        fontFamily: fontFamily,
       ),
       dropdownMenuTheme: _buildDropdownMenuTheme(
         colorScheme,
         plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
       ),
       textTheme: _buildTextTheme(
         useSystemFont,
@@ -120,7 +127,11 @@ class ThemeBuilder {
         plusEnableMaterialExpressive,
         tvFocus,
       ),
-      sliderTheme: _buildSliderTheme(colorScheme, plusEnableMaterialExpressive),
+      sliderTheme: _buildSliderTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
+      ),
       expansionTileTheme: ExpansionTileThemeData(
         shape: const Border(),
         collapsedShape: const Border(),
@@ -145,6 +156,7 @@ class ThemeBuilder {
         plusEnableMaterialExpressive,
         cornerRadius,
         tvFocus,
+        fontFamily: fontFamily,
       ),
       menuButtonTheme: tvFocus.enabled
           ? MenuButtonThemeData(style: tvFocus.buttonStyle(0.35))
@@ -153,6 +165,7 @@ class ThemeBuilder {
         colorScheme,
         plusEnableMaterialExpressive,
         cornerRadius,
+        fontFamily: fontFamily,
       ),
       bottomSheetTheme: _buildBottomSheetTheme(
         colorScheme,
@@ -162,37 +175,52 @@ class ThemeBuilder {
       navigationBarTheme: _buildNavigationBarTheme(
         colorScheme,
         plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
       ),
-      appBarTheme: _buildAppBarTheme(colorScheme, plusEnableMaterialExpressive),
+      appBarTheme: _buildAppBarTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
+      ),
       searchBarTheme: _buildSearchBarTheme(
         colorScheme,
         plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
       ),
       elevatedButtonTheme: _buildElevatedButtonTheme(
         cornerRadius,
         plusEnableMaterialExpressive,
         tvFocus,
+        fontFamily: fontFamily,
       ),
       filledButtonTheme: _buildFilledButtonTheme(
         cornerRadius,
         plusEnableMaterialExpressive,
         tvFocus,
+        fontFamily: fontFamily,
       ),
       textButtonTheme: _buildTextButtonTheme(
         cornerRadius,
         plusEnableMaterialExpressive,
         tvFocus,
+        fontFamily: fontFamily,
       ),
       outlinedButtonTheme: _buildOutlinedButtonTheme(
         cornerRadius,
         plusEnableMaterialExpressive,
         tvFocus,
+        fontFamily: fontFamily,
       ),
-      chipTheme: _buildChipTheme(colorScheme, plusEnableMaterialExpressive),
+      chipTheme: _buildChipTheme(
+        colorScheme,
+        plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
+      ),
       dividerTheme: _buildDividerTheme(colorScheme),
       snackBarTheme: _buildSnackBarTheme(
         colorScheme,
         plusEnableMaterialExpressive,
+        fontFamily: fontFamily,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: colorScheme.primary,
@@ -229,8 +257,9 @@ class ThemeBuilder {
   static InputDecorationTheme _buildInputDecorationTheme(
     ColorScheme colorScheme,
     bool expressive,
-    double? cornerRadius,
-  ) {
+    double? cornerRadius, {
+    String? fontFamily,
+  }) {
     final borderRadius =
         cornerRadius ?? (expressive ? AppConstants.defaultBorderRadius : 12.0);
     return InputDecorationTheme(
@@ -266,10 +295,12 @@ class ThemeBuilder {
         vertical: AppConstants.inputVerticalPadding,
       ),
       labelStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onSurface,
         fontWeight: FontWeight.w500,
       ),
       floatingLabelStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.primary,
         fontWeight: FontWeight.w600,
       ),
@@ -408,10 +439,12 @@ class ThemeBuilder {
   /// Builds DropdownMenuThemeData with consistent text styling and squircle menu
   static DropdownMenuThemeData _buildDropdownMenuTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return DropdownMenuThemeData(
       textStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onSurface,
         fontSize: 16,
         fontWeight: expressive ? FontWeight.w600 : FontWeight.w500,
@@ -539,8 +572,9 @@ class ThemeBuilder {
   /// Builds SliderThemeData with M3 tonal track and thumb
   static SliderThemeData _buildSliderTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return SliderThemeData(
       // Opts into the M3 Expressive slider (16dp track, bar handle with gap)
       // when Material 3 Expressive is active; uses sleek classic track in
@@ -553,7 +587,10 @@ class ThemeBuilder {
       thumbColor: colorScheme.primary,
       overlayColor: colorScheme.primary.withValues(alpha: AppOpacity.hint),
       valueIndicatorColor: colorScheme.primaryContainer,
-      valueIndicatorTextStyle: TextStyle(color: colorScheme.onPrimaryContainer),
+      valueIndicatorTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        color: colorScheme.onPrimaryContainer,
+      ),
     );
   }
 
@@ -562,8 +599,9 @@ class ThemeBuilder {
     ColorScheme colorScheme,
     bool expressive,
     double? cornerRadius,
-    _TvFocus tvFocus,
-  ) {
+    _TvFocus tvFocus, {
+    String? fontFamily,
+  }) {
     final radius = (cornerRadius ?? (expressive ? 16.0 : 12.0)).clamp(
       10.0,
       20.0,
@@ -596,6 +634,7 @@ class ThemeBuilder {
         }),
         textStyle: WidgetStateProperty.resolveWith((states) {
           return TextStyle(
+            fontFamily: fontFamily,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w500,
@@ -610,19 +649,22 @@ class ThemeBuilder {
   static DialogThemeData _buildDialogTheme(
     ColorScheme colorScheme,
     bool expressive,
-    double? cornerRadius,
-  ) {
+    double? cornerRadius, {
+    String? fontFamily,
+  }) {
     return DialogThemeData(
       backgroundColor: colorScheme.surfaceContainerHigh,
       surfaceTintColor: Colors.transparent,
       elevation: 6,
       shape: _shape(expressive, cornerRadius ?? (expressive ? 32 : 28)),
       titleTextStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onSurface,
         fontSize: 24,
         fontWeight: expressive ? FontWeight.w600 : FontWeight.w400,
       ),
       contentTextStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onSurfaceVariant,
         fontSize: 14,
       ),
@@ -659,8 +701,9 @@ class ThemeBuilder {
   /// Builds NavigationBarThemeData with proper M3 icon/label theming
   static NavigationBarThemeData _buildNavigationBarTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return NavigationBarThemeData(
       backgroundColor: colorScheme.surfaceContainer,
       surfaceTintColor: Colors.transparent,
@@ -678,12 +721,14 @@ class ThemeBuilder {
       labelTextStyle: WidgetStateProperty.resolveWith((states) {
         if (states.contains(WidgetState.selected)) {
           return TextStyle(
+            fontFamily: fontFamily,
             color: colorScheme.onSurface,
             fontSize: 12,
             fontWeight: expressive ? FontWeight.w700 : FontWeight.w500,
           );
         }
         return TextStyle(
+          fontFamily: fontFamily,
           color: colorScheme.onSurfaceVariant,
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -695,8 +740,9 @@ class ThemeBuilder {
   /// Builds AppBarTheme for consistent app bar styling
   static AppBarTheme _buildAppBarTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return AppBarTheme(
       backgroundColor: colorScheme.surface,
       foregroundColor: colorScheme.onSurface,
@@ -705,6 +751,7 @@ class ThemeBuilder {
       surfaceTintColor: Colors.transparent,
       centerTitle: false,
       titleTextStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onSurface,
         fontSize: 22,
         fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
@@ -716,8 +763,9 @@ class ThemeBuilder {
   /// Builds SearchBarThemeData with proper elevation and shape
   static SearchBarThemeData _buildSearchBarTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return SearchBarThemeData(
       elevation: WidgetStateProperty.all(0),
       backgroundColor: WidgetStateProperty.all(
@@ -737,10 +785,10 @@ class ThemeBuilder {
         );
       }),
       hintStyle: WidgetStateProperty.all(
-        TextStyle(color: colorScheme.onSurfaceVariant),
+        TextStyle(fontFamily: fontFamily, color: colorScheme.onSurfaceVariant),
       ),
       textStyle: WidgetStateProperty.all(
-        TextStyle(color: colorScheme.onSurface),
+        TextStyle(fontFamily: fontFamily, color: colorScheme.onSurface),
       ),
     );
   }
@@ -748,17 +796,20 @@ class ThemeBuilder {
   /// Builds ChipThemeData for consistent chip styling (M3E squircle vs classic M3)
   static ChipThemeData _buildChipTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return ChipThemeData(
       backgroundColor: colorScheme.surfaceContainerLow,
       selectedColor: colorScheme.primaryContainer,
       disabledColor: colorScheme.onSurface.withValues(alpha: AppOpacity.hint),
       labelStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onSurfaceVariant,
         fontWeight: expressive ? FontWeight.w600 : FontWeight.w500,
       ),
       secondaryLabelStyle: TextStyle(
+        fontFamily: fontFamily,
         color: colorScheme.onPrimaryContainer,
         fontWeight: expressive ? FontWeight.w700 : FontWeight.w500,
       ),
@@ -785,11 +836,15 @@ class ThemeBuilder {
   /// Builds SnackBarThemeData with inverse surface colors and M3 floating shape
   static SnackBarThemeData _buildSnackBarTheme(
     ColorScheme colorScheme,
-    bool expressive,
-  ) {
+    bool expressive, {
+    String? fontFamily,
+  }) {
     return SnackBarThemeData(
       backgroundColor: colorScheme.inverseSurface,
-      contentTextStyle: TextStyle(color: colorScheme.onInverseSurface),
+      contentTextStyle: TextStyle(
+        fontFamily: fontFamily,
+        color: colorScheme.onInverseSurface,
+      ),
       actionTextColor: colorScheme.inversePrimary,
       shape: _shape(expressive, 16),
       behavior: SnackBarBehavior.floating,
@@ -800,12 +855,14 @@ class ThemeBuilder {
   static ElevatedButtonThemeData _buildElevatedButtonTheme(
     double? cornerRadius,
     bool expressive,
-    _TvFocus tvFocus,
-  ) {
+    _TvFocus tvFocus, {
+    String? fontFamily,
+  }) {
     return ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         textStyle: TextStyle(
+          fontFamily: fontFamily,
           fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
           letterSpacing: expressive ? 0.1 : 0.2,
         ),
@@ -819,12 +876,14 @@ class ThemeBuilder {
   static FilledButtonThemeData _buildFilledButtonTheme(
     double? cornerRadius,
     bool expressive,
-    _TvFocus tvFocus,
-  ) {
+    _TvFocus tvFocus, {
+    String? fontFamily,
+  }) {
     return FilledButtonThemeData(
       style: FilledButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         textStyle: TextStyle(
+          fontFamily: fontFamily,
           fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
           letterSpacing: expressive ? 0.1 : 0.2,
         ),
@@ -838,12 +897,14 @@ class ThemeBuilder {
   static TextButtonThemeData _buildTextButtonTheme(
     double? cornerRadius,
     bool expressive,
-    _TvFocus tvFocus,
-  ) {
+    _TvFocus tvFocus, {
+    String? fontFamily,
+  }) {
     return TextButtonThemeData(
       style: TextButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         textStyle: TextStyle(
+          fontFamily: fontFamily,
           fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
           letterSpacing: expressive ? 0.1 : 0.2,
         ),
@@ -857,12 +918,14 @@ class ThemeBuilder {
   static OutlinedButtonThemeData _buildOutlinedButtonTheme(
     double? cornerRadius,
     bool expressive,
-    _TvFocus tvFocus,
-  ) {
+    _TvFocus tvFocus, {
+    String? fontFamily,
+  }) {
     return OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         overlayColor: tvFocus.enabled ? tvFocus.color(0.4) : null,
         textStyle: TextStyle(
+          fontFamily: fontFamily,
           fontWeight: expressive ? FontWeight.w700 : FontWeight.w600,
           letterSpacing: expressive ? 0.1 : 0.2,
         ),
