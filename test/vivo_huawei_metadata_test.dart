@@ -30,6 +30,7 @@ class _Vivo extends VivoAppStore {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) async {
     requests++;
     return Response(jsonEncode(response), 200);
@@ -52,6 +53,7 @@ class _Huawei extends HuaweiAppGallery {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) async {
     requests++;
     return Response(

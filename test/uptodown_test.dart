@@ -14,6 +14,7 @@ class _UptodownWithPage extends Uptodown {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) async => http.Response(
     page,
     200,

@@ -21,6 +21,7 @@ class _FakeApkMirror extends APKMirror {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) {
     requests.add(url);
     return handler(url);

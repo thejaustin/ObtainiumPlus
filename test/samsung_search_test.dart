@@ -27,6 +27,7 @@ class _SearchGalaxyStore extends SamsungGalaxyStore {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) async {
     requests.add((
       uri: Uri.parse(url),

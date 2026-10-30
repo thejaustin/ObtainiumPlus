@@ -173,6 +173,7 @@ abstract class AppSource {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) async {
     Future<Response> perform() async {
       var sp = SettingsProvider();
@@ -185,6 +186,9 @@ abstract class AppSource {
         additionalSettings,
         url,
       );
+      if (extraHeaders != null && extraHeaders.isNotEmpty) {
+        headers = {...?headers, ...extraHeaders};
+      }
       return await SourceUtils.httpRequest(
         url,
         method: postBody != null ? 'POST' : 'GET',

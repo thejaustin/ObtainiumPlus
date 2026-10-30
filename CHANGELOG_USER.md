@@ -8,6 +8,7 @@
 
 ### ⚡ Update Checks
 - **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 update checks at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.
+- **Much Less Data for GitHub Checks**: GitHub apps are now checked with conditional requests, so a repo with no new release answers with an empty "not modified" reply instead of resending its whole release list (often hundreds of KB per app). With a GitHub token set, these replies also don't count against your rate limit.
 - **Fewer Wasted GitHub Requests**: Once GitHub's API rate limit is reached, the remaining GitHub apps go straight to the releases feed until the limit resets, instead of each one failing against the API first.
 - **Excluded Categories & Disabled Apps Are Skipped**: Batch update checks now skip apps in categories you excluded from checks, and apps with checking disabled. Before this fix, both were still checked.
 - **Failing Apps Back Off**: An app whose check fails, or that hits a rate limit, waits one full update interval before it's checked again, instead of being retried on every background run. Connection drops don't count, so those apps are retried as usual. Repeated failures now count toward Update Health's failed-checks warning, which previously never triggered.

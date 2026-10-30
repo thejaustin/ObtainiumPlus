@@ -7,6 +7,15 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-29 — Claude: GitHub ETag Conditional Requests
+
+- **`lib/services/github_etag_cache.dart`:** gzipped per-URL cache files (sha1 names) in temp `github_etag_cache/`, with LRU pruning (600 entries / 40MB, checked every 50 writes). `GitHub.sourceRequest` (a new override) sends `If-None-Match` for `api.github.com` GETs and turns a 304 back into a 200 with the cached body, keeping the 304's rate-limit headers.
+- **`AppSource.sourceRequest` signature change:** it gained `extraHeaders`. All test fakes that override it were updated.
+- **Measured:** the `ImranR98/Obtainium` releases list (`per_page=100`) is 380KB gzipped (6.2MB of JSON) for a 200; the 304 is 0B. Per GitHub's docs, a 304 is rate-limit free only when *authorized*; anonymous users save bandwidth but not quota.
+- Tests: `github_etag_cache_test.dart`. Suite 551/551.
+
+---
+
 ## 2026-10-29 — Claude: Shadowed-Extension Audit (lifecycle / install / import-export)
 
 - **Audit:** almost every public method in `apps_provider_lifecycle.dart`, `apps_provider_install.dart` and `apps_provider_import_export.dart` is shadowed by a same-named `AppsProvider` instance method, so the extension copies never run. The fork's live versions delegate to services (AppInstallService, AppDownloadService…). Upstream fixes that were ported into the extensions after the June split were checked against the live path:

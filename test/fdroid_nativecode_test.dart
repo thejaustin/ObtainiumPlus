@@ -71,6 +71,7 @@ class _TestFDroid extends FDroid {
     Map<String, dynamic> additionalSettings, {
     bool followRedirects = true,
     Object? postBody,
+    Map<String, String>? extraHeaders,
   }) async {
     requestedUrls.add(url);
     final body = responses[url];

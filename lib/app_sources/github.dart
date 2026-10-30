@@ -10,6 +10,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/github_etag_cache.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/utils/string_utils.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -310,6 +311,39 @@ class GitHub extends AppSource {
     subdomainPrefix: r'(www\.)?',
     pathPattern: r'/[^/]+/[^/]+',
   );
+
+  /// API GETs go through [GitHubEtagCache]: unchanged resources come back
+  /// as a bodyless 304 that is answered from the cache.
+  @override
+  Future<Response> sourceRequest(
+    String url,
+    Map<String, dynamic> additionalSettings, {
+    bool followRedirects = true,
+    Object? postBody,
+    Map<String, String>? extraHeaders,
+  }) async {
+    if (postBody != null || Uri.tryParse(url)?.host != 'api.github.com') {
+      return super.sourceRequest(
+        url,
+        additionalSettings,
+        followRedirects: followRedirects,
+        postBody: postBody,
+        extraHeaders: extraHeaders,
+      );
+    }
+    final cache = GitHubEtagCache.instance;
+    final cached = await cache.lookup(url);
+    final response = await super.sourceRequest(
+      url,
+      additionalSettings,
+      followRedirects: followRedirects,
+      extraHeaders: {
+        ...?extraHeaders,
+        if (cached != null) HttpHeaders.ifNoneMatchHeader: cached.etag,
+      },
+    );
+    return cache.resolve(url, response, cached);
+  }
 
   @override
   Future<Map<String, String>?> getRequestHeaders(
