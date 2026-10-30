@@ -231,4 +231,36 @@ void main() {
       );
     });
   });
+
+  group('isNewlyFoundUpdate', () {
+    test('does not report an older release for an installed app', () {
+      final previous = makeApp('1.4.0-gplay', '1.4.0');
+      final fetched = makeApp('1.4.0-gplay', '1.3.9');
+      expect(AppUpdateService.isNewlyFoundUpdate(previous, fetched), isFalse);
+    });
+
+    test('reports a newer release, and any change for uninstalled apps', () {
+      expect(
+        AppUpdateService.isNewlyFoundUpdate(
+          makeApp('1.4.0-gplay', '1.4.0'),
+          makeApp('1.4.0-gplay', '1.4.1'),
+        ),
+        isTrue,
+      );
+      expect(
+        AppUpdateService.isNewlyFoundUpdate(
+          makeApp(null, '1.4.0'),
+          makeApp(null, '1.3.9'),
+        ),
+        isTrue,
+      );
+      expect(
+        AppUpdateService.isNewlyFoundUpdate(
+          makeApp('1.4.0', '1.4.0'),
+          makeApp('1.4.0', '1.4.0'),
+        ),
+        isFalse,
+      );
+    });
+  });
 }

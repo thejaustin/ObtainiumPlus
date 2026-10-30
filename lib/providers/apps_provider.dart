@@ -2840,7 +2840,9 @@ class AppsProvider with ChangeNotifier {
       // a sync, and re-querying it per app is an expensive platform-channel
       // call. loadApps() and the FGBG refresh keep the cached info fresh.
       await saveApps([newApp], reuseInstalledInfo: true);
-      return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
+      return AppUpdateService.isNewlyFoundUpdate(currentApp, newApp)
+          ? newApp
+          : null;
     } finally {
       checkingUpdateIds.remove(appId);
       _notifyUiOnly();
@@ -3003,7 +3005,7 @@ class AppsProvider with ChangeNotifier {
               'latest ${newApp.latestVersion}',
             );
             fetched.add(newApp);
-            if (newApp.latestVersion != currentApp.latestVersion) {
+            if (AppUpdateService.isNewlyFoundUpdate(currentApp, newApp)) {
               updates.add(newApp);
               refreshFound.value = updates.length;
             }

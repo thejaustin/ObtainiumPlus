@@ -26,6 +26,19 @@ class AppUpdateService {
     _updateCache.remove(appId);
   }
 
+  /// Whether a check that turned [previous] into [fetched] found an update
+  /// worth reporting (notification, auto-install, "updates found"). For an
+  /// installed app the new latest version must also pass the downgrade guard,
+  /// so an older release re-surfacing isn't announced or installed.
+  static bool isNewlyFoundUpdate(App previous, App fetched) {
+    if (fetched.latestVersion == previous.latestVersion) return false;
+    final installed = fetched.installedVersion;
+    if (installed == null || fetched.additionalSettings['trackOnly'] == true) {
+      return true;
+    }
+    return areVersionsDifferent(fetched, installed, fetched.latestVersion);
+  }
+
   static bool areVersionsDifferent(
     App app,
     String? installed,

@@ -23,7 +23,7 @@
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
 ### 🛡️ Fixes
-- **Fewer Fake "Updates" That Are Really Downgrades**: When an app's installed version has an extra label that its releases don't (for example `1.4.0-gplay`, `2.0.1 (201)` or `1.2.3-fdroid` against a `1.3.9` release), Obtainium+ couldn't tell which was newer and listed the older release as an update. It now compares the version numbers and stops offering older releases.
+- **Fewer Fake "Updates" That Are Really Downgrades**: When an app's installed version has an extra label that its releases don't (for example `1.4.0-gplay`, `2.0.1 (201)` or `1.2.3-fdroid` against a `1.3.9` release), Obtainium+ couldn't tell which was newer and listed the older release as an update. It now compares the version numbers and stops offering older releases, and update notifications and background auto-updates skip them too.
 - **Removing an HTML Source Step or Header No Longer Breaks the Form**: Deleting an intermediate link step or a request header from an HTML-source app (Add App or app options) could replace that part of the form with an error box. It now removes just that entry, and the entries after it keep their own values.
 - **Fixed Error Pop-Ups After Failed Updates**: When an update or install started from the apps list failed, a second hidden error could follow the error message. It's gone.
 - **Backups No Longer Include Per-App Tokens Unless Asked**: Exports, including auto-exports, made without the "include credentials" option no longer contain access tokens saved on individual apps (for example, a token for a self-hosted GitHub or GitLab).
