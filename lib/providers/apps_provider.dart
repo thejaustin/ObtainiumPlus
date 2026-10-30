@@ -13,28 +13,20 @@ import 'package:home_widget/home_widget.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:android_system_font/android_system_font.dart';
-import 'package:android_package_installer/android_package_installer.dart';
 import 'package:android_package_manager/android_package_manager.dart';
-import 'package:battery_plus/battery_plus.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/backup_crypto.dart';
 import 'package:flutter/services.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:http/io_client.dart';
 import 'package:obtainium/app_sources/direct_apk_link.dart';
 import 'package:obtainium/app_sources/html.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/main.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
@@ -58,9 +50,7 @@ import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:archive/archive.dart' as archive;
-import 'package:share_plus/share_plus.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 export 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -72,14 +62,9 @@ import 'package:obtainium/utils/version_utils.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:obtainium/providers/apps_provider_import_export.dart';
-import 'package:obtainium/providers/apps_provider_install.dart';
 import 'package:obtainium/providers/apps_provider_lifecycle.dart';
 import 'package:obtainium/providers/apps_provider_updates.dart';
 import 'package:obtainium/components/ui_widgets.dart';
-
-import 'package:obtainium/utils/signing_cert_utils.dart';
-import 'package:obtainium/utils/translation_loader.dart';
 
 export 'apps_provider_import_export.dart';
 export 'apps_provider_install.dart';
@@ -97,9 +82,6 @@ const int _downloadPollIntervalSeconds = 5;
 const int _partialHashCheckStartingSize = 1024;
 const int _partialHashCheckLowerLimit = 128;
 const int _partialHashCheckDecrement = 256;
-const int _bgUpdateMaxAttempts = 4;
-const int _bgUpdateMaxRetryWaitSeconds = 30;
-const int _bgClientExceptionRetryWaitSeconds = 15 * 60;
 
 final packageManager = AndroidPackageManager();
 final packageInfoFlags = PackageInfoFlags({PMFlag.getSigningCertificates});
@@ -1577,7 +1559,6 @@ class AppsProvider with ChangeNotifier {
     for (final file in tarArchive.files) {
       if (file.isFile) {
         final content = file.content;
-        if (content == null) continue;
         final outPath = '${destDir.path}/${file.name}';
         final outFile = File(outPath);
         outFile.createSync(recursive: true);
@@ -1857,7 +1838,7 @@ class AppsProvider with ChangeNotifier {
           apps[id]!.app.otherAssetUrls.isNotEmpty) {
         MapEntry<String, String>? tempFileUrl = await confirmAppFileUrl(
           apps[id]!.app,
-          context?.mounted == true ? context : null,
+          context.mounted == true ? context : null,
           true,
           evenIfSingleChoice: true,
         );

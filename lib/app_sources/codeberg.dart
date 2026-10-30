@@ -126,7 +126,6 @@ class Codeberg extends AppSource {
   List<GeneratedFormItem> get searchQuerySettingFormItems =>
       searchQuerySettingItemsForUrl(hosts.isNotEmpty ? hosts[0] : _defaultHost);
 
-  @override
   List<GeneratedFormItem> searchQuerySettingItemsForUrl(
     String url, {
     SettingsProvider? settingsProvider,

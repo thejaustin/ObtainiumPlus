@@ -1611,15 +1611,4 @@ class AddAppPageState extends State<AddAppPage> {
 
     return scaffold;
   }
-
-  Widget _smallSpinner() {
-    return const Padding(
-      padding: EdgeInsets.all(12),
-      child: SizedBox(
-        width: 20,
-        height: 20,
-        child: ExpressiveCircularProgressIndicator(strokeWidth: 2),
-      ),
-    );
-  }
 }

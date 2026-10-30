@@ -5,7 +5,6 @@ import 'dart:math';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/version_service.dart' show isAppUpdateable;
-import 'package:obtainium/utils/min_update_age.dart';
 
 /// Stamps when [newApp]'s latest version changed. With the
 /// `detectionDateAsReleaseDate` setting on, that time also stands in for the
@@ -94,19 +93,6 @@ extension AppsProviderUpdates on AppsProvider {
       }
       return null;
     }
-  }
-
-  /// Returns true when [newApp]'s release is newer than the configured
-  /// minimum update age and should therefore be suppressed.
-  Future<bool> _isReleaseYoungerThanMinAge(App currentApp, App newApp) async {
-    if (newApp.latestVersion == currentApp.latestVersion) {
-      return false;
-    }
-    final minAgeDays = await effectiveMinUpdateAgeDays(
-      currentApp.additionalSettings,
-      settingsProvider: settingsProvider,
-    );
-    return isReleaseTooYoung(newApp.releaseDate, minAgeDays);
   }
 
   /// Finds app IDs whose installed version differs from the latest version, with optional filtering.

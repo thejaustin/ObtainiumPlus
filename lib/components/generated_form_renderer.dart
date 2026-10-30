@@ -156,7 +156,6 @@ class _GeneratedFormState extends State<GeneratedForm> {
   final Map<String, TextEditingController> _textControllers = {};
   final Map<String, GlobalKey<FormFieldState>> _fieldKeys = {};
   final Map<String, int> _subFormGenerations = {};
-  int _subFormGenerationCount = 0;
 
   InputDecoration _fieldDecoration({
     required String labelText,
@@ -461,8 +460,15 @@ class _GeneratedFormState extends State<GeneratedForm> {
     bool isLast = true,
   }) {
     final compact = item.items.length == 1 && item.items[0].length == 1;
-    final List<Map<String, dynamic>> entries =
-        values[fieldKey] as List<Map<String, dynamic>>;
+    // Normalize: values can arrive as a plain List (initial/imported values),
+    // and casting that to List<Map> throws during build.
+    final raw = values[fieldKey];
+    final List<Map<String, dynamic>> entries = raw is List<Map<String, dynamic>>
+        ? raw
+        : values[fieldKey] = [
+            for (final e in (raw as List? ?? const []))
+              Map<String, dynamic>.from(e as Map),
+          ];
     final n = entries.length;
     // Bumping the generation changes every child's key, so all entries are
     // re-initialized from [values] after a structural add/remove instead of
@@ -470,9 +476,6 @@ class _GeneratedFormState extends State<GeneratedForm> {
     final generation = _subFormGenerations[fieldKey] ?? 0;
     final List<Widget> cards = [];
     for (int i = 0; i < n; i++) {
-      final internalFormKey = ValueKey(
-        generateDeterministicId(n, seed2: i, seed3: _subFormGenerationCount),
-      );
       final isLastEntry = i == n - 1;
       cards.add(
         ConnectedCard(
@@ -528,10 +531,13 @@ class _GeneratedFormState extends State<GeneratedForm> {
                       icon: const Icon(Icons.delete_outline_rounded),
                       onPressed: n > 0
                           ? () {
-                              final temp = List.from(values[fieldKey]);
-                              temp.removeAt(i);
-                              values[fieldKey] = List.from(temp);
-                              _subFormGenerationCount++;
+                              values[fieldKey] =
+                                  List<Map<String, dynamic>>.from(entries)
+                                    ..removeAt(i);
+                              // Re-key every entry so the ones after the
+                              // removed row don't keep its field state.
+                              _subFormGenerations[fieldKey] = generation + 1;
+                              setState(() {});
                               notifyFormChange();
                             }
                           : null,

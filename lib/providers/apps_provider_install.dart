@@ -14,13 +14,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:obtainium/components/app_detail_widgets.dart'
     hide AppFilePicker, APKOriginWarningDialog;
 import 'package:obtainium/custom_errors.dart';
-import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/installer.dart';
-import 'package:obtainium/installers/root_installer.dart';
-import 'package:obtainium/installers/shizuku_installer.dart';
-import 'package:obtainium/installers/stock_installer.dart';
-import 'package:obtainium/installers/external_installer.dart';
-import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/notifications_provider.dart';

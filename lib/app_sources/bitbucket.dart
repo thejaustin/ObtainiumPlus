@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
-import 'package:obtainium/utils/app_utils.dart';
 
 class Bitbucket extends AppSource {
   Bitbucket() {

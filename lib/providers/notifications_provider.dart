@@ -5,7 +5,6 @@
 import 'dart:isolate';
 import 'dart:ui';
 
-import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:material_ui/material_ui.dart';

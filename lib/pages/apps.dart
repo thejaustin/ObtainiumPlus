@@ -10,7 +10,6 @@ import 'package:obtainium/components/apps/niagara_alphabet_scrubber.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
 import 'package:obtainium/components/common/contextual_tip.dart';
-import 'package:obtainium/pages/add_app.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/components/empty_state.dart';
@@ -55,7 +54,6 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
-import 'package:obtainium/utils/nav_helper.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
@@ -987,7 +985,6 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
           })
           .catchError((e) {
             if (context.mounted) showError(e, context);
-            return <String>[];
           });
     }
 
@@ -1315,56 +1312,6 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       );
     }
 
-    getCategoryCollapsibleTile(int index) {
-      var tiles = listedApps
-          .asMap()
-          .entries
-          .where(
-            (e) =>
-                e.value.app.categories.contains(listedCategories[index]) ||
-                e.value.app.categories.isEmpty &&
-                    listedCategories[index] == null,
-          )
-          .map((e) => getSingleAppHorizTile(e.key))
-          .toList();
-
-      capFirstChar(String str) => str[0].toUpperCase() + str.substring(1);
-      return ExpansionTile(
-        key: PageStorageKey<String>(
-          'category_tile:${listedCategories[index] ?? '__uncategorized__'}',
-        ),
-        onExpansionChanged: (_) => AppHaptics.selectionClick(),
-        expansionAnimationStyle: AnimationStyle(
-          curve: Easing.emphasizedDecelerate,
-          reverseCurve: Easing.emphasizedAccelerate,
-          duration: const Duration(milliseconds: 260),
-        ),
-        initiallyExpanded: true,
-        title: Text(
-          capFirstChar(listedCategories[index] ?? tr('noCategory')),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        controlAffinity: ListTileControlAffinity.leading,
-        trailing: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-          ),
-          child: Text(
-            tiles.length.toString(),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.onPrimaryContainer,
-            ),
-          ),
-        ),
-        children: tiles,
-      );
-    }
-
     getSelectAllButton() {
       final isSelected = selectedAppIds.isNotEmpty;
       final selecting = !isSelected;
@@ -1580,7 +1527,6 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                           }
                         }
                         if (context.mounted) showError(e, context);
-                        return <String>[];
                       });
                 }
               });

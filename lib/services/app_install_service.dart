@@ -19,19 +19,16 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/install_landed.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
-import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/signing_cert_utils.dart';
-import 'package:obtainium/models/typed_settings.dart';
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -712,8 +709,8 @@ class AppInstallService {
         file.file.path,
         mimeType: 'application/vnd.android.package-archive',
       );
-      if (firstTimeWithContext!.mounted) {
-        ScaffoldMessenger.of(firstTimeWithContext!).showSnackBar(
+      if (firstTimeWithContext.mounted) {
+        ScaffoldMessenger.of(firstTimeWithContext).showSnackBar(
           SnackBar(
             content: Text(tr('appVerifierInstructionToast')),
             duration: const Duration(seconds: 5),
@@ -895,7 +892,7 @@ class AppInstallService {
               // incompatible) would fail identically in the stock installer, so
               // report them directly instead of retrying and hiding the cause.
               if (const {4, 5, 6, 7, -2, -4, -7}.contains(commitCode)) {
-                throw InstallError(commitCode!, appId: file.appId);
+                throw InstallError(commitCode, appId: file.appId);
               }
               throw Exception("Root installer failed with code $commitCode");
             }
@@ -935,7 +932,7 @@ class AppInstallService {
               // incompatible) would fail identically in the stock installer, so
               // report them directly instead of retrying and hiding the cause.
               if (const {4, 5, 6, 7, -2, -4, -7}.contains(commitCode)) {
-                throw InstallError(commitCode!, appId: file.appId);
+                throw InstallError(commitCode, appId: file.appId);
               }
               throw Exception(
                 "External installer failed with code $commitCode",
@@ -992,7 +989,7 @@ class AppInstallService {
               // incompatible) would fail identically in the stock installer, so
               // report them directly instead of retrying and hiding the cause.
               if (const {4, 5, 6, 7, -2, -4, -7}.contains(commitCode)) {
-                throw InstallError(commitCode!, appId: file.appId);
+                throw InstallError(commitCode, appId: file.appId);
               }
               throw Exception("Shizuku failed with code $commitCode");
             }

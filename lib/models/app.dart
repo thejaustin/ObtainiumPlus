@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/models/typed_settings.dart';

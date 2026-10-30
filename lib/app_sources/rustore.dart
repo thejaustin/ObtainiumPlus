@@ -5,7 +5,6 @@ import 'dart:ui' show PlatformDispatcher;
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_charset_detector/flutter_charset_detector.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/core/logging/app_logger.dart';

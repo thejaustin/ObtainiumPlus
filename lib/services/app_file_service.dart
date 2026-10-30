@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:obtainium/utils/logger.dart';
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
@@ -190,7 +189,7 @@ class AppFileService {
         if (!iconsCacheDir.existsSync()) {
           iconsCacheDir.createSync(recursive: true);
         }
-      } catch (e, st) {
+      } catch (e) {
         // External storage creation failed, fall back to internal app documents directory
         Sentry.addBreadcrumb(
           Breadcrumb(
@@ -544,7 +543,7 @@ class AppFileService {
       // Handle 416 Range Not Satisfiable (e.g. remote file changed)
       if (response.statusCode == HttpStatus.requestedRangeNotSatisfiable &&
           rangeStart > 0) {
-        responseClient?.close();
+        responseClient.close();
         deleteFile(tempDownloadedFile);
         rangeStart = 0;
         received = 0;
@@ -560,7 +559,7 @@ class AppFileService {
 
       if (response.statusCode < 200 || response.statusCode > 299) {
         final retryAfter = response.headers.value('retry-after');
-        responseClient?.close();
+        responseClient.close();
         if (tempDownloadedFile.existsSync() && rangeStart == 0) {
           deleteFile(tempDownloadedFile);
         }

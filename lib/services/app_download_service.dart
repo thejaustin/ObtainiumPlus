@@ -20,7 +20,6 @@ import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:provider/provider.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/installers/external_installer.dart';
@@ -420,7 +419,7 @@ class AppDownloadService {
             app.additionalSettings['allowInsecure'] == true ||
             source.allowInsecureRedirects,
         logs: logs,
-        isCancelled: isCancelled != null ? () => isCancelled!(app.id) : null,
+        isCancelled: isCancelled != null ? () => isCancelled(app.id) : null,
         useSmartRetries: settingsProvider.plusEnableSmartRetries,
       );
 
@@ -560,7 +559,7 @@ class AppDownloadService {
           apps[id]!.app.otherAssetUrls.isNotEmpty) {
         MapEntry<String, String>? tempFileUrl = await confirmAppFileUrl(
           apps[id]!.app,
-          context?.mounted == true ? context : null,
+          context.mounted == true ? context : null,
           true,
           evenIfSingleChoice: true,
         );

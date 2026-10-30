@@ -4,7 +4,6 @@ import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/known_issues_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/core/logging/app_logger.dart';

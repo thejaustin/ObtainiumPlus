@@ -323,7 +323,7 @@ class _SelectionModalState extends State<SelectionModal> {
               if (value! && widget.onlyOneSelectionAllowed) {
                 selectOnlyOne(entry.key);
               } else {
-                entrySelections[entry] = value!;
+                entrySelections[entry] = value;
               }
             });
           }

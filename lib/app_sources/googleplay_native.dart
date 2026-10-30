@@ -55,6 +55,9 @@ class GooglePlayNative extends AppSource {
         final versionCode = details['versionCode'] as int? ?? 1;
         final urls = await api.getDeliveryUrls(appId, versionCode);
         if (urls.isEmpty) {
+          // Not awaited on purpose: mirror errors should reach the caller,
+          // not the catch below (which would run the fallback a second time).
+          // ignore: unawaited_return_in_try_block
           return _mirrorFallback(standardUrl, additionalSettings);
         }
         return APKDetails(

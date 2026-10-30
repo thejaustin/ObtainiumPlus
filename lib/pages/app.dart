@@ -14,7 +14,6 @@ import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
@@ -478,7 +477,6 @@ class _AppPageState extends State<AppPage> {
     var plusSettings = context.watch<PlusSettingsProvider>();
     var viewSettings = context.watch<ViewSettingsProvider>();
     var updateSettings = context.watch<UpdateSettingsProvider>();
-    var behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -580,7 +578,7 @@ class _AppPageState extends State<AppPage> {
         infoLines = '${tr('xIsTrackOnly', args: [tr('app')])}\n$infoLines';
       }
       if (installedVersionIsEstimate) {
-        var realVersion = app?.installedInfo?.versionName;
+        var realVersion = app.installedInfo?.versionName;
         infoLines = realVersion != null
             ? '${tr('pseudoVersionInUse')} (OS installed $realVersion)\n$infoLines'
             : '${tr('pseudoVersionInUse')}\n$infoLines';
@@ -1507,9 +1505,7 @@ class _AppPageState extends State<AppPage> {
                             scaleDownFactor: 0.92,
                             child: AppIconAction(
                               semanticLabel: tr('openApp', args: [app!.name]),
-                              onTap: app == null
-                                  ? null
-                                  : () => pm.openApp(app.app.id),
+                              onTap: () => pm.openApp(app.app.id),
                               borderRadius: 24,
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(24),
@@ -1731,7 +1727,7 @@ class _AppPageState extends State<AppPage> {
           ),
         ],
         getInfoColumn(),
-        if (app != null) AppVersionHistoryWidget(app: app!.app),
+        if (app != null) AppVersionHistoryWidget(app: app.app),
 
         const SizedBox(height: 16),
         _buildSystemActions(),
@@ -1857,8 +1853,8 @@ class _AppPageState extends State<AppPage> {
           isInstalled &&
           AppUpdateService.areVersionsDifferent(
             app!.app,
-            app!.app.installedVersion,
-            app!.app.latestVersion,
+            app.app.installedVersion,
+            app.app.latestVersion,
           );
       final isDownloading =
           app?.downloadProgress != null || areDownloadsRunning;

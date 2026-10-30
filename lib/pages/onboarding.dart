@@ -21,7 +21,6 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
-import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 
 class OnboardingPage extends StatefulWidget {

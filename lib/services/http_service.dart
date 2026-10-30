@@ -1,6 +1,5 @@
 // HTTP client creation, streaming requests, redirect/error handling.
 
-import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 

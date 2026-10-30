@@ -8,7 +8,7 @@ Future<NetworkQuality> checkNetworkQuality() async {
   try {
     final client = http.Client();
     final stopwatch = Stopwatch()..start();
-    final response = await client
+    await client
         .head(Uri.parse('https://connectivitycheck.gstatic.com/generate_204'))
         .timeout(const Duration(seconds: 3));
     stopwatch.stop();

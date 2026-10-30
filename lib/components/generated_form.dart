@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
@@ -660,82 +659,75 @@ class _GeneratedFormState extends State<GeneratedForm> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   ...() sync* {
-                        var tagEntries =
-                            values[fieldKey]
-                                as Map<String, MapEntry<int, bool>>?;
-                        if (tagEntries != null) {
-                          var sorted = tagEntries.entries.toList()
-                            ..sort(
-                              (a, b) => a.key.toLowerCase().compareTo(
-                                b.key.toLowerCase(),
-                              ),
-                            );
-                          yield* sorted;
-                        }
-                      }().map((e2) {
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: ChoiceChip(
-                            label: Text(e2.key),
-                            backgroundColor: Color(
-                              e2.value.key,
-                            ).withValues(alpha: 50 / 255),
-                            selectedColor: Color(e2.value.key),
-                            visualDensity: VisualDensity.compact,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                Provider.of<PlusSettingsProvider>(
-                                  context,
-                                  listen: false,
-                                ).plusGlobalCornerRadius.clamp(0.0, 16.0),
-                              ),
-                            ),
-                            selected: e2.value.value,
-                            onSelected: (value) {
-                              setState(() {
-                                (values[fieldKey]
-                                    as Map<String, MapEntry<int, bool>>)[e2
-                                    .key] = MapEntry(
-                                  (values[fieldKey]
-                                          as Map<
-                                            String,
-                                            MapEntry<int, bool>
-                                          >)[e2.key]!
-                                      .key,
-                                  value,
-                                );
-                                if (item.singleSelect && value == true) {
-                                  for (var key
-                                      in (values[fieldKey]
-                                              as Map<
-                                                String,
-                                                MapEntry<int, bool>
-                                              >)
-                                          .keys) {
-                                    if (key != e2.key) {
-                                      (values[fieldKey]
-                                          as Map<
-                                            String,
-                                            MapEntry<int, bool>
-                                          >)[key] = MapEntry(
-                                        (values[fieldKey]
-                                                as Map<
-                                                  String,
-                                                  MapEntry<int, bool>
-                                                >)[key]!
-                                            .key,
-                                        false,
-                                      );
-                                    }
-                                  }
-                                }
-                                someValueChanged();
-                              });
-                            },
+                    var tagEntries =
+                        values[fieldKey] as Map<String, MapEntry<int, bool>>?;
+                    if (tagEntries != null) {
+                      var sorted = tagEntries.entries.toList()
+                        ..sort(
+                          (a, b) => a.key.toLowerCase().compareTo(
+                            b.key.toLowerCase(),
                           ),
                         );
-                      }) ??
-                      [const SizedBox.shrink()],
+                      yield* sorted;
+                    }
+                  }().map((e2) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(e2.key),
+                        backgroundColor: Color(
+                          e2.value.key,
+                        ).withValues(alpha: 50 / 255),
+                        selectedColor: Color(e2.value.key),
+                        visualDensity: VisualDensity.compact,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            Provider.of<PlusSettingsProvider>(
+                              context,
+                              listen: false,
+                            ).plusGlobalCornerRadius.clamp(0.0, 16.0),
+                          ),
+                        ),
+                        selected: e2.value.value,
+                        onSelected: (value) {
+                          setState(() {
+                            (values[fieldKey]
+                                as Map<String, MapEntry<int, bool>>)[e2
+                                .key] = MapEntry(
+                              (values[fieldKey]
+                                      as Map<String, MapEntry<int, bool>>)[e2
+                                      .key]!
+                                  .key,
+                              value,
+                            );
+                            if (item.singleSelect && value == true) {
+                              for (var key
+                                  in (values[fieldKey]
+                                          as Map<String, MapEntry<int, bool>>)
+                                      .keys) {
+                                if (key != e2.key) {
+                                  (values[fieldKey]
+                                      as Map<
+                                        String,
+                                        MapEntry<int, bool>
+                                      >)[key] = MapEntry(
+                                    (values[fieldKey]
+                                            as Map<
+                                              String,
+                                              MapEntry<int, bool>
+                                            >)[key]!
+                                        .key,
+                                    false,
+                                  );
+                                }
+                              }
+                            }
+                            someValueChanged();
+                          });
+                        },
+                      ),
+                    );
+                  }),
                   (values[fieldKey] as Map<String, MapEntry<int, bool>>?)
                               ?.values
                               .where((e) => e.value)

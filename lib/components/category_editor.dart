@@ -165,7 +165,6 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   }
 
   Future<void> _delete() async {
-    final appsProvider = context.read<AppsProvider>();
     final settingsProvider = context.read<SettingsProvider>();
     final confirmed = await showConfirmDialog(
       context,
@@ -222,7 +221,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
   }) {
     final cs = Theme.of(context).colorScheme;
     return ScaleTouchWrapper(
-      hapticOnPressDown: onTap != null,
+      hapticOnPressDown: true,
       scaleDownFactor: 0.82,
       child: Semantics(
         button: true,

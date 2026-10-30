@@ -400,9 +400,7 @@ List<String> getAllTagsFromApps(List<MapEntry<String, AppInMemory>> apps) {
   final tags = <String>{};
   for (final app in apps) {
     final appTags = app.value.app.tags;
-    if (appTags != null) {
-      tags.addAll(appTags);
-    }
+    tags.addAll(appTags);
   }
   return tags.toList()..sort();
 }

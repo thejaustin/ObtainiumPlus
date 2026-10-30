@@ -7,7 +7,6 @@ import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/host_request_gate.dart';
-import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/utils/update_health.dart';
 

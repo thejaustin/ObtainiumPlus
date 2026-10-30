@@ -417,7 +417,8 @@ class FDroid extends AppSource {
   static int? _versionCodeFromApkUrl(String url) =>
       int.tryParse(RegExp(r'_(\d+)\.apk$').firstMatch(url)?.group(1) ?? '');
 
-  @override
+  // Ported from upstream 1.7.1, but the AppSource hook and its caller (ABI-
+  // aware APK selection) were not; not called yet.
   Future<Map<String, List<String>>> getApkAbisByUrl(App app) async {
     if (hostChanged && !hostIdenticalDespiteAnyChange) return const {};
     final appId = await tryInferringAppId(app.url);

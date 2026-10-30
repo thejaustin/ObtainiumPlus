@@ -7,6 +7,25 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-29 — Claude: Analyzer Warning Cleanup (99 → 5)
+
+- **Mechanical fixes:** `dart fix` for unused/duplicate imports, unnecessary `!`/`?.`/null checks and an unused catch stack. Dead locals/consts/helpers were removed by hand: `_bgUpdate*` consts, `getCategoryCollapsibleTile`, `_smallSpinner`, `_isReleaseYoungerThanMinAge`, and main.dart's `hide bgUpdateCheck` and two unused text consts. Four files that were unformatted at HEAD (`app_actions_context_menu`, `command_center`, `settings_subpage`, `app.dart`) were deliberately **not** reformatted, to keep the diff small.
+- **Real bugs found:**
+  - **`generated_form_renderer.dart` sub-form remove:**
+    - It stored an untyped `List.from`, which crashed the next build (`List<dynamic>` is not a `List<Map>`).
+    - It had no `setState`.
+    - It bumped a stale `_subFormGenerationCount` instead of `_subFormGenerations[fieldKey]`, so later entries kept the removed row's state.
+    - Fixed. The builder also normalizes untyped lists. Test: `generated_form_subform_test.dart`, which fails without the fix.
+  - **`apps.dart` `catchError` handlers** returned `<String>[]` on a `Future<Null>` chain, which threw a second, uncaught error. Fixed.
+- **Kept on purpose (5 warnings):**
+  - RuStore `_downloadLinkUrl`/`_getSecureSession`, and F-Droid `getApkAbisByUrl` (its `@override` was dropped and a comment added). These are **partial upstream ports**: the hook and caller were never merged, so the "Single-ABI F-Droid Filter" in the 1.7.3-p1 notes isn't actually wired up. Wiring it needs device testing.
+  - `error_app` `_showRepair` and `onboarding` `_isSamsung`: they're set but never read, which looks like unfinished UI.
+  - Sentry `profilesSampleRate` is experimental.
+- **Also noted:** there are two live `GeneratedForm` implementations. `generated_form.dart` is used by modals/selection, and `generated_form_renderer.dart` by pages.
+- Suite 552/552.
+
+---
+
 ## 2026-10-29 — Claude: GitHub ETag Conditional Requests
 
 - **`lib/services/github_etag_cache.dart`:** gzipped per-URL cache files (sha1 names) in temp `github_etag_cache/`, with LRU pruning (600 entries / 40MB, checked every 50 writes). `GitHub.sourceRequest` (a new override) sends `If-None-Match` for `api.github.com` GETs and turns a 304 back into a 200 with the cached body, keeping the 304's rate-limit headers.

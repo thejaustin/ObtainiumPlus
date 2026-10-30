@@ -18,7 +18,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/pages/home.dart';
-import 'package:obtainium/providers/apps_provider.dart' hide bgUpdateCheck;
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:obtainium/providers/logs_provider.dart' hide AppLogger;
@@ -89,9 +89,6 @@ final Set<Locale> supportedLocaleSet = supportedLocales
     .toSet();
 const localeDir = 'assets/translations';
 bool isFdroidBuild = false;
-
-const String _unexpectedErrorText = 'An unexpected error occurred.';
-const String _closeText = 'Close';
 
 /// Global navigator key, used to navigate from outside the widget tree
 /// (e.g. tapping a notification).

@@ -23,6 +23,8 @@
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
 ### 🛡️ Fixes
+- **Removing an HTML Source Step or Header No Longer Breaks the Form**: Deleting an intermediate link step or a request header from an HTML-source app (Add App or app options) could replace that part of the form with an error box. It now removes just that entry, and the entries after it keep their own values.
+- **Fixed Error Pop-Ups After Failed Updates**: When an update or install started from the apps list failed, a second hidden error could follow the error message. It's gone.
 - **Backups No Longer Include Per-App Tokens Unless Asked**: Exports, including auto-exports, made without the "include credentials" option no longer contain access tokens saved on individual apps (for example, a token for a self-hosted GitHub or GitLab).
 - **Updated App Icons Show Up**: If an app's icon changes in an update, including updates made outside Obtainium+, the new icon is now loaded instead of the old cached one.
 
