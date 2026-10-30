@@ -541,6 +541,10 @@
   "updateX": "更新 {}",
   "updates": "更新",
   "updatesAvailable": "更新可用",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "更新可用",
   "updatesAvailableNotifDescription": "Obtainium 追踪的应用有更新时发送通知",
   "url": {

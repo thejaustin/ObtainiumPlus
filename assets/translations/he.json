@@ -557,6 +557,10 @@
   "updateX": "עדכון {}",
   "updates": "עדכונים",
   "updatesAvailable": "עדכונים זמינים",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "עדכונים זמינים",
   "updatesAvailableNotifDescription": "התראה למשתמש על עצם כך שיש עדכונים זמינים ליישום אחד או יותר שבמעקב בתוך Updatium",
   "url": {

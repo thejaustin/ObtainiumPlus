@@ -7,6 +7,18 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-29 — Claude: Update-Check Consolidation, Host-Aware Scheduling & Progress Motion
+
+- **Dead-code trap fixed:** `AppsProvider` had instance methods `checkUpdate`/`checkUpdates`/`getAppsSortedByUpdateCheckTime` that *shadowed* the same-named members of the `AppsProviderUpdates` extension (instance members always win in Dart). The extension versions (ported from upstream in Sep) never ran, so in production: disabled apps and excluded categories were still checked, `consecutiveFailedChecks` was never incremented (Update Health's failed-check warning could never fire), failed apps weren't backed off (#3187), the TLS-handshake retry and APKMirror `prefetchUpdateInfo` never ran, and every app was saved and notified individually. The extension copies are deleted. The live class methods now call the extension's `fetchUpdate`/`fetchUpdateWithHandshakeRetry`.
+- **Kept caller contracts:** errors are still thrown as `Map{'errors','updates'}`. Still kept: the `gettingUpdates` early return, the `ignoreAppsCheckedAfter`/`usp` params, `refreshTotal`/`checkingUpdateIds`, the 90s per-app timeout, and the `updateCheckConcurrencyLimit` user setting. The single-app `checkUpdate` still saves immediately.
+- **New `KeyedWorkQueue` (`lib/services/keyed_work_queue.dart`):** hands out work round-robin by host, with at most 3 in flight per host (`_maxUpdateChecksPerHost`). It's separate from `HostRequestGate`, because sharing that gate's per-host state would deadlock APKMirror's inner gated requests. Batch results are saved every 3s. A retryable error under `throwErrorsForRetry` calls `queue.clear()` so the other workers stop sending requests.
+- **GitHub API fail-fast (`github.dart`):** `rateLimitErrorCheck` records the reset time per auth class (anonymous or token) for `api.github.com`. While it's set, `fetchReleaseDetailsWithTagFallback` goes straight to the Atom-feed fallback.
+- **Motion:** in `active_operations_banner.dart`, the new `_UpdateCheckProgress` tweens progress and the counter (with tabular figures), and shows a `refreshFound` "N updates found" pill (new `updatesFound` plural key in all locales). The bulk download bar is tweened too. In `app_grid_tile.dart`, the progress strip uses AnimatedSwitcher/AnimatedSize. All motion is gated on `plusEnableEnhancedAnimations` and `MediaQuery.disableAnimationsOf`.
+- **Tests:** `test/keyed_work_queue_test.dart`. Full suite: 543/543.
+- **Left uncommitted from the Antigravity session:** `tool/preview.sh` and `tool/preview/settings_preview_test.dart`, which render Settings to PNG and show them with chafa. They work, but the run reports a failure from a `getDeviceInfo` MissingPluginException (it needs a mock channel), and some labels render as Ahem boxes. Still open from that session: the Changelog/What's New width is still 840 (should be 1040), the Plus Features sheet still has hardcoded strings, and the dialog inner boxes still use 12dp corners instead of the M3E shapes.
+
+---
+
 ## 2026-10-30 — Antigravity: Connected Sub-Setting Surfaces, Full-Row ToggleTile & Sheet/Card M3E Geometry
 
 - **`ConnectedSettingContainer` on a real `Material` surface (`lib/components/settings/connected_setting_container.dart`):** Replaced the `Stack` + `DecoratedBox` background with `Material(shape: CardMetrics.shape(..., expressive: isM3E), clipBehavior: Clip.antiAlias)`. Nested `ListTile`/`SwitchListTile` ink splashes now render on and clip to the container (they used to paint underneath the decoration), and the accent rail is clipped by the squircle instead of a separate `ClipRRect`.

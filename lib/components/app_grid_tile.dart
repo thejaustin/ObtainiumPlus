@@ -1240,85 +1240,119 @@ class _AppGridTileState extends State<AppGridTile>
         final isChecking = ctx.select<AppsProvider, bool>(
           (p) => p.checkingUpdateIds.contains(widget.appInMemory.app.id),
         );
+        final animate =
+            ctx.select<PlusSettingsProvider, bool>(
+              (p) => p.plusEnableEnhancedAnimations,
+            ) &&
+            !MediaQuery.disableAnimationsOf(ctx);
         return ValueListenableBuilder<double?>(
           valueListenable: widget.appInMemory.downloadProgressNotifier,
           builder: (context, downloadProgress, child) {
-            if (downloadProgress != null) {
-              return Padding(
-                padding: const EdgeInsets.only(top: 5),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            () {
-                              if (downloadProgress < 0) {
-                                final total =
-                                    widget.appInMemory.downloadTotalBytes;
-                                return total != null && total > 0
-                                    ? '${tr('installing')} · ${formatBytes(total)}'
-                                    : tr('installing');
-                              }
-                              final speed = formatSpeed(
-                                widget.appInMemory.downloadSpeedBytesPerSec,
-                              );
-                              final safePercent =
-                                  (downloadProgress.isNaN ||
-                                      downloadProgress.isInfinite)
-                                  ? 0
-                                  : downloadProgress.toInt();
-                              return speed != null
-                                  ? '$safePercent% · $speed'
-                                  : '$safePercent%';
-                            }(),
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                        ),
-                        if (downloadProgress >= 0)
-                          GestureDetector(
-                            onTap: () {
-                              context.read<AppsProvider>().cancelDownload(
-                                widget.appInMemory.app.id,
-                              );
-                            },
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 2),
-                              child: Icon(Icons.close_rounded, size: 13),
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    ExpressiveProgressIndicator(
-                      value: downloadProgress >= 0
-                          ? downloadProgress / 100
-                          : null,
-                      height: 3.5,
-                    ),
-                  ],
+            final content = _progressContent(
+              context,
+              downloadProgress,
+              isChecking,
+            );
+            if (!animate) return content;
+            // Fade/resize between idle, checking and downloading instead of
+            // popping the strip in and out as a batch check sweeps the grid.
+            return AnimatedSize(
+              duration: const Duration(milliseconds: 220),
+              curve: Easing.emphasizedDecelerate,
+              alignment: Alignment.topCenter,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Easing.emphasizedDecelerate,
+                switchOutCurve: Easing.emphasizedAccelerate,
+                child: KeyedSubtree(
+                  key: ValueKey(
+                    downloadProgress != null
+                        ? 'progress'
+                        : (isChecking ? 'checking' : 'idle'),
+                  ),
+                  child: content,
                 ),
-              );
-            }
-            if (isChecking) {
-              return const Padding(
-                padding: EdgeInsets.only(top: 6),
-                child: ExpressiveProgressIndicator(value: null, height: 2),
-              );
-            }
-            return const SizedBox.shrink();
+              ),
+            );
           },
         );
       },
     );
+  }
+
+  Widget _progressContent(
+    BuildContext context,
+    double? downloadProgress,
+    bool isChecking,
+  ) {
+    if (downloadProgress != null) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 5),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    () {
+                      if (downloadProgress < 0) {
+                        final total = widget.appInMemory.downloadTotalBytes;
+                        return total != null && total > 0
+                            ? '${tr('installing')} · ${formatBytes(total)}'
+                            : tr('installing');
+                      }
+                      final speed = formatSpeed(
+                        widget.appInMemory.downloadSpeedBytesPerSec,
+                      );
+                      final safePercent =
+                          (downloadProgress.isNaN ||
+                              downloadProgress.isInfinite)
+                          ? 0
+                          : downloadProgress.toInt();
+                      return speed != null
+                          ? '$safePercent% · $speed'
+                          : '$safePercent%';
+                    }(),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                ),
+                if (downloadProgress >= 0)
+                  GestureDetector(
+                    onTap: () {
+                      context.read<AppsProvider>().cancelDownload(
+                        widget.appInMemory.app.id,
+                      );
+                    },
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 2),
+                      child: Icon(Icons.close_rounded, size: 13),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 3),
+            ExpressiveProgressIndicator(
+              value: downloadProgress >= 0 ? downloadProgress / 100 : null,
+              height: 3.5,
+            ),
+          ],
+        ),
+      );
+    }
+    if (isChecking) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 6),
+        child: ExpressiveProgressIndicator(value: null, height: 2),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   String _buildSemanticLabel() {

@@ -541,6 +541,10 @@
   "updateX": "Nadogradi {}",
   "updates": "Nadogradnje",
   "updatesAvailable": "Dostupna ažuriranja",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Dostupna ažuriranja",
   "updatesAvailableNotifDescription": "Obavještava korisnika da su ažuriranja dostupna za jednu ili više aplikacija koje prati Obtainium",
   "url": {

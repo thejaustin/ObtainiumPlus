@@ -4,6 +4,13 @@ All notable changes to Obtainium+ are documented in this file.
 
 ## [Unreleased]
 
+### ⚡ Update Checks
+- **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 requests at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.
+- **Fewer Wasted GitHub Requests**: Once GitHub's API rate limit is reached, the remaining GitHub apps go straight to the releases feed until the limit resets, instead of each one failing against the API first.
+- **Excluded Categories & Disabled Apps Are Skipped**: Update checks now skip apps in categories you excluded from checks, and apps with checking disabled. Before this fix, both were still checked.
+- **Failing Apps Back Off**: An app whose check fails is not retried on every background run; it waits one full update interval. Repeated failures now count toward Update Health's failed-checks warning, which previously never triggered.
+- **Smoother Update Progress**: The update-check bar and counter glide between steps instead of jumping, a live "N updates found" pill appears as updates turn up, and the progress strips on app tiles fade in and out. The bulk download bar also eases between steps.
+
 ---
 
 ## [v1.7.1-p2] - 2026-10-18

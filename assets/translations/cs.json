@@ -549,6 +549,10 @@
   "updateX": "Aktualizovat {}",
   "updates": "Aktualizace",
   "updatesAvailable": "Dostupné aktualizace",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Dostupné aktualizace",
   "updatesAvailableNotifDescription": "Upozorňuje uživatele, že jsou k dispozici aktualizace pro jednu nebo více aplikací sledovaných Obtainium",
   "url": {

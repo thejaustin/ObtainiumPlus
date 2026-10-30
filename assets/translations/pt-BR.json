@@ -541,6 +541,10 @@
   "updateX": "Atualizar {}",
   "updates": "Atualizações",
   "updatesAvailable": "Atualizações disponíveis",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Atualizações disponíveis",
   "updatesAvailableNotifDescription": "Notifica o usuário que atualizações estão disponíveis para um ou mais apps rastreados pelo Obtainium",
   "url": {

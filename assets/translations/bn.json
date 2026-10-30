@@ -541,6 +541,10 @@
   "updateX": "{} আপডেট করুন",
   "updates": "আপডেটসমূহ",
   "updatesAvailable": "আপডেট উপলব্ধ",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "আপডেটসমূহ উপলব্ধ",
   "updatesAvailableNotifDescription": "Obtainium দ্বারা ট্র্যাক করা এক বা একাধিক অ্যাপের আপডেট পাওয়া গেলে ব্যবহারকারীকে জানানো হয়",
   "url": {

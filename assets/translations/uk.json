@@ -541,6 +541,10 @@
   "updateX": "Оновити {}",
   "updates": "Оновлення",
   "updatesAvailable": "Доступні оновлення",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Доступні оновлення",
   "updatesAvailableNotifDescription": "Повідомляє користувача, що доступні оновлення для одного чи декількох застосунків, які відстежує Obtainium",
   "url": {

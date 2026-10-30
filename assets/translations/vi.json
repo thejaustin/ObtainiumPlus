@@ -541,6 +541,10 @@
   "updateX": "Cập nhật {}",
   "updates": "Cập nhật",
   "updatesAvailable": "Cập nhật có sẵn",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Cập nhật có sẵn",
   "updatesAvailableNotifDescription": "Thông báo cho người dùng rằng có bản cập nhật cho một hoặc nhiều Ứng dụng được theo dõi bởi Obtainium",
   "url": {

@@ -45,6 +45,23 @@ bool isReleaseExcluded(
 class GitHub extends AppSource {
   static const int _fallbackCacheSeconds = 3600;
 
+  /// When the GitHub API last reported an exhausted quota, keyed by whether
+  /// the request was authenticated (anonymous and token quotas are separate).
+  /// While set, release lookups skip the API and go straight to the Atom
+  /// feed, so a large update check doesn't spend one doomed request per app.
+  static final Map<bool, DateTime> _apiBlockedUntil = {};
+
+  static int? _apiBlockedMinutes(bool authenticated) {
+    final until = _apiBlockedUntil[authenticated];
+    if (until == null) return null;
+    final remaining = until.difference(DateTime.now());
+    if (remaining.isNegative) {
+      _apiBlockedUntil.remove(authenticated);
+      return null;
+    }
+    return (remaining.inSeconds / 60).ceil().clamp(1, 9999);
+  }
+
   GitHub({bool hostChanged = false}) {
     name = 'GitHub';
     hosts = ['github.com'];
@@ -1092,9 +1109,24 @@ class GitHub extends AppSource {
     Future<String> Function(bool) reqUrlGenerator,
     dynamic Function(Response)? onHttpErrorCode,
   ) async {
+    final apiUrl = await reqUrlGenerator(false);
+    if (Uri.tryParse(apiUrl)?.host == 'api.github.com') {
+      final authenticated =
+          additionalSettings['skipAuth'] != true &&
+          (await getTokenIfAny(additionalSettings))?.isNotEmpty == true;
+      final blockedMinutes = _apiBlockedMinutes(authenticated);
+      if (blockedMinutes != null) {
+        try {
+          return await _fallbackScrapeReleases(standardUrl, additionalSettings);
+        } catch (fallbackErr) {
+          talker.warning('GitHub Atom fallback scraper failed: $fallbackErr');
+          throw RateLimitError(blockedMinutes);
+        }
+      }
+    }
     try {
       return await _fetchReleaseDetails(
-        await reqUrlGenerator(false),
+        apiUrl,
         standardUrl,
         additionalSettings,
         onHttpErrorCode: onHttpErrorCode,
@@ -1299,6 +1331,15 @@ class GitHub extends AppSource {
       final remainingMinutes = ((resetEpochSeconds - nowSeconds) / 60)
           .ceil()
           .clamp(1, 9999);
+      final request = res.request;
+      if (request?.url.host == 'api.github.com') {
+        final authenticated = request!.headers.keys.any(
+          (k) => k.toLowerCase() == HttpHeaders.authorizationHeader,
+        );
+        _apiBlockedUntil[authenticated] = DateTime.fromMillisecondsSinceEpoch(
+          resetEpochSeconds * 1000,
+        );
+      }
       throw RateLimitError(remainingMinutes);
     }
   }

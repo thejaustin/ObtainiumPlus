@@ -541,6 +541,10 @@
   "updateX": "به روز رسانی {}",
   "updates": "به روز رسانی ها",
   "updatesAvailable": "بروزرسانی در دسترس ",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "بروزرسانی در دسترس ",
   "updatesAvailableNotifDescription": "به کاربر اطلاع می دهد که به روز رسانی برای یک یا چند برنامه ردیابی شده توسط Obtainium در دسترس است",
   "url": {

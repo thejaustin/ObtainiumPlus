@@ -541,6 +541,10 @@
   "updateX": "Perbarui {}",
   "updates": "Pembaruan",
   "updatesAvailable": "Pembaruan tersedia",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Pembaruan tersedia",
   "updatesAvailableNotifDescription": "Memberi tahu pengguna bahwa pembaruan tersedia untuk aplikasi yang dilacak oleh Obtainium",
   "url": {

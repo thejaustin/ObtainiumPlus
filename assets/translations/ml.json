@@ -541,6 +541,10 @@
   "updateX": "{} അപ്‌ഡേറ്റ് ചെയ്യുക",
   "updates": "അപ്‌ഡേറ്റുകൾ",
   "updatesAvailable": "അപ്‌ഡേറ്റുകൾ ലഭ്യമാണ്",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "അപ്‌ഡേറ്റുകൾ ലഭ്യമാണ്",
   "updatesAvailableNotifDescription": "ഒബ്‌റ്റേനിയം ട്രാക്ക് ചെയ്യുന്ന ഒന്നോ അതിലധികമോ ആപ്പുകൾക്ക് അപ്‌ഡേറ്റുകൾ ലഭ്യമാണെന്ന് ഉപയോക്താവിനെ അറിയിക്കുന്നു",
   "url": {

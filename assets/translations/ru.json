@@ -554,6 +554,10 @@
   "updateX": "Обновить {}",
   "updates": "Обновления",
   "updatesAvailable": "Доступны обновления",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Доступны обновления",
   "updatesAvailableNotifDescription": "Уведомляет о наличии обновлений для одного или нескольких приложений в Obtainium",
   "url": {

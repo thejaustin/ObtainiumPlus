@@ -547,6 +547,10 @@
   "updateX": "Update {}",
   "updates": "Updates",
   "updatesAvailable": "Updates available",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Updates available",
   "updatesAvailableNotifDescription": "Notifies the user that updates are available for one or more apps tracked by Obtainium",
   "url": {

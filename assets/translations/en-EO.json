@@ -541,6 +541,10 @@
   "updateX": "Ĝisdatigi {}",
   "updates": "Ĝisdatigoj",
   "updatesAvailable": "Haveblaj ĝisdatigoj",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Haveblaj ĝisdatigoj",
   "updatesAvailableNotifDescription": "Sciigas al la uzanto, ke ĝisdatigoj haveblas por unu aŭ pluraj apoj sekvitaj fare de Obtainium.",
   "url": {

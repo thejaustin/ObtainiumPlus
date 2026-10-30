@@ -635,6 +635,10 @@
   "updateX": "Ενημέρωση {}",
   "updates": "Ενημερώσεις",
   "updatesAvailable": "Διαθέσιμες ενημερώσεις",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Διαθέσιμες ενημερώσεις",
   "updatesAvailableNotifDescription": "Ειδοποιεί τον χρήστη ότι υπάρχουν διαθέσιμες ενημερώσεις για μία ή περισσότερες εφαρμογές που παρακολουθεί το Obtainium",
   "url": {

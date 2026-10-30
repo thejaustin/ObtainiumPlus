@@ -541,6 +541,10 @@
   "updateX": "حدِّث {}",
   "updates": "التحديثات",
   "updatesAvailable": "تحديثات متاحة",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "تتوفّر تحديثات",
   "updatesAvailableNotifDescription": "يخطر المستخدم بوجود تحديثات لواحد أو أكثر من التطبيقات التي يتعقبها Obtainium",
   "url": {

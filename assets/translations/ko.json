@@ -541,6 +541,10 @@
   "updateX": "{} 업데이트",
   "updates": "업데이트",
   "updatesAvailable": "업데이트 가능",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "업데이트 가능",
   "updatesAvailableNotifDescription": "Obtainium이 추적하는 하나 이상의 앱에 대한 업데이트가 있음을 사용자에게 알립니다",
   "url": {

@@ -541,6 +541,10 @@
   "updateX": "{} frissítése",
   "updates": "Frissítések",
   "updatesAvailable": "Frissítések érhetők el",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Frissítések érhetők el",
   "updatesAvailableNotifDescription": "Értesíti a felhasználót, hogy egy vagy több, az Obtainium által nyomon követett alkalmazáshoz frissítések állnak rendelkezésre",
   "url": {

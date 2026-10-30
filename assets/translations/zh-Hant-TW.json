@@ -541,6 +541,10 @@
   "updateX": "更新 {}",
   "updates": "更新",
   "updatesAvailable": "有可用的更新",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "有可用的更新",
   "updatesAvailableNotifDescription": "當 Obtainium 追蹤的一個或多個應用程式有可用更新時，通知使用者",
   "url": {

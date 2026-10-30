@@ -541,6 +541,10 @@
   "updateX": "{} をアップデートする",
   "updates": "アップデート",
   "updatesAvailable": "アップデートが利用可能",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "アップデートが利用可能",
   "updatesAvailableNotifDescription": "Obtainiumが追跡している1つまたは複数のアプリのアップデートが利用可能であることをユーザーに通知する",
   "url": {

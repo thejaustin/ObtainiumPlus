@@ -125,70 +125,11 @@ class ActiveOperationsBanner extends StatelessWidget {
                           children: [
                             // In-Flight Update Checks
                             if (isCheckingUpdates) ...[
-                              Row(
-                                children: [
-                                  SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: ExpressiveCircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Text(
-                                      tr('checkingForUpdates'),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleSmall
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: colorScheme.onSurface,
-                                          ),
-                                    ),
-                                  ),
-                                  ListenableBuilder(
-                                    listenable: Listenable.merge([
-                                      appsProvider.refreshProgress,
-                                      appsProvider.refreshTotal,
-                                    ]),
-                                    builder: (context, _) {
-                                      final progress =
-                                          appsProvider.refreshProgress.value;
-                                      if (progress == null || progress <= 0) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      final total =
-                                          appsProvider.refreshTotal.value;
-                                      final label = total > 0
-                                          ? '${(progress * total).round()} / $total'
-                                          : '${(progress * 100).toInt()}%';
-                                      return Text(
-                                        label,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: colorScheme.primary,
-                                            ),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              ValueListenableBuilder<double?>(
-                                valueListenable: appsProvider.refreshProgress,
-                                builder: (context, progress, _) {
-                                  return ExpressiveProgressIndicator(
-                                    value: (progress != null && progress > 0)
-                                        ? progress
-                                        : null,
-                                    height: 4,
-                                  );
-                                },
+                              _UpdateCheckProgress(
+                                appsProvider: appsProvider,
+                                animate:
+                                    animationsEnabled &&
+                                    !MediaQuery.disableAnimationsOf(context),
                               ),
                               if (activeDownloads.isNotEmpty)
                                 const Padding(
@@ -289,6 +230,158 @@ class ActiveOperationsBanner extends StatelessWidget {
                 ),
               ),
             ),
+    );
+  }
+}
+
+/// Batch update-check header: count, a pill tallying updates found so far,
+/// and the progress bar. Progress arrives in per-app steps; tweening it keeps
+/// the bar and counter gliding instead of jumping as each check finishes.
+class _UpdateCheckProgress extends StatelessWidget {
+  final AppsProvider appsProvider;
+  final bool animate;
+
+  const _UpdateCheckProgress({
+    required this.appsProvider,
+    required this.animate,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final duration = Duration(milliseconds: animate ? 450 : 0);
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        appsProvider.refreshProgress,
+        appsProvider.refreshTotal,
+        appsProvider.refreshFound,
+      ]),
+      builder: (context, _) {
+        final progress = appsProvider.refreshProgress.value;
+        final total = appsProvider.refreshTotal.value;
+        final found = appsProvider.refreshFound.value;
+        final determinate = progress != null && progress > 0;
+        return TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: determinate ? progress : 0.0),
+          duration: duration,
+          curve: Easing.emphasizedDecelerate,
+          builder: (context, shown, _) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: ExpressiveCircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        tr('checkingForUpdates'),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                        ),
+                      ),
+                    ),
+                    if (determinate)
+                      Text(
+                        total > 0
+                            ? '${(shown * total).round()} / $total'
+                            : '${(shown * 100).round()}%',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                          // Fixed-width digits so the counter doesn't jitter.
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                  ],
+                ),
+                AnimatedSwitcher(
+                  duration: duration,
+                  switchInCurve: Easing.emphasizedDecelerate,
+                  switchOutCurve: Easing.emphasizedAccelerate,
+                  transitionBuilder: (child, animation) => SizeTransition(
+                    sizeFactor: animation,
+                    alignment: Alignment.topCenter,
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(
+                        scale: Tween<double>(
+                          begin: 0.9,
+                          end: 1,
+                        ).animate(animation),
+                        alignment: Alignment.centerLeft,
+                        child: child,
+                      ),
+                    ),
+                  ),
+                  child: found > 0
+                      ? Padding(
+                          key: const ValueKey('found'),
+                          padding: const EdgeInsets.only(top: 8),
+                          child: _FoundUpdatesPill(count: found),
+                        )
+                      : const SizedBox(key: ValueKey('none'), width: 0),
+                ),
+                const SizedBox(height: 10),
+                ExpressiveProgressIndicator(
+                  value: determinate ? shown : null,
+                  height: 4,
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FoundUpdatesPill extends StatelessWidget {
+  final int count;
+
+  const _FoundUpdatesPill({required this.count});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    return DecoratedBox(
+      decoration: ShapeDecoration(
+        shape: const StadiumBorder(),
+        color: colorScheme.secondaryContainer,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.upgrade_rounded,
+              size: 14,
+              color: colorScheme.onSecondaryContainer,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              plural('updatesFound', count),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSecondaryContainer,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -529,7 +622,22 @@ class _BulkSummaryRow extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 10),
-        ExpressiveProgressIndicator(value: fraction, height: 4),
+        // Whole apps finishing move the aggregate in big steps; glide them.
+        TweenAnimationBuilder<double>(
+          tween: Tween<double>(end: fraction),
+          duration: Duration(
+            milliseconds:
+                context.select<PlusSettingsProvider, bool>(
+                      (p) => p.plusEnableEnhancedAnimations,
+                    ) &&
+                    !MediaQuery.disableAnimationsOf(context)
+                ? 450
+                : 0,
+          ),
+          curve: Easing.emphasizedDecelerate,
+          builder: (context, shown, _) =>
+              ExpressiveProgressIndicator(value: shown, height: 4),
+        ),
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(

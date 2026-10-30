@@ -51,6 +51,8 @@ import 'package:provider/provider.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_fgbg/flutter_fgbg.dart';
 import 'package:obtainium/providers/source_provider.dart';
+import 'package:obtainium/services/keyed_work_queue.dart';
+import 'package:obtainium/utils/update_health.dart' show shouldCountFailedCheck;
 import 'package:http/http.dart';
 import 'package:android_intent_plus/android_intent.dart';
 import 'package:android_intent_plus/flag.dart';
@@ -856,6 +858,9 @@ class AppsProvider with ChangeNotifier {
   /// list pipeline on every listener each tick and stutter the UI).
   final ValueNotifier<double?> refreshProgress = ValueNotifier<double?>(null);
   final ValueNotifier<int> refreshTotal = ValueNotifier<int>(0);
+
+  /// Updates found so far by the running batch check.
+  final ValueNotifier<int> refreshFound = ValueNotifier<int>(0);
   LogsProvider logs = LogsProvider();
 
   bool isSelectionMode = false;
@@ -2824,65 +2829,59 @@ class AppsProvider with ChangeNotifier {
 
   Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {
     // apps[appId] can go missing if the app was removed/untracked while
-    // this check was queued (e.g. a concurrent batch checkUpdates() slot,
-    // or the detail page's own auto-check racing a removal elsewhere) (#227).
-    App? currentApp = apps[appId]?.app;
+    // this check was queued (e.g. the detail page's own auto-check racing a
+    // removal elsewhere) (#227).
+    final App? currentApp = apps[appId]?.app;
     if (currentApp == null) {
-      return null;
-    }
-    // Pause update checks until the user resolves a pending repo rename.
-    if (currentApp.hasPendingRepoRename) {
       return null;
     }
     // Spinner state only: _notifyUiOnly avoids invalidating the apps memo,
     // which made every per-app tick re-filter/sort the whole list (#330).
     checkingUpdateIds.add(appId);
-    final batch = gettingUpdates;
-    batch ? _throttledNotify(full: false) : _notifyUiOnly();
+    _notifyUiOnly();
     try {
-      SourceProvider sourceProvider = SourceProvider();
-      App newApp = await sourceProvider
-          .getApp(
-            sourceProvider.getSource(
-              currentApp.url,
-              overrideSource: currentApp.overrideSource,
-            ),
-            currentApp.url,
-            currentApp.additionalSettings,
-            currentApp: currentApp,
-          )
-          // A source that stalls mid-response must not hold a worker slot
-          // (and the whole check) forever.
-          .timeout(const Duration(seconds: 90));
-      if (currentApp.preferredApkIndex < newApp.apkUrls.length) {
-        newApp.preferredApkIndex = currentApp.preferredApkIndex;
-      }
-      AppLogger.trace(
-        'Update check for ${currentApp.name}: '
-        'installed ${currentApp.installedVersion ?? '-'}, '
-        'latest ${newApp.latestVersion}',
-      );
+      final App? newApp = await fetchUpdateWithHandshakeRetry(
+        appId,
+      ).timeout(_updateCheckTimeout);
+      if (newApp == null) return null;
       // Reuse cached PackageInfo/icon: installed version doesn't change during
       // a sync, and re-querying it per app is an expensive platform-channel
       // call. loadApps() and the FGBG refresh keep the cached info fresh.
-      await saveApps(
-        [newApp],
-        reuseInstalledInfo: true,
-        // A batch check notifies once at the end anyway.
-        throttleNotify: batch,
-      );
+      await saveApps([newApp], reuseInstalledInfo: true);
       return newApp.latestVersion != currentApp.latestVersion ? newApp : null;
     } finally {
       checkingUpdateIds.remove(appId);
-      batch ? _throttledNotify(full: false) : _notifyUiOnly();
+      _notifyUiOnly();
     }
   }
 
+  /// A source that stalls mid-response must not hold a worker slot (and the
+  /// whole check) forever.
+  static const Duration _updateCheckTimeout = Duration(seconds: 90);
+
+  /// Most checks sent to one host at a time, whatever the overall concurrency
+  /// setting. Keeps big lists (often mostly GitHub) from bursting one host and
+  /// lets apps on other hosts proceed meanwhile.
+  static const int _maxUpdateChecksPerHost = 3;
+
+  /// How often a batch check persists finished results. Saving per app made
+  /// every check rewrite and re-render the list.
+  static const Duration _updateCheckSaveInterval = Duration(seconds: 3);
+
+  /// Returns the IDs of apps that update checks cover (not disabled, not in a
+  /// category excluded from checks), least recently checked first.
   List<String> getAppsSortedByUpdateCheckTime({
     DateTime? ignoreAppsCheckedAfter,
     bool onlyCheckInstalledOrTrackOnlyApps = false,
   }) {
+    final excludedCategories = settingsProvider.categoriesExcludedFromChecks;
     List<String> appIds = apps.values
+        .where((app) => !app.app.disabled)
+        .where(
+          (app) =>
+              excludedCategories.isEmpty ||
+              !app.app.categories.any(excludedCategories.contains),
+        )
         .where(
           (app) =>
               app.app.lastUpdateCheck == null ||
@@ -2922,7 +2921,15 @@ class AppsProvider with ChangeNotifier {
     MultiAppMultiError errors = MultiAppMultiError();
     if (!gettingUpdates) {
       gettingUpdates = true;
+      refreshFound.value = 0;
       notify();
+      // Finished results waiting for the next periodic save.
+      final List<App> fetched = [];
+      // Failed checks still advance the app's check time so background runs
+      // don't retry them every 15 minutes; they become due again after one
+      // full update interval. Value: whether the failure counts toward the
+      // Update Health failed-checks threshold.
+      final Map<String, bool> failedIds = {};
       try {
         List<String> appIds = getAppsSortedByUpdateCheckTime(
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
@@ -2930,7 +2937,8 @@ class AppsProvider with ChangeNotifier {
               updateSettings.onlyCheckInstalledOrTrackOnlyApps,
         );
         if (specificIds != null) {
-          appIds = appIds.where((aId) => specificIds.contains(aId)).toList();
+          final wanted = specificIds.toSet();
+          appIds = appIds.where(wanted.contains).toList();
         }
 
         final int totalToProcess = appIds.length;
@@ -2951,40 +2959,148 @@ class AppsProvider with ChangeNotifier {
           }
         } catch (_) {}
 
-        await _runWithConcurrencyLimit<String>(
-          appIds,
-          settingsProvider.updateCheckConcurrencyLimit,
-          (appId) async {
-            App? newApp;
+        // Group by source so sources that support it (APKMirror) can fetch
+        // shared data once for the whole batch instead of once per app.
+        final sourceProvider = SourceProvider();
+        final prefetchGroups = <AppSource, List<App>>{};
+        final hostOf = <String, String>{};
+        for (final appId in appIds) {
+          final app = apps[appId]?.app;
+          if (app == null) continue;
+          hostOf[appId] = Uri.tryParse(app.url)?.host.toLowerCase() ?? '';
+          try {
+            final source = sourceProvider.getSource(
+              app.url,
+              overrideSource: app.overrideSource,
+            );
+            prefetchGroups.putIfAbsent(source, () => []).add(app);
+          } on ObtainiumError {
+            // The per-app check surfaces unsupported URLs.
+          }
+        }
+        await Future.wait(
+          prefetchGroups.entries.map((group) async {
             try {
-              newApp = await checkUpdate(appId);
+              await group.key.prefetchUpdateInfo(group.value);
             } catch (e) {
-              if ((e is RateLimitError || e is SocketException) &&
-                  throwErrorsForRetry) {
-                rethrow;
-              }
-              if (e is RepositoryRenamedError) {
-                await updatePendingRepoRename(appId, e.newUrl);
-              } else {
-                errors.add(appId, e, appName: apps[appId]?.name);
-              }
-            } finally {
-              completedCount++;
-              if (totalToProcess > 0) {
-                refreshProgress.value = completedCount / totalToProcess;
-              }
+              AppLogger.info('Update prefetch failed: $e');
             }
-            if (newApp != null) {
-              updates.add(newApp);
-            }
-          },
+          }),
         );
+
+        final queue = KeyedWorkQueue<String>(
+          appIds,
+          (id) => hostOf[id] ?? '',
+          perKeyLimit: _maxUpdateChecksPerHost,
+        );
+        var lastSaveTime = DateTime.now();
+
+        Future<void> checkOne(String appId) async {
+          final currentApp = apps[appId]?.app;
+          if (currentApp == null) return;
+          checkingUpdateIds.add(appId);
+          _throttledNotify(full: false);
+          try {
+            final newApp = await fetchUpdateWithHandshakeRetry(
+              appId,
+            ).timeout(_updateCheckTimeout);
+            if (newApp == null) return;
+            AppLogger.trace(
+              'Update check for ${currentApp.name}: '
+              'installed ${currentApp.installedVersion ?? '-'}, '
+              'latest ${newApp.latestVersion}',
+            );
+            fetched.add(newApp);
+            if (newApp.latestVersion != currentApp.latestVersion) {
+              updates.add(newApp);
+              refreshFound.value = updates.length;
+            }
+          } catch (e) {
+            if ((e is RateLimitError || e is SocketException) &&
+                throwErrorsForRetry) {
+              // The caller retries the whole run later; stop spending
+              // requests on the rest of this one.
+              queue.clear();
+              rethrow;
+            }
+            if (e is RepositoryRenamedError) {
+              await updatePendingRepoRename(appId, e.newUrl);
+            } else {
+              errors.add(appId, e, appName: apps[appId]?.name);
+              failedIds[appId] = shouldCountFailedCheck(e);
+            }
+          } finally {
+            checkingUpdateIds.remove(appId);
+            _throttledNotify(full: false);
+          }
+        }
+
+        Future<void> worker() async {
+          while (true) {
+            final appId = await queue.take();
+            if (appId == null) return;
+            try {
+              await checkOne(appId);
+            } finally {
+              queue.done(appId);
+              completedCount++;
+              refreshProgress.value = completedCount / totalToProcess;
+            }
+            if (fetched.isNotEmpty &&
+                DateTime.now().difference(lastSaveTime) >=
+                    _updateCheckSaveInterval) {
+              final batch = List<App>.from(fetched);
+              fetched.clear();
+              lastSaveTime = DateTime.now();
+              await saveApps(
+                batch,
+                reuseInstalledInfo: true,
+                throttleNotify: true,
+              );
+            }
+            // Yield so synchronous HTML/JSON parsing across many apps can't
+            // starve frame rendering (ANRs on lower-end devices).
+            await Future<void>.delayed(Duration.zero);
+          }
+        }
+
+        if (appIds.isNotEmpty) {
+          final workers = settingsProvider.updateCheckConcurrencyLimit.clamp(
+            1,
+            appIds.length,
+          );
+          await Future.wait(List.generate(workers, (_) => worker()));
+        }
       } finally {
-        gettingUpdates = false;
-        refreshProgress.value = null;
-        refreshTotal.value = 0;
-        checkingUpdateIds.clear();
-        notify();
+        try {
+          if (fetched.isNotEmpty) {
+            await saveApps(fetched, reuseInstalledInfo: true);
+          }
+          final now = DateTime.now();
+          final failedApps = [
+            for (final entry in failedIds.entries)
+              if (apps[entry.key]?.app case final app?)
+                app.copyWith(
+                  lastUpdateCheck: now,
+                  consecutiveFailedChecks: entry.value
+                      ? app.consecutiveFailedChecks + 1
+                      : app.consecutiveFailedChecks,
+                ),
+          ];
+          if (failedApps.isNotEmpty) {
+            await saveApps(
+              failedApps,
+              attemptToCorrectInstallStatus: false,
+              reuseInstalledInfo: true,
+            );
+          }
+        } finally {
+          gettingUpdates = false;
+          refreshProgress.value = null;
+          refreshTotal.value = 0;
+          checkingUpdateIds.clear();
+          notify();
+        }
       }
     }
     if (errors.idsByErrorString.isNotEmpty) {
@@ -3216,6 +3332,7 @@ class AppsProvider with ChangeNotifier {
     _eventSubscription?.cancel();
     refreshProgress.dispose();
     refreshTotal.dispose();
+    refreshFound.dispose();
     super.dispose();
   }
 

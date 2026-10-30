@@ -541,6 +541,10 @@
   "updateX": "{} bijwerken",
   "updates": "Bijwerken",
   "updatesAvailable": "Updates beschikbaar",
+  "updatesFound": {
+    "one": "{} update found",
+    "other": "{} updates found"
+  },
   "updatesAvailableNotifChannel": "Updates beschikbaar",
   "updatesAvailableNotifDescription": "Stelt de gebruiker op de hoogte dat er updates beschikbaar zijn voor een of meer apps die worden bijgehouden door Obtainium.",
   "url": {
