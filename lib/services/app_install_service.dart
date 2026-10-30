@@ -627,6 +627,9 @@ class AppInstallService {
               'existingVersionName': appInfo?.versionName,
               'wasInstalled': appInfo != null,
               'existingUpdateTime': appInfo?.lastUpdateTime,
+              // Android 14+: claim update ownership on first install so
+              // later updates can stay silent (upstream #3445).
+              'requestUpdateOwnership': appInfo == null,
             },
           );
         } on ShizukuUnavailableError {
@@ -969,6 +972,9 @@ class AppInstallService {
                 'existingVersionName': appInfo?.versionName,
                 'wasInstalled': appInfo != null,
                 'existingUpdateTime': appInfo?.lastUpdateTime,
+                // Android 14+: claim update ownership on first install so
+                // later updates can stay silent (upstream #3445).
+                'requestUpdateOwnership': appInfo == null,
               },
             );
             if (shizukuResult.isSuccess) {

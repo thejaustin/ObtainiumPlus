@@ -167,6 +167,11 @@ abstract class AppSource {
     return match.group(0)!;
   }
 
+  /// Supported ABIs per APK URL for [app]'s latest release, when the source
+  /// publishes them (F-Droid repos do). An empty list marks a universal APK;
+  /// a missing URL means unknown. Used to label choices in the APK picker.
+  Future<Map<String, List<String>>> getApkAbisByUrl(App app) async => const {};
+
   Future<Response> sourceRequest(
     String url,
     Map<String, dynamic> additionalSettings, {

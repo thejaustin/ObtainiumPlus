@@ -1666,9 +1666,22 @@ class AppsProvider with ChangeNotifier {
     }
     // get device supported architecture
     List<String> archs = (await DeviceInfoPlugin().androidInfo).supportedAbis;
+    // Label each APK with the architectures it supports when the source knows
+    // (F-Droid repos), so a multi-APK release isn't a guessing game.
+    var apkAbis = const <String, List<String>>{};
+    if (!pickAnyAsset && urlsToSelectFrom.length > 1 && context != null) {
+      try {
+        apkAbis = await SourceProvider()
+            .getSource(app.url, overrideSource: app.overrideSource)
+            .getApkAbisByUrl(app);
+      } catch (e) {
+        AppLogger.info('Failed to get APK ABI metadata: $e');
+      }
+    }
 
     if ((urlsToSelectFrom.length > 1 || evenIfSingleChoice) &&
-        context != null) {
+        context != null &&
+        context.mounted) {
       appFileUrl = await showDialog(
         // ignore: use_build_context_synchronously
         context: context,
@@ -1678,6 +1691,7 @@ class AppsProvider with ChangeNotifier {
             initVal: appFileUrl,
             archs: archs,
             pickAnyAsset: pickAnyAsset,
+            apkAbis: apkAbis,
           );
         },
       );
@@ -3442,12 +3456,17 @@ class AppFilePicker extends StatefulWidget {
     this.initVal,
     this.archs,
     this.pickAnyAsset = false,
+    this.apkAbis = const {},
   });
 
   final App app;
   final MapEntry<String, String>? initVal;
   final List<String>? archs;
   final bool pickAnyAsset;
+
+  /// Supported ABIs per APK URL, when the source provides them. An empty
+  /// list marks a universal APK.
+  final Map<String, List<String>> apkAbis;
 
   @override
   State<AppFilePicker> createState() => _AppFilePickerState();
@@ -3482,6 +3501,13 @@ class _AppFilePickerState extends State<AppFilePicker> {
           ...urlsToSelectFrom.map(
             (u) => RadioListTile<String>(
               title: Text(u.key),
+              subtitle: switch (widget.apkAbis[u.value]) {
+                null => null,
+                final abis when abis.isEmpty => Text(tr('universalApk')),
+                final abis => Text(
+                  tr('apkAbi', args: [list2FriendlyString(abis)]),
+                ),
+              },
               value: u.value,
               groupValue: fileUrl!.value,
               onChanged: (String? val) {

@@ -23,6 +23,9 @@
 - **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
 
 ### 🛡️ Fixes
+- **APK Architecture Labels**: When an F-Droid repo release has several APKs, the APK picker now shows which architecture each one is for, or marks it as universal.
+- **Detection Date Fix**: With "use detection date as release date" on, the first check after adding an app no longer invents a release date for a version that was already out.
+- **Silent Updates via Shizuku on Android 14+**: Apps first installed through Shizuku now claim update ownership, so later updates can install without a prompt.
 - **Fewer Fake "Updates" That Are Really Downgrades**: When an app's installed version has an extra label that its releases don't (for example `1.4.0-gplay`, `2.0.1 (201)` or `1.2.3-fdroid` against a `1.3.9` release), Obtainium+ couldn't tell which was newer and listed the older release as an update. It now compares the version numbers and stops offering older releases, and update notifications and background auto-updates skip them too.
 - **Removing an HTML Source Step or Header No Longer Breaks the Form**: Deleting an intermediate link step or a request header from an HTML-source app (Add App or app options) could replace that part of the form with an error box. It now removes just that entry, and the entries after it keep their own values.
 - **Fixed Error Pop-Ups After Failed Updates**: When an update or install started from the apps list failed, a second hidden error could follow the error message. It's gone.

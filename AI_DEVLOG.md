@@ -7,6 +7,22 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-10-30 — Claude: Upstream v1.7.3 Gap Check (by upstream tests)
+
+- **Method:** ported every `upstream/main:test/*` file the fork lacked and ran it. `upstream/dev` has nothing beyond `main`.
+- **Passing as-is:** `github_release_filter`, `probe_close`, `stale_update_notification`. `fdroid_repo_builds` passes after porting upstream's `FDroidRepo.getSupportedAbis()` hook, so be7fa0c9 is live. `app_info_dialog` passes after harness adaptations (positional `App` ctor, Flutter `MaterialApp` instead of `material_ui`, Plus provider).
+- **Were missing, now ported:**
+  - The `recordLatestVersionChange` detection-date guard (the first observation no longer fabricates a release date).
+  - The `AppSource.getApkAbisByUrl` hook, wired into the **live** `confirmAppFileUrl`/`AppFilePicker` in `apps_provider.dart`, which shows ABI subtitles. F-Droid gets its `@override` back.
+  - `requestUpdateOwnership: appInfo == null` on both live Shizuku install sites (#3445). Before this, only the dead extension set it.
+- **Dropped tests (UI drift; the features themselves are present):** `add_app_install_source` (Galaxy Store install source: the fork's Add App renders those switches without `ToggleTile`) and `search_profiles` (`SelectionModal` lives elsewhere).
+- **NOT ported (big upstream features from 2026-10-22):**
+  - **Embedded Cronet + Android trust store** (80bc82f8, ~1.6k lines). It needs Gradle KGP/AGP changes, a network_security_config, and an HttpService rewrite onto package:http clients.
+  - **User-managed certificate pins** (3fc108a4, ~4.1k lines: pin_store, pin_set_editor, certificate_bridge).
+  - Their tests (`http_service`, `pin_store`, `pinned_certificates`) were removed until those are ported. The fork's version string claims 1.7.3 parity, which these two contradict. Per AGENTS.md, either port them or adjust the claim.
+
+---
+
 ## 2026-10-29 — Claude: Downgrades Shown as Updates
 
 - **User report:** many apps show "updates" that are really downgrades.

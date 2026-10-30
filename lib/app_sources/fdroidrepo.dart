@@ -487,12 +487,17 @@ class FDroidRepo extends AppSource {
   ) async {
     if (versions.length <= 1) return versions;
     if (versions.every((v) => v.nativecode.isEmpty)) return versions;
-    final abis = (await DeviceInfoPlugin().androidInfo).supportedAbis;
+    final abis = await getSupportedAbis();
     final compatible = versions
         .where((v) => v.nativecode.isEmpty || v.nativecode.any(abis.contains))
         .toList();
     return compatible.isNotEmpty ? compatible : versions;
   }
+
+  /// The device's supported ABIs, most preferred first. Overridable so tests
+  /// can run without the device-info platform channel.
+  Future<List<String>> getSupportedAbis() async =>
+      (await DeviceInfoPlugin().androidInfo).supportedAbis;
 
   @override
   Future<APKDetails> getLatestAPKDetails(

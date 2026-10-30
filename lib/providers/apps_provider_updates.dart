@@ -10,18 +10,21 @@ import 'package:obtainium/services/version_service.dart' show isAppUpdateable;
 /// `detectionDateAsReleaseDate` setting on, that time also stands in for the
 /// release date when the source gives none (direct APK links, most HTML pages).
 App recordLatestVersionChange(App currentApp, App newApp, {DateTime? now}) {
-  final changedAt =
-      newApp.latestVersion != currentApp.latestVersion ||
-          currentApp.latestVersionChangedAt == null
+  final versionChanged = newApp.latestVersion != currentApp.latestVersion;
+  final firstObservation = currentApp.latestVersionChangedAt == null;
+  final changedAt = versionChanged || firstObservation
       ? (now ?? DateTime.now())
       : currentApp.latestVersionChangedAt;
+  // Only date a version by when it was found if it actually appeared while
+  // tracked (or was already dated that way): the first check after adding an
+  // app, or turning the setting on, must not invent a release date.
+  final useDetectionDate =
+      newApp.releaseDate == null &&
+      newApp.additionalSettings['detectionDateAsReleaseDate'] == true &&
+      (versionChanged || currentApp.releaseDate != null);
   return newApp.copyWith(
     latestVersionChangedAt: changedAt,
-    releaseDate:
-        newApp.releaseDate == null &&
-            newApp.additionalSettings['detectionDateAsReleaseDate'] == true
-        ? changedAt
-        : newApp.releaseDate,
+    releaseDate: useDetectionDate ? changedAt : newApp.releaseDate,
   );
 }
 
