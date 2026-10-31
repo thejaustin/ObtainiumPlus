@@ -245,6 +245,17 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Ask before installing a build of an app when a different build of it
+  /// (another package name) is already installed.
+  bool get askAboutOtherInstalledBuilds {
+    return prefs?.safeBool('askAboutOtherInstalledBuilds') ?? true;
+  }
+
+  set askAboutOtherInstalledBuilds(bool val) {
+    prefs?.setBool('askAboutOtherInstalledBuilds', val);
+    notifyListeners();
+  }
+
   bool get shizukuFallbackToSystem {
     return prefs?.safeBool('shizukuFallbackToSystem') ?? true;
   }

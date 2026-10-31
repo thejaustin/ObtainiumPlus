@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-PREFS= TABS=0 DARK=false WIDTH=412 HEIGHT=2400 VIEW=true COLS=${COLUMNS:-80}
+DIALOG= PREFS= TABS=0 DARK=false WIDTH=412 HEIGHT=2400 VIEW=true COLS=${COLUMNS:-80}
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tabs) TABS=$2; shift 2 ;;
@@ -20,6 +20,7 @@ while [[ $# -gt 0 ]]; do
     --cols) COLS=$2; shift 2 ;;
     --no-view) VIEW=false; shift ;;
     --prefs) PREFS=$2; shift 2 ;;
+    --dialog) DIALOG=$2; shift 2 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
@@ -34,6 +35,7 @@ flutter test tool/preview/settings_preview_test.dart \
   --dart-define=PREVIEW_WIDTH="$WIDTH" \
   --dart-define=PREVIEW_HEIGHT="$HEIGHT" \
   --dart-define=PREVIEW_PREFS="$PREFS" \
+  --dart-define=PREVIEW_DIALOG="$DIALOG" \
   --dart-define=FLUTTER_ROOT_DIR="$FLUTTER_ROOT_DIR" 2>&1 |
   grep -E "PREVIEW |Error|Exception|failed" || true
 

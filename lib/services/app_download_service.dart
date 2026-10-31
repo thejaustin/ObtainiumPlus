@@ -15,6 +15,10 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/app_variant_service.dart';
+import 'package:obtainium/components/variant_conflict_dialog.dart';
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:android_intent_plus/flag.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/download_install_pipeline.dart';
@@ -37,6 +41,25 @@ import 'package:obtainium/utils/source_utils.dart';
 String _cacheStem(App app, String downloadUrl) {
   final v = app.latestVersion.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
   return '${app.id}-$v-${downloadUrl.hashCode}';
+}
+
+/// Work to do once a batch is finished, decided in the "another build is
+/// installed" dialog. Uninstalling waits for the end of the batch because
+/// removing a Shizuku manager would break the installs still queued behind it.
+class _VariantFollowUps {
+  /// Exact package names to uninstall.
+  final uninstall = <String>{};
+
+  /// App ID -> build to uninstall once that app's install succeeds.
+  final replaceOnSuccess = <String, String>{};
+
+  /// Tracked app ID -> installed build's package to track instead.
+  final retrack = <String, String>{};
+
+  /// App IDs (after retracking) to reopen the file picker for.
+  final repick = <String>{};
+
+  bool get isEmpty => uninstall.isEmpty && retrack.isEmpty && repick.isEmpty;
 }
 
 class AppDownloadService {
@@ -170,6 +193,7 @@ class AppDownloadService {
       'imranr98_obtainium_github.com',
       'dev.thejaustin.obtainiumplus.fdroid',
     };
+    final followUps = _VariantFollowUps();
     final parallel =
         forceParallelDownloads || behaviorSettings.parallelDownloads;
     final notUpdatedNames = <String>[];
@@ -217,6 +241,7 @@ class AppDownloadService {
         final isUpdate = apps[id]?.installedInfo != null;
         final installed = await _installApp(
           id: id,
+          variantFollowUps: followUps,
           willBeSilent: (res['willBeSilent'] as bool?) ?? false,
           downloadedFile: file,
           downloadedDir: dir,
@@ -231,7 +256,9 @@ class AppDownloadService {
           notificationsProvider: notificationsProvider,
           context: context?.mounted == true ? context : null,
         );
+        final replaced = followUps.replaceOnSuccess.remove(id);
         if (installed) {
+          if (replaced != null) followUps.uninstall.add(replaced);
           installedIds.add(id);
         } else if (isUpdate) {
           // New installs already say "cancelled"; updates said nothing.
@@ -256,12 +283,169 @@ class AppDownloadService {
       );
     }
 
+    if (!followUps.isEmpty) {
+      await _runVariantFollowUps(
+        followUps,
+        apps: apps,
+        removeApps: removeApps,
+        saveApps: saveApps,
+        logs: logs,
+      );
+      final repick = followUps.repick.where((id) => apps[id] != null).toList();
+      if (repick.isNotEmpty && context != null && context.mounted) {
+        // The prepare step opens the file picker for apps with several files.
+        installedIds.addAll(
+          await downloadAndInstallLatestApps(
+            appIds: repick,
+            apps: apps,
+            settingsProvider: settingsProvider,
+            behaviorSettings: behaviorSettings,
+            plusSettings: plusSettings,
+            updateSettings: updateSettings,
+            logs: logs,
+            APKDir: APKDir,
+            notifyListeners: notifyListeners,
+            saveApps: saveApps,
+            removeApps: removeApps,
+            checkUpdate: checkUpdate,
+            confirmAppFileUrl: confirmAppFileUrl,
+            canInstallSilently: canInstallSilently,
+            waitForUserToReturnToForeground: waitForUserToReturnToForeground,
+            context: context,
+            notificationsProvider: notificationsProvider,
+            forceParallelDownloads: forceParallelDownloads,
+            useExisting: useExisting,
+            isCancelled: isCancelled,
+          ),
+        );
+      }
+    }
+
     errors.successfulAppIds = installedIds;
     if (errors.idsByErrorString.isNotEmpty) {
       throw errors;
     }
 
     return installedIds;
+  }
+
+  static Future<void> _runVariantFollowUps(
+    _VariantFollowUps followUps, {
+    required Map<String, AppInMemory> apps,
+    required Future<void> Function(List<String>) removeApps,
+    required Future<void> Function(List<App>, {bool onlyIfExists}) saveApps,
+    required LogsProvider logs,
+  }) async {
+    for (final entry in followUps.retrack.entries) {
+      final app = apps[entry.key]?.app;
+      if (app == null || apps[entry.value] != null) continue;
+      logs.add(
+        'Tracking installed build "${entry.value}" instead of "${entry.key}"',
+      );
+      await removeApps([entry.key]);
+      app.id = entry.value;
+      await saveApps([app], onlyIfExists: false);
+    }
+    for (final pkg in followUps.uninstall) {
+      logs.add('Asking to uninstall replaced build "$pkg"');
+      try {
+        // Exact package: AppInstallService.uninstallApp resolves aliases and
+        // could target the build that was just installed.
+        await AndroidIntent(
+          action: 'android.intent.action.DELETE',
+          data: 'package:$pkg',
+          flags: <int>[Flag.FLAG_ACTIVITY_NEW_TASK],
+        ).launch();
+      } catch (e) {
+        logs.add(
+          'Could not open uninstall for "$pkg": $e',
+          level: LogLevel.warning,
+        );
+      }
+    }
+  }
+
+  /// Returns false when the install should not go ahead (the user picked
+  /// something else, or there's no one to ask). See [AppVariantService].
+  static Future<bool> _checkOtherInstalledBuild({
+    required String id,
+    required DownloadedApk file,
+    required Map<String, AppInMemory> apps,
+    required BehaviorSettingsProvider behaviorSettings,
+    required LogsProvider logs,
+    required _VariantFollowUps? followUps,
+    Future<void> Function(List<App>)? saveApps,
+    BuildContext? context,
+  }) async {
+    final app = apps[id]?.app;
+    if (app == null) return true;
+    String? apkPackage;
+    try {
+      apkPackage = (await pm.getPackageArchiveInfo(
+        archiveFilePath: file.file.path,
+      ))?.packageName;
+    } catch (_) {}
+    if (apkPackage == null) return true;
+
+    final variants = await AppVariantService.findInstalledVariants(
+      pm,
+      apkPackage,
+    );
+    final action = AppVariantService.decide(
+      apkPackageInstalled: variants.isEmpty
+          ? true
+          : await AppVariantService.isInstalledExactly(pm, apkPackage),
+      installedVariants: variants,
+      rememberedChoice:
+          app.additionalSettings[AppVariantService.rememberedChoiceKey]
+              as String?,
+      askEnabled: behaviorSettings.askAboutOtherInstalledBuilds,
+      hasContext: context != null && context.mounted,
+    );
+    if (action == VariantAction.install) return true;
+    final installed = variants.first;
+    if (action == VariantAction.hold) {
+      logs.add(
+        'Held install of "$apkPackage": "${installed.packageName}" is installed',
+        level: LogLevel.warning,
+      );
+      throw ObtainiumError(
+        tr('variantHeldInBackground', args: [app.finalName, installed.label]),
+      );
+    }
+
+    final decision = await showVariantConflictDialog(
+      context!,
+      appName: app.finalName,
+      apkPackage: apkPackage,
+      installed: installed,
+      canPickOtherFile: app.apkUrls.length > 1,
+    );
+    logs.add(
+      'Another build "${installed.packageName}" is installed; user chose ${decision.choice.name}',
+    );
+    switch (decision.choice) {
+      case VariantChoice.keepBoth:
+        if (decision.dontAskAgain) {
+          app.additionalSettings[AppVariantService.rememberedChoiceKey] =
+              AppVariantService.keepBothValue;
+          await saveApps?.call([app]);
+        }
+        return true;
+      case VariantChoice.replace:
+        followUps?.replaceOnSuccess[id] = installed.packageName;
+        return true;
+      case VariantChoice.useInstalled:
+        followUps?.retrack[id] = installed.packageName;
+        followUps?.repick.add(installed.packageName);
+        return false;
+      case VariantChoice.cancel:
+        // Track what's actually on the device rather than the skipped build.
+        if (AppConstants.arePackageAliases(id, installed.packageName)) {
+          followUps?.retrack[id] = installed.packageName;
+        }
+        return false;
+    }
   }
 
   static Future<Map<String, dynamic>> downloadApp({
@@ -815,6 +999,7 @@ class AppDownloadService {
 
   static Future<bool> _installApp({
     required String id,
+    _VariantFollowUps? variantFollowUps,
     required bool willBeSilent,
     required DownloadedApk? downloadedFile,
     required DownloadedDir? downloadedDir,
@@ -834,6 +1019,21 @@ class AppDownloadService {
     try {
       if (apps[id] == null) throw ObtainiumError(tr('appNotFound'));
       if (downloadedFile == null && downloadedDir == null) {
+        return false;
+      }
+      if (downloadedFile != null &&
+          !await _checkOtherInstalledBuild(
+            id: id,
+            file: downloadedFile,
+            apps: apps,
+            behaviorSettings: behaviorSettings,
+            logs: logs,
+            followUps: variantFollowUps,
+            saveApps: saveApps,
+            // Not contextIfNewInstall: alias-aware installed info makes this
+            // look like an update when only the other build is installed.
+            context: context?.mounted == true ? context : null,
+          )) {
         return false;
       }
       bool sayInstalled = false;

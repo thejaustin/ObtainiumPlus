@@ -13,6 +13,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:obtainium/components/variant_conflict_dialog.dart';
+import 'package:obtainium/services/app_variant_service.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
@@ -33,6 +35,8 @@ const _height = int.fromEnvironment('PREVIEW_HEIGHT', defaultValue: 2400);
 const _flutterRoot = String.fromEnvironment('FLUTTER_ROOT_DIR');
 // Extra boolean prefs, e.g. "plusUseCompactSettings=true,foo=false".
 const _prefsArg = String.fromEnvironment('PREVIEW_PREFS');
+// "variant": render the another-version-installed dialog instead of Settings.
+const _dialogArg = String.fromEnvironment('PREVIEW_DIALOG');
 
 const _fakeAndroidDeviceInfo = <String, dynamic>{
   'version': {
@@ -191,7 +195,9 @@ void main() {
                     useSystemFont: false,
                     cornerRadius: plus.plusGlobalCornerRadius,
                   ),
-                  home: SettingsPage(initialTab: tab),
+                  home: _dialogArg == 'variant'
+                      ? const _VariantDialogPreview()
+                      : SettingsPage(initialTab: tab),
                 ),
               ),
             ),
@@ -223,7 +229,9 @@ void main() {
         final image = await boundary.toImage(pixelRatio: 2.0);
         final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
         final out = File(
-          'build/previews/settings_tab_$tab${_dark ? '_dark' : ''}.png',
+          _dialogArg.isNotEmpty
+              ? 'build/previews/dialog_$_dialogArg${_dark ? '_dark' : ''}.png'
+              : 'build/previews/settings_tab_$tab${_dark ? '_dark' : ''}.png',
         );
         out.parent.createSync(recursive: true);
         out.writeAsBytesSync(bytes!.buffer.asUint8List());
@@ -233,4 +241,34 @@ void main() {
       tester.takeException();
     }, timeout: const Timeout(Duration(minutes: 2)));
   }
+}
+
+class _VariantDialogPreview extends StatefulWidget {
+  const _VariantDialogPreview();
+
+  @override
+  State<_VariantDialogPreview> createState() => _VariantDialogPreviewState();
+}
+
+class _VariantDialogPreviewState extends State<_VariantDialogPreview> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      showVariantConflictDialog(
+        context,
+        appName: 'Shizuku+',
+        apkPackage: 'moe.shizuku.privileged.api',
+        installed: const InstalledVariant(
+          packageName: 'af.shizuku.plus.api',
+          label: 'Shizuku+',
+          versionName: '13.6.0.r1',
+        ),
+        canPickOtherFile: true,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const Scaffold();
 }

@@ -7,7 +7,9 @@ import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
 import 'package:obtainium/components/system_app_selector_sheet.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/services/app_variant_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -315,6 +317,25 @@ class _InstallationSectionState extends State<InstallationSection>
                 behaviorSettings.removeOnExternalUninstall = v;
               },
             ),
+
+          // Another build of the app already installed
+          if (_matches(tr('askAboutOtherInstalledBuilds')))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.layers_outlined,
+                active: behaviorSettings.askAboutOtherInstalledBuilds,
+              ),
+              title: Text(tr('askAboutOtherInstalledBuilds')),
+              subtitle: Text(tr('askAboutOtherInstalledBuildsDescription')),
+              value: behaviorSettings.askAboutOtherInstalledBuilds,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.askAboutOtherInstalledBuilds = v;
+              },
+            ),
+          if (_matches(tr('askAboutOtherInstalledBuilds')))
+            const _ForgetVariantChoicesTile(),
 
           // App Verifier
           if (_matches(tr('beforeNewInstallsShareToAppVerifier')))
@@ -882,6 +903,40 @@ class _InstallationSectionState extends State<InstallationSection>
         content: Text(error.message),
         behavior: SnackBarBehavior.floating,
       ),
+    );
+  }
+}
+
+/// Clears every app's "Don't ask again" from the another-build dialog. Only
+/// shown while at least one app has it set.
+class _ForgetVariantChoicesTile extends StatelessWidget {
+  const _ForgetVariantChoicesTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final appsProvider = context.watch<AppsProvider>();
+    final remembered = appsProvider.apps.values
+        .map((a) => a.app)
+        .where(
+          (a) => a.additionalSettings.containsKey(
+            AppVariantService.rememberedChoiceKey,
+          ),
+        )
+        .toList();
+    if (remembered.isEmpty) return const SizedBox.shrink();
+    return ListTile(
+      leading: buildSettingsIconBadge(context, Icons.restart_alt_rounded),
+      title: Text(tr('forgetVariantChoices')),
+      subtitle: Text(
+        plural('forgetVariantChoicesDescription', remembered.length),
+      ),
+      onTap: () async {
+        AppHaptics.selectionClick();
+        for (final a in remembered) {
+          a.additionalSettings.remove(AppVariantService.rememberedChoiceKey);
+        }
+        await appsProvider.saveApps(remembered);
+      },
     );
   }
 }

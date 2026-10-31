@@ -1691,5 +1691,24 @@
   "relatedDeveloperDesc": "Experimental developer preferences and tools",
   "relatedSystemUpdatesDesc": "OTA system package updates and sources",
   "foregroundServiceTitle": "Reliable background checks",
-  "foregroundServiceDesc": "Run update checks as a foreground service. More reliable, but uses more power"
+  "foregroundServiceDesc": "Run update checks as a foreground service. More reliable, but uses more power",
+  "variantConflictTitle": "Another version is installed",
+  "variantConflictBody": "You have {} installed as {}. This update is a different build ({}), so it would be added as a second app instead of updating yours.",
+  "variantConflictShizukuNote": "Only one Shizuku service runs at a time. Open the build you keep once to start it.",
+  "variantReplaceTitle": "Replace the installed build",
+  "variantReplaceDesc": "Install this build, then uninstall {}. Its data and permissions don't carry over.",
+  "variantUseInstalledTitle": "Keep the installed build",
+  "variantUseInstalledDesc": "Skip this file and pick the matching one from the release.",
+  "variantKeepBothTitle": "Keep both",
+  "variantKeepBothDesc": "Install this build next to {}.",
+  "variantDontAskAgain": "Don't ask again for this app",
+  "variantDontAskAgainDesc": "Applies when you choose Keep both",
+  "variantHeldInBackground": "{} wasn't installed because {} is already installed as a separate build. Open Obtainium+ to choose what to do.",
+  "askAboutOtherInstalledBuilds": "Ask when another version is installed",
+  "askAboutOtherInstalledBuildsDescription": "Before installing a build of an app that's already installed under another package name, ask whether to replace it, keep it or keep both",
+  "forgetVariantChoices": "Forget \"Don't ask again\" choices",
+  "forgetVariantChoicesDescription": {
+    "one": "1 app installs without asking when another version is installed",
+    "other": "{} apps install without asking when another version is installed"
+  }
 }
