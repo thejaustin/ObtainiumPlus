@@ -123,8 +123,9 @@ class AppConstants {
   /// standalone Plus package ID or its drop-in stock Shizuku package ID, and
   /// allows install-status detection to transparently locate installed aliases.
   static const List<Set<String>> packageAliasGroups = [
-    // Shizuku family
-    {shizukuPlusId, shizukuStockId, dhizukuId},
+    // Shizuku family. Dhizuku is a separate app (a device-owner service),
+    // not a Shizuku build, so it's not an alias.
+    {shizukuPlusId, shizukuStockId},
     // Obtainium family
     {
       obtainiumPlusId,
