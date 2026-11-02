@@ -151,7 +151,7 @@ class SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _selectedSectionIndex = _mapInitialTab(widget.initialTab ?? 0);
-    _androidInfoFuture = DeviceUtils.getAndroidInfo();
+    _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       if (!mounted) return;
       setState(() {

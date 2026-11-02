@@ -21,18 +21,16 @@ class DeviceUtils {
   DeviceUtils._();
 
   static AndroidDeviceInfo? _cachedAndroidInfo;
-  static Future<AndroidDeviceInfo>? _inFlightAndroidInfo;
 
   /// Returns cached Android device info to avoid repeated platform calls.
   /// Fixes issue #62: Cache DeviceInfoPlugin results.
   static Future<AndroidDeviceInfo> getAndroidInfo() async {
     if (_cachedAndroidInfo != null) return _cachedAndroidInfo!;
-    _inFlightAndroidInfo ??= DeviceInfoPlugin().androidInfo;
     try {
-      _cachedAndroidInfo = await _inFlightAndroidInfo!;
+      _cachedAndroidInfo = await DeviceInfoPlugin().androidInfo;
       return _cachedAndroidInfo!;
-    } finally {
-      _inFlightAndroidInfo = null;
+    } catch (_) {
+      return await DeviceInfoPlugin().androidInfo;
     }
   }
 
