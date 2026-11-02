@@ -155,6 +155,10 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusEnableMaterialExpressive(bool val) =>
       _setBool('plusEnableMaterialExpressive', val);
 
+  bool get plusEnableMaterial3Expressive => plusEnableMaterialExpressive;
+  set plusEnableMaterial3Expressive(bool val) =>
+      plusEnableMaterialExpressive = val;
+
   bool get plusDevUseThirdPartyLoadingIndicator =>
       _getBool('plusDevUseThirdPartyLoadingIndicator', defaultValue: false);
   set plusDevUseThirdPartyLoadingIndicator(bool val) =>

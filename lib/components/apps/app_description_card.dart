@@ -835,7 +835,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
             TextButton.icon(
               icon: const Icon(Icons.copy_rounded, size: 14),
               label: const Text('Copy Raw', style: TextStyle(fontSize: 12)),
-              visualDensity: VisualDensity.compact,
+              style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: text));
                 AppHaptics.lightImpact();

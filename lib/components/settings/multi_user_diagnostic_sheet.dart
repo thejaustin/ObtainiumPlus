@@ -46,6 +46,7 @@ class _MultiUserDiagnosticSheetState extends State<MultiUserDiagnosticSheet> {
   Future<void> _loadProfiles() async {
     setState(() => _isLoading = true);
     try {
+      final pm = AndroidPackageManager();
       final results = await AppVariantService.findAllInstalledVariants(pm, '');
       final Map<int, List<InstalledVariant>> grouped = {};
       for (final v in results) {

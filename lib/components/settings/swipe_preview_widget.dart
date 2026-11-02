@@ -99,6 +99,7 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
 
   void _startAutoPreview() {
     if (!mounted || _sandboxMode) return;
+    if (WidgetsBinding.instance is! WidgetsFlutterBinding) return;
     _animController.repeat();
   }
 
