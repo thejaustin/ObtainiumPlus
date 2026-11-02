@@ -70,15 +70,11 @@ class AppsViewSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> viewWidgets = [
-      if (_matches(tr('showWebInAppView')))
-        buildFeatureToggle<ViewSettingsProvider>(
-          context,
-          icon: Icons.web_outlined,
-          title: tr('showWebInAppView'),
-          subtitle: tr('showWebInAppViewDescription'),
-          value: (s) => s.showAppWebpage,
-          onChanged: (s, v) => onSetState(() => s.showAppWebpage = v),
-        ),
+      if (_matches(tr('showWebInAppView')) ||
+          _matches('default app details tab') ||
+          _matches('description style') ||
+          _matches('webpage'))
+        _buildAppDescriptionStyleSelector(context),
       if (_matches(tr('updatesPlacement')) ||
           _matches(tr('pinUpdates')) ||
           _matches(tr('recentUpdates')))
@@ -1122,6 +1118,90 @@ class AppsViewSettingsSection extends StatelessWidget {
                   onSetState(() => settings.categoryIconCount = value.toInt()),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAppDescriptionStyleSelector(BuildContext context) {
+    return Consumer<PlusSettingsProvider>(
+      builder: (context, plusSettings, child) {
+        final isCompact = plusSettings.plusUseCompactSettings;
+        final currentStyle = plusSettings.plusAppDescriptionStyle;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              dense: isCompact,
+              visualDensity: isCompact
+                  ? VisualDensity.compact
+                  : VisualDensity.standard,
+              leading: buildSettingsIconBadge(
+                context,
+                Icons.auto_awesome_outlined,
+              ),
+              title: Text(
+                'Default App Details Tab',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: isCompact
+                  ? null
+                  : const Text(
+                      'Default style when viewing app details: Obtainium+, README, Play Store, Webpage, or Raw',
+                    ),
+            ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, isCompact ? 8 : 12),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: SegmentedButton<AppDescriptionStyle>(
+                  style: SegmentedButton.styleFrom(
+                    visualDensity: isCompact
+                        ? VisualDensity.compact
+                        : VisualDensity.standard,
+                  ),
+                  segments: const [
+                    ButtonSegment(
+                      value: AppDescriptionStyle.obtainiumPlus,
+                      label: Text('Obtainium+'),
+                      icon: Icon(Icons.rocket_launch_rounded),
+                    ),
+                    ButtonSegment(
+                      value: AppDescriptionStyle.githubReadme,
+                      label: Text('README'),
+                      icon: Icon(Icons.code_rounded),
+                    ),
+                    ButtonSegment(
+                      value: AppDescriptionStyle.playStore,
+                      label: Text('Play Store'),
+                      icon: Icon(Icons.shop_two_outlined),
+                    ),
+                    ButtonSegment(
+                      value: AppDescriptionStyle.liveWebpage,
+                      label: Text('Webpage'),
+                      icon: Icon(Icons.language_rounded),
+                    ),
+                    ButtonSegment(
+                      value: AppDescriptionStyle.rawMarkdown,
+                      label: Text('Raw'),
+                      icon: Icon(Icons.text_snippet_outlined),
+                    ),
+                  ],
+                  selected: {currentStyle},
+                  onSelectionChanged: (value) {
+                    AppHaptics.selectionClick();
+                    onSetState(() {
+                      plusSettings.plusAppDescriptionStyle = value.first;
+                    });
+                  },
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

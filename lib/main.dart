@@ -36,6 +36,7 @@ import 'package:obtainium/providers/source_config_provider.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
+import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/material_ui_bridge.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
@@ -375,7 +376,7 @@ Future<void> _startObtainium() async {
 
   unawaited(() async {
     try {
-      final androidInfo = await DeviceInfoPlugin().androidInfo;
+      final androidInfo = await DeviceUtils.getAndroidInfo();
       if (androidInfo.version.sdkInt >= 29) {
         SystemChrome.setSystemUIOverlayStyle(
           const SystemUiOverlayStyle(
@@ -787,7 +788,6 @@ class _ObtainiumState extends State<Obtainium> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _manageServices(updateSettings, logs);
     });
-    _handleFirstRun(settingsProvider, appsProvider, context);
 
     return WithForegroundTask(
       child: ObtainiumDynamicColorBuilder(

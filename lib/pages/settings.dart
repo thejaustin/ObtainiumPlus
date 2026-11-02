@@ -12,6 +12,7 @@ import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/plus_features_sheet.dart';
+import 'package:obtainium/components/settings/settings_hero_overview.dart';
 import 'package:obtainium/components/settings/settings_tab_masthead.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
@@ -28,6 +29,7 @@ import 'package:obtainium/pages/update_health.dart';
 import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -98,22 +100,14 @@ class SettingsPageState extends State<SettingsPage> {
       return;
     }
     AppHaptics.selectionClick();
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _scrollController.jumpTo(0);
+    }
     setState(() {
       _previousSectionIndex = _selectedSectionIndex;
       _selectedSectionIndex = index;
     });
     _dockVisible.value = true;
-    if (_scrollController.hasClients) {
-      if (context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
-        _scrollController.animateTo(
-          0,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOutCubic,
-        );
-      } else {
-        _scrollController.jumpTo(0);
-      }
-    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || index < 0 || index >= _chipKeys.length) return;
       final chipContext = _chipKeys[index].currentContext;
@@ -157,7 +151,7 @@ class SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _selectedSectionIndex = _mapInitialTab(widget.initialTab ?? 0);
-    _androidInfoFuture = DeviceInfoPlugin().androidInfo;
+    _androidInfoFuture = DeviceUtils.getAndroidInfo();
     _searchController.addListener(() {
       if (!mounted) return;
       setState(() {
@@ -520,6 +514,19 @@ class SettingsPageState extends State<SettingsPage> {
                       ),
                       switchInCurve: Easing.emphasizedDecelerate,
                       switchOutCurve: Easing.emphasizedAccelerate,
+                      layoutBuilder:
+                          (
+                            Widget? currentChild,
+                            List<Widget> previousChildren,
+                          ) {
+                            return Stack(
+                              alignment: Alignment.topCenter,
+                              children: <Widget>[
+                                ...previousChildren,
+                                if (currentChild != null) currentChild,
+                              ],
+                            );
+                          },
                       transitionBuilder:
                           (Widget child, Animation<double> animation) {
                             final bool isForward =
@@ -572,6 +579,13 @@ class SettingsPageState extends State<SettingsPage> {
                                   _searchController.clear();
                                   _selectSection(index);
                                 },
+                              ),
+                            if (_searchQuery.isEmpty)
+                              SettingsHeroOverview(
+                                onSearchKeyword: (keyword) {
+                                  _searchController.text = keyword;
+                                },
+                                onSelectTab: _selectSection,
                               ),
                             Column(
                               key: _resultsKey,
@@ -1063,6 +1077,13 @@ class SettingsPageState extends State<SettingsPage> {
 
       case 3: // Behavior
         items = [
+          ConnectedSettingItem(
+            icon: Icons.battery_charging_full_rounded,
+            title: tr('disableBatteryOptimisation'),
+            subtitle: tr('relatedBatteryDesc'),
+            accentColor: colorScheme.secondary,
+            onTap: () => showDeviceOptimizationSheet(context: context),
+          ),
           ConnectedSettingItem(
             icon: Icons.palette_outlined,
             title: tr('settingsTabAppearance'),

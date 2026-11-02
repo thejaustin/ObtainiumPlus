@@ -2,9 +2,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
-/// A modern glassmorphic dialog widget with backdrop blur effect.
+/// A modern glassmorphic dialog widget with backdrop blur effect and fluid dismiss.
 class GlassDialog extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -13,6 +14,8 @@ class GlassDialog extends StatelessWidget {
   final bool scrollable;
   final IconData? icon;
   final double? width;
+  final bool dismissible;
+  final bool showCloseButton;
 
   const GlassDialog({
     super.key,
@@ -23,6 +26,8 @@ class GlassDialog extends StatelessWidget {
     this.scrollable = true,
     this.icon,
     this.width,
+    this.dismissible = true,
+    this.showCloseButton = true,
   });
 
   @override
@@ -31,7 +36,7 @@ class GlassDialog extends StatelessWidget {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final radius = plusSettings.plusGlobalCornerRadius;
 
-    return Dialog(
+    final dialogWidget = Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -105,6 +110,18 @@ class GlassDialog extends StatelessWidget {
         ),
       ),
     );
+
+    if (!dismissible) return dialogWidget;
+
+    return Dismissible(
+      key: const ValueKey('glass_dialog_dismissible'),
+      direction: DismissDirection.down,
+      onDismissed: (_) {
+        AppHaptics.selectionClick();
+        Navigator.of(context).maybePop();
+      },
+      child: dialogWidget,
+    );
   }
 
   Widget _buildHeader(BuildContext context, bool enableGlass) {
@@ -169,6 +186,16 @@ class GlassDialog extends StatelessWidget {
               ],
             ),
           ),
+          if (showCloseButton)
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 20),
+              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              visualDensity: VisualDensity.compact,
+              onPressed: () {
+                AppHaptics.selectionClick();
+                Navigator.of(context).maybePop();
+              },
+            ),
         ],
       ),
     );

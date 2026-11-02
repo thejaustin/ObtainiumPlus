@@ -7,12 +7,15 @@ import android.accounts.OperationCanceledException
 import android.app.Activity
 import android.app.AppOpsManager
 import android.app.PendingIntent
+import android.app.usage.UsageStats
+import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
@@ -21,6 +24,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
@@ -28,6 +32,7 @@ import java.io.IOException
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import rikka.shizuku.Shizuku
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "dev.thejaustin.obtainiumplus/native"
@@ -365,6 +370,49 @@ class MainActivity : FlutterActivity() {
                     "isUsageAccessGranted" -> {
                         result.success(isUsageAccessGranted())
                     }
+                    "openUsageAccessSettings" -> {
+                        try {
+                            val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+                                data = Uri.parse("package:$packageName")
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (_: Exception) {
+                            try {
+                                val fallbackIntent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).apply {
+                                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                }
+                                startActivity(fallbackIntent)
+                                result.success(true)
+                            } catch (e: Exception) {
+                                result.success(false)
+                            }
+                        }
+                    }
+                    "grantUsageAccessShizuku" -> {
+                        grantUsageAccessPrivileged(result)
+                    }
+                    "queryAllUsageStats" -> {
+                        val startTime = (call.argument<Number>("startTime"))?.toLong()
+                            ?: (System.currentTimeMillis() - 365L * 24 * 60 * 60 * 1000)
+                        val endTime = (call.argument<Number>("endTime"))?.toLong()
+                            ?: System.currentTimeMillis()
+                        result.success(queryAllUsageStats(startTime, endTime))
+                    }
+                    "getAppUsageStats" -> {
+                        val targetPkg = call.argument<String>("packageName")
+                        if (targetPkg == null) {
+                            result.error("INVALID_ARGUMENT", "packageName required", null)
+                        } else {
+                            val startTime = (call.argument<Number>("startTime"))?.toLong()
+                                ?: (System.currentTimeMillis() - 365L * 24 * 60 * 60 * 1000)
+                            val endTime = (call.argument<Number>("endTime"))?.toLong()
+                                ?: System.currentTimeMillis()
+                            val all = queryAllUsageStats(startTime, endTime)
+                            result.success(all[targetPkg])
+                        }
+                    }
                     "isRooted" -> {
                         result.success(isRooted())
                     }
@@ -598,6 +646,74 @@ class MainActivity : FlutterActivity() {
                             result.success(false)
                         }
                     }
+                    "getInstalledProfilesAndApps" -> {
+                        try {
+                            val targetPackage = call.argument<String>("packageName")
+                            val userManager = getSystemService(Context.USER_SERVICE) as? android.os.UserManager
+                            val launcherApps = getSystemService(Context.LAUNCHER_APPS_SERVICE) as? android.content.pm.LauncherApps
+                            val list = mutableListOf<Map<String, Any?>>()
+
+                            if (userManager != null && launcherApps != null) {
+                                for (user in userManager.userProfiles) {
+                                    val userId = try {
+                                        val m = user.javaClass.getMethod("getIdentifier")
+                                        m.invoke(user) as? Int ?: 0
+                                    } catch (_: Exception) {
+                                        user.hashCode()
+                                    }
+                                    val profileLabel = when (userId) {
+                                        0 -> "Main Profile"
+                                        10, 11, 12 -> "Work Profile (Insular / Shelter)"
+                                        95 -> "Dual Messenger (Samsung)"
+                                        999 -> "Parallel Space (Dual Apps)"
+                                        else -> "Profile $userId"
+                                    }
+
+                                    val activities = try {
+                                        launcherApps.getActivityList(targetPackage, user)
+                                    } catch (_: Exception) {
+                                        emptyList()
+                                    }
+                                    for (activity in activities) {
+                                        val appInfo = activity.applicationInfo
+                                        var versionName: String? = null
+                                        try {
+                                            val pInfo = packageManager.getPackageInfo(appInfo.packageName, 0)
+                                            versionName = pInfo.versionName
+                                        } catch (_: Exception) {}
+                                        list.add(mapOf(
+                                            "packageName" to appInfo.packageName,
+                                            "label" to activity.label.toString(),
+                                            "versionName" to versionName,
+                                            "userId" to userId,
+                                            "profileLabel" to profileLabel,
+                                        ))
+                                    }
+                                }
+                            }
+                            result.success(list)
+                        } catch (e: Exception) {
+                            result.error("PROFILE_DETECTION_FAILED", e.message, null)
+                        }
+                    }
+                    "getInstallerPackageName" -> {
+                        val target = call.argument<String>("packageName")
+                        if (target.isNullOrEmpty()) {
+                            result.success(null)
+                        } else {
+                            try {
+                                val installer = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                    packageManager.getInstallSourceInfo(target).installingPackageName
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    packageManager.getInstallerPackageName(target)
+                                }
+                                result.success(installer)
+                            } catch (_: Exception) {
+                                result.success(null)
+                            }
+                        }
+                    }
                     else -> result.notImplemented()
                 }
             } catch (e: Exception) {
@@ -691,6 +807,146 @@ class MainActivity : FlutterActivity() {
             )
         }
         return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    private fun grantUsageAccessPrivileged(result: MethodChannel.Result) {
+        Thread {
+            try {
+                var methodUsed = "none"
+                var succeeded = false
+
+                // 1. Try Shizuku if alive
+                var isShizukuAlive = false
+                try {
+                    isShizukuAlive = Shizuku.pingBinder()
+                } catch (_: Throwable) {}
+
+                if (isShizukuAlive) {
+                    val shizukuPerm = try {
+                        Shizuku.checkSelfPermission()
+                    } catch (_: Throwable) {
+                        PackageManager.PERMISSION_DENIED
+                    }
+
+                    if (shizukuPerm == PackageManager.PERMISSION_GRANTED) {
+                        methodUsed = "shizuku"
+                        var p: Process? = null
+                        try {
+                            p = Shizuku.newProcess(
+                                arrayOf("sh", "-c", "appops set $packageName GET_USAGE_STATS allow"),
+                                null,
+                                null
+                            )
+                            p.waitFor()
+                            succeeded = isUsageAccessGranted()
+                        } catch (_: Throwable) {
+                        } finally {
+                            try {
+                                p?.outputStream?.close()
+                                p?.inputStream?.close()
+                                p?.errorStream?.close()
+                            } catch (_: Throwable) {}
+                            try { p?.destroy() } catch (_: Throwable) {}
+                        }
+                    } else {
+                        runOnUiThread {
+                            result.success(
+                                mapOf(
+                                    "success" to false,
+                                    "status" to "SHIZUKU_PERMISSION_REQUIRED",
+                                    "message" to "Shizuku permission not yet granted to Obtainium+"
+                                )
+                            )
+                        }
+                        return@Thread
+                    }
+                }
+
+                // 2. Try root fallback if Shizuku wasn't available or didn't succeed
+                if (!succeeded && isRooted()) {
+                    var rootProc: Process? = null
+                    try {
+                        methodUsed = "root"
+                        rootProc = Runtime.getRuntime().exec(arrayOf("su", "-c", "appops set $packageName GET_USAGE_STATS allow"))
+                        rootProc.waitFor()
+                        succeeded = isUsageAccessGranted()
+                    } catch (_: Throwable) {
+                    } finally {
+                        try {
+                            rootProc?.outputStream?.close()
+                            rootProc?.inputStream?.close()
+                            rootProc?.errorStream?.close()
+                        } catch (_: Throwable) {}
+                        try { rootProc?.destroy() } catch (_: Throwable) {}
+                    }
+                }
+
+                val finalGranted = isUsageAccessGranted()
+                runOnUiThread {
+                    result.success(
+                        mapOf(
+                            "success" to finalGranted,
+                            "status" to if (finalGranted) "GRANTED" else if (!isShizukuAlive) "SHIZUKU_NOT_RUNNING" else "FAILED",
+                            "method" to methodUsed
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                runOnUiThread {
+                    result.error("GRANT_ERROR", e.message, null)
+                }
+            }
+        }.start()
+    }
+
+    private fun queryAllUsageStats(startTimeMs: Long, endTimeMs: Long): Map<String, Map<String, Long>> {
+        if (!isUsageAccessGranted()) {
+            return emptyMap()
+        }
+        val usm = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager ?: return emptyMap()
+        val map = HashMap<String, MutableMap<String, Long>>()
+
+        val aggregated = try {
+            usm.queryAndAggregateUsageStats(startTimeMs, endTimeMs)
+        } catch (_: Exception) {
+            null
+        }
+
+        if (!aggregated.isNullOrEmpty()) {
+            for ((pkg, stats) in aggregated) {
+                if (stats.lastTimeUsed > 0 || stats.totalTimeInForeground > 0) {
+                    map[pkg] = mutableMapOf(
+                        "lastTimeUsed" to stats.lastTimeUsed,
+                        "totalForegroundMs" to stats.totalTimeInForeground,
+                        "firstTimeStamp" to stats.firstTimeStamp,
+                        "lastTimeStamp" to stats.lastTimeStamp
+                    )
+                }
+            }
+        } else {
+            val statsList = try {
+                usm.queryUsageStats(UsageStatsManager.INTERVAL_BEST, startTimeMs, endTimeMs)
+            } catch (_: Exception) {
+                null
+            }
+            if (statsList != null) {
+                for (usage in statsList) {
+                    val existing = map.getOrPut(usage.packageName) {
+                        mutableMapOf(
+                            "lastTimeUsed" to 0L,
+                            "totalForegroundMs" to 0L,
+                            "firstTimeStamp" to usage.firstTimeStamp,
+                            "lastTimeStamp" to usage.lastTimeStamp
+                        )
+                    }
+                    if (usage.lastTimeUsed > existing["lastTimeUsed"]!!) {
+                        existing["lastTimeUsed"] = usage.lastTimeUsed
+                    }
+                    existing["totalForegroundMs"] = existing["totalForegroundMs"]!! + usage.totalTimeInForeground
+                }
+            }
+        }
+        return map
     }
 
     @Deprecated("Deprecated in Java")

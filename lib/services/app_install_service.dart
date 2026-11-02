@@ -27,8 +27,10 @@ import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/services/usage_stats_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/signing_cert_utils.dart';
+import 'package:obtainium/models/install_history_entry.dart';
 
 final pm = AndroidPackageManager();
 // Full flags (with signing certs) used for single-package lookups only.
@@ -70,16 +72,56 @@ class AppInstallService {
     }
   }
 
-  static Future<List<PackageInfo>> getAllInstalledInfo() async {
-    try {
-      return await pm
-              .getInstalledPackages(flags: _listPackageFlags)
-              .timeout(const Duration(seconds: 15)) ??
-          [];
-    } catch (e) {
-      talker.error('Error fetching installed packages: ${e.toString()}');
-      return [];
+  static List<PackageInfo>? _cachedInstalledPackages;
+  static DateTime? _cachedInstalledPackagesTimestamp;
+  static Future<List<PackageInfo>>? _inFlightInstalledPackagesQuery;
+  static const Duration _installedPackagesTtl = Duration(seconds: 10);
+
+  /// Invalidates the in-memory installed package list cache so the next query
+  /// re-checks the live PackageManager binder service.
+  static void invalidateInstalledPackagesCache() {
+    _cachedInstalledPackages = null;
+    _cachedInstalledPackagesTimestamp = null;
+  }
+
+  static Future<List<PackageInfo>> getAllInstalledInfo({
+    bool forceRefresh = false,
+  }) async {
+    final cached = _cachedInstalledPackages;
+    final timestamp = _cachedInstalledPackagesTimestamp;
+    if (!forceRefresh &&
+        cached != null &&
+        timestamp != null &&
+        DateTime.now().difference(timestamp) < _installedPackagesTtl) {
+      return cached;
     }
+
+    if (_inFlightInstalledPackagesQuery != null) {
+      return await _inFlightInstalledPackagesQuery!;
+    }
+
+    final queryFuture = () async {
+      try {
+        final result =
+            await pm
+                .getInstalledPackages(flags: _listPackageFlags)
+                .timeout(const Duration(seconds: 15)) ??
+            [];
+        if (result.isNotEmpty) {
+          _cachedInstalledPackages = result;
+          _cachedInstalledPackagesTimestamp = DateTime.now();
+        }
+        return result;
+      } catch (e) {
+        talker.error('Error fetching installed packages: ${e.toString()}');
+        return <PackageInfo>[];
+      } finally {
+        _inFlightInstalledPackagesQuery = null;
+      }
+    }();
+
+    _inFlightInstalledPackagesQuery = queryFuture;
+    return await queryFuture;
   }
 
   static Future<PackageInfo?> getInstalledInfo(
@@ -87,6 +129,20 @@ class AppInstallService {
     bool printErr = true,
   }) async {
     if (packageName != null) {
+      // Check fast in-memory package cache first (0ms IPC)
+      final cachedList = _cachedInstalledPackages;
+      if (cachedList != null) {
+        for (final p in cachedList) {
+          if (p.packageName == packageName) return p;
+        }
+        final aliases = AppConstants.getAliasesFor(packageName);
+        for (final alias in aliases) {
+          for (final p in cachedList) {
+            if (p.packageName == alias) return p;
+          }
+        }
+      }
+
       try {
         final info = await pm
             .getPackageInfo(packageName: packageName, flags: _listPackageFlags)
@@ -121,6 +177,7 @@ class AppInstallService {
       package: 'vnd.android.package-archive',
     );
     await intent.launch();
+    invalidateInstalledPackagesCache();
   }
 
   static Future<bool> canDowngradeApps() async =>
@@ -234,21 +291,11 @@ class AppInstallService {
   }
 
   static Future<void> openUsageAccessSettings() async {
-    const AndroidIntent intent = AndroidIntent(
-      action: 'android.settings.USAGE_ACCESS_SETTINGS',
-    );
-    await intent.launch();
+    await UsageStatsService.openUsageAccessSettings();
   }
 
   static Future<bool> isUsageAccessGranted() async {
-    try {
-      final bool? granted = await const MethodChannel(
-        'dev.thejaustin.obtainiumplus/native',
-      ).invokeMethod<bool>('isUsageAccessGranted');
-      return granted ?? false;
-    } catch (e) {
-      return false;
-    }
+    return UsageStatsService.isUsageAccessGranted();
   }
 
   static Future<void> openApp(String appId) async {
@@ -1060,12 +1107,30 @@ class AppInstallService {
       installed = true;
       // App may have been removed while the install dialog was shown; skip update.
       if (apps[file.appId] != null) {
-        apps[file.appId]!.app.installedVersion =
-            apps[file.appId]!.app.latestVersion;
+        final targetApp = apps[file.appId]!.app;
+        final now = DateTime.now();
+        final prevVersion = targetApp.installedVersion;
+        targetApp.installedVersion = targetApp.latestVersion;
+        targetApp.firstInstalledAt ??= now;
+        targetApp.lastInstalledAt = now;
+        targetApp.installHistory.add(
+          InstallHistoryEntry(
+            version: targetApp.latestVersion,
+            previousVersion: prevVersion != targetApp.latestVersion
+                ? prevVersion
+                : null,
+            timestamp: now,
+            installerMethod: installer.runtimeType.toString().replaceAll(
+              'Installer',
+              '',
+            ),
+            versionCode: nonNullNewInfo?.versionCode,
+          ),
+        );
         // Persist the new installedVersion and refresh PackageInfo so the UI
         // immediately reflects the installed state without waiting for next load.
         if (saveApps != null) {
-          await saveApps([apps[file.appId]!.app]);
+          await saveApps([targetApp]);
         }
 
         // Android 14+ Update Ownership
@@ -1080,6 +1145,7 @@ class AppInstallService {
       try {
         await file.file.delete(recursive: true);
       } catch (_) {}
+      invalidateInstalledPackagesCache();
     } else if (code == 3 &&
         firstTimeWithContext != null &&
         firstTimeWithContext.mounted) {
@@ -1124,10 +1190,27 @@ class AppInstallService {
           if (result.isSuccess) {
             somethingInstalled = true;
             if (apps[dir.appId] != null) {
-              apps[dir.appId]!.app.installedVersion =
-                  apps[dir.appId]!.app.latestVersion;
+              final targetApp = apps[dir.appId]!.app;
+              final now = DateTime.now();
+              final prevVersion = targetApp.installedVersion;
+              targetApp.installedVersion = targetApp.latestVersion;
+              targetApp.firstInstalledAt ??= now;
+              targetApp.lastInstalledAt = now;
+              targetApp.installHistory.add(
+                InstallHistoryEntry(
+                  version: targetApp.latestVersion,
+                  previousVersion: prevVersion != targetApp.latestVersion
+                      ? prevVersion
+                      : null,
+                  timestamp: now,
+                  installerMethod: installer.runtimeType.toString().replaceAll(
+                    'Installer',
+                    '',
+                  ),
+                ),
+              );
               if (saveApps != null) {
-                await saveApps([apps[dir.appId]!.app]);
+                await saveApps([targetApp]);
               }
             }
           }

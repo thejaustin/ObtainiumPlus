@@ -286,25 +286,12 @@ class _SquigglyPainter extends CustomPainter {
       // Indeterminate mode: draw full background track
       canvas.drawLine(Offset(0, centerY), Offset(size.width, centerY), bgPaint);
 
-      // M3 Expressive Indeterminate: smooth morphing wave with M3 curve expansion/contraction
+      // M3 Expressive Indeterminate: smooth morphing wave with continuous phase loop
       const double wavelength = 28.0;
       const double frequency = (2 * math.pi) / wavelength;
       final double phase = animationValue * 4 * math.pi;
 
-      // Smooth M3 curve for head & tail movement
-      double m3Ease(double t) {
-        t = t.clamp(0.0, 1.0);
-        return t < 0.5 ? 4 * t * t * t : 1 - math.pow(-2 * t + 2, 3) / 2;
-      }
-
-      // First segment (main active wave)
-      final double head1 = m3Ease((animationValue * 1.6).clamp(0.0, 1.0));
-      final double tail1 = m3Ease((animationValue * 1.6 - 0.6).clamp(0.0, 1.0));
-
-      // Second segment (catch-up / follow-through wave)
-      final double head2 = m3Ease((animationValue * 1.6 - 0.5).clamp(0.0, 1.0));
-      final double tail2 = m3Ease((animationValue * 1.6 - 1.1).clamp(0.0, 1.0));
-
+      // Two overlapping wave segments staggered by half a cycle for seamless flow
       void drawWaveSegment(double startT, double endT) {
         final double startX = size.width * startT;
         final double endX = size.width * endT;
@@ -325,6 +312,23 @@ class _SquigglyPainter extends CustomPainter {
         }
         canvas.drawPath(segmentPath, activePaint);
       }
+
+      // Staggered continuous cycles without clamping stutter
+      final double t1 = animationValue;
+      final double head1 = Curves.easeInOutCubic.transform(
+        (t1 * 1.3).clamp(0.0, 1.0),
+      );
+      final double tail1 = Curves.easeInOutCubic.transform(
+        (t1 * 1.3 - 0.4).clamp(0.0, 1.0),
+      );
+
+      final double t2 = (animationValue + 0.5) % 1.0;
+      final double head2 = Curves.easeInOutCubic.transform(
+        (t2 * 1.3).clamp(0.0, 1.0),
+      );
+      final double tail2 = Curves.easeInOutCubic.transform(
+        (t2 * 1.3 - 0.4).clamp(0.0, 1.0),
+      );
 
       drawWaveSegment(tail1, head1);
       drawWaveSegment(tail2, head2);
@@ -442,18 +446,22 @@ class _WavyCircularPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    // Adaptive wave count and amplitude based on radius to avoid dense squishing on compact sizes
+    // Adaptive wave count and amplitude based on radius to avoid dense squishing or jitter on compact sizes
     final int waveCount;
     final double amplitude;
-    if (radius < 12.0) {
+    if (radius < 10.0) {
+      // Extremely compact (e.g. inside buttons): smooth arc avoids jagged vibrating pixels
+      waveCount = 0;
+      amplitude = 0.0;
+    } else if (radius < 18.0) {
+      waveCount = 4;
+      amplitude = math.min(1.0, radius * 0.08);
+    } else if (radius < 26.0) {
       waveCount = 6;
-      amplitude = math.min(1.2, radius * 0.15);
-    } else if (radius < 22.0) {
-      waveCount = 8;
-      amplitude = math.min(1.8, radius * 0.14);
+      amplitude = math.min(1.6, radius * 0.10);
     } else {
-      waveCount = 12;
-      amplitude = math.min(2.5, radius * 0.12);
+      waveCount = 10;
+      amplitude = math.min(2.2, radius * 0.12);
     }
 
     final path = Path();

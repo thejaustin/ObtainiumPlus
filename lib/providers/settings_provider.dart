@@ -16,6 +16,7 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/utils/device_utils.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -158,7 +159,7 @@ class SettingsProvider with ChangeNotifier {
           return;
         }
         try {
-          final info = await DeviceInfoPlugin().androidInfo;
+          final info = await DeviceUtils.getAndroidInfo();
           _cachedIsTV =
               info.systemFeatures.contains(
                 'android.hardware.type.television',
@@ -1178,7 +1179,7 @@ class SettingsProvider with ChangeNotifier {
   Future<bool> getInstallPermission({bool enforce = false}) async => true;
 
   int get updateCheckConcurrencyLimit =>
-      (prefs?.safeInt('updateCheckConcurrencyLimit') ?? 3).clamp(1, 16);
+      (prefs?.safeInt('updateCheckConcurrencyLimit') ?? 6).clamp(1, 16);
   set updateCheckConcurrencyLimit(int val) {
     prefs?.setInt('updateCheckConcurrencyLimit', val);
     notifyListeners();

@@ -38,6 +38,11 @@ class GitHubEtagCache {
   Directory? _dir;
   int _writesSincePrune = 0;
 
+  /// Fast in-memory L1 cache to eliminate redundant disk I/O and gzip
+  /// decompression on hot lookups (<0.1ms).
+  final Map<String, GitHubCachedResponse> _l1MemoryCache = {};
+  static const int _maxL1Entries = 250;
+
   static Future<Directory> _defaultDirectory() async =>
       Directory('${(await getTemporaryDirectory()).path}/github_etag_cache');
 
@@ -50,14 +55,32 @@ class GitHubEtagCache {
   Future<File> _fileFor(String url) async =>
       File('${(await _cacheDir()).path}/${sha1.convert(utf8.encode(url))}.gz');
 
-  /// The cached response for [url], if any. Send its [GitHubCachedResponse.etag]
-  /// as `If-None-Match`, then pass it to [resolve].
+  /// The cached response for [url], if any. Checks the fast in-memory L1 cache
+  /// first before falling back to reading and g-unzipping from disk.
+  /// Send its [GitHubCachedResponse.etag] as `If-None-Match`, then pass it to [resolve].
   Future<GitHubCachedResponse?> lookup(String url) async {
+    final memoryHit = _l1MemoryCache[url];
+    if (memoryHit != null) return memoryHit;
+
     final entry = await _read(url);
     final etag = entry?['etag'];
     final body = entry?['body'];
     if (etag is! String || body is! String) return null;
-    return GitHubCachedResponse(etag, body);
+    final cached = GitHubCachedResponse(etag, body);
+    _putL1(url, cached);
+    return cached;
+  }
+
+  void _putL1(String url, GitHubCachedResponse response) {
+    if (_l1MemoryCache.length >= _maxL1Entries) {
+      _l1MemoryCache.remove(_l1MemoryCache.keys.first);
+    }
+    _l1MemoryCache[url] = response;
+  }
+
+  /// Clears the in-memory L1 ETag cache.
+  void clearMemoryCache() {
+    _l1MemoryCache.clear();
   }
 
   /// Turns a 304 for [url] back into the [cached] 200 response. Returns
@@ -71,6 +94,9 @@ class GitHubEtagCache {
     if (response.statusCode == 304) {
       final body = cached?.body;
       if (body == null) return response;
+      if (cached != null) {
+        _putL1(url, cached);
+      }
       // Touch so pruning keeps entries that are still in use.
       try {
         await (await _fileFor(url)).setLastModified(DateTime.now());
@@ -88,6 +114,7 @@ class GitHubEtagCache {
     }
     final etag = response.headers['etag'];
     if (response.statusCode == 200 && etag != null && etag.isNotEmpty) {
+      _putL1(url, GitHubCachedResponse(etag, response.body));
       await _write(url, etag, response.body);
     }
     return response;

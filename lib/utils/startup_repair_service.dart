@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -11,6 +12,7 @@ class StartupRepairService {
   /// Clears the icon cache to resolve potential image loading or corruption crashes
   static Future<void> clearIconCache() async {
     try {
+      AppsProvider.clearIconMemoryCache();
       final dirs = await AppFileService.initAppDirectories();
       final iconsDir = dirs['iconsCacheDir'];
       if (iconsDir != null && iconsDir.existsSync()) {

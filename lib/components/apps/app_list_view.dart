@@ -216,11 +216,19 @@ class AppListView extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                 ],
-                getActionIcon(action),
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: fg.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(child: getActionIcon(action)),
+                ),
                 if (!alignRight && label.isNotEmpty) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 10),
                   Text(
                     label,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -243,6 +251,17 @@ class AppListView extends StatelessWidget {
 
       Widget child = Dismissible(
         key: Key('dismiss_${app.app.id}'),
+        dismissThresholds: const {
+          DismissDirection.startToEnd: 0.38,
+          DismissDirection.endToStart: 0.38,
+        },
+        onUpdate: (details) {
+          if (details.reached && !details.previousReached) {
+            AppHaptics.lightImpact();
+          } else if (!details.reached && details.previousReached) {
+            AppHaptics.selectionClick();
+          }
+        },
         direction: !swipeEnabled
             ? DismissDirection.none
             : (behaviorSettings.swipeRightAction == AppSwipeAction.none
@@ -259,6 +278,7 @@ class AppListView extends StatelessWidget {
           alignRight: true,
         ),
         confirmDismiss: (direction) {
+          AppHaptics.success();
           if (direction == DismissDirection.startToEnd) {
             return handleSwipe(behaviorSettings.swipeRightAction);
           } else {

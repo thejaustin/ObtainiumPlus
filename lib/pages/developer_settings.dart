@@ -30,6 +30,10 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/play_store_diagnostic_sheet.dart';
+import 'package:obtainium/components/settings/play_store_inspector_sheet.dart';
+import 'package:obtainium/components/settings/multi_user_diagnostic_sheet.dart';
+import 'package:obtainium/components/settings/usage_access_card.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
   final ScrollController? scrollController;
@@ -125,6 +129,24 @@ class DeveloperSettingsPage extends StatelessWidget {
                 trailing: const Icon(Icons.file_open_outlined),
                 onTap: () => _handleStandaloneInstall(context),
               ),
+            ListTile(
+              leading: const Icon(Icons.network_check_rounded),
+              title: const Text('Google Play & Network Diagnostics'),
+              subtitle: const Text(
+                'Test FDFE endpoints, latency, microG, AAS tokens & VPN',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showPlayStoreDiagnosticSheet(context),
+            ),
+            ListTile(
+              leading: const Icon(Icons.developer_board_rounded),
+              title: const Text('Play Store App Inspector'),
+              subtitle: const Text(
+                'Live protobuf details & split APK delivery sandbox',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showPlayStoreInspectorSheet(context),
+            ),
           ]),
           _buildSection(context, tr('playStoreSafetyAndFilters'), [
             _buildSafetyScoreCard(context),
@@ -190,6 +212,23 @@ class DeveloperSettingsPage extends StatelessWidget {
               onChanged: (val) {
                 val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                 context.read<PlusSettingsProvider>().autoDiscardTokens = val;
+              },
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.cloud_sync_outlined),
+              title: const Text('Prefer Quota-Free Registries'),
+              subtitle: const Text(
+                'Query IzzyOnDroid & F-Droid index caches before calling rate-limited GitHub APIs',
+              ),
+              value: context
+                  .watch<PlusSettingsProvider>()
+                  .plusPreferQuotaFreeRegistries,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                context
+                        .read<PlusSettingsProvider>()
+                        .plusPreferQuotaFreeRegistries =
+                    val;
               },
             ),
             const Divider(),
@@ -323,6 +362,16 @@ class DeveloperSettingsPage extends StatelessWidget {
                 }
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.supervised_user_circle_outlined),
+              title: const Text('Multi-User & Parallel Environment'),
+              subtitle: const Text(
+                'Inspect Insular, Shelter, Dual Messenger & installer sources',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showMultiUserDiagnosticSheet(context),
+            ),
+            const UsageAccessCard(margin: EdgeInsets.only(top: 8, bottom: 4)),
           ]),
           _buildSection(context, tr('expressiveDesignShapes'), [
             SwitchListTile.adaptive(

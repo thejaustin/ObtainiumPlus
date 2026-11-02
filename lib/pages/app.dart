@@ -37,6 +37,9 @@ import 'package:android_package_manager/android_package_manager.dart'
     hide LaunchMode;
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
+import 'package:obtainium/components/apps/app_variants_sheet.dart';
+import 'package:obtainium/components/apps/app_description_card.dart';
+import 'package:obtainium/services/app_variant_service.dart';
 
 /// Whether opening the detail page should resolve the selected APK's size.
 ///
@@ -81,9 +84,20 @@ class _AppPageState extends State<AppPage> {
   bool _wasWebViewOpened = false;
   AppInMemory? prevApp;
   bool updating = false;
+  bool _hasAutoCheckedVariants = false;
 
   Future<List<Map<String, String>>> _getInstalledStores() async {
     final stores = [
+      {
+        'name': 'Google Play Store',
+        'package': 'com.android.vending',
+        'scheme': 'market://details?id=',
+      },
+      {
+        'name': 'Galaxy Store',
+        'package': 'com.sec.android.app.samsungapps',
+        'scheme': 'samsungapps://ProductDetail/',
+      },
       {
         'name': 'Aurora Store',
         'package': 'com.aurora.store',
@@ -126,12 +140,24 @@ class _AppPageState extends State<AppPage> {
     try {
       await intent.launch();
     } catch (e) {
+      if (storePackage == 'com.sec.android.app.samsungapps') {
+        try {
+          await launchUrlString(
+            'https://apps.samsung.com/appquery/appDetail.as?appId=$appId',
+          );
+          return;
+        } catch (_) {}
+      }
       // Fallback
       final fallback = AndroidIntent(
         action: 'android.intent.action.VIEW',
         data: 'market://details?id=$appId',
       );
-      await fallback.launch();
+      try {
+        await fallback.launch();
+      } catch (_) {
+        launchUrlString('https://play.google.com/store/apps/details?id=$appId');
+      }
     }
   }
 
@@ -536,6 +562,38 @@ class _AppPageState extends State<AppPage> {
         if (mounted) getUpdate(id);
       });
     }
+
+    if (app != null &&
+        app.app.installedVersion == null &&
+        !_hasAutoCheckedVariants) {
+      _hasAutoCheckedVariants = true;
+      final targetAppId = app.app.id;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        try {
+          final variants = await AppVariantService.findAllInstalledVariants(
+            pm,
+            targetAppId,
+            url: app.app.url,
+            name: app.name,
+            apkUrls: app.app.apkUrls.map((e) => e.value).toList(),
+          );
+          if (variants.isNotEmpty && mounted) {
+            final appToUpdate = appsProvider.apps[targetAppId];
+            if (appToUpdate != null &&
+                appToUpdate.app.installedVersion == null) {
+              final chosen = variants.first;
+              appToUpdate.app.installedVersion =
+                  chosen.versionName ?? appToUpdate.app.latestVersion;
+              appToUpdate.app.additionalSettings['linkedPackage'] =
+                  chosen.packageName;
+              appsProvider.saveApps([appToUpdate.app]);
+              if (mounted) setState(() {});
+            }
+          }
+        } catch (_) {}
+      });
+    }
     var trackOnly = app?.app.additionalSettings['trackOnly'] == true;
 
     bool isVersionDetectionStandard =
@@ -576,6 +634,17 @@ class _AppPageState extends State<AppPage> {
       );
       if (trackOnly) {
         infoLines = '${tr('xIsTrackOnly', args: [tr('app')])}\n$infoLines';
+      }
+      final firstInstalled =
+          app?.app.effectiveFirstInstalled ??
+          (app?.installedInfo?.firstInstallTime != null
+              ? DateTime.fromMillisecondsSinceEpoch(
+                  app!.installedInfo!.firstInstallTime!,
+                )
+              : null);
+      if (firstInstalled != null) {
+        infoLines =
+            '${tr('installed')}: ${firstInstalled.toLocal().toString().split('.').first}\n$infoLines';
       }
       if (installedVersionIsEstimate) {
         var realVersion = app.installedInfo?.versionName;
@@ -720,6 +789,76 @@ class _AppPageState extends State<AppPage> {
                                         ),
                                       ),
                                     ],
+                                    const SizedBox(height: 6),
+                                    ScaleTouchWrapper(
+                                      scaleDownFactor: 0.94,
+                                      onTap: () {
+                                        AppHaptics.selectionClick();
+                                        showAppVariantsSheet(
+                                          context: context,
+                                          appId: app?.app.id ?? widget.appId,
+                                        );
+                                      },
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 3,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .surfaceContainerHighest
+                                              .withValues(alpha: 0.7),
+                                          borderRadius: BorderRadius.circular(
+                                            CardMetrics.pillRadius,
+                                          ),
+                                          border: Border.all(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .outlineVariant
+                                                .withValues(alpha: 0.35),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.hub_outlined,
+                                              size: 13,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                            ),
+                                            const SizedBox(width: 5),
+                                            Text(
+                                              app?.app.additionalSettings['linkedPackage'] !=
+                                                      null
+                                                  ? 'Linked: ${app!.app.additionalSettings['linkedPackage']}'
+                                                  : (installed
+                                                        ? 'Local install active'
+                                                        : 'Find / Switch Local App'),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall
+                                                  ?.copyWith(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurfaceVariant,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                            ),
+                                            const SizedBox(width: 3),
+                                            Icon(
+                                              Icons.arrow_drop_down,
+                                              size: 14,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -1103,93 +1242,10 @@ class _AppPageState extends State<AppPage> {
               ],
             ),
           ],
-          if (app?.app.additionalSettings['about'] is String &&
-              app?.app.additionalSettings['about'].isNotEmpty)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.description_outlined,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        tr('about'),
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 16),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                  ),
-                  child: GestureDetector(
-                    onLongPress: () {
-                      Clipboard.setData(
-                        ClipboardData(
-                          text: app?.app.additionalSettings['about'] ?? '',
-                        ),
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(tr('copiedToClipboard'))),
-                      );
-                    },
-                    child: CollapsibleAbout(
-                      text: app?.app.additionalSettings['about'] ?? '',
-                      child: Markdown(
-                        physics: const NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        styleSheet: MarkdownStyleSheet(
-                          p: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(height: 1.5),
-                          blockquoteDecoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        data: app?.app.additionalSettings['about'],
-                        onTapLink: (text, href, title) {
-                          if (href != null) {
-                            launchUrlString(
-                              href,
-                              mode: LaunchMode.externalApplication,
-                            );
-                          }
-                        },
-                        extensionSet: md.ExtensionSet(
-                          md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                          [
-                            md.EmojiSyntax(),
-                            ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          if (app != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: AppDescriptionCard(app: app),
             ),
         ],
       );
@@ -1479,64 +1535,64 @@ class _AppPageState extends State<AppPage> {
                   child: Hero(
                     tag: 'app_icon_${widget.appId}',
                     child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: app?.icon != null
-                          ? [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 24,
-                                offset: const Offset(0, 10),
-                              ),
-                              BoxShadow(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.primary.withValues(alpha: 0.10),
-                                blurRadius: 32,
-                                spreadRadius: -2,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: app?.icon != null
-                        ? ScaleTouchWrapper(
-                            hapticOnPressDown: app != null,
-                            scaleDownFactor: 0.92,
-                            child: AppIconAction(
-                              semanticLabel: tr('openApp', args: [app!.name]),
-                              onTap: () => pm.openApp(app.app.id),
-                              borderRadius: 24,
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(24),
-                                child: Image.memory(
-                                  app.icon!,
-                                  height: iconSize,
-                                  width: iconSize,
-                                  fit: BoxFit.contain,
-                                  gaplessPlayback: true,
-                                  filterQuality: FilterQuality.medium,
-                                  cacheWidth:
-                                      (iconSize *
-                                              MediaQuery.devicePixelRatioOf(
-                                                context,
-                                              ))
-                                          .round(),
-                                  cacheHeight:
-                                      (iconSize *
-                                              MediaQuery.devicePixelRatioOf(
-                                                context,
-                                              ))
-                                          .round(),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: app?.icon != null
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.12),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 10),
+                                ),
+                                BoxShadow(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withValues(alpha: 0.10),
+                                  blurRadius: 32,
+                                  spreadRadius: -2,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: app?.icon != null
+                          ? ScaleTouchWrapper(
+                              hapticOnPressDown: app != null,
+                              scaleDownFactor: 0.92,
+                              child: AppIconAction(
+                                semanticLabel: tr('openApp', args: [app!.name]),
+                                onTap: () => pm.openApp(app.app.id),
+                                borderRadius: 24,
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(24),
+                                  child: Image.memory(
+                                    app.icon!,
+                                    height: iconSize,
+                                    width: iconSize,
+                                    fit: BoxFit.contain,
+                                    gaplessPlayback: true,
+                                    filterQuality: FilterQuality.medium,
+                                    cacheWidth:
+                                        (iconSize *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
+                                    cacheHeight:
+                                        (iconSize *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
+                                  ),
                                 ),
                               ),
-                            ),
-                          )
-                        : AppIconShimmer(size: iconSize, borderRadius: 24),
+                            )
+                          : AppIconShimmer(size: iconSize, borderRadius: 24),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
             );
           },
         ),
@@ -1654,78 +1710,6 @@ class _AppPageState extends State<AppPage> {
             ),
           ),
         ),
-        if (plusSettings.plusEnableTags && app != null) ...[
-          const SizedBox(height: 10),
-          Center(
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 6,
-              runSpacing: 4,
-              children: [
-                ...app.app.tags.map(
-                  (tag) => Chip(
-                    label: Text(
-                      tag,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                    avatar: Icon(
-                      Icons.label_rounded,
-                      size: 13,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .secondaryContainer
-                        .withValues(alpha: 0.5),
-                    side: BorderSide(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .secondary
-                          .withValues(alpha: 0.25),
-                      width: 0.8,
-                    ),
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-                ActionChip(
-                  avatar: const Icon(Icons.add_rounded, size: 14),
-                  label: Text(
-                    app.app.tags.isEmpty ? tr('editTags') : tr('add'),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  shape: const StadiumBorder(),
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  onPressed: () async {
-                    AppHaptics.selectionClick();
-                    final allTags = getAllTagsFromApps(
-                      appsProvider.apps.entries.toList(),
-                    );
-                    final result = await showTagEditor(
-                      context: context,
-                      currentTags: app.app.tags,
-                      allTags: allTags,
-                    );
-                    if (result != null && mounted) {
-                      app.app.tags = result;
-                      appsProvider.saveApps([app.app]);
-                      setState(() {});
-                    }
-                  },
-                ),
-              ],
-            ),
-          ),
-        ],
         getInfoColumn(),
         if (app != null) AppVersionHistoryWidget(app: app.app),
 
@@ -1872,17 +1856,19 @@ class _AppPageState extends State<AppPage> {
       // Each state drives shape, color, and content independently.
       final String stateKey = isDownloading
           ? 'downloading'
+          : updating
+          ? 'checkingUpdates'
           : (isInstalled && !hasUpdate)
           ? 'open'
           : isInstalled
           ? 'update'
           : 'install';
 
-      final ShapeBorder targetShape = isDownloading
+      final ShapeBorder targetShape = (isDownloading || updating)
           ? const StadiumBorder()
           : RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
 
-      final Color fillColor = isDownloading
+      final Color fillColor = (isDownloading || updating)
           ? colorScheme.surfaceContainerHighest
           : (isInstalled && !hasUpdate)
           ? colorScheme.secondaryContainer
@@ -1890,7 +1876,7 @@ class _AppPageState extends State<AppPage> {
           ? colorScheme.tertiaryContainer
           : colorScheme.primary;
 
-      final Color onColor = isDownloading
+      final Color onColor = (isDownloading || updating)
           ? colorScheme.onSurfaceVariant
           : (isInstalled && !hasUpdate)
           ? colorScheme.onSecondaryContainer
@@ -1900,7 +1886,31 @@ class _AppPageState extends State<AppPage> {
 
       // Content for each state, keyed so AnimatedSwitcher replaces them
       Widget content;
-      if (isDownloading) {
+      if (updating) {
+        content = Row(
+          key: const ValueKey('checkingUpdates'),
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: ExpressiveCircularProgressIndicator(
+                strokeWidth: 2,
+                color: onColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              tr('checkingForUpdates'),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: onColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        );
+      } else if (isDownloading) {
         final progress = app?.downloadProgress;
         content = Row(
           key: const ValueKey('downloading'),
@@ -2197,6 +2207,14 @@ class _AppPageState extends State<AppPage> {
                             },
                           );
                           break;
+                        case 'variants':
+                          if (app != null) {
+                            showAppVariantsSheet(
+                              context: context,
+                              appId: app.app.id,
+                            );
+                          }
+                          break;
                         case 'markUpdated':
                           showMarkUpdatedDialog();
                           break;
@@ -2271,6 +2289,15 @@ class _AppPageState extends State<AppPage> {
                             child: ListTile(
                               leading: const Icon(Icons.settings_outlined),
                               title: Text(tr('settings')),
+                              dense: true,
+                            ),
+                          ),
+                        if (app != null)
+                          const PopupMenuItem(
+                            value: 'variants',
+                            child: ListTile(
+                              leading: Icon(Icons.hub_outlined),
+                              title: Text('Local App & Variants'),
                               dense: true,
                             ),
                           ),
@@ -2375,11 +2402,13 @@ class _AppPageState extends State<AppPage> {
             ValueListenableBuilder<double?>(
               valueListenable: app.downloadProgressNotifier,
               builder: (context, downloadProgress, child) {
-                if (downloadProgress == null) return const SizedBox.shrink();
+                if (downloadProgress == null && !updating) {
+                  return const SizedBox.shrink();
+                }
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
                   child: ExpressiveProgressIndicator(
-                    value: downloadProgress >= 0
+                    value: (downloadProgress != null && downloadProgress >= 0)
                         ? downloadProgress / 100
                         : null,
                   ),
@@ -2538,7 +2567,39 @@ class _AppPageState extends State<AppPage> {
           : Theme.of(context),
       child: Scaffold(
         appBar: widget.isModal
-            ? null
+            ? AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  tooltip: tr('close'),
+                  onPressed: () {
+                    AppHaptics.selectionClick();
+                    Navigator.of(context).pop();
+                  },
+                ),
+                title: Text(
+                  app?.name ?? '',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.hub_outlined),
+                    tooltip: 'Local App & Variants',
+                    onPressed: () {
+                      AppHaptics.selectionClick();
+                      showAppVariantsSheet(
+                        context: context,
+                        appId: app?.app.id ?? widget.appId,
+                      );
+                    },
+                  ),
+                ],
+              )
             : (showAppWebpageFinal ? AppBar() : appScreenAppBar()),
         backgroundColor: widget.isModal
             ? Colors.transparent

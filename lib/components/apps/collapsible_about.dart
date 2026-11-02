@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
@@ -67,24 +68,50 @@ class _CollapsibleAboutState extends State<CollapsibleAbout> {
                   ),
                 ),
         ),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton.icon(
-            style: TextButton.styleFrom(
-              foregroundColor: colorScheme.primary,
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 4),
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ScaleTouchWrapper(
+              scaleDownFactor: 0.94,
+              onTap: () {
+                AppHaptics.selectionClick();
+                setState(() => _expanded = !_expanded);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      tr(_expanded ? 'aboutShowLess' : 'aboutShowMore'),
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    AnimatedRotation(
+                      turns: _expanded ? 0.5 : 0,
+                      duration: Duration(milliseconds: anims ? 240 : 0),
+                      curve: Curves.easeOutCubic,
+                      child: Icon(
+                        Icons.expand_more_rounded,
+                        size: 16,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            onPressed: () {
-              AppHaptics.selectionClick();
-              setState(() => _expanded = !_expanded);
-            },
-            icon: AnimatedRotation(
-              turns: _expanded ? 0.5 : 0,
-              duration: Duration(milliseconds: anims ? 240 : 0),
-              child: const Icon(Icons.expand_more_rounded, size: 20),
-            ),
-            label: Text(tr(_expanded ? 'aboutShowLess' : 'aboutShowMore')),
           ),
         ),
       ],

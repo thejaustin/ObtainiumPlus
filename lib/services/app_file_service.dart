@@ -44,6 +44,7 @@ class AppFileService {
   static Directory? _cachedAppStorageDir;
   static Directory? _cachedAppsDir;
   static Map<String, Directory>? _cachedAppDirectories;
+  static Future<Map<String, Directory>>? _initDirectoriesFuture;
 
   static Future<Directory> getAppStorageDir() async {
     if (_cachedAppStorageDir != null) return _cachedAppStorageDir!;
@@ -114,124 +115,133 @@ class AppFileService {
     }
   }
 
-  static Future<Map<String, Directory>> initAppDirectories() async {
+  static Future<Map<String, Directory>> initAppDirectories() {
     if (_cachedAppDirectories != null) {
-      return _cachedAppDirectories!;
+      return Future.value(_cachedAppDirectories!);
     }
-    late Directory APKDir;
-    late Directory iconsCacheDir;
+    return _initDirectoriesFuture ??= _doInitAppDirectories();
+  }
 
-    Directory? cacheRoot;
+  static Future<Map<String, Directory>> _doInitAppDirectories() async {
     try {
-      final results = await Future.wait<Object?>([
-        getExternalCacheDirectories(),
-        getExternalStorageDirectory(),
-      ]);
-      final extStorage = results[1] as Directory?;
-      if (extStorage != null) {
-        _cachedAppStorageDir ??= extStorage;
-      }
-      cacheRoot = selectPrimaryExternalCache(
-        results[0] as List<Directory>?,
-        extStorage,
-      );
-    } catch (_) {}
+      late Directory APKDir;
+      late Directory iconsCacheDir;
 
-    if (cacheRoot != null) {
-      Sentry.addBreadcrumb(
-        Breadcrumb(
-          message:
-              'initAppDirectories: using primary external cache path ${cacheRoot.path}',
-        ),
-      );
-      APKDir = cacheRoot;
-      iconsCacheDir = Directory('${cacheRoot.path}/icons');
+      Directory? cacheRoot;
       try {
-        if (!APKDir.existsSync()) {
-          APKDir.createSync(recursive: true);
+        final results = await Future.wait<Object?>([
+          getExternalCacheDirectories(),
+          getExternalStorageDirectory(),
+        ]);
+        final extStorage = results[1] as Directory?;
+        if (extStorage != null) {
+          _cachedAppStorageDir ??= extStorage;
         }
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync(recursive: true);
-        }
-      } catch (e) {
-        // External cache unavailable at runtime; fall through to internal storage
-        cacheRoot = null;
-      }
-    }
+        cacheRoot = selectPrimaryExternalCache(
+          results[0] as List<Directory>?,
+          extStorage,
+        );
+      } catch (_) {}
 
-    if (cacheRoot == null) {
-      Sentry.addBreadcrumb(
-        Breadcrumb(
-          message:
-              'initAppDirectories: external cache unavailable, falling back to internal cache/app storage',
-        ),
-      );
-      try {
-        final internalCache = await getApplicationCacheDirectory();
-        APKDir = Directory('${internalCache.path}/apks');
-        iconsCacheDir = Directory('${internalCache.path}/icons');
-        if (!APKDir.existsSync()) {
-          APKDir.createSync(recursive: true);
-        }
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync(recursive: true);
-        }
-      } catch (_) {
-        var baseDir = await getAppStorageDir();
-        APKDir = Directory('${baseDir.path}/apks');
-        iconsCacheDir = Directory('${baseDir.path}/icons');
-      }
-
-      try {
-        if (!APKDir.existsSync()) {
-          APKDir.createSync(recursive: true);
-        }
-        if (!iconsCacheDir.existsSync()) {
-          iconsCacheDir.createSync(recursive: true);
-        }
-      } catch (e) {
-        // External storage creation failed, fall back to internal app documents directory
+      if (cacheRoot != null) {
         Sentry.addBreadcrumb(
           Breadcrumb(
             message:
-                'initAppDirectories: external storage creation failed, falling back to internal storage',
+                'initAppDirectories: using primary external cache path ${cacheRoot.path}',
           ),
         );
-        final fallback = await getApplicationDocumentsDirectory();
-        APKDir = Directory('${fallback.path}/apks');
-        iconsCacheDir = Directory('${fallback.path}/icons');
-
-        if (!APKDir.existsSync()) {
-          try {
+        APKDir = cacheRoot;
+        iconsCacheDir = Directory('${cacheRoot.path}/icons');
+        try {
+          if (!APKDir.existsSync()) {
             APKDir.createSync(recursive: true);
-          } catch (fallbackErr, fallbackSt) {
-            Sentry.captureException(
-              fallbackErr,
-              stackTrace: fallbackSt,
-              withScope: (scope) {
-                scope.setTag('storage_path', APKDir.path);
-                scope.setTag(
-                  'error_code',
-                  (fallbackErr is FileSystemException)
-                      ? (fallbackErr.osError?.errorCode.toString() ?? 'unknown')
-                      : 'unknown',
-                );
-              },
-            );
-            rethrow;
           }
-        }
-        if (!iconsCacheDir.existsSync()) {
-          try {
+          if (!iconsCacheDir.existsSync()) {
             iconsCacheDir.createSync(recursive: true);
-          } catch (_) {}
+          }
+        } catch (e) {
+          // External cache unavailable at runtime; fall through to internal storage
+          cacheRoot = null;
         }
       }
-    }
 
-    final result = {'APKDir': APKDir, 'iconsCacheDir': iconsCacheDir};
-    _cachedAppDirectories = result;
-    return result;
+      if (cacheRoot == null) {
+        Sentry.addBreadcrumb(
+          Breadcrumb(
+            message:
+                'initAppDirectories: external cache unavailable, falling back to internal cache/app storage',
+          ),
+        );
+        try {
+          final internalCache = await getApplicationCacheDirectory();
+          APKDir = Directory('${internalCache.path}/apks');
+          iconsCacheDir = Directory('${internalCache.path}/icons');
+          if (!APKDir.existsSync()) {
+            APKDir.createSync(recursive: true);
+          }
+          if (!iconsCacheDir.existsSync()) {
+            iconsCacheDir.createSync(recursive: true);
+          }
+        } catch (_) {
+          var baseDir = await getAppStorageDir();
+          APKDir = Directory('${baseDir.path}/apks');
+          iconsCacheDir = Directory('${baseDir.path}/icons');
+        }
+
+        try {
+          if (!APKDir.existsSync()) {
+            APKDir.createSync(recursive: true);
+          }
+          if (!iconsCacheDir.existsSync()) {
+            iconsCacheDir.createSync(recursive: true);
+          }
+        } catch (e) {
+          // External storage creation failed, fall back to internal app documents directory
+          Sentry.addBreadcrumb(
+            Breadcrumb(
+              message:
+                  'initAppDirectories: external storage creation failed, falling back to internal storage',
+            ),
+          );
+          final fallback = await getApplicationDocumentsDirectory();
+          APKDir = Directory('${fallback.path}/apks');
+          iconsCacheDir = Directory('${fallback.path}/icons');
+
+          if (!APKDir.existsSync()) {
+            try {
+              APKDir.createSync(recursive: true);
+            } catch (fallbackErr, fallbackSt) {
+              Sentry.captureException(
+                fallbackErr,
+                stackTrace: fallbackSt,
+                withScope: (scope) {
+                  scope.setTag('storage_path', APKDir.path);
+                  scope.setTag(
+                    'error_code',
+                    (fallbackErr is FileSystemException)
+                        ? (fallbackErr.osError?.errorCode.toString() ??
+                              'unknown')
+                        : 'unknown',
+                  );
+                },
+              );
+              rethrow;
+            }
+          }
+          if (!iconsCacheDir.existsSync()) {
+            try {
+              iconsCacheDir.createSync(recursive: true);
+            } catch (_) {}
+          }
+        }
+      }
+
+      final result = {'APKDir': APKDir, 'iconsCacheDir': iconsCacheDir};
+      _cachedAppDirectories = result;
+      return result;
+    } finally {
+      _initDirectoriesFuture = null;
+    }
   }
 
   static void clearAppCache(String appId, Directory APKDir) {

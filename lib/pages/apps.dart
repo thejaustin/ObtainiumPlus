@@ -25,6 +25,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/services/app_install_service.dart';
+import 'package:obtainium/services/usage_stats_service.dart';
 import 'package:obtainium/theme.dart';
 import 'package:obtainium/services/app_search_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
@@ -260,11 +261,24 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   final ValueNotifier<({bool isCollapsed, bool showScrollToTop})>
   scrollFabState = ValueNotifier((isCollapsed: false, showScrollToTop: false));
   double _lastScrollOffset = 0;
+  Map<String, AppUsageStats> _usageStats = {};
+
+  Future<void> _loadUsageStats() async {
+    final granted = await UsageStatsService.isUsageAccessGranted();
+    if (!granted) return;
+    final stats = await UsageStatsService.getAllUsageStats();
+    if (mounted) {
+      setState(() {
+        _usageStats = stats;
+      });
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     scrollController.addListener(_onScroll);
+    _loadUsageStats();
     final ap = context.read<AppsProvider>();
     if (ap.selectedAppIds.isNotEmpty) {
       selectedAppIds = ap.selectedAppIds.toSet();
@@ -544,6 +558,113 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         } else if (sortCol == SortColumnSettings.releaseDate) {
           final aDate = a.app.releaseDate;
           final bDate = b.app.releaseDate;
+          final isDescending =
+              viewSettings.sortOrder == SortOrderSettings.descending;
+          if (aDate == null && bDate == null) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          } else if (aDate == null) {
+            result = isDescending ? -1 : 1;
+          } else if (bDate == null) {
+            result = isDescending ? 1 : -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (sortCol == SortColumnSettings.installDate) {
+          final aDate =
+              a.app.effectiveFirstInstalled ??
+              (a.installedInfo?.firstInstallTime != null
+                  ? DateTime.fromMillisecondsSinceEpoch(
+                      a.installedInfo!.firstInstallTime!,
+                    )
+                  : null);
+          final bDate =
+              b.app.effectiveFirstInstalled ??
+              (b.installedInfo?.firstInstallTime != null
+                  ? DateTime.fromMillisecondsSinceEpoch(
+                      b.installedInfo!.firstInstallTime!,
+                    )
+                  : null);
+          final isDescending =
+              viewSettings.sortOrder == SortOrderSettings.descending;
+          if (aDate == null && bDate == null) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          } else if (aDate == null) {
+            result = isDescending ? -1 : 1;
+          } else if (bDate == null) {
+            result = isDescending ? 1 : -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (sortCol == SortColumnSettings.lastUpdated) {
+          final aDate =
+              a.app.effectiveLastInstalled ??
+              (a.installedInfo?.lastUpdateTime != null
+                  ? DateTime.fromMillisecondsSinceEpoch(
+                      a.installedInfo!.lastUpdateTime!,
+                    )
+                  : null);
+          final bDate =
+              b.app.effectiveLastInstalled ??
+              (b.installedInfo?.lastUpdateTime != null
+                  ? DateTime.fromMillisecondsSinceEpoch(
+                      b.installedInfo!.lastUpdateTime!,
+                    )
+                  : null);
+          final isDescending =
+              viewSettings.sortOrder == SortOrderSettings.descending;
+          if (aDate == null && bDate == null) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          } else if (aDate == null) {
+            result = isDescending ? -1 : 1;
+          } else if (bDate == null) {
+            result = isDescending ? 1 : -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (sortCol == SortColumnSettings.lastCheckDate) {
+          final aDate = a.app.lastUpdateCheck;
+          final bDate = b.app.lastUpdateCheck;
+          final isDescending =
+              viewSettings.sortOrder == SortOrderSettings.descending;
+          if (aDate == null && bDate == null) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          } else if (aDate == null) {
+            result = isDescending ? -1 : 1;
+          } else if (bDate == null) {
+            result = isDescending ? 1 : -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (sortCol == SortColumnSettings.source) {
+          final aSrc = (a.app.overrideSource ?? a.app.url).toLowerCase();
+          final bSrc = (b.app.overrideSource ?? b.app.url).toLowerCase();
+          result = aSrc.compareTo(bSrc);
+          if (result == 0) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          }
+        } else if (sortCol == SortColumnSettings.added) {
+          final aDate = a.app.effectiveFirstInstalled ?? a.app.lastUpdateCheck;
+          final bDate = b.app.effectiveFirstInstalled ?? b.app.lastUpdateCheck;
+          final isDescending =
+              viewSettings.sortOrder == SortOrderSettings.descending;
+          if (aDate == null && bDate == null) {
+            result = sortKeyMap[a]!.compareTo(sortKeyMap[b]!);
+          } else if (aDate == null) {
+            result = isDescending ? -1 : 1;
+          } else if (bDate == null) {
+            result = isDescending ? 1 : -1;
+          } else {
+            result = aDate.compareTo(bDate);
+          }
+        } else if (sortCol == SortColumnSettings.lastUsed) {
+          final aStats =
+              _usageStats[a.app.id] ??
+              _usageStats[a.installedInfo?.packageName];
+          final bStats =
+              _usageStats[b.app.id] ??
+              _usageStats[b.installedInfo?.packageName];
+          final aDate = aStats?.lastTimeUsed;
+          final bDate = bStats?.lastTimeUsed;
           final isDescending =
               viewSettings.sortOrder == SortOrderSettings.descending;
           if (aDate == null && bDate == null) {
@@ -2308,6 +2429,10 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                                         context,
                                       ).showSnackBar(
                                         SnackBar(
+                                          behavior: SnackBarBehavior.floating,
+                                          dismissDirection:
+                                              DismissDirection.horizontal,
+                                          duration: const Duration(seconds: 2),
                                           content: Text(tr('appAdded')),
                                           action: SnackBarAction(
                                             label: tr('install'),

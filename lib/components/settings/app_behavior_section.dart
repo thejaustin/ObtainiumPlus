@@ -5,8 +5,10 @@ import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
+import 'package:obtainium/components/settings/usage_access_card.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/components/settings/swipe_preview_widget.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
@@ -106,6 +108,8 @@ class AppBehaviorSection extends StatelessWidget {
                               ? ConnectedSettingContainer(
                                   child: Column(
                                     children: [
+                                      const SwipePreviewWidget(),
+                                      const Divider(height: 1),
                                       if (_matches(tr('swipeRightAction')))
                                         _buildSwipeActionDropdown(
                                           context,
@@ -127,6 +131,11 @@ class AppBehaviorSection extends StatelessWidget {
               )
             : null;
 
+        final usageAccessWidget = _buildUsageAccessGroup(context, isSearching);
+        final libraryStorageWidget = _buildLibraryStorageGroup(
+          context,
+          isSearching,
+        );
         final discoverySafetyWidget = _buildDiscoverySafetyGroup(
           context,
           isSearching,
@@ -138,6 +147,16 @@ class AppBehaviorSection extends StatelessWidget {
             if (hapticsWidget != null && swipeWidget != null)
               const SizedBox(height: 12),
             ?swipeWidget,
+          ];
+
+          final rightChildren = [
+            ?usageAccessWidget,
+            if (usageAccessWidget != null && libraryStorageWidget != null)
+              const SizedBox(height: 12),
+            ?libraryStorageWidget,
+            if (libraryStorageWidget != null || usageAccessWidget != null)
+              const SizedBox(height: 12),
+            discoverySafetyWidget,
           ];
 
           return Row(
@@ -153,7 +172,7 @@ class AppBehaviorSection extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [discoverySafetyWidget],
+                  children: rightChildren,
                 ),
               ),
             ],
@@ -162,7 +181,21 @@ class AppBehaviorSection extends StatelessWidget {
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [?hapticsWidget, ?swipeWidget, discoverySafetyWidget],
+          children: [
+            ?hapticsWidget,
+            if (hapticsWidget != null && swipeWidget != null)
+              const SizedBox(height: 12),
+            ?swipeWidget,
+            if (swipeWidget != null && usageAccessWidget != null)
+              const SizedBox(height: 12),
+            ?usageAccessWidget,
+            if (usageAccessWidget != null && libraryStorageWidget != null)
+              const SizedBox(height: 12),
+            ?libraryStorageWidget,
+            if (libraryStorageWidget != null || usageAccessWidget != null)
+              const SizedBox(height: 12),
+            discoverySafetyWidget,
+          ],
         );
       },
     );
@@ -361,6 +394,65 @@ class AppBehaviorSection extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget? _buildUsageAccessGroup(BuildContext context, bool isSearching) {
+    if (isSearching &&
+        !_matches(tr('appLaunchAndUsage')) &&
+        !_matches(tr('usageAccessSettings')) &&
+        !_matches('usage') &&
+        !_matches('screen time')) {
+      return null;
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!isSearching) ...[
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 6),
+            child: Text(
+              tr('appLaunchAndUsage'),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+        ],
+        const UsageAccessCard(margin: EdgeInsets.only(bottom: 12)),
+      ],
+    );
+  }
+
+  Widget? _buildLibraryStorageGroup(BuildContext context, bool isSearching) {
+    final hasRemove = _matches(tr('removeOnExternalUninstall'));
+    if (!hasRemove) return null;
+
+    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    return ExpressiveSettingsGroup(
+      title: isSearching ? null : tr('libraryAndStorage'),
+      description: isSearching ? null : tr('libraryAndStorageDesc'),
+      persistKey: 'libraryAndStorage',
+      icon: Icons.folder_delete_outlined,
+      isExpandable: !isSearching,
+      initiallyExpanded: true,
+      children: [
+        SwitchListTile.adaptive(
+          secondary: buildSettingsIconBadge(
+            context,
+            Icons.delete_sweep_outlined,
+            active: behaviorSettings.removeOnExternalUninstall,
+          ),
+          title: Text(tr('removeOnExternalUninstall')),
+          subtitle: Text(tr('removeOnExternalUninstallDescription')),
+          value: behaviorSettings.removeOnExternalUninstall,
+          onChanged: (v) {
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+            behaviorSettings.removeOnExternalUninstall = v;
+          },
+        ),
+      ],
     );
   }
 

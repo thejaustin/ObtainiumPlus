@@ -20,7 +20,7 @@ Future<VariantDecision> showVariantConflictDialog(
 }) async {
   final result = await showDialog<VariantDecision>(
     context: context,
-    barrierDismissible: false,
+    barrierDismissible: true,
     builder: (_) => _VariantConflictDialog(
       appName: appName,
       apkPackage: apkPackage,
@@ -108,68 +108,73 @@ class _VariantConflictDialogState extends State<_VariantConflictDialog> {
       );
     }
 
-    return GlassDialog(
-      title: tr('variantConflictTitle'),
-      icon: Icons.layers_outlined,
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            tr(
-              'variantConflictBody',
-              args: [installedName, installed.packageName, widget.apkPackage],
-            ),
-          ),
-          if (involvesShizuku) ...[
-            const SizedBox(height: 8),
+    return Dismissible(
+      key: const Key('variant_conflict_dialog_dismiss'),
+      direction: DismissDirection.down,
+      onDismissed: (_) => _pick(VariantChoice.cancel),
+      child: GlassDialog(
+        title: tr('variantConflictTitle'),
+        icon: Icons.layers_outlined,
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
             Text(
-              tr('variantConflictShizukuNote'),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+              tr(
+                'variantConflictBody',
+                args: [installedName, installed.packageName, widget.apkPackage],
               ),
             ),
-          ],
-          const SizedBox(height: 4),
-          option(
-            icon: Icons.swap_horiz_rounded,
-            title: tr('variantReplaceTitle'),
-            subtitle: tr('variantReplaceDesc', args: [installed.label]),
-            choice: VariantChoice.replace,
-            emphasized: true,
-          ),
-          if (widget.canPickOtherFile)
+            if (involvesShizuku) ...[
+              const SizedBox(height: 8),
+              Text(
+                tr('variantConflictShizukuNote'),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+            const SizedBox(height: 4),
             option(
-              icon: Icons.undo_rounded,
-              title: tr('variantUseInstalledTitle'),
-              subtitle: tr('variantUseInstalledDesc'),
-              choice: VariantChoice.useInstalled,
+              icon: Icons.swap_horiz_rounded,
+              title: tr('variantReplaceTitle'),
+              subtitle: tr('variantReplaceDesc', args: [installed.label]),
+              choice: VariantChoice.replace,
+              emphasized: true,
             ),
-          option(
-            icon: Icons.library_add_outlined,
-            title: tr('variantKeepBothTitle'),
-            subtitle: tr('variantKeepBothDesc', args: [installed.label]),
-            choice: VariantChoice.keepBoth,
-          ),
-          const SizedBox(height: 4),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            dense: true,
-            visualDensity: VisualDensity.compact,
-            controlAffinity: ListTileControlAffinity.leading,
-            value: _dontAskAgain,
-            onChanged: (v) => setState(() => _dontAskAgain = v ?? false),
-            title: Text(tr('variantDontAskAgain')),
-            subtitle: Text(tr('variantDontAskAgainDesc')),
+            if (widget.canPickOtherFile)
+              option(
+                icon: Icons.undo_rounded,
+                title: tr('variantUseInstalledTitle'),
+                subtitle: tr('variantUseInstalledDesc'),
+                choice: VariantChoice.useInstalled,
+              ),
+            option(
+              icon: Icons.library_add_outlined,
+              title: tr('variantKeepBothTitle'),
+              subtitle: tr('variantKeepBothDesc', args: [installed.label]),
+              choice: VariantChoice.keepBoth,
+            ),
+            const SizedBox(height: 4),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              dense: true,
+              visualDensity: VisualDensity.compact,
+              controlAffinity: ListTileControlAffinity.leading,
+              value: _dontAskAgain,
+              onChanged: (v) => setState(() => _dontAskAgain = v ?? false),
+              title: Text(tr('variantDontAskAgain')),
+              subtitle: Text(tr('variantDontAskAgainDesc')),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => _pick(VariantChoice.cancel),
+            child: Text(tr('cancel')),
           ),
         ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => _pick(VariantChoice.cancel),
-          child: Text(tr('cancel')),
-        ),
-      ],
     );
   }
 }

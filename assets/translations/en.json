@@ -1235,6 +1235,20 @@
   "installUpdate": "Install / Update",
   "installationCancelled": "Installation cancelled",
   "usageAccessSettings": "Usage Access Settings",
+  "usageAccessPermission": "Usage Access Permission",
+  "packageUsageStats": "android.permission.PACKAGE_USAGE_STATS",
+  "usageAccessGranted": "Active",
+  "usageAccessNotGranted": "Permission Required",
+  "usageAccessDescription": "Allows Obtainium+ to view app launch recency, track last-used timestamps, and calculate foreground usage for your apps.",
+  "grantWithShizuku": "Grant with Shizuku",
+  "grantWithElevated": "Grant with Elevated Shell",
+  "usageAccessGrantedVia": "Usage access granted successfully via {}!",
+  "grantUsageAccessFailed": "Failed to grant usage access. Try granting via System Settings.",
+  "trackingAppsCount": "Tracking usage stats for {} apps",
+  "refreshStats": "Refresh Stats",
+  "lastUsed": "Last Used",
+  "screenTime": "Screen Time",
+  "neverUsed": "Never Used",
   "batteryOptimizationSettings": "Battery Optimization Settings",
   "batteryOptimizationSettingsPage": "Open Battery Optimization settings page instead",
   "enableAutostart": "Enable Autostart",
@@ -1625,5 +1639,9 @@
   "forgetVariantChoicesDescription": {
     "one": "1 app installs without asking when another version is installed",
     "other": "{} apps install without asking when another version is installed"
-  }
+  },
+  "libraryAndStorage": "Library & Storage Management",
+  "libraryAndStorageDesc": "Manage tracked apps lifecycle and automatic cleanup",
+  "appLaunchAndUsage": "App Launch & Usage Recency",
+  "appLaunchAndUsageDesc": "Track foreground screen time and sort apps by last used"
 }

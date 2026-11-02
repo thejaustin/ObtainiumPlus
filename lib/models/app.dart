@@ -4,6 +4,7 @@ import 'package:obtainium/models/typed_settings.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/models/version_history_entry.dart';
+import 'package:obtainium/models/install_history_entry.dart';
 
 /// Converts a list of [MapEntry] pairs into a 2D list of strings for JSON encoding.
 List<List<String>> stringMapListTo2DList(
@@ -37,6 +38,19 @@ class App {
   late String? overrideSource;
   bool allowIdChange = false;
   List<VersionHistoryEntry> versionHistory = [];
+  DateTime? firstInstalledAt;
+  DateTime? lastInstalledAt;
+  List<InstallHistoryEntry> installHistory = [];
+
+  /// Effective first installed date, falling back to earliest install history entry.
+  DateTime? get effectiveFirstInstalled =>
+      firstInstalledAt ??
+      (installHistory.isNotEmpty ? installHistory.first.timestamp : null);
+
+  /// Effective last installed or updated date, falling back to latest install history entry.
+  DateTime? get effectiveLastInstalled =>
+      lastInstalledAt ??
+      (installHistory.isNotEmpty ? installHistory.last.timestamp : null);
 
   /// If non-null, the app's source has a new canonical URL and a rename is pending.
   String? pendingRepoRenameUrl;
@@ -81,6 +95,9 @@ class App {
     this.newerReleasesFilteredOut,
     this.updateHealthEnabled = true,
     this.updateHealthDismissedVersion,
+    this.firstInstalledAt,
+    this.lastInstalledAt,
+    this.installHistory = const [],
   });
 
   @override
@@ -137,6 +154,9 @@ class App {
     Object? newerReleasesFilteredOut = _sentinel,
     bool? updateHealthEnabled,
     Object? updateHealthDismissedVersion = _sentinel,
+    Object? firstInstalledAt = _sentinel,
+    Object? lastInstalledAt = _sentinel,
+    List<InstallHistoryEntry>? installHistory,
   }) {
     return App(
         id ?? this.id,
@@ -193,6 +213,13 @@ class App {
         updateHealthDismissedVersion: updateHealthDismissedVersion == _sentinel
             ? this.updateHealthDismissedVersion
             : updateHealthDismissedVersion as String?,
+        firstInstalledAt: firstInstalledAt == _sentinel
+            ? this.firstInstalledAt
+            : firstInstalledAt as DateTime?,
+        lastInstalledAt: lastInstalledAt == _sentinel
+            ? this.lastInstalledAt
+            : lastInstalledAt as DateTime?,
+        installHistory: installHistory ?? List.from(this.installHistory),
       )
       ..pendingRepoRenameUrl = (pendingRepoRenameUrl == _sentinel
           ? this.pendingRepoRenameUrl
@@ -228,6 +255,9 @@ class App {
     newerReleasesFilteredOut: newerReleasesFilteredOut,
     updateHealthEnabled: updateHealthEnabled,
     updateHealthDismissedVersion: updateHealthDismissedVersion,
+    firstInstalledAt: firstInstalledAt,
+    lastInstalledAt: lastInstalledAt,
+    installHistory: List.from(installHistory),
   )..pendingRepoRenameUrl = pendingRepoRenameUrl;
 
   factory App.fromJson(
@@ -303,6 +333,38 @@ class App {
         updateHealthEnabled: (json['updateHealthEnabled'] as bool?) ?? true,
         updateHealthDismissedVersion:
             json['updateHealthDismissedVersion'] as String?,
+        firstInstalledAt: json['firstInstalledAt'] == null
+            ? null
+            : (json['firstInstalledAt'] is num
+                  ? ((json['firstInstalledAt'] as num).toInt() > 100000000000000
+                        ? DateTime.fromMicrosecondsSinceEpoch(
+                            (json['firstInstalledAt'] as num).toInt(),
+                          )
+                        : DateTime.fromMillisecondsSinceEpoch(
+                            (json['firstInstalledAt'] as num).toInt(),
+                          ))
+                  : null),
+        lastInstalledAt: json['lastInstalledAt'] == null
+            ? null
+            : (json['lastInstalledAt'] is num
+                  ? ((json['lastInstalledAt'] as num).toInt() > 100000000000000
+                        ? DateTime.fromMicrosecondsSinceEpoch(
+                            (json['lastInstalledAt'] as num).toInt(),
+                          )
+                        : DateTime.fromMillisecondsSinceEpoch(
+                            (json['lastInstalledAt'] as num).toInt(),
+                          ))
+                  : null),
+        installHistory: json['installHistory'] != null
+            ? (json['installHistory'] as List<dynamic>)
+                  .whereType<Map>()
+                  .map(
+                    (e) => InstallHistoryEntry.fromJson(
+                      Map<String, dynamic>.from(e),
+                    ),
+                  )
+                  .toList()
+            : [],
       )..pendingRepoRenameUrl = json['pendingRepoRenameUrl'] as String?;
     } on TypeError catch (e) {
       AppLogger.error(
@@ -344,6 +406,9 @@ class App {
     'newerReleasesFilteredOut': newerReleasesFilteredOut,
     'updateHealthEnabled': updateHealthEnabled,
     'updateHealthDismissedVersion': updateHealthDismissedVersion,
+    'firstInstalledAt': firstInstalledAt?.microsecondsSinceEpoch,
+    'lastInstalledAt': lastInstalledAt?.microsecondsSinceEpoch,
+    'installHistory': installHistory.map((e) => e.toJson()).toList(),
   };
 }
 

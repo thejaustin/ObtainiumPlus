@@ -422,6 +422,8 @@ class _SortFilterPanelState extends State<SortFilterPanel>
         return (tr('installStatus'), Icons.install_mobile_rounded);
       case AppSortMethod.defaultSort:
         return (tr('defaultSort'), Icons.sort_rounded);
+      case AppSortMethod.lastUsed:
+        return (tr('lastUsed'), Icons.insights_rounded);
     }
   }
 

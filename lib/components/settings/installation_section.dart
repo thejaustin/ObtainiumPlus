@@ -301,23 +301,6 @@ class _InstallationSectionState extends State<InstallationSection>
               onChanged: (s, v) => s.plusEnableUserPreapproval = v,
             ),
 
-          // Remove on External Uninstall
-          if (_matches(tr('removeOnExternalUninstall')))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.delete_sweep_outlined,
-                active: behaviorSettings.removeOnExternalUninstall,
-              ),
-              title: Text(tr('removeOnExternalUninstall')),
-              subtitle: Text(tr('removeOnExternalUninstallDescription')),
-              value: behaviorSettings.removeOnExternalUninstall,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.removeOnExternalUninstall = v;
-              },
-            ),
-
           // Another build of the app already installed
           if (_matches(tr('askAboutOtherInstalledBuilds')))
             SwitchListTile.adaptive(

@@ -279,6 +279,21 @@ class PlusSettingsProvider with ChangeNotifier {
       _getBool('plusEnablePopupSlider', defaultValue: false);
   set plusEnablePopupSlider(bool val) => _setBool('plusEnablePopupSlider', val);
 
+  /// Visual presentation style for app description and about info
+  AppDescriptionStyle get plusAppDescriptionStyle {
+    final str = _getString(
+      'plusAppDescriptionStyle',
+      defaultValue: AppDescriptionStyle.obtainiumPlus.name,
+    );
+    return AppDescriptionStyle.values.firstWhere(
+      (e) => e.name == str,
+      orElse: () => AppDescriptionStyle.obtainiumPlus,
+    );
+  }
+
+  set plusAppDescriptionStyle(AppDescriptionStyle val) =>
+      _setString('plusAppDescriptionStyle', val.name);
+
   bool get plusEnableResponsiveAppLayout =>
       _getBool('plusEnableResponsiveAppLayout', defaultValue: false);
   set plusEnableResponsiveAppLayout(bool val) =>
@@ -422,6 +437,11 @@ class PlusSettingsProvider with ChangeNotifier {
   bool get autoDiscardTokens =>
       _getBool('autoDiscardTokens', defaultValue: true);
   set autoDiscardTokens(bool val) => _setBool('autoDiscardTokens', val);
+
+  bool get plusPreferQuotaFreeRegistries =>
+      _getBool('plusPreferQuotaFreeRegistries', defaultValue: true);
+  set plusPreferQuotaFreeRegistries(bool val) =>
+      _setBool('plusPreferQuotaFreeRegistries', val);
 
   // Quick-Add FAB menu item visibility
   bool get plusFabShowSearch =>

@@ -85,6 +85,9 @@ class _CommandCenterState extends State<CommandCenter> {
               .firstOrNull;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
+              behavior: SnackBarBehavior.floating,
+              dismissDirection: DismissDirection.horizontal,
+              duration: const Duration(seconds: 2),
               content: Text(tr('appAdded')),
               action: newApp != null
                   ? SnackBarAction(

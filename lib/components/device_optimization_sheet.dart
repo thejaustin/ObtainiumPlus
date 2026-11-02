@@ -5,6 +5,7 @@ import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
+import 'package:obtainium/components/settings/usage_access_card.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -1108,6 +1109,11 @@ class _DeviceOptimizationSheetContentState
 
                             // Shizuku & ShizukuPlus Hero Status Card
                             const ShizukuStatusCard(margin: EdgeInsets.zero),
+
+                            const SizedBox(height: 14),
+
+                            // Usage Access (PACKAGE_USAGE_STATS) Elevation Card
+                            const UsageAccessCard(margin: EdgeInsets.zero),
                           ],
                         ),
                       ),

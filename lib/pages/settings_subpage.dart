@@ -61,11 +61,15 @@ class SettingsSubpage extends StatefulWidget {
 class _SettingsSubpageState extends State<SettingsSubpage> {
   late final ScrollController _siblingScrollController;
   final List<GlobalKey> _siblingKeys = [];
+  late int _currentIndex;
+  late int _previousIndex;
 
   @override
   void initState() {
     super.initState();
     _siblingScrollController = ScrollController();
+    _currentIndex = widget.currentSiblingIndex ?? 0;
+    _previousIndex = _currentIndex;
     if (widget.siblings != null && widget.siblings!.isNotEmpty) {
       _siblingKeys.addAll(
         List.generate(widget.siblings!.length, (_) => GlobalKey()),
@@ -77,12 +81,10 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
   }
 
   void _scrollToActiveSibling() {
-    if (!mounted ||
-        widget.currentSiblingIndex == null ||
-        widget.currentSiblingIndex! >= _siblingKeys.length) {
+    if (!mounted || _currentIndex >= _siblingKeys.length) {
       return;
     }
-    final key = _siblingKeys[widget.currentSiblingIndex!];
+    final key = _siblingKeys[_currentIndex];
     final targetContext = key.currentContext;
     if (targetContext != null) {
       Scrollable.ensureVisible(
@@ -112,7 +114,20 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(cardRadius);
-    final resolvedAccent = widget.accentColor ?? colorScheme.primary;
+
+    final hasSiblings = widget.siblings != null && widget.siblings!.isNotEmpty;
+    final currentSibling =
+        hasSiblings && _currentIndex < widget.siblings!.length
+        ? widget.siblings![_currentIndex]
+        : null;
+    final activeTitle = currentSibling?.title ?? widget.title;
+    final activeSubtitle = currentSibling?.subtitle ?? widget.subtitle;
+    final activeIcon = currentSibling?.icon ?? widget.icon;
+    final resolvedAccent =
+        currentSibling?.accentColor ??
+        widget.accentColor ??
+        colorScheme.primary;
+    final activeChild = currentSibling?.child ?? widget.child;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
     final double hPadding = screenWidth > 1040
@@ -134,8 +149,8 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
         physics: plusSettings.scrollPhysics,
         slivers: [
           CustomAppBar(
-            title: widget.title,
-            subtitle: widget.subtitle,
+            title: activeTitle,
+            subtitle: activeSubtitle,
             actions: effectiveActions.isNotEmpty ? effectiveActions : null,
           ),
           SliverPadding(
@@ -145,7 +160,7 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // M3 Expressive Masthead Card
-                  if (widget.icon != null) ...[
+                  if (activeIcon != null) ...[
                     Card(
                       elevation: 0,
                       margin: EdgeInsets.only(bottom: isCompact ? 8 : 12),
@@ -203,7 +218,7 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                     ),
                                   ),
                                   child: Icon(
-                                    widget.icon,
+                                    activeIcon,
                                     size: isCompact ? 20 : 24,
                                     color: resolvedAccent,
                                   ),
@@ -215,7 +230,7 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        widget.title,
+                                        activeTitle,
                                         style: theme.textTheme.titleMedium
                                             ?.copyWith(
                                               fontWeight: FontWeight.w700,
@@ -223,11 +238,11 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                               color: colorScheme.onSurface,
                                             ),
                                       ),
-                                      if (widget.subtitle != null &&
-                                          widget.subtitle!.isNotEmpty) ...[
+                                      if (activeSubtitle != null &&
+                                          activeSubtitle.isNotEmpty) ...[
                                         const SizedBox(height: 2),
                                         Text(
-                                          widget.subtitle!,
+                                          activeSubtitle,
                                           style: theme.textTheme.bodySmall
                                               ?.copyWith(
                                                 color: colorScheme
@@ -247,7 +262,8 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                     ),
                   ],
                   // Lateral Sibling Navigation Bar
-                  if (widget.siblings != null && widget.siblings!.length > 1) ...[
+                  if (widget.siblings != null &&
+                      widget.siblings!.length > 1) ...[
                     Padding(
                       padding: EdgeInsets.only(bottom: isCompact ? 8 : 12),
                       child: SingleChildScrollView(
@@ -255,9 +271,11 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                         scrollDirection: Axis.horizontal,
                         physics: const BouncingScrollPhysics(),
                         child: Row(
-                          children: List.generate(widget.siblings!.length, (index) {
+                          children: List.generate(widget.siblings!.length, (
+                            index,
+                          ) {
                             final sibling = widget.siblings![index];
-                            final isCurrent = index == widget.currentSiblingIndex;
+                            final isCurrent = index == _currentIndex;
                             final siblingAccent =
                                 sibling.accentColor ?? resolvedAccent;
                             final chipRadius = CardMetrics.inner(cardRadius);
@@ -281,9 +299,9 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                           alpha: isM3E ? 0.22 : 0.16,
                                         )
                                       : (plusSettings.plusEnableGlassmorphism
-                                          ? colorScheme.surfaceContainerLow
-                                              .withValues(alpha: 0.72)
-                                          : colorScheme.surfaceContainerLow),
+                                            ? colorScheme.surfaceContainerLow
+                                                  .withValues(alpha: 0.72)
+                                            : colorScheme.surfaceContainerLow),
                                   shape: CardMetrics.shape(
                                     chipRadius,
                                     expressive: isM3E,
@@ -291,12 +309,13 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                       color: isCurrent
                                           ? siblingAccent.withValues(alpha: 0.6)
                                           : colorScheme.outlineVariant
-                                              .withValues(
-                                                alpha: theme.brightness ==
-                                                        Brightness.dark
-                                                    ? 0.35
-                                                    : 0.65,
-                                              ),
+                                                .withValues(
+                                                  alpha:
+                                                      theme.brightness ==
+                                                          Brightness.dark
+                                                      ? 0.35
+                                                      : 0.65,
+                                                ),
                                       width: isCurrent ? 1.5 : 1.0,
                                     ),
                                   ),
@@ -309,63 +328,11 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                         ? null
                                         : () {
                                             AppHaptics.selectionClick();
-                                            final bool slideForward = index >
-                                                (widget.currentSiblingIndex ?? 0);
-                                            Navigator.of(context).pushReplacement(
-                                              PageRouteBuilder(
-                                                pageBuilder:
-                                                    (context, animation, _) =>
-                                                        SettingsSubpage(
-                                                  title: sibling.title,
-                                                  subtitle: sibling.subtitle,
-                                                  icon: sibling.icon,
-                                                  accentColor:
-                                                      sibling.accentColor,
-                                                  siblings: widget.siblings,
-                                                  currentSiblingIndex: index,
-                                                  connectedItems:
-                                                      widget.connectedItems,
-                                                  actions: widget.actions,
-                                                  onReset: widget.onReset,
-                                                  child: sibling.child,
-                                                ),
-                                                transitionDuration:
-                                                    const Duration(
-                                                  milliseconds: 240,
-                                                ),
-                                                reverseTransitionDuration:
-                                                    const Duration(
-                                                  milliseconds: 200,
-                                                ),
-                                                transitionsBuilder: (
-                                                  context,
-                                                  animation,
-                                                  secondaryAnimation,
-                                                  child,
-                                                ) {
-                                                  final curved = CurvedAnimation(
-                                                    parent: animation,
-                                                    curve: Curves.easeOutCubic,
-                                                  );
-                                                  final slide = Tween<Offset>(
-                                                    begin: Offset(
-                                                      slideForward
-                                                          ? 0.05
-                                                          : -0.05,
-                                                      0.0,
-                                                    ),
-                                                    end: Offset.zero,
-                                                  ).animate(curved);
-                                                  return SlideTransition(
-                                                    position: slide,
-                                                    child: FadeTransition(
-                                                      opacity: curved,
-                                                      child: child,
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                            );
+                                            setState(() {
+                                              _previousIndex = _currentIndex;
+                                              _currentIndex = index;
+                                            });
+                                            _scrollToActiveSibling();
                                           },
                                     child: Padding(
                                       padding: EdgeInsets.symmetric(
@@ -389,12 +356,12 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                                 ?.copyWith(
                                                   color: isCurrent
                                                       ? (theme.brightness ==
-                                                              Brightness.dark
-                                                          ? siblingAccent
-                                                          : colorScheme
-                                                              .onSurface)
+                                                                Brightness.dark
+                                                            ? siblingAccent
+                                                            : colorScheme
+                                                                  .onSurface)
                                                       : colorScheme
-                                                          .onSurfaceVariant,
+                                                            .onSurfaceVariant,
                                                   fontWeight: isCurrent
                                                       ? FontWeight.w700
                                                       : FontWeight.w500,
@@ -412,7 +379,46 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                       ),
                     ),
                   ],
-                  widget.child,
+                  AnimatedSwitcher(
+                    duration: Duration(
+                      milliseconds: plusSettings.plusEnableEnhancedAnimations
+                          ? 260
+                          : 0,
+                    ),
+                    switchInCurve: Easing.emphasizedDecelerate,
+                    switchOutCurve: Easing.emphasizedAccelerate,
+                    layoutBuilder:
+                        (Widget? currentChild, List<Widget> previousChildren) {
+                          return Stack(
+                            alignment: Alignment.topCenter,
+                            children: <Widget>[
+                              ...previousChildren,
+                              if (currentChild != null) currentChild,
+                            ],
+                          );
+                        },
+                    transitionBuilder: (child, animation) {
+                      final bool slideForward = _currentIndex >= _previousIndex;
+                      final curved = CurvedAnimation(
+                        parent: animation,
+                        curve: Easing.emphasizedDecelerate,
+                      );
+                      return FadeTransition(
+                        opacity: curved,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: Offset(slideForward ? 0.04 : -0.04, 0.0),
+                            end: Offset.zero,
+                          ).animate(curved),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(_currentIndex),
+                      child: activeChild,
+                    ),
+                  ),
                   // Connected Settings Strip at subpage bottom
                   if (widget.connectedItems != null &&
                       widget.connectedItems!.isNotEmpty) ...[

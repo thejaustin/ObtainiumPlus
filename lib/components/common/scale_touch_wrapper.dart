@@ -73,13 +73,7 @@ class _ScaleTouchWrapperState extends State<ScaleTouchWrapper>
     _pressHapticTimer?.cancel();
 
     if (widget.hapticOnPressDown) {
-      _pendingPressHaptic = true;
-      _pressHapticTimer = Timer(const Duration(milliseconds: 35), () {
-        if (_isPressed && _pendingPressHaptic && mounted) {
-          _pendingPressHaptic = false;
-          AppHaptics.tapDown();
-        }
-      });
+      AppHaptics.tapDown();
     }
 
     if (!_animate) return;

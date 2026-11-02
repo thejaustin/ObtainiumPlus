@@ -9,10 +9,12 @@ Future<T?> showDraggableModalBottomSheet<T>({
   required BuildContext context,
   required Widget Function(BuildContext, ScrollController) builder,
   double initialChildSize = 0.95,
-  double minChildSize = 0.5,
+  double minChildSize = 0.25,
   double maxChildSize = 1.0,
   bool useSafeArea = true,
+  bool showDragHandle = true,
 }) {
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
   final plusSettings = context.read<PlusSettingsProvider>();
   final enableGlass = plusSettings.plusEnableGlassmorphism;
   final radius = plusSettings.plusOverrideIndividualCornerRadius
@@ -60,10 +62,32 @@ Future<T?> showDraggableModalBottomSheet<T>({
                     width: 1,
                   ),
                 ),
-                child: SafeArea(
-                  bottom: false,
-                  top: useSafeArea,
-                  child: builder(context, scrollController),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showDragHandle)
+                      Center(
+                        child: Container(
+                          margin: const EdgeInsets.only(top: 10, bottom: 4),
+                          width: 36,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurfaceVariant
+                                .withValues(alpha: 0.4),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                    Expanded(
+                      child: SafeArea(
+                        bottom: false,
+                        top: useSafeArea,
+                        child: builder(context, scrollController),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

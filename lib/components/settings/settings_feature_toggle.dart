@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -25,25 +26,32 @@ Widget buildSettingsIconBadge(
   final badgeSize = isCompact ? 30.0 : 36.0;
   final resolvedAccent = accentColor ?? colorScheme.primary;
 
-  return AnimatedContainer(
+  return AnimatedScale(
+    scale: active ? 1.05 : 1.0,
     duration: Duration(
-      milliseconds: plusSettings.plusEnableEnhancedAnimations ? 220 : 0,
+      milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
     ),
     curve: Curves.easeOutCubic,
-    width: badgeSize,
-    height: badgeSize,
-    decoration: ShapeDecoration(
-      color: active
-          ? resolvedAccent.withValues(alpha: isM3E ? 0.16 : 0.12)
-          : colorScheme.surfaceContainerHighest.withValues(
-              alpha: isM3E ? 0.50 : 0.32,
-            ),
-      shape: CardMetrics.shape(innerRadius, expressive: isM3E),
-    ),
-    child: Icon(
-      icon,
-      size: isCompact ? 16 : 19,
-      color: active ? resolvedAccent : colorScheme.onSurfaceVariant,
+    child: AnimatedContainer(
+      duration: Duration(
+        milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
+      ),
+      curve: Curves.easeOutCubic,
+      width: badgeSize,
+      height: badgeSize,
+      decoration: ShapeDecoration(
+        color: active
+            ? resolvedAccent.withValues(alpha: isM3E ? 0.16 : 0.12)
+            : colorScheme.surfaceContainerHighest.withValues(
+                alpha: isM3E ? 0.50 : 0.32,
+              ),
+        shape: CardMetrics.shape(innerRadius, expressive: isM3E),
+      ),
+      child: Icon(
+        icon,
+        size: isCompact ? 16 : 19,
+        color: active ? resolvedAccent : colorScheme.onSurfaceVariant,
+      ),
     ),
   );
 }
@@ -79,34 +87,38 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
       final isEnabled = value(settings);
       final isCompact = plusSettings.plusUseCompactSettings;
 
-      return SwitchListTile.adaptive(
-        secondary: buildSettingsIconBadge(context, icon, active: isEnabled),
-        title: Text(
-          title,
-          style: isCompact
-              ? Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)
-              : Theme.of(context).listTileTheme.titleTextStyle,
+      return ScaleTouchWrapper(
+        scaleDownFactor: 0.985,
+        hapticOnPressDown: true,
+        child: SwitchListTile.adaptive(
+          secondary: buildSettingsIconBadge(context, icon, active: isEnabled),
+          title: Text(
+            title,
+            style: isCompact
+                ? Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)
+                : Theme.of(context).listTileTheme.titleTextStyle,
+          ),
+          subtitle: (subtitle != null && subtitle.isNotEmpty)
+              ? Text(
+                  subtitle,
+                  maxLines: isCompact ? 2 : 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: isCompact
+                      ? Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        )
+                      : null,
+                )
+              : null,
+          value: isEnabled,
+          onChanged: (v) {
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+            onChanged(settings, v);
+          },
         ),
-        subtitle: (subtitle != null && subtitle.isNotEmpty)
-            ? Text(
-                subtitle,
-                maxLines: isCompact ? 2 : 3,
-                overflow: TextOverflow.ellipsis,
-                style: isCompact
-                    ? Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      )
-                    : null,
-              )
-            : null,
-        value: isEnabled,
-        onChanged: (v) {
-          v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-          onChanged(settings, v);
-        },
       );
     },
   );

@@ -7,6 +7,7 @@ enum SortColumnSettings {
   source,
   installDate,
   lastCheckDate,
+  lastUsed,
 }
 
 enum SortOrderSettings { ascending, descending }
@@ -18,6 +19,7 @@ enum AppSortMethod {
   recentlyAdded,
   installStatus,
   defaultSort,
+  lastUsed,
 }
 
 enum CategoryIconPosition { leading, trailing, below, disabled }
@@ -37,3 +39,11 @@ enum InstallerMode { system, shizuku, external, root }
 enum SettingsLayoutMode { m3eCompactGrid, classicGrouped }
 
 enum ColourSchemeMode { standard, vibrant, expressive, materialYou }
+
+enum AppDescriptionStyle {
+  obtainiumPlus,
+  githubReadme,
+  playStore,
+  liveWebpage,
+  rawMarkdown,
+}

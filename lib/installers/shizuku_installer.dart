@@ -377,10 +377,10 @@ class ShizukuInstaller extends Installer {
     }
 
     // Concurrent package-verification polling.
-    // Adaptive interval: 350ms for the first 10s, then every ~3rd tick (~1050ms)
-    // to reduce package manager pressure during longer installs.
+    // Fast progressive polling: 120ms for the first 1.2s, then 300ms, then backoff.
+    // Detects rapid installs instantly without waiting on a fixed 350ms tick.
     int pollTick = 0;
-    final pollTimer = Timer.periodic(const Duration(milliseconds: 350), (
+    final pollTimer = Timer.periodic(const Duration(milliseconds: 120), (
       t,
     ) async {
       pollTick++;
@@ -389,6 +389,7 @@ class ShizukuInstaller extends Installer {
         return;
       }
       if (stopwatch.elapsedMilliseconds > 10000 && pollTick % 3 != 0) return;
+      if (stopwatch.elapsedMilliseconds > 1200 && pollTick % 2 != 0) return;
       try {
         if (await landed() && !completer.isCompleted) {
           t.cancel();

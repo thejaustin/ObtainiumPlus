@@ -197,9 +197,9 @@ class UpdateSettingsSection extends StatelessWidget {
     }
     return Consumer<SettingsProvider>(
       builder: (context, settings, _) {
-        const steps = [1, 2, 3, 5, 10];
+        const steps = [1, 2, 4, 6, 8, 12];
         final idx = steps.indexOf(settings.updateCheckConcurrencyLimit);
-        final sliderVal = (idx < 0 ? 2 : idx).toDouble();
+        final sliderVal = (idx < 0 ? 3 : idx).toDouble();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -208,14 +208,14 @@ class UpdateSettingsSection extends StatelessWidget {
               title: tr('plusUpdateCheckConcurrency'),
               subtitle: tr('plusUpdateCheckConcurrencyDescription'),
               value: sliderVal,
-              defaultValue: 2.0,
+              defaultValue: 3.0,
               min: 0,
-              max: 4,
-              divisions: 4,
-              labelBuilder: (v) => steps[v.round().clamp(0, 4)].toString(),
+              max: 5,
+              divisions: 5,
+              labelBuilder: (v) => steps[v.round().clamp(0, 5)].toString(),
               onChanged: (val) {
                 settings.updateCheckConcurrencyLimit =
-                    steps[val.round().clamp(0, 4)];
+                    steps[val.round().clamp(0, 5)];
               },
             ),
           ],
