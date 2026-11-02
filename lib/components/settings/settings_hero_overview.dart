@@ -71,7 +71,7 @@ class SettingsHeroOverview extends StatelessWidget {
                     label: installerMode == 'shizuku'
                         ? 'Shizuku'
                         : (installerMode == 'root' ? 'Root' : 'System'),
-                    subLabel: tr('installer'),
+                    subLabel: tr('installation'),
                     color: installerMode == 'shizuku'
                         ? colorScheme.primary
                         : colorScheme.secondary,
@@ -91,7 +91,7 @@ class SettingsHeroOverview extends StatelessWidget {
                         : Icons.touch_app_rounded,
                     label: updateInterval > 0
                         ? '${updateInterval}h'
-                        : tr('manual'),
+                        : tr('never'),
                     subLabel: tr('updates'),
                     color: updateInterval > 0
                         ? colorScheme.tertiary
@@ -109,7 +109,7 @@ class SettingsHeroOverview extends StatelessWidget {
                     context: context,
                     icon: Icons.insights_rounded,
                     label: tr('diagnostics'),
-                    subLabel: tr('device'),
+                    subLabel: tr('system'),
                     color: colorScheme.primary,
                     onTap: () {
                       AppHaptics.selectionClick();
@@ -166,7 +166,7 @@ class SettingsHeroOverview extends StatelessWidget {
                   _buildQuickSearchChip(
                     context: context,
                     icon: Icons.import_export_rounded,
-                    label: tr('importExportSettings'),
+                    label: tr('importExport'),
                     cornerRadius: cornerRadius,
                     isM3E: isM3E,
                     onTap: () => onSearchKeyword('export'),

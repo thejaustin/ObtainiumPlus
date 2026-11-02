@@ -503,7 +503,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
               _buildBadge(
                 icon: Icons.file_download_outlined,
                 label:
-                    '${app.app.apkUrls.length} APK ${plural('asset', app.app.apkUrls.length)}',
+                    '${app.app.apkUrls.length} APK ${app.app.apkUrls.length == 1 ? 'file' : 'files'}',
                 cs: cs,
               ),
             if (app.app.additionalSettings['trackOnly'] == true)
