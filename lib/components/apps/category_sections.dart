@@ -555,7 +555,7 @@ class CategorySections extends StatelessWidget {
       child: ExpansionTile(
         shape: const Border(),
         collapsedShape: const Border(),
-        key: PageStorageKey<String>(
+        key: ValueKey<String>(
           'category_tile:${categoryName ?? '__uncategorized__'}',
         ),
         onExpansionChanged: (_) => AppHaptics.selectionClick(),

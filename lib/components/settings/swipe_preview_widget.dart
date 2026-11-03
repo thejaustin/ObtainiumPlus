@@ -78,9 +78,10 @@ class SwipePreviewWidget extends StatefulWidget {
 }
 
 class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _sandboxMode = false;
   late AnimationController _animController;
+  AnimationController? _springController;
   double _dragOffset = 0.0;
   bool _thresholdActivated = false;
 
@@ -145,15 +146,23 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
     });
   }
 
+  void _stopSpringAnimation() {
+    _springController?.stop();
+    _springController?.dispose();
+    _springController = null;
+  }
+
   @override
   void dispose() {
     _animController.removeListener(_onAutoPreviewTick);
     _animController.dispose();
+    _stopSpringAnimation();
     super.dispose();
   }
 
   void _onHorizontalDragUpdate(DragUpdateDetails details, double totalWidth) {
     if (!_sandboxMode) return;
+    _stopSpringAnimation();
     final settings = context.read<BehaviorSettingsProvider>();
     setState(() {
       _dragOffset = (_dragOffset + details.delta.dx).clamp(
@@ -200,17 +209,22 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
       details.primaryVelocity ?? 0.0,
     );
 
-    final springController = AnimationController.unbounded(vsync: this);
-    springController.addListener(() {
+    _stopSpringAnimation();
+    final ctrl = AnimationController.unbounded(vsync: this);
+    _springController = ctrl;
+    ctrl.addListener(() {
       if (mounted) {
         setState(() {
-          _dragOffset = springController.value;
+          _dragOffset = ctrl.value;
         });
       }
     });
-    springController.animateWith(sim).whenComplete(() {
+    ctrl.animateWith(sim).whenComplete(() {
       _thresholdActivated = false;
-      springController.dispose();
+      if (_springController == ctrl) {
+        ctrl.dispose();
+        _springController = null;
+      }
     });
   }
 

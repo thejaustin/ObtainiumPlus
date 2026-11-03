@@ -46,6 +46,9 @@ class PlayStoreMirrorService {
       // Ignore apps already tracked in Obtainium
       if (trackedApps.containsKey(pkg.packageName)) return false;
 
+      // Ignore system applications (flag 1 = FLAG_SYSTEM)
+      if (((pkg.applicationInfo?.flags ?? 0) & 1) != 0) return false;
+
       // Ignore common system/google packages that we shouldn't manage
       if (pkg.packageName!.startsWith('com.android.') ||
           pkg.packageName!.startsWith('com.google.android.gms') ||

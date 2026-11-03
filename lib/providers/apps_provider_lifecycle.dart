@@ -488,9 +488,12 @@ extension AppsProviderLifecycle on AppsProvider {
                 fallback: this.apps[app.id]?.icon,
               );
         if (!canReuse) {
-          app = app.copyWith(
-            name: await (info?.applicationInfo?.getAppLabel()) ?? app.name,
-          );
+          try {
+            final label = await info?.applicationInfo?.getAppLabel();
+            if (label != null && label.isNotEmpty) {
+              app = app.copyWith(name: label);
+            }
+          } catch (_) {}
         }
         if (attemptToCorrectInstallStatus) {
           app = reconcileInstallStatus(app, info) ?? app;

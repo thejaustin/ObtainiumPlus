@@ -2677,7 +2677,12 @@ class AppsProvider with ChangeNotifier {
           LogsProvider().add('Failed to read cached icon for $appId: $e');
         }
       }
-      icon ??= await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon();
+      try {
+        icon ??=
+            await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon();
+      } catch (e) {
+        LogsProvider().add('Failed to load live icon for $appId: $e');
+      }
       if (icon != null && !alreadyCached) {
         try {
           if (!await iconsCacheDir.exists()) {
@@ -2776,11 +2781,17 @@ class AppsProvider with ChangeNotifier {
             ? (bulkInstalledMap[app.id] ??
                   _findInBulkInstalledMap(bulkInstalledMap, app.id))
             : await getInstalledInfo(app.id);
-        var icon = canReuse
-            ? this.apps[app.id]!.icon
-            : await info?.applicationInfo?.getAppIcon();
+        Uint8List? icon = canReuse ? this.apps[app.id]!.icon : null;
         if (!canReuse) {
-          app.name = await (info?.applicationInfo?.getAppLabel()) ?? app.name;
+          try {
+            icon = await info?.applicationInfo?.getAppIcon();
+          } catch (_) {}
+          try {
+            final label = await info?.applicationInfo?.getAppLabel();
+            if (label != null && label.isNotEmpty) {
+              app.name = label;
+            }
+          } catch (_) {}
         }
         if (attemptToCorrectInstallStatus) {
           app = getCorrectedInstallStatusAppIfPossible(app, info) ?? app;

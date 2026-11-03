@@ -1043,7 +1043,7 @@ class _AppPageState extends State<AppPage> {
                     context,
                   ).copyWith(dividerColor: Colors.transparent),
                   child: ExpansionTile(
-                    key: PageStorageKey<String>(
+                    key: ValueKey<String>(
                       'app_cert_hashes_${app.app.id}',
                     ),
                     onExpansionChanged: (_) => AppHaptics.selectionClick(),

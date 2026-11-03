@@ -389,7 +389,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                           ),
                         ),
                       ExpansionTile(
-                        key: const PageStorageKey<String>(
+                        key: const ValueKey<String>(
                           'home_deep_link_raw_json',
                         ),
                         onExpansionChanged: (_) => AppHaptics.selectionClick(),

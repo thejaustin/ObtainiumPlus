@@ -183,7 +183,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
         ),
       ),
       child: ExpansionTile(
-        key: PageStorageKey<String>('system_update:${update.appId}'),
+        key: ValueKey<String>('system_update:${update.appId}'),
         onExpansionChanged: (_) => AppHaptics.selectionClick(),
         expansionAnimationStyle: AnimationStyle(
           curve: Easing.emphasizedDecelerate,

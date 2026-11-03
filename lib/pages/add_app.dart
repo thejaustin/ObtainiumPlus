@@ -977,7 +977,7 @@ class AddAppPageState extends State<AddAppPage> {
                 context,
               ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                key: const PageStorageKey<String>('add_app_advanced'),
+                key: const ValueKey<String>('add_app_advanced'),
                 onExpansionChanged: (expanded) {
                   AppHaptics.selectionClick();
                 },
@@ -1010,8 +1010,10 @@ class AddAppPageState extends State<AddAppPage> {
                 ),
                 childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: [
-                  Column(
-                    children: [
+                  PageStorage(
+                    bucket: PageStorageBucket(),
+                    child: Column(
+                      children: [
                       () {
                         var formItems =
                             pickedSource!.combinedAppSpecificSettingFormItems;
@@ -1126,6 +1128,7 @@ class AddAppPageState extends State<AddAppPage> {
                         ),
                       ],
                     ],
+                  ),
                   ),
                 ],
               ),
