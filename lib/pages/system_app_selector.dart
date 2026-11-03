@@ -56,6 +56,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   bool _showSystemApps = false;
   String _searchQuery = '';
   List<_EnhancedPackageInfo> _apps = [];
+  final Set<String> _loadedIconPackages = {};
 
   // View settings
   SystemAppViewMode _viewMode = SystemAppViewMode.list;
@@ -87,36 +88,73 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           _isLoading = false;
         });
         _sortApps();
-        _loadIcons(installed);
+        // Prioritize user apps to prevent Vivo/OEM system service theme crashes
+        final userPackages = installed
+            .where((pkg) => ((pkg.applicationInfo?.flags ?? 0) & 1) == 0)
+            .toList();
+        _loadIcons(userPackages);
+        if (_showSystemApps) {
+          final systemPackages = installed
+              .where((pkg) => ((pkg.applicationInfo?.flags ?? 0) & 1) != 0)
+              .toList();
+          _loadIcons(systemPackages);
+        }
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+  void _toggleShowSystemApps() {
+    setState(() => _showSystemApps = !_showSystemApps);
+    if (_showSystemApps) {
+      AppInstallService.getAllInstalledInfo().then((installed) {
+        if (!mounted) return;
+        final sysPkgs = installed
+            .where((pkg) => ((pkg.applicationInfo?.flags ?? 0) & 1) != 0)
+            .toList();
+        _loadIcons(sysPkgs);
+      });
+    }
+  }
+
   Future<void> _loadIcons(List<PackageInfo> packages) async {
-    const batchSize = 12;
+    final toLoad = packages
+        .where(
+          (pkg) =>
+              pkg.packageName != null &&
+              !_loadedIconPackages.contains(pkg.packageName),
+        )
+        .toList();
+    if (toLoad.isEmpty) return;
+    for (final pkg in toLoad) {
+      if (pkg.packageName != null) _loadedIconPackages.add(pkg.packageName!);
+    }
+
+    const batchSize = 6;
     // Build O(1) index map to eliminate repeated O(N) indexWhere lookups
     final Map<String, int> indexMap = {
       for (int i = 0; i < _apps.length; i++)
         if (_apps[i].packageName != null) _apps[i].packageName!: i,
     };
 
-    for (int i = 0; i < packages.length; i += batchSize) {
+    for (int i = 0; i < toLoad.length; i += batchSize) {
       if (!mounted) return;
-      final batch = packages.sublist(
+      final batch = toLoad.sublist(
         i,
-        (i + batchSize).clamp(0, packages.length),
+        (i + batchSize).clamp(0, toLoad.length),
       );
       bool anyUpdated = false;
       await Future.wait(
         batch.map((pkg) async {
           try {
             final iconBytes = await pkg.applicationInfo?.getAppIcon().timeout(
-              const Duration(seconds: 10),
+              const Duration(seconds: 4),
+              onTimeout: () => null,
             );
             final appName = await pkg.applicationInfo?.getAppLabel().timeout(
-              const Duration(seconds: 10),
+              const Duration(seconds: 4),
+              onTimeout: () => null,
             );
             final idx = indexMap[pkg.packageName];
             if (idx != null && idx < _apps.length) {
@@ -651,9 +689,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                       ? Icons.system_update_rounded
                                       : Icons.person_outline_rounded,
                                 ),
-                                onPressed: () => setState(
-                                  () => _showSystemApps = !_showSystemApps,
-                                ),
+                                onPressed: _toggleShowSystemApps,
                                 tooltip: tr('showSystemApps'),
                               ),
                             ),
@@ -1009,8 +1045,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     ? Icons.system_update_rounded
                     : Icons.person_outline_rounded,
               ),
-              onPressed: () =>
-                  setState(() => _showSystemApps = !_showSystemApps),
+              onPressed: _toggleShowSystemApps,
               tooltip: tr('showSystemApps'),
             ),
           ),

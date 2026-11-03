@@ -13,6 +13,9 @@
 # --- Shizuku (shizuku_apk_installer) — AIDL-generated binder classes ------
 -keep class rikka.shizuku.** { *; }
 -keep interface rikka.shizuku.** { *; }
+-keepclassmembers class rikka.shizuku.Shizuku {
+    static *** newProcess(...);
+}
 -dontwarn rikka.shizuku.**
 
 # --- flutter_local_notifications -------------------------------------------
@@ -42,3 +45,5 @@
 # not app code, so no keep needed for them specifically — but keep the
 # activity itself and any Kotlin data classes it exposes over MethodChannel.
 -keep class dev.thejaustin.obtainiumplus.** { *; }
+-keep class app.obtainiumplus.** { *; }
+-dontwarn app.obtainiumplus.**

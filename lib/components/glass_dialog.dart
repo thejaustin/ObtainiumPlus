@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
@@ -189,7 +190,11 @@ class GlassDialog extends StatelessWidget {
           if (showCloseButton)
             IconButton(
               icon: const Icon(Icons.close_rounded, size: 20),
-              tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+              tooltip: Localizations.of<MaterialLocalizations>(
+                    context,
+                    MaterialLocalizations,
+                  )?.closeButtonTooltip ??
+                  tr('close'),
               visualDensity: VisualDensity.compact,
               onPressed: () {
                 AppHaptics.selectionClick();

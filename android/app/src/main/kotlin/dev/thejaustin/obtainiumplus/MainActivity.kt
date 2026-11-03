@@ -832,12 +832,19 @@ class MainActivity : FlutterActivity() {
                         methodUsed = "shizuku"
                         var p: Process? = null
                         try {
-                            p = Shizuku.newProcess(
+                            val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+                                "newProcess",
+                                Array<String>::class.java,
+                                Array<String>::class.java,
+                                String::class.java
+                            ).apply { isAccessible = true }
+                            p = newProcessMethod.invoke(
+                                null,
                                 arrayOf("sh", "-c", "appops set $packageName GET_USAGE_STATS allow"),
                                 null,
                                 null
-                            )
-                            p.waitFor()
+                            ) as? Process
+                            p?.waitFor()
                             succeeded = isUsageAccessGranted()
                         } catch (_: Throwable) {
                         } finally {
