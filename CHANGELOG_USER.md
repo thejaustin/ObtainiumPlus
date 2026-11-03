@@ -2,6 +2,10 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+---
+
+## [1.7.3-p13] — 2026-11-03
+
 ### 🎨 Material 3 Expressive UI & Gestures
 - **Settings Architecture & Fluid Navigation Overhaul (M3E)**:
   - **Single Authoritative Domain Architecture**: Deduplicated settings across screens under the "Single Authoritative Home" rule. Re-categorized `removeOnExternalUninstall` into Tab 3 (App Behavior) under a unified "Library & Storage Management" group, decoupled battery optimizations into dedicated connected action cards, and cross-referenced features via lightweight connected pills instead of duplicating controls.
