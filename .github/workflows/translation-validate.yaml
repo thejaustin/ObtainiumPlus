@@ -22,7 +22,7 @@ jobs:
         # get only the changed files
         run: |
           echo "files<<EOF" >> "$GITHUB_OUTPUT"
-          git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^assets/translations/.*\.json$' || true >> "$GITHUB_OUTPUT"
+          (git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '^assets/translations/.*\.json$' || true) >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
         
 

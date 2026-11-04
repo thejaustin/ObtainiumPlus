@@ -192,7 +192,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -239,11 +243,15 @@ jobs:
       - name: Build APK
         run: |
           flutter build apk --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+          flutter build apk --split-per-abi --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
           find build/app/outputs/flutter-apk/ -name "app-*normal*.apk" -exec bash -c 'mv "$1" "${1//-normal/}"' -- {} \;
           if [ "${{ steps.detect_build.outputs.is_dev }}" = "true" ]; then
-            mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/Obtainium-Plus-Dev.apk
+            for f in build/app/outputs/flutter-apk/*.apk; do
+              mv "$f" "${f//app-/Obtainium-Plus-Dev-}"
+            done
           fi
           rm -f ./build/app/outputs/flutter-apk/*.sha1
+          (cd build/app/outputs/flutter-apk && sha256sum *.apk > sha256sums.txt)
 
       - name: Cache Sentry CLI
         id: cache-sentry
@@ -353,7 +361,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: obtainium-plus-apk
-          path: build/app/outputs/flutter-apk/*.apk
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/flutter-apk/sha256sums.txt
 
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -364,7 +374,9 @@ jobs:
           prerelease: ${{ steps.detect_build.outputs.is_dev == 'true' }}
           makeLatest: ${{ steps.detect_build.outputs.is_dev != 'true' }}
           generateReleaseNotes: false
-          artifacts: "build/app/outputs/flutter-apk/*.apk"
+          artifacts: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/flutter-apk/sha256sums.txt
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           replacesArtifacts: true
