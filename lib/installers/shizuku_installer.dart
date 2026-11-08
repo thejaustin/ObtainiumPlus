@@ -361,6 +361,7 @@ class ShizukuInstaller extends Installer {
       final info = await AppInstallService.getInstalledInfo(
         appId,
         printErr: false,
+        bypassCache: true,
       );
       return info != null &&
           hasInstallLanded(

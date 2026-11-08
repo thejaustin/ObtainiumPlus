@@ -2724,14 +2724,15 @@ class AppsProvider with ChangeNotifier {
     }
   }
 
-  bool _iconBatchScheduled = false;
+  Timer? _iconBatchTimer;
 
+  // Each icon load finishes in its own event-loop turn, so a microtask never
+  // grouped anything: every icon rebuilt the whole apps page. A short timer
+  // folds a burst of icon loads into one rebuild.
   void _scheduleIconBatchNotification() {
-    if (_iconBatchScheduled) return;
-    _iconBatchScheduled = true;
-    Future.microtask(() {
-      _iconBatchScheduled = false;
-      _notifyUiOnly();
+    if (_iconBatchTimer?.isActive ?? false) return;
+    _iconBatchTimer = Timer(const Duration(milliseconds: 80), () {
+      if (!_disposed) _notifyUiOnly();
     });
   }
 
@@ -3516,6 +3517,7 @@ class AppsProvider with ChangeNotifier {
     _disposed = true;
     foregroundSubscription?.cancel();
     _autoExportDebounce?.cancel();
+    _iconBatchTimer?.cancel();
     _widgetUpdateDebounce?.cancel();
     _eventSubscription?.cancel();
     refreshProgress.dispose();
@@ -3535,15 +3537,28 @@ class AppsProvider with ChangeNotifier {
     );
     final List<App> pps = results[0];
     final Map<String, dynamic> errorsMap = results[1];
+    // One batched save: per-app saves each re-queried PackageManager,
+    // rebuilt the list and rewrote apps_cache.json (O(N²) on big imports).
+    final toAdd = <String, App>{};
     for (var app in pps) {
-      if (apps.containsKey(app.id)) {
+      if (apps.containsKey(app.id) || toAdd.containsKey(app.id)) {
         errorsMap.addAll({
           app.id:
-              '${tr('appAlreadyAdded')}: ${apps[app.id]?.app.name ?? app.id}',
+              '${tr('appAlreadyAdded')}: '
+              '${apps[app.id]?.app.name ?? toAdd[app.id]?.name ?? app.id}',
         });
       } else {
-        await saveApps([app], onlyIfExists: false);
+        toAdd[app.id] = app;
       }
+    }
+    // Chunked so a large import doesn't queue hundreds of icon/label
+    // platform calls (main-thread PNG encodes) at once.
+    final newApps = toAdd.values.toList();
+    for (var i = 0; i < newApps.length; i += 25) {
+      await saveApps(
+        newApps.sublist(i, (i + 25).clamp(0, newApps.length)),
+        onlyIfExists: false,
+      );
     }
     final List<List<String>> errors = errorsMap.keys
         .map((e) => [e, errorsMap[e].toString()])

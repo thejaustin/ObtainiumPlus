@@ -262,7 +262,11 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   scrollFabState = ValueNotifier((isCollapsed: false, showScrollToTop: false));
   double _lastScrollOffset = 0;
   Map<String, AppUsageStats> _usageStats = {};
+  bool _usageStatsRequested = false;
+  int _usageStatsGen = 0;
 
+  // Only the "last used" sort needs these; loading them at startup put a
+  // year-long usage query in the middle of the first frames.
   Future<void> _loadUsageStats() async {
     final granted = await UsageStatsService.isUsageAccessGranted();
     if (!granted) return;
@@ -270,6 +274,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     if (mounted) {
       setState(() {
         _usageStats = stats;
+        _usageStatsGen++;
       });
     }
   }
@@ -278,7 +283,6 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   void initState() {
     super.initState();
     scrollController.addListener(_onScroll);
-    _loadUsageStats();
     final ap = context.read<AppsProvider>();
     if (ap.selectedAppIds.isNotEmpty) {
       selectedAppIds = ap.selectedAppIds.toSet();
@@ -459,8 +463,13 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
 
     final baseFilterKey =
         '${filter.nameFilter}|${filter.authorFilter}|${filter.idFilter}|${filter.categoryFilter.join(",")}|${filter.tagFilter.join(",")}|${filter.sourceFilter}|${filter.includeUptodate}|${filter.includeNonInstalled}|$activeTag';
+    if (viewSettings.sortColumn == SortColumnSettings.lastUsed &&
+        !_usageStatsRequested) {
+      _usageStatsRequested = true;
+      _loadUsageStats();
+    }
     final sortKey =
-        '${viewSettings.sortColumn.name}|${viewSettings.sortOrder.name}|${viewSettings.pinUpdates}|${viewSettings.buryNonInstalled}';
+        '${viewSettings.sortColumn.name}|${viewSettings.sortOrder.name}|${viewSettings.pinUpdates}|${viewSettings.buryNonInstalled}|$_usageStatsGen';
     final appsRevision = appsProvider.appsRevision;
     final appsCount = appsProvider.apps.length;
 

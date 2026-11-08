@@ -398,7 +398,16 @@ class MainActivity : FlutterActivity() {
                             ?: (System.currentTimeMillis() - 365L * 24 * 60 * 60 * 1000)
                         val endTime = (call.argument<Number>("endTime"))?.toLong()
                             ?: System.currentTimeMillis()
-                        result.success(queryAllUsageStats(startTime, endTime))
+                        // A year of usage events can take a second to
+                        // aggregate; keep it off the UI thread.
+                        Thread {
+                            val stats = try {
+                                queryAllUsageStats(startTime, endTime)
+                            } catch (_: Throwable) {
+                                emptyMap()
+                            }
+                            runOnUiThread { result.success(stats) }
+                        }.start()
                     }
                     "getAppUsageStats" -> {
                         val targetPkg = call.argument<String>("packageName")
@@ -409,8 +418,14 @@ class MainActivity : FlutterActivity() {
                                 ?: (System.currentTimeMillis() - 365L * 24 * 60 * 60 * 1000)
                             val endTime = (call.argument<Number>("endTime"))?.toLong()
                                 ?: System.currentTimeMillis()
-                            val all = queryAllUsageStats(startTime, endTime)
-                            result.success(all[targetPkg])
+                            Thread {
+                                val stats = try {
+                                    queryAllUsageStats(startTime, endTime)[targetPkg]
+                                } catch (_: Throwable) {
+                                    null
+                                }
+                                runOnUiThread { result.success(stats) }
+                            }.start()
                         }
                     }
                     "isRooted" -> {

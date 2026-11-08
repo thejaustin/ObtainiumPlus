@@ -73,6 +73,7 @@ class AppInstallService {
   }
 
   static List<PackageInfo>? _cachedInstalledPackages;
+  static Map<String, PackageInfo>? _cachedInstalledPackagesByName;
   static DateTime? _cachedInstalledPackagesTimestamp;
   static Future<List<PackageInfo>>? _inFlightInstalledPackagesQuery;
   static const Duration _installedPackagesTtl = Duration(seconds: 10);
@@ -81,7 +82,20 @@ class AppInstallService {
   /// re-checks the live PackageManager binder service.
   static void invalidateInstalledPackagesCache() {
     _cachedInstalledPackages = null;
+    _cachedInstalledPackagesByName = null;
     _cachedInstalledPackagesTimestamp = null;
+  }
+
+  /// The cached package map while it is still within the TTL. Single-package
+  /// lookups used to read the list with no TTL, so post-install checks saw
+  /// the pre-install version until something invalidated the cache.
+  static Map<String, PackageInfo>? get _freshInstalledPackagesByName {
+    final ts = _cachedInstalledPackagesTimestamp;
+    if (ts == null ||
+        DateTime.now().difference(ts) >= _installedPackagesTtl) {
+      return null;
+    }
+    return _cachedInstalledPackagesByName;
   }
 
   static Future<List<PackageInfo>> getAllInstalledInfo({
@@ -109,37 +123,49 @@ class AppInstallService {
             [];
         if (result.isNotEmpty) {
           _cachedInstalledPackages = result;
+          _cachedInstalledPackagesByName = {
+            for (final p in result)
+              if (p.packageName != null) p.packageName!: p,
+          };
           _cachedInstalledPackagesTimestamp = DateTime.now();
         }
         return result;
       } catch (e) {
         talker.error('Error fetching installed packages: ${e.toString()}');
         return <PackageInfo>[];
-      } finally {
-        _inFlightInstalledPackagesQuery = null;
       }
     }();
 
+    // Cleared on completion rather than in a `finally` inside the closure:
+    // a synchronous throw would run that before this assignment and leave a
+    // finished (empty) future cached forever.
     _inFlightInstalledPackagesQuery = queryFuture;
+    unawaited(
+      queryFuture.whenComplete(() {
+        if (identical(_inFlightInstalledPackagesQuery, queryFuture)) {
+          _inFlightInstalledPackagesQuery = null;
+        }
+      }),
+    );
     return await queryFuture;
   }
 
   static Future<PackageInfo?> getInstalledInfo(
     String? packageName, {
     bool printErr = true,
+    // Install verification must see the live package, not a snapshot taken
+    // up to 10 s earlier (before the install).
+    bool bypassCache = false,
   }) async {
     if (packageName != null) {
       // Check fast in-memory package cache first (0ms IPC)
-      final cachedList = _cachedInstalledPackages;
-      if (cachedList != null) {
-        for (final p in cachedList) {
-          if (p.packageName == packageName) return p;
-        }
-        final aliases = AppConstants.getAliasesFor(packageName);
-        for (final alias in aliases) {
-          for (final p in cachedList) {
-            if (p.packageName == alias) return p;
-          }
+      final byName = bypassCache ? null : _freshInstalledPackagesByName;
+      if (byName != null) {
+        final hit = byName[packageName];
+        if (hit != null) return hit;
+        for (final alias in AppConstants.getAliasesFor(packageName)) {
+          final a = byName[alias];
+          if (a != null) return a;
         }
       }
 
@@ -1129,6 +1155,9 @@ class AppInstallService {
         );
         // Persist the new installedVersion and refresh PackageInfo so the UI
         // immediately reflects the installed state without waiting for next load.
+        // Drop the pre-install package snapshot first, or the save reads the
+        // old version back and the update still shows as pending.
+        invalidateInstalledPackagesCache();
         if (saveApps != null) {
           await saveApps([targetApp]);
         }
