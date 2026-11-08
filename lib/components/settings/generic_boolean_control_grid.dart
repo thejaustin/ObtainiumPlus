@@ -98,7 +98,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                                   s.description!.isNotEmpty)
                               ? Text(
                                   s.description!,
-                                  maxLines: isCompact ? 1 : 3,
+                                  maxLines: isCompact ? 2 : 3,
                                   overflow: TextOverflow.ellipsis,
                                   style: isCompact
                                       ? Theme.of(

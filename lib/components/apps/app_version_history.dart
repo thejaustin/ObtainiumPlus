@@ -49,7 +49,7 @@ class AppVersionHistoryWidget extends StatelessWidget {
           child: Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              key: ValueKey<String>('version_history:${app.id}'),
+              key: PageStorageKey<String>('version_history:${app.id}'),
               onExpansionChanged: (_) => AppHaptics.selectionClick(),
               expansionAnimationStyle: AnimationStyle(
                 curve: Easing.emphasizedDecelerate,

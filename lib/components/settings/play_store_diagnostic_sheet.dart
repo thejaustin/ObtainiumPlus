@@ -386,12 +386,16 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
                                     mainAxisAlignment:
                                         MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        s.title,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
+                                      Expanded(
+                                        child: Text(
+                                          s.title,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
                                       ),
                                       if (s.latencyMs != null)
                                         Container(

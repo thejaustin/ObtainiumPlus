@@ -152,7 +152,7 @@ class ThemeSettingsSection extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),
           child: ExpansionTile(
-            key: const ValueKey<String>('settings_advanced_theming'),
+            key: const PageStorageKey<String>('settings_advanced_theming'),
             onExpansionChanged: (_) => AppHaptics.selectionClick(),
             expansionAnimationStyle: AnimationStyle(
               curve: Easing.emphasizedDecelerate,

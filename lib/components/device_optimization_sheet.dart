@@ -13,23 +13,50 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/utils/modal_utils.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
 /// Live connectivity and permission status for Shizuku/ShizukuPlus.
 enum ShizukuLiveStatus { active, permissionNeeded, notRunning, rootless }
 
-/// Shows the Device Compatibility & Performance Sheet.
+/// Opens the Device Compatibility & Performance page (Service Doctor).
+///
+/// This used to be a bottom sheet that embedded the Shizuku status card,
+/// whose "Service Doctor" chip opened the sheet again, stacking copies. It is
+/// long-form reference content, so it's a page now.
 Future<void> showDeviceOptimizationSheet({required BuildContext context}) {
-  return showDraggableModalBottomSheet<void>(
-    context: context,
-    initialChildSize: 0.85,
-    minChildSize: 0.5,
-    maxChildSize: 0.95,
-    builder: (sheetContext, scrollController) {
-      return DeviceOptimizationSheetContent(scrollController: scrollController);
-    },
+  return Navigator.of(context).push<void>(
+    MaterialPageRoute(builder: (_) => const DeviceOptimizationPage()),
   );
+}
+
+class DeviceOptimizationPage extends StatefulWidget {
+  const DeviceOptimizationPage({super.key});
+
+  @override
+  State<DeviceOptimizationPage> createState() => _DeviceOptimizationPageState();
+}
+
+class _DeviceOptimizationPageState extends State<DeviceOptimizationPage> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(tr('devicePerformanceAndCompatibility'))),
+      body: SafeArea(
+        top: false,
+        child: DeviceOptimizationSheetContent(
+          scrollController: _scrollController,
+        ),
+      ),
+    );
+  }
 }
 
 class DeviceOptimizationSheetContent extends StatefulWidget {
@@ -345,72 +372,18 @@ class _DeviceOptimizationSheetContentState
 
     return Column(
       children: [
-        // Drag handle
-        Center(
-          child: Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              tr('devicePerformanceAndCompatibilitySubtitle'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ),
         ),
-
-        // Header Title
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.tune_rounded,
-                  color: colorScheme.onPrimaryContainer,
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr('devicePerformanceAndCompatibility'),
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      tr('devicePerformanceAndCompatibilitySubtitle'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              ScaleTouchWrapper(
-                hapticOnPressDown: true,
-                scaleDownFactor: 0.88,
-                child: IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  tooltip: tr('close'),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const Divider(height: 1),
 
         // Horizontally scrolling OEM selection tabs
         SizedBox(
@@ -1108,7 +1081,10 @@ class _DeviceOptimizationSheetContentState
                             const SizedBox(height: 14),
 
                             // Shizuku & ShizukuPlus Hero Status Card
-                            const ShizukuStatusCard(margin: EdgeInsets.zero),
+                            const ShizukuStatusCard(
+                              margin: EdgeInsets.zero,
+                              showDoctorChip: false,
+                            ),
 
                             const SizedBox(height: 14),
 

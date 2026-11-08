@@ -56,7 +56,17 @@ class SettingsPageState extends State<SettingsPage> {
   int _selectedSectionIndex = 0;
   int _previousSectionIndex = 0;
   late final Future<dynamic> _versionFuture = getInstalledInfo(obtainiumId);
-  final GlobalKey _resultsKey = GlobalKey();
+  // One key per switcher child: the outgoing and incoming tab both stay
+  // mounted during the crossfade, so a shared GlobalKey was duplicated.
+  GlobalKey _resultsKey = GlobalKey();
+  String? _resultsKeyId;
+  GlobalKey _resultsKeyFor(String id) {
+    if (id != _resultsKeyId) {
+      _resultsKeyId = id;
+      _resultsKey = GlobalKey();
+    }
+    return _resultsKey;
+  }
   final List<GlobalKey> _chipKeys = List.generate(5, (_) => GlobalKey());
   bool _noResults = false;
 
@@ -202,6 +212,9 @@ class SettingsPageState extends State<SettingsPage> {
     final showTopPinnedCategoryBar =
         !plusSettings.plusSettingsBottomNavBar && _searchQuery.isEmpty;
     final isCompact = plusSettings.plusUseCompactSettings;
+    final switcherId = _searchQuery.isNotEmpty
+        ? 'search_$_searchQuery'
+        : 'tab_$_selectedSectionIndex';
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
@@ -264,101 +277,40 @@ class SettingsPageState extends State<SettingsPage> {
               slivers: [
                 CustomAppBar(
                   title: tr('settings'),
+                  // Icon buttons, not pill chips: two labelled chips plus
+                  // the density toggle overflowed the bar at phone width.
                   actions: [
                     ScaleTouchWrapper(
                       hapticOnPressDown: true,
-                      scaleDownFactor: 0.92,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 4),
-                        child: ActionChip(
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          avatar: Icon(
-                            Icons.stars_rounded,
-                            size: 15,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          label: Text(
-                            'Obtainium+',
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                ),
-                          ),
-                          shape: CardMetrics.shape(
-                            CardMetrics.pill(
-                              plusSettings.plusGlobalCornerRadius,
-                            ),
-                            expressive:
-                                plusSettings.plusEnableMaterialExpressive,
-                            side: BorderSide(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .outlineVariant
-                                  .withValues(alpha: 0.35),
-                            ),
-                          ),
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerLow,
-                          onPressed: () {
-                            AppHaptics.selectionClick();
-                            showPlusFeaturesSheet(context: context);
-                          },
+                      scaleDownFactor: 0.88,
+                      child: IconButton(
+                        visualDensity: VisualDensity.compact,
+                        tooltip: 'Obtainium+',
+                        icon: Icon(
+                          Icons.stars_rounded,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
+                        onPressed: () => showPlusFeaturesSheet(context: context),
                       ),
                     ),
                     FutureBuilder<dynamic>(
                       future: _versionFuture,
                       builder: (context, snap) {
                         final String? v = snap.data?.versionName as String?;
-                        final isM3E = plusSettings.plusEnableMaterialExpressive;
-                        final colorScheme = Theme.of(context).colorScheme;
                         return ScaleTouchWrapper(
                           hapticOnPressDown: true,
-                          scaleDownFactor: 0.92,
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: ActionChip(
-                              visualDensity: VisualDensity.compact,
-                              materialTapTargetSize:
-                                  MaterialTapTargetSize.shrinkWrap,
-                              avatar: Icon(
-                                Icons.history_edu_rounded,
-                                size: 15,
-                                color: colorScheme.primary,
-                              ),
-                              label: Text(
-                                (v != null && v.isNotEmpty)
-                                    ? v
-                                    : tr('viewChangelog'),
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: colorScheme.onSurface,
-                                    ),
-                              ),
-                              shape: CardMetrics.shape(
-                                CardMetrics.pill(
-                                  plusSettings.plusGlobalCornerRadius,
-                                ),
-                                expressive: isM3E,
-                                side: BorderSide(
-                                  color: colorScheme.outlineVariant.withValues(
-                                    alpha: 0.35,
-                                  ),
-                                ),
-                              ),
-                              backgroundColor: colorScheme.surfaceContainerLow,
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                showWhatsNewSheet(context);
-                              },
+                          scaleDownFactor: 0.88,
+                          child: IconButton(
+                            visualDensity: VisualDensity.compact,
+                            tooltip: (v != null && v.isNotEmpty)
+                                ? '${tr('viewChangelog')} ($v)'
+                                : tr('viewChangelog'),
+                            icon: const Icon(
+                              Icons.history_edu_rounded,
+                              size: 20,
                             ),
+                            onPressed: () => showWhatsNewSheet(context),
                           ),
                         );
                       },
@@ -564,11 +516,7 @@ class SettingsPageState extends State<SettingsPage> {
                             );
                           },
                       child: KeyedSubtree(
-                        key: ValueKey<String>(
-                          _searchQuery.isNotEmpty
-                              ? 'search_$_searchQuery'
-                              : 'tab_$_selectedSectionIndex',
-                        ),
+                        key: ValueKey<String>(switcherId),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
@@ -588,7 +536,7 @@ class SettingsPageState extends State<SettingsPage> {
                                 onSelectTab: _selectSection,
                               ),
                             Column(
-                              key: _resultsKey,
+                              key: _resultsKeyFor(switcherId),
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 if (_searchQuery.isNotEmpty ||

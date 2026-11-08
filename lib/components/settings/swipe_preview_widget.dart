@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
+import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -101,7 +102,12 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
   void _startAutoPreview() {
     if (!mounted || _sandboxMode) return;
     if (WidgetsBinding.instance is! WidgetsFlutterBinding) return;
-    _animController.repeat();
+    // Honour the animations setting, and play a few demo loops instead of
+    // rebuilding every frame for as long as the settings page is open.
+    if (!context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations) {
+      return;
+    }
+    _animController.repeat(count: 3);
   }
 
   void _onAutoPreviewTick() {

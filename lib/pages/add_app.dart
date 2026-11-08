@@ -977,7 +977,7 @@ class AddAppPageState extends State<AddAppPage> {
                 context,
               ).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                key: const ValueKey<String>('add_app_advanced'),
+                key: const PageStorageKey<String>('add_app_advanced'),
                 onExpansionChanged: (expanded) {
                   AppHaptics.selectionClick();
                 },

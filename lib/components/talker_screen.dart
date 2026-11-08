@@ -213,7 +213,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: ExpansionTile(
-                          key: ValueKey<String>(
+                          key: PageStorageKey<String>(
                             'talker_log:${log.timestamp.millisecondsSinceEpoch}:$index',
                           ),
                           onExpansionChanged: (_) =>

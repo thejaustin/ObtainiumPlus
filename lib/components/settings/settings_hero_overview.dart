@@ -90,7 +90,7 @@ class SettingsHeroOverview extends StatelessWidget {
                         ? Icons.schedule_rounded
                         : Icons.touch_app_rounded,
                     label: updateInterval > 0
-                        ? '${updateInterval}h'
+                        ? _compactInterval(updateInterval)
                         : tr('never'),
                     subLabel: tr('updates'),
                     color: updateInterval > 0
@@ -123,6 +123,8 @@ class SettingsHeroOverview extends StatelessWidget {
 
             // Quick topic chips
             SingleChildScrollView(
+              // Own storage slot, or it restores the page's vertical offset.
+              key: const PageStorageKey<String>('settings_hero_topics'),
               scrollDirection: Axis.horizontal,
               physics: const BouncingScrollPhysics(),
               child: Row(
@@ -280,4 +282,14 @@ class SettingsHeroOverview extends StatelessWidget {
       ),
     );
   }
+}
+
+/// `updateInterval` is stored in minutes; it was shown as hours ("120h" for a
+/// 2-hour schedule).
+String _compactInterval(int minutes) {
+  String trim(double v) =>
+      v == v.roundToDouble() ? v.toInt().toString() : v.toStringAsFixed(1);
+  if (minutes < 60) return '${minutes}m';
+  if (minutes < 24 * 60) return '${trim(minutes / 60)}h';
+  return '${trim(minutes / (24 * 60))}d';
 }

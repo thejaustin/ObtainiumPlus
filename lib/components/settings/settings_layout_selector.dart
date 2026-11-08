@@ -144,7 +144,7 @@ class SettingsLayoutSelector extends StatelessWidget {
             Theme(
               data: theme.copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                key: const ValueKey<String>('settings_layout_granular'),
+                key: const PageStorageKey<String>('settings_layout_granular'),
                 onExpansionChanged: (_) => AppHaptics.selectionClick(),
                 expansionAnimationStyle: AnimationStyle(
                   curve: Easing.emphasizedDecelerate,

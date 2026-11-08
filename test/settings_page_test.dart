@@ -174,6 +174,83 @@ void main() {
     }, timeout: const Timeout(Duration(minutes: 1)));
   }
 
+  // Phone width with enlarged text: the default 800x600 view hid overflowing
+  // app-bar actions and tile rows that real devices show as clipped text.
+  for (var tab = 0; tab <= 8; tab++) {
+    testWidgets('settings section $tab fits a 360dp phone at 1.3x text', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1.0;
+      tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(tab);
+      });
+      await pumpCapturingErrors(tester, app);
+      expect(find.byType(SettingsPage), findsOneWidget);
+    }, timeout: const Timeout(Duration(minutes: 1)));
+  }
+
+  // Red error cards on device (1.7.3-p15): after scrolling one tab, switching
+  // tabs threw "type 'double' is not a subtype of type 'bool?'" in
+  // Expansible.initState — expansion tiles keyed with plain ValueKeys shared
+  // the settings scroll view's PageStorage slot and read its scroll offset.
+  testWidgets('switching tabs after scrolling keeps expansion state intact', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0);
+    });
+    final errors = <FlutterErrorDetails>[];
+    final baseHandler = FlutterError.onError;
+    FlutterError.onError = errors.add;
+    try {
+      await tester.pumpWidget(app);
+      await pumpUntilMounted(tester);
+      for (final tabKey in [
+        'settingsTabUpdatesInstall',
+        'settingsTabNotifications',
+        'settingsTabBehavior',
+        'settingsTabAdvancedDebug',
+      ]) {
+        await tester.drag(
+          find.byType(CustomScrollView).first,
+          const Offset(0, -400),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+        final chip = find.widgetWithText(
+          ChoiceChip,
+          translations[tabKey] as String,
+        );
+        await tester.ensureVisible(chip);
+        await tester.tap(chip, warnIfMissed: false);
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+      }
+    } finally {
+      FlutterError.onError = baseHandler;
+    }
+    final typeErrors = errors
+        .where((d) => d.exception.toString().contains("'bool?'"))
+        .toList();
+    for (final d in typeErrors) {
+      // ignore: avoid_print
+      print('──── captured error detail ────\n$d');
+    }
+    expect(typeErrors, isEmpty);
+  }, timeout: const Timeout(Duration(minutes: 1)));
+
   // #336/#337: flex_color_picker's colour-code field (Appearance tab) is a
   // material_ui TextField, which needs material_ui's own MaterialLocalizations.
   // Only the en-only Default delegate was registered, so every other locale
@@ -330,9 +407,9 @@ void main() {
       await pumpCapturingErrors(tester, app);
       expect(find.byType(SettingsPage), findsOneWidget);
 
-      // Verify Obtainium+ action chip in app bar (the design-style
-      // segmented button also reads "Obtainium+", so match the chip itself)
-      expect(find.widgetWithText(ActionChip, 'Obtainium+'), findsOneWidget);
+      // Obtainium+ features entry in the app bar (an icon button since the
+      // labelled chips overflowed phone widths)
+      expect(find.byTooltip('Obtainium+'), findsOneWidget);
 
       // Verify no redundant uppercase or banner duplication
       expect(find.text('APPEARANCE'), findsNothing);

@@ -355,8 +355,11 @@ class _UsageAccessCardState extends State<UsageAccessCard>
                 ],
               ),
             ] else ...[
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 4,
                 children: [
                   TextButton.icon(
                     onPressed: _refreshStatus,

@@ -349,7 +349,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       // Remove the default ExpansionTile dividers
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
-        key: ValueKey(
+        key: PageStorageKey<String>(
           'expressive_settings_group:${widget.persistKey ?? widget.title ?? widget.hashCode.toString()}',
         ),
         shape: const RoundedRectangleBorder(side: BorderSide.none),

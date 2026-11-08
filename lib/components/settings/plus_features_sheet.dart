@@ -101,19 +101,6 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
         physics: plusSettings.scrollPhysics,
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
         children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-
           // Header Banner
           Container(
             padding: const EdgeInsets.all(18),

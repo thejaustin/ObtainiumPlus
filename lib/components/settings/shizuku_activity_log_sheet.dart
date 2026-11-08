@@ -77,19 +77,6 @@ class _ShizukuActivityLogSheetContentState
 
     return Column(
       children: [
-        // Drag handle
-        Center(
-          child: Container(
-            margin: const EdgeInsets.only(top: 12, bottom: 8),
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        ),
-
         // Title and actions header
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 12, 12),

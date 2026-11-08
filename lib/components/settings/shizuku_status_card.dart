@@ -18,10 +18,14 @@ class ShizukuStatusCard extends StatefulWidget {
   final VoidCallback? onStatusChanged;
   final EdgeInsetsGeometry margin;
 
+  /// False where the card is shown inside Service Doctor itself.
+  final bool showDoctorChip;
+
   const ShizukuStatusCard({
     super.key,
     this.onStatusChanged,
     this.margin = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    this.showDoctorChip = true,
   });
 
   @override
@@ -467,21 +471,23 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                       ),
                       onPressed: _testLatency,
                     ),
-                    const SizedBox(width: 8),
-                    ActionChip(
-                      avatar: const Icon(
-                        Icons.medical_services_outlined,
-                        size: 15,
+                    if (widget.showDoctorChip) ...[
+                      const SizedBox(width: 8),
+                      ActionChip(
+                        avatar: const Icon(
+                          Icons.medical_services_outlined,
+                          size: 15,
+                        ),
+                        label: Text(
+                          tr('serviceDoctor'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          showDeviceOptimizationSheet(context: context);
+                        },
                       ),
-                      label: Text(
-                        tr('serviceDoctor'),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      onPressed: () {
-                        AppHaptics.selectionClick();
-                        showDeviceOptimizationSheet(context: context);
-                      },
-                    ),
+                    ],
                     const SizedBox(width: 8),
                     ActionChip(
                       avatar: const Icon(Icons.assignment_outlined, size: 15),
