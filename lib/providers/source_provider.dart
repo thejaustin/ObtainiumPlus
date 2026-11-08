@@ -6,6 +6,8 @@
 // resolving the same names.
 // ========================================================================
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:obtainium/utils/release_notes_utils.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -464,6 +466,14 @@ class SourceProvider {
     } on ObtainiumError catch (e) {
       throw e..withUrlContext(standardUrl);
     }
+    // Store "what's new" text (Play, APKPure) arrives as a one-line HTML
+    // fragment; stored as-is it rendered literal <br> tags.
+    final rawNotes = apk.changeLog;
+    if (rawNotes != null &&
+        !rawNotes.contains('\n') &&
+        RegExp(r'<br\s*/?>|</p>|</li>', caseSensitive: false).hasMatch(rawNotes)) {
+      apk = apk.copyWith(changeLog: playNotesHtmlToText(rawNotes));
+    }
 
     // Adding an app must honor the minimum update age too. Sources that can
     // look back already return an older eligible release, so this only blocks
@@ -560,7 +570,7 @@ class SourceProvider {
       otherAssetUrls: apk.allAssetUrls
           .where((a) => apk.apkUrls.indexWhere((p) => a.key == p.key) < 0)
           .toList(),
-      versionHistory: _buildVersionHistory(currentApp, apk),
+      versionHistory: buildVersionHistory(currentApp, apk),
       apkSizeBytes: apk.apkSizeBytes,
       latestVersionChangedAt: currentApp?.latestVersionChangedAt,
       consecutiveFailedChecks: currentApp?.consecutiveFailedChecks ?? 0,
@@ -572,7 +582,8 @@ class SourceProvider {
     return source.postProcessApp(finalApp);
   }
 
-  List<VersionHistoryEntry> _buildVersionHistory(
+  @visibleForTesting
+  static List<VersionHistoryEntry> buildVersionHistory(
     App? currentApp,
     APKDetails apk,
   ) {
@@ -586,15 +597,50 @@ class SourceProvider {
         ),
       ];
     }
+    final list = List<VersionHistoryEntry>.from(currentApp.versionHistory);
+    final existing = list.indexWhere(
+      (e) => e.version.trim() == apk.version.trim(),
+    );
+    if (existing >= 0) {
+      // Version seen before (pre-release toggle, mirror fallback): fill in
+      // notes that arrived late instead of adding a second entry.
+      final e = list[existing];
+      final incoming = normalizeReleaseNotes(apk.changeLog);
+      // Notes deliberately blanked as a repeat of an older entry must stay
+      // blank, or the next check would write the duplicate back.
+      final repeatsOlder = list.any(
+        (o) =>
+            !identical(o, e) &&
+            o.changeLog != null &&
+            normalizeReleaseNotes(o.changeLog) == incoming,
+      );
+      if ((e.changeLog == null || e.changeLog!.trim().isEmpty) &&
+          incoming.isNotEmpty &&
+          !repeatsOlder) {
+        list[existing] = VersionHistoryEntry(
+          version: e.version,
+          changeLog: apk.changeLog,
+          releaseDate: e.releaseDate ?? apk.releaseDate,
+          detectedAt: e.detectedAt,
+        );
+      }
+      return list;
+    }
     if (currentApp.latestVersion != apk.version) {
+      // Sources without per-version notes (APKPure "what's new", carried
+      // forward mirrors) hand back the previous body; don't store it again.
+      final previous = list.isEmpty ? null : list.first.changeLog;
+      final sameAsPrevious =
+          previous != null &&
+          normalizeReleaseNotes(previous) ==
+              normalizeReleaseNotes(apk.changeLog);
       final newEntry = VersionHistoryEntry(
         version: apk.version,
-        changeLog: apk.changeLog,
+        changeLog: sameAsPrevious ? null : apk.changeLog,
         releaseDate: apk.releaseDate,
         detectedAt: DateTime.now(),
       );
-      final list = List<VersionHistoryEntry>.from(currentApp.versionHistory)
-        ..insert(0, newEntry);
+      list.insert(0, newEntry);
       return list.length > 5 ? list.sublist(0, 5) : list;
     }
 

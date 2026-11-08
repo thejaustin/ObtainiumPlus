@@ -263,6 +263,9 @@ class GitLab extends AppSource {
           apkUrls.entries.toList(),
           AppNames(names.author, names.name.split('/').last),
           releaseDate: releaseDate,
+          changeLog: (e['description'] as String?)?.trim().isNotEmpty == true
+              ? e['description'] as String
+              : null,
         );
       }).whereType<APKDetails>();
       if (apkDetailsList.isEmpty) {

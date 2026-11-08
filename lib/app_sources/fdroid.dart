@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/release_notes_utils.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -156,11 +157,16 @@ class FDroid extends AppSource {
             }
             if ((isGitHub || isGitLab) &&
                 (details.changeLog?.indexOf('/blob/') ?? -1) >= 0) {
+              final fullChangelog = (await sourceRequest(
+                details.changeLog!.replaceFirst('/blob/', '/raw/'),
+                additionalSettings,
+              )).body;
+              // Keep only this version's section; the whole file made every
+              // version-history entry show every release.
               details = details.copyWith(
-                changeLog: (await sourceRequest(
-                  details.changeLog!.replaceFirst('/blob/', '/raw/'),
-                  additionalSettings,
-                )).body,
+                changeLog:
+                    extractChangelogSection(fullChangelog, details.version) ??
+                    fullChangelog,
               );
             }
           }

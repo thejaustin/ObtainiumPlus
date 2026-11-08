@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/release_notes_utils.dart';
 import 'package:obtainium/app_sources/googleplay.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
@@ -69,6 +70,9 @@ class GooglePlayNative extends AppSource {
           AppNames(
             appId,
             details['developerName'] as String? ?? 'Google Play (Native)',
+          ),
+          changeLog: playNotesHtmlToText(
+            details['recentChangesHtml'] as String?,
           ),
         );
       }

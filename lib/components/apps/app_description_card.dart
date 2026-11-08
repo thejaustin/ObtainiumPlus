@@ -1,4 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
@@ -9,6 +11,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/services/readme_service.dart';
 import 'package:obtainium/services/usage_stats_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -115,7 +118,7 @@ class _AppDescriptionModalSheet extends StatelessWidget {
                     scaleDownFactor: 0.88,
                     child: IconButton(
                       icon: const Icon(Icons.copy_rounded, size: 20),
-                      tooltip: tr('copiedToClipboard'),
+                      tooltip: tr('copyToClipboard'),
                       onPressed: () {
                         final text =
                             app.app.additionalSettings['about'] as String? ??
@@ -184,13 +187,36 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
   WebViewController? _webViewController;
   bool _isWebLoading = false;
   int _webProgress = 0;
+  String? _webError;
+  Future<ReadmeDoc?>? _readmeFuture;
+  ReadmeDoc? _readme;
+
+  @override
+  void initState() {
+    super.initState();
+    _startReadmeFetch();
+  }
+
+  // Most apps have no manual "about" text, so every style showed "Empty
+  // description content". The repo README is the natural fallback.
+  void _startReadmeFetch() {
+    final future = ReadmeService.instance.fetch(widget.app.app);
+    _readmeFuture = future;
+    future.then((doc) {
+      if (mounted && identical(_readmeFuture, future) && doc != null) {
+        setState(() => _readme = doc);
+      }
+    });
+  }
 
   @override
   void didUpdateWidget(AppDescriptionCard oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.app.app.url != widget.app.app.url) {
       _webViewController = null;
-      _initWebControllerIfNeeded();
+      _webError = null;
+      _readme = null;
+      _startReadmeFetch();
     }
   }
 
@@ -214,7 +240,12 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
         ..setNavigationDelegate(
           NavigationDelegate(
             onPageStarted: (_) {
-              if (mounted) setState(() => _isWebLoading = true);
+              if (mounted) {
+                setState(() {
+                  _isWebLoading = true;
+                  _webError = null;
+                });
+              }
             },
             onProgress: (p) {
               if (mounted) setState(() => _webProgress = p);
@@ -222,11 +253,43 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
             onPageFinished: (_) {
               if (mounted) setState(() => _isWebLoading = false);
             },
+            onWebResourceError: (error) {
+              if (error.isForMainFrame == true && mounted) {
+                setState(() {
+                  _isWebLoading = false;
+                  _webError = error.description;
+                });
+              }
+            },
+            // Store pages redirect to intent:// / market:// links, which a
+            // WebView can't open (ERR_UNKNOWN_URL_SCHEME).
+            // The tab must not jump into another app on its own, so block the
+            // redirect and point at "Open in browser" instead.
+            onNavigationRequest: (request) {
+              final scheme = Uri.tryParse(request.url)?.scheme;
+              if (scheme == 'http' || scheme == 'https') {
+                return NavigationDecision.navigate;
+              }
+              if (request.isMainFrame && mounted) {
+                setState(() {
+                  _isWebLoading = false;
+                  _webError =
+                      'This page wants to open another app. Use Open in '
+                      'Browser to view it.';
+                });
+              }
+              return NavigationDecision.prevent;
+            },
           ),
-        );
+        )
+        // Browser default: pages without their own background keep dark text
+        // readable.
+        ..setBackgroundColor(Colors.white);
       controller.loadRequest(uri);
       _webViewController = controller;
-    } catch (_) {}
+    } catch (e) {
+      _webError = e.toString();
+    }
   }
 
   String get _aboutText {
@@ -234,7 +297,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
     if (raw is String && raw.trim().isNotEmpty) {
       return raw.trim();
     }
-    return '';
+    return _readme?.markdown.trim() ?? '';
   }
 
   bool get _isLong =>
@@ -315,7 +378,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
                   scaleDownFactor: 0.90,
                   child: IconButton(
                     icon: const Icon(Icons.copy_rounded, size: 18),
-                    tooltip: tr('copiedToClipboard'),
+                    tooltip: tr('copyToClipboard'),
                     visualDensity: VisualDensity.compact,
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: text));
@@ -651,15 +714,37 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
     String text,
     bool hasText,
   ) {
+    final app = widget.app;
+
+    _readmeFuture ??= ReadmeService.instance.fetch(app.app);
+    return FutureBuilder<ReadmeDoc?>(
+      future: _readmeFuture,
+      builder: (context, snap) {
+        final doc = snap.data;
+        if (snap.connectionState != ConnectionState.done) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Center(child: ExpressiveProgressIndicator()),
+          );
+        }
+        return _buildReadmeBody(context, doc, text, hasText);
+      },
+    );
+  }
+
+  Widget _buildReadmeBody(
+    BuildContext context,
+    ReadmeDoc? doc,
+    String text,
+    bool hasText,
+  ) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final app = widget.app;
-
-    final repoParts = app.app.url.contains('github.com/')
-        ? app.app.url.split('github.com/').last.split('/')
-        : <String>[];
-    final repoOwner = repoParts.isNotEmpty ? repoParts[0] : app.app.author;
-    final repoName = repoParts.length > 1 ? repoParts[1] : app.name;
+    final repoLabel = doc?.repoLabel ?? '${app.app.author} / ${app.name}';
+    final branch = doc?.branch;
+    final body = doc?.markdown ?? text;
+    final hasBody = body.trim().isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -680,12 +765,15 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  '$repoOwner / $repoName',
+                  repoLabel,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+              if (branch != null)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
@@ -693,7 +781,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  'main',
+                  branch,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -707,9 +795,9 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
         const SizedBox(height: 12),
 
         // README Markdown Content
-        if (hasText)
+        if (hasBody)
           _buildCollapsibleWrapper(
-            child: _renderMarkdown(context, text, isGithub: true),
+            child: _renderMarkdown(context, body, isGithub: true, doc: doc),
           )
         else
           _buildEmptyPlaceholder(
@@ -975,9 +1063,18 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
             borderRadius: BorderRadius.vertical(
               bottom: Radius.circular(baseRadius),
             ),
-            child: WebViewWidget(
-              controller: _webViewController!..setBackgroundColor(cs.surface),
-            ),
+            child: _webError != null
+                ? _buildEmptyPlaceholder(context, _webError!)
+                : WebViewWidget(
+                    controller: _webViewController!,
+                    // Without this the page's scroll view wins every
+                    // vertical drag and the web content looks frozen.
+                    gestureRecognizers: {
+                      Factory<OneSequenceGestureRecognizer>(
+                        () => EagerGestureRecognizer(),
+                      ),
+                    },
+                  ),
           ),
         ),
       ],
@@ -1077,7 +1174,11 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
     BuildContext context,
     String text, {
     bool isGithub = false,
+    ReadmeDoc? doc,
   }) {
+    doc ??= (_readme != null && text == _readme!.markdown.trim())
+        ? _readme
+        : null;
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
 
@@ -1105,10 +1206,11 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
         ),
       ),
       data: text,
+      imageDirectory: doc?.baseRaw.toString(),
       onTapLink: (text, href, title) {
-        if (href != null) {
-          launchUrlString(href, mode: LaunchMode.externalApplication);
-        }
+        if (href == null || href.startsWith('#')) return;
+        final target = doc?.resolve(href).toString() ?? href;
+        launchUrlString(target, mode: LaunchMode.externalApplication);
       },
       extensionSet: md.ExtensionSet(
         md.ExtensionSet.gitHubFlavored.blockSyntaxes,
