@@ -2,6 +2,21 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+### Fixed
+- Settings tabs no longer show red "Something went wrong" cards after scrolling another tab.
+- Service Doctor is now a regular page and no longer opens copies of itself.
+- Settings header buttons, diagnostic rows and the usage-access buttons no longer run off narrow screens. Compact mode shows two lines of each setting's description instead of one.
+- The Updates summary tile shows the real check interval ("2h", not "120h").
+- Release notes: version history no longer repeats the same notes, F-Droid apps show only that version's section of the changelog, and Play Store notes no longer show raw `<br>` tags.
+- The webpage view in an app's About card scrolls, and store pages that try to open another app show a message instead of an error page.
+- Shizuku installs are checked against the live package, so a finished update shouldn't keep showing as pending.
+
+### Improved
+- About card: the README tab now loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links, and apps without a description show their README.
+- GitLab and Google Play (native) apps now show release notes.
+- Importing many installed apps saves them in batches instead of one at a time.
+- Less work at startup: icons that load together redraw the list once, and app-usage data loads only when you sort by last used.
+
 ---
 
 ## [1.7.3-p13] — 2026-11-03

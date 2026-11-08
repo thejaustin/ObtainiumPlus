@@ -7,7 +7,41 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
-## 2026-10-30 (later) — Claude: Scroll Jank, Install-Edge Flicker, Settings Visual Pass
+## 2026-11-08 — Claude: Deep Review of p15 (4 agents + device QA)
+
+- **Red error cards (root cause, test-pinned):** `type 'double' is not a subtype of 'bool?'` in `Expansible.initState`. Every `ExpansionTile` had a plain `ValueKey`, so its PageStorage identifier equalled the enclosing `PageStorageKey('settings_page_scroll')` and it read the scroll offset back as its expanded flag. This only happened after scrolling a tab, which is why fresh launches and tests looked fine. All 12 ExpansionTiles now use `PageStorageKey<String>`. Regression test: `settings_page_test` "switching tabs after scrolling" (fails on the old code).
+- **Settings:**
+  - Service Doctor is a page (`DeviceOptimizationPage`); the embedded `ShizukuStatusCard(showDoctorChip: false)` stops it opening itself.
+  - The app bar chips became icon buttons (the bar overflowed by 146px at 360dp / 1.3x). New 360dp tests cover all tabs.
+  - Per-child GlobalKey for the tab switcher, so there's no duplicate key during the crossfade.
+  - Diagnostic row overflows fixed. Removed duplicate drag handles. The swipe preview respects the animations setting and plays 3 loops.
+  - The hero interval was minutes shown as "h". Compact grid descriptions are 2 lines.
+- **Release notes / README:**
+  - New `utils/release_notes_utils.dart` (changelog section extraction, Play HTML→text, normalization).
+  - Version history dedupes by version and drops a body identical to the previous one.
+  - F-Droid stores only the version's section. GitLab fills `changeLog`. Native Play uses `recentChangesHtml`. One-line HTML notes are normalized in `SourceProvider.getApp`.
+  - New `services/readme_service.dart` (GitHub `/readme`, GitLab and Gitea/Codeberg default branch + raw) feeds the README tab and acts as the fallback "about" text.
+  - Card webview: eager gesture recognizer, `onNavigationRequest` blocks intent:// with a message, `onWebResourceError` placeholder.
+- **Perf / correctness:**
+  - `getInstalledInfo` honours the TTL with a map lookup, and the cache is invalidated before the post-install save (it caused stale "update pending").
+  - The in-flight package future clears via `whenComplete`.
+  - `addAppsByURL` does a single batched save.
+  - Icon notifications use an 80ms timer.
+  - Usage stats load lazily (only for the last-used sort) and natively off the UI thread.
+- **Baselines (p15 release, device):** cold start 330ms warm-ish / 643ms first. App-list scroll p50 16.7ms on a 120Hz panel (about 60fps cap), app-page open p99 33ms. gfxinfo is useless for Flutter, so use SurfaceFlinger `--latency`.
+- **Open (not done):**
+  - apps_cache.json can go stale: no file-count check, unserialized writes, quarantine restore not reflected.
+  - Native batched label/icon method for the installed-apps picker.
+  - Per-version release notes API (`getReleaseNotes` on AppSource).
+  - Settings tab pill stacks on top of the main floating nav bar (design decision pending).
+  - Contradictory Shizuku status between the doctor page and the installer section.
+  - The multi-user diagnostic misses user 150.
+  - Obtainium+ self-entry shows p10 installed while p15 is.
+  - Sheets→pages for the play inspector and multi-user diagnostic.
+  - About 25 hard-coded English strings in the new diagnostic sheets.
+  - Glass blur cost on scroll.
+
+ — Claude: Scroll Jank, Install-Edge Flicker, Settings Visual Pass
 
 - **Scroll lag root cause:** `AppListTile`/`AppGridTile` ran a fade+slide entrance in every `initState`, including scroll-back and re-sort rebuilds, with index×30 ms delays. They started at opacity 0 and only decided in a post-frame callback. A new `components/apps/tile_entrance.dart` lets the fade play once per app within 1.2 s of the first tile; the decision is made in `initState`. `Scrollable.recommendDeferredLoadingForContext` can't be called in `initState` (it asserts via `View.of`).
 - **"Edge of an operation" flicker:** the slivers had no `findChildIndexCallback`, so a row that moved after an install finished got a fresh State. Callbacks were added in the list (`dismiss_`/`reorder_` keys), grid (plain or `draggable_` id) and category grid. Removed `Transform.scale(1.02)` for lists of 1–2 apps. `ActiveOperationsBanner` is now stateful and holds its last content for 0.9 s when idle, and download rows are keyed.
