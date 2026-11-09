@@ -7,6 +7,37 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-09 — Claude: Review Follow-Through (4 Worktree Agents) + Visual Lab
+
+- **Process:** four agents worked in `~/projects/op-wt-{notes,cache,diag,lab}` (branches `wt/*`) on disjoint files, each owning one en.json anchor. They left changes uncommitted; the lead committed and merged into `fix/review-2026-11`.
+  - **`translation_shape_test` requires every en.json key in all 35 locales.** Use `scratchpad/sync_locales.py`-style insertion (English value after the nearest shared key) after adding keys.
+- **Notes:**
+  - `AppSource.getReleaseNotes`/`supportsReleaseNotes` (GitHub, GitLab, Codeberg, Gitea), `ReleaseNotesService` (15 min cache, dedupe, errors → stored history), fetched lazily in the expanded Version History.
+  - `getChangeLogFn` now has a single copy in `app_changelog.dart`.
+  - F-Droid per-version notes not done; `filterReleaseTitlesByRegEx` not applied to fetched notes.
+- **Cache:**
+  - `services/apps_cache_index.dart`: v2 index with the file list and snapshot time, a dirty marker written by the background provider, a debounced single writer, tmp cleanup, isolate decode.
+  - The resume path only refreshes package info when the file signature is unchanged.
+  - Picker uses native `getLabelsAndIcons` (`dev.thejaustin.obtainiumplus/native`, background executor, 96px).
+  - Self entry stuck on p10: `AppsProvider` had its own non-"v"-stripping copies of `reconcileVersionDifferences`/`doStringsMatchUnderRegEx` (now delegate to version_utils).
+  - `App.installHistory` defaults to a growable list.
+- **Diag:**
+  - `services/shizuku_status_service.dart` is the single status source. The first probe after start always says `services_not_found` while the plugin's binder request is pending; that was the disagreement.
+  - Diagnostics are pages via `diagnostic_page_scaffold.dart`.
+  - Secure Folder (user 150) can't be enumerated even by shell.
+  - `getInstalledShizukuPackageId` requires an exact package match (alias fallback reported stock Shizuku as Shizuku+).
+- **Lab:**
+  - `plusSettingsNavPlacement` enum (bottom/top/merged) replaces `plusSettingsBottomNavBar` (migrated, old getter kept as a wrapper).
+  - `SettingsSectionController` shared by home and the settings page; `settings_category_bar_host.dart`.
+  - Other `plusLab*` prefs: app-bar actions, header size, hero/topic chips, compact description lines, nav blur, Obtainium+ entry.
+  - `VisualLabPage` is opened from Developer & Diagnostics.
+  - **Home's real bar isn't covered by tests.**
+- **Open:**
+  - Device QA of all Visual Lab variants (debug build).
+  - Picker: load visible rows first.
+  - F-Droid notes.
+  - Listing user names needs a native `pm list users` via Shizuku.
+
 ## 2026-11-08 — Claude: Deep Review of p15 (4 agents + device QA)
 
 - **Red error cards (root cause, test-pinned):** `type 'double' is not a subtype of 'bool?'` in `Expansible.initState`. Every `ExpansionTile` had a plain `ValueKey`, so its PageStorage identifier equalled the enclosing `PageStorageKey('settings_page_scroll')` and it read the scroll offset back as its expanded flag. This only happened after scrolling a tab, which is why fresh launches and tests looked fine. All 12 ExpansionTiles now use `PageStorageKey<String>`. Regression test: `settings_page_test` "switching tabs after scrolling" (fails on the old code).

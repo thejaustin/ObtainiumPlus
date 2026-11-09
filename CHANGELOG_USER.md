@@ -10,10 +10,19 @@
 - Release notes: version history no longer repeats the same notes, F-Droid apps show only that version's section of the changelog, and Play Store notes no longer show raw `<br>` tags.
 - The webpage view in an app's About card scrolls, and store pages that try to open another app show a message instead of an error page.
 - Shizuku installs are checked against the live package, so a finished update shouldn't keep showing as pending.
+- Shizuku status is the same on every screen. The installer section could say "not running" while Service Doctor said active.
+- The multi-user diagnostic lists your profiles instead of always saying none were found.
+- Obtainium+ showed an older installed version than the one actually installed (the "v" in tags wasn't ignored).
+- The app library repairs its index if it drifts from the saved apps, so apps can't silently go missing from the list.
 
 ### Improved
 - About card: the README tab now loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links, and apps without a description show their README.
 - GitLab and Google Play (native) apps now show release notes.
+- Version History now loads every release with its notes from GitHub, GitLab, Codeberg and Gitea when you expand it, not just the versions this device happened to see.
+- Service Doctor, Play Store diagnostics and inspector, and the multi-user diagnostic are full pages that match the rest of settings.
+- The installed-apps picker loads small icons and names in batches and sorts by app name.
+- The settings category bar no longer sits on top of the main navigation bar.
+- New Visual Lab in Developer & Diagnostics: try alternative layouts, such as the settings category bar at the top or merged into the main navigation bar, a smaller settings header, or less blur. Everything starts at the current look and can be reset.
 - Importing many installed apps saves them in batches instead of one at a time.
 - Less work at startup: icons that load together redraw the list once, and app-usage data loads only when you sort by last used.
 
