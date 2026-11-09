@@ -35,6 +35,11 @@ class SettingsHeroOverview extends StatelessWidget {
 
     final shape = CardMetrics.shape(16, expressive: isM3E);
 
+    // Visual Lab: the topic chips repeat the category bar's destinations.
+    final showTopicChips = context.select<PlusSettingsProvider, bool>(
+      (s) => s.plusLabShowHeroTopicChips,
+    );
+
     final installerMode = behaviorSettings.installerMode;
     final updateInterval = updateSettings.updateInterval;
 
@@ -119,72 +124,74 @@ class SettingsHeroOverview extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            if (showTopicChips) ...[
+              const SizedBox(height: 12),
 
-            // Quick topic chips
-            SingleChildScrollView(
-              // Own storage slot, or it restores the page's vertical offset.
-              key: const PageStorageKey<String>('settings_hero_topics'),
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  _buildQuickSearchChip(
-                    context: context,
-                    icon: Icons.palette_outlined,
-                    label: tr('appearance'),
-                    cornerRadius: cornerRadius,
-                    isM3E: isM3E,
-                    onTap: () => onSelectTab(0),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildQuickSearchChip(
-                    context: context,
-                    icon: Icons.bolt_rounded,
-                    label: 'Shizuku',
-                    cornerRadius: cornerRadius,
-                    isM3E: isM3E,
-                    onTap: () => onSearchKeyword('shizuku'),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildQuickSearchChip(
-                    context: context,
-                    icon: Icons.swipe_rounded,
-                    label: tr('swipeGestures'),
-                    cornerRadius: cornerRadius,
-                    isM3E: isM3E,
-                    onTap: () => onSelectTab(3),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildQuickSearchChip(
-                    context: context,
-                    icon: Icons.insights_rounded,
-                    label: tr('usageAccessSettings'),
-                    cornerRadius: cornerRadius,
-                    isM3E: isM3E,
-                    onTap: () => onSelectTab(3),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildQuickSearchChip(
-                    context: context,
-                    icon: Icons.import_export_rounded,
-                    label: tr('importExport'),
-                    cornerRadius: cornerRadius,
-                    isM3E: isM3E,
-                    onTap: () => onSearchKeyword('export'),
-                  ),
-                  const SizedBox(width: 6),
-                  _buildQuickSearchChip(
-                    context: context,
-                    icon: Icons.warning_amber_rounded,
-                    label: tr('safetyAndRateLimits'),
-                    cornerRadius: cornerRadius,
-                    isM3E: isM3E,
-                    onTap: () => onSearchKeyword('warning'),
-                  ),
-                ],
+              // Quick topic chips
+              SingleChildScrollView(
+                // Own storage slot, or it restores the page's vertical offset.
+                key: const PageStorageKey<String>('settings_hero_topics'),
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Row(
+                  children: [
+                    _buildQuickSearchChip(
+                      context: context,
+                      icon: Icons.palette_outlined,
+                      label: tr('appearance'),
+                      cornerRadius: cornerRadius,
+                      isM3E: isM3E,
+                      onTap: () => onSelectTab(0),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildQuickSearchChip(
+                      context: context,
+                      icon: Icons.bolt_rounded,
+                      label: 'Shizuku',
+                      cornerRadius: cornerRadius,
+                      isM3E: isM3E,
+                      onTap: () => onSearchKeyword('shizuku'),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildQuickSearchChip(
+                      context: context,
+                      icon: Icons.swipe_rounded,
+                      label: tr('swipeGestures'),
+                      cornerRadius: cornerRadius,
+                      isM3E: isM3E,
+                      onTap: () => onSelectTab(3),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildQuickSearchChip(
+                      context: context,
+                      icon: Icons.insights_rounded,
+                      label: tr('usageAccessSettings'),
+                      cornerRadius: cornerRadius,
+                      isM3E: isM3E,
+                      onTap: () => onSelectTab(3),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildQuickSearchChip(
+                      context: context,
+                      icon: Icons.import_export_rounded,
+                      label: tr('importExport'),
+                      cornerRadius: cornerRadius,
+                      isM3E: isM3E,
+                      onTap: () => onSearchKeyword('export'),
+                    ),
+                    const SizedBox(width: 6),
+                    _buildQuickSearchChip(
+                      context: context,
+                      icon: Icons.warning_amber_rounded,
+                      label: tr('safetyAndRateLimits'),
+                      cornerRadius: cornerRadius,
+                      isM3E: isM3E,
+                      onTap: () => onSearchKeyword('warning'),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),

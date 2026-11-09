@@ -23,6 +23,9 @@ import 'package:obtainium/pages/apps.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/components/settings/settings_category_bar_host.dart';
+import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/services/settings_section_controller.dart';
 import 'package:obtainium/pages/system_updates.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -82,6 +85,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   final GlobalKey<AppsPageState> _appsPageKey = GlobalKey<AppsPageState>();
   final GlobalKey<SettingsPageState> _settingsPageKey =
       GlobalKey<SettingsPageState>();
+
+  /// Settings categories shown in this scaffold's bottom bar (Visual Lab
+  /// `bottom` / `merged` placements) drive the Settings tab through this.
+  final SettingsSectionController _settingsSection =
+      SettingsSectionController();
   late List<NavigationPageItem> pages;
 
   bool _providersInitialized = false;
@@ -130,7 +138,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     NavigationPageItem(
       'settings',
       Icons.settings_outlined,
-      SettingsPage(key: _settingsPageKey),
+      SettingsPage(key: _settingsPageKey, sectionController: _settingsSection),
       selectedIcon: Icons.settings_rounded,
     ),
   ];
@@ -763,6 +771,32 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
 
     final isM3E = plusSettings.plusEnableMaterialExpressive;
+
+    // Settings categories hosted in this bar while Settings is the current
+    // tab (SettingsPage hides its own bar then — see its `hostedBar`).
+    final placement = plusSettings.plusSettingsNavPlacement;
+    final settingsIndex = pages.indexWhere((p) => p.title == 'settings');
+    final hostsSettings = placement != SettingsNavPlacement.top;
+    final merged = placement == SettingsNavPlacement.merged;
+    final settingsRow = hostsSettings
+        ? SettingsCategoryBarHost(
+            controller: _settingsSection,
+            show: currentIndex == settingsIndex,
+            separate: !merged,
+          )
+        : null;
+
+    // Visual Lab glass strength: strong = the shipped sigmas (20 floating,
+    // 16 flat). Merged mode is one surface, so one BackdropFilter — no
+    // BackdropGroup needed.
+    final blurStrength = plusSettings.plusLabNavBarBlur;
+    final blurEnabled =
+        plusSettings.plusEnableGlassmorphism &&
+        blurStrength != NavBarBlurStrength.off;
+    double sigmaFor(double strong) => blurStrength == NavBarBlurStrength.soft
+        ? AppConstants.glassBlurSigmaSoft
+        : strong;
+
     final navBar = NavigationBar(
       elevation: 0,
       backgroundColor: Colors.transparent,
@@ -832,75 +866,136 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                // Shadows outside ClipRRect so they aren't clipped.
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 36,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 4),
-                      ),
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.14),
-                        blurRadius: 14,
-                        spreadRadius: -4,
-                        offset: const Offset(0, 10),
-                      ),
-                      if (enableGlass)
-                        BoxShadow(
-                          color: colorScheme.primary.withValues(alpha: 0.06),
-                          blurRadius: 28,
-                          spreadRadius: 2,
-                          offset: Offset.zero,
-                        ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(32),
-                    child: ConditionalBlur(
-                      enabled: enableGlass,
-                      sigma: 20,
-                      child: Container(
-                        decoration: ShapeDecoration(
-                          color: colorScheme.surfaceContainerHigh.withValues(
-                            alpha: enableGlass ? 0.72 : 1.0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (!merged && settingsRow != null) settingsRow,
+                    // Shadows outside ClipRRect so they aren't clipped.
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 36,
+                            spreadRadius: 0,
+                            offset: const Offset(0, 4),
                           ),
-                          shape: CardMetrics.shape(
-                            32,
-                            expressive: isM3E,
-                            side: BorderSide(
-                              color: enableGlass
-                                  ? colorScheme.primary.withValues(alpha: 0.18)
-                                  : colorScheme.outlineVariant.withValues(
-                                      alpha: 0.18,
-                                    ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.14),
+                            blurRadius: 14,
+                            spreadRadius: -4,
+                            offset: const Offset(0, 10),
+                          ),
+                          if (enableGlass)
+                            BoxShadow(
+                              color: colorScheme.primary.withValues(
+                                alpha: 0.06,
+                              ),
+                              blurRadius: 28,
+                              spreadRadius: 2,
+                              offset: Offset.zero,
                             ),
-                          ),
-                        ),
-                        child: Stack(
-                          children: [
-                            // Inner top-edge highlight beneath nav content
-                            Positioned.fill(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      colorScheme.primaryContainer.withValues(
-                                        alpha: enableGlass ? 0.10 : 0.04,
-                                      ),
-                                      Colors.transparent,
-                                    ],
-                                    stops: const [0.0, 0.45],
-                                  ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(32),
+                        child: ConditionalBlur(
+                          enabled: blurEnabled,
+                          sigma: sigmaFor(20),
+                          child: Container(
+                            decoration: ShapeDecoration(
+                              color: colorScheme.surfaceContainerHigh
+                                  .withValues(alpha: enableGlass ? 0.72 : 1.0),
+                              shape: CardMetrics.shape(
+                                32,
+                                expressive: isM3E,
+                                side: BorderSide(
+                                  color: enableGlass
+                                      ? colorScheme.primary.withValues(
+                                          alpha: 0.18,
+                                        )
+                                      : colorScheme.outlineVariant.withValues(
+                                          alpha: 0.18,
+                                        ),
                                 ),
                               ),
                             ),
-                            wrapWithFocus(plusNavBar),
+                            child: Stack(
+                              children: [
+                                // Inner top-edge highlight beneath nav content
+                                Positioned.fill(
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          colorScheme.primaryContainer
+                                              .withValues(
+                                                alpha: enableGlass
+                                                    ? 0.10
+                                                    : 0.04,
+                                              ),
+                                          Colors.transparent,
+                                        ],
+                                        stops: const [0.0, 0.45],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (merged && settingsRow != null)
+                                  Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      settingsRow,
+                                      wrapWithFocus(plusNavBar),
+                                    ],
+                                  )
+                                else
+                                  wrapWithFocus(plusNavBar),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+        : Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!merged && settingsRow != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: settingsRow,
+                ),
+              RepaintBoundary(
+                key: _bottomNavBarKey,
+                child: ClipRRect(
+                  child: ConditionalBlur(
+                    enabled: blurEnabled,
+                    sigma: sigmaFor(16),
+                    child: Container(
+                      color: colorScheme.surface.withValues(
+                        alpha: enableGlass ? 0.78 : 1.0,
+                      ),
+                      child: wrapWithFocus(
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: 0.4,
+                              ),
+                            ),
+                            if (merged && settingsRow != null) settingsRow,
+                            navBar,
                           ],
                         ),
                       ),
@@ -908,36 +1003,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ),
               ),
-            ),
-          )
-        : RepaintBoundary(
-            key: _bottomNavBarKey,
-            child: ClipRRect(
-              child: ConditionalBlur(
-                enabled: enableGlass,
-                sigma: 16,
-                child: Container(
-                  color: colorScheme.surface.withValues(
-                    alpha: enableGlass ? 0.78 : 1.0,
-                  ),
-                  child: wrapWithFocus(
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.4,
-                          ),
-                        ),
-                        navBar,
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            ],
           );
 
     return ValueListenableBuilder<bool>(
@@ -967,6 +1033,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void dispose() {
     _navBarVisible.dispose();
+    _settingsSection.dispose();
     _tabController.dispose();
     _linkSubscription?.cancel();
     super.dispose();

@@ -40,6 +40,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
           builder: (context, constraints) {
             final colorScheme = Theme.of(context).colorScheme;
             final isCompact = plusSettings.plusUseCompactSettings;
+            final compactLines = plusSettings.plusLabCompactDescriptionLines;
             final isM3E = plusSettings.plusEnableMaterialExpressive;
             final availableWidth = constraints.maxWidth;
             final crossAxisCount = availableWidth >= 900
@@ -98,7 +99,7 @@ class GenericBooleanControlGrid<T extends ChangeNotifier>
                                   s.description!.isNotEmpty)
                               ? Text(
                                   s.description!,
-                                  maxLines: isCompact ? 2 : 3,
+                                  maxLines: isCompact ? compactLines : 3,
                                   overflow: TextOverflow.ellipsis,
                                   style: isCompact
                                       ? Theme.of(

@@ -86,6 +86,9 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
       }
       final isEnabled = value(settings);
       final isCompact = plusSettings.plusUseCompactSettings;
+      final compactLines = context.select<PlusSettingsProvider, int>(
+        (s) => s.plusLabCompactDescriptionLines,
+      );
 
       return ScaleTouchWrapper(
         scaleDownFactor: 0.985,
@@ -103,7 +106,7 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
           subtitle: (subtitle != null && subtitle.isNotEmpty)
               ? Text(
                   subtitle,
-                  maxLines: isCompact ? 2 : 3,
+                  maxLines: isCompact ? compactLines : 3,
                   overflow: TextOverflow.ellipsis,
                   style: isCompact
                       ? Theme.of(context).textTheme.bodySmall?.copyWith(

@@ -47,3 +47,19 @@ enum AppDescriptionStyle {
   liveWebpage,
   rawMarkdown,
 }
+
+// Visual Lab (developer options). Stored by index via safeEnum — append new
+// members at the end only, or stored indexes shift.
+
+/// Where the Settings category bar sits. [merged] shares one glass surface
+/// with the main navigation bar (Settings as a home tab only; elsewhere it
+/// falls back to [bottom]).
+enum SettingsNavPlacement { bottom, top, merged }
+
+enum SettingsAppBarActionsStyle { icons, labelledChips }
+
+enum SettingsHeaderSize { large, compact }
+
+enum NavBarBlurStrength { off, soft, strong }
+
+enum PlusFeaturesEntry { sheet, jumpToSection }

@@ -90,6 +90,24 @@ class PlusSettingsProvider with ChangeNotifier {
     _scheduleNotify();
   }
 
+  T _getEnum<T extends Enum>(
+    String key,
+    List<T> values, {
+    required T defaultValue,
+  }) {
+    final cached = _cache[key];
+    if (cached is T) return cached;
+    final val = _prefs?.safeEnum(key, values) ?? defaultValue;
+    _cache[key] = val;
+    return val;
+  }
+
+  void _setEnum<T extends Enum>(String key, T val) {
+    _cache[key] = val;
+    _prefs?.setInt(key, val.index);
+    _scheduleNotify();
+  }
+
   double _getDouble(String key, {required double defaultValue}) {
     final cached = _cache[key];
     if (cached is double) return cached;
@@ -233,10 +251,99 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusSettingsUseHeroCards(bool val) =>
       _setBool('plusSettingsUseHeroCards', val);
 
+  /// Where the Settings category bar sits (Visual Lab). Replaces the old
+  /// `plusSettingsBottomNavBar` bool, which is read only to migrate: absent
+  /// (or type-flipped) new key → old `false` means [SettingsNavPlacement.top],
+  /// anything else [SettingsNavPlacement.bottom].
+  SettingsNavPlacement get plusSettingsNavPlacement {
+    const key = 'plusSettingsNavPlacement';
+    final cached = _cache[key];
+    if (cached is SettingsNavPlacement) return cached;
+    final stored = _prefs?.safeEnum(key, SettingsNavPlacement.values);
+    final val =
+        stored ??
+        ((_prefs?.safeBool('plusSettingsBottomNavBar') ?? true)
+            ? SettingsNavPlacement.bottom
+            : SettingsNavPlacement.top);
+    _cache[key] = val;
+    return val;
+  }
+
+  set plusSettingsNavPlacement(SettingsNavPlacement val) =>
+      _setEnum('plusSettingsNavPlacement', val);
+
+  /// Compatibility shim for the pre-Visual-Lab bool: maps onto
+  /// [plusSettingsNavPlacement] (never the old key).
+  @Deprecated('Use plusSettingsNavPlacement')
   bool get plusSettingsBottomNavBar =>
-      _getBool('plusSettingsBottomNavBar', defaultValue: true);
-  set plusSettingsBottomNavBar(bool val) =>
-      _setBool('plusSettingsBottomNavBar', val);
+      plusSettingsNavPlacement != SettingsNavPlacement.top;
+  @Deprecated('Use plusSettingsNavPlacement')
+  set plusSettingsBottomNavBar(bool val) => plusSettingsNavPlacement = val
+      ? SettingsNavPlacement.bottom
+      : SettingsNavPlacement.top;
+
+  // ── Visual Lab (developer options). Every default is the shipped look. ──
+
+  SettingsAppBarActionsStyle get plusLabSettingsAppBarActions => _getEnum(
+    'plusLabSettingsAppBarActions',
+    SettingsAppBarActionsStyle.values,
+    defaultValue: SettingsAppBarActionsStyle.icons,
+  );
+  set plusLabSettingsAppBarActions(SettingsAppBarActionsStyle val) =>
+      _setEnum('plusLabSettingsAppBarActions', val);
+
+  bool get plusLabShowSettingsHero =>
+      _getBool('plusLabShowSettingsHero', defaultValue: true);
+  set plusLabShowSettingsHero(bool val) =>
+      _setBool('plusLabShowSettingsHero', val);
+
+  bool get plusLabShowHeroTopicChips =>
+      _getBool('plusLabShowHeroTopicChips', defaultValue: true);
+  set plusLabShowHeroTopicChips(bool val) =>
+      _setBool('plusLabShowHeroTopicChips', val);
+
+  SettingsHeaderSize get plusLabSettingsHeaderSize => _getEnum(
+    'plusLabSettingsHeaderSize',
+    SettingsHeaderSize.values,
+    defaultValue: SettingsHeaderSize.large,
+  );
+  set plusLabSettingsHeaderSize(SettingsHeaderSize val) =>
+      _setEnum('plusLabSettingsHeaderSize', val);
+
+  /// Max lines for setting descriptions in compact density (1–3).
+  int get plusLabCompactDescriptionLines =>
+      _getInt('plusLabCompactDescriptionLines', defaultValue: 2).clamp(1, 3);
+  set plusLabCompactDescriptionLines(int val) =>
+      _setInt('plusLabCompactDescriptionLines', val.clamp(1, 3));
+
+  NavBarBlurStrength get plusLabNavBarBlur => _getEnum(
+    'plusLabNavBarBlur',
+    NavBarBlurStrength.values,
+    defaultValue: NavBarBlurStrength.strong,
+  );
+  set plusLabNavBarBlur(NavBarBlurStrength val) =>
+      _setEnum('plusLabNavBarBlur', val);
+
+  PlusFeaturesEntry get plusLabPlusFeaturesEntry => _getEnum(
+    'plusLabPlusFeaturesEntry',
+    PlusFeaturesEntry.values,
+    defaultValue: PlusFeaturesEntry.sheet,
+  );
+  set plusLabPlusFeaturesEntry(PlusFeaturesEntry val) =>
+      _setEnum('plusLabPlusFeaturesEntry', val);
+
+  /// Writes every Visual Lab option's default explicitly (removing the
+  /// placement key would re-run the old-bool migration).
+  void resetVisualLab() {
+    plusSettingsNavPlacement = SettingsNavPlacement.bottom;
+    plusLabSettingsAppBarActions = SettingsAppBarActionsStyle.icons;
+    plusLabShowSettingsHero = true;
+    plusLabShowHeroTopicChips = true;
+    plusLabSettingsHeaderSize = SettingsHeaderSize.large;
+    plusLabCompactDescriptionLines = 2;
+    plusLabNavBarBlur = NavBarBlurStrength.strong;
+    plusLabPlusFeaturesEntry = PlusFeaturesEntry.sheet;
+  }
 
   bool get plusShowAdvancedSettings =>
       _getBool('plusShowAdvancedSettings', defaultValue: true);

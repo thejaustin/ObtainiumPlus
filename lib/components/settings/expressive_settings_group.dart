@@ -86,6 +86,9 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
   Widget build(BuildContext context) {
     final plusSettings = Provider.of<PlusSettingsProvider>(context);
     final isCompact = plusSettings.plusUseCompactSettings;
+    // Visual Lab description-lines knob (default 2 = shipped). Compact
+    // density still hides group descriptions entirely.
+    final descriptionLines = plusSettings.plusLabCompactDescriptionLines;
     final colorScheme = Theme.of(context).colorScheme;
 
     final visibleChildren = widget.children.where((child) {
@@ -231,7 +234,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                               const SizedBox(height: 2),
                               Text(
                                 widget.description ?? widget.helpText!,
-                                maxLines: 2,
+                                maxLines: descriptionLines,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
@@ -380,7 +383,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         subtitle: (!isCompact && widget.description != null)
             ? Text(
                 widget.description!,
-                maxLines: 2,
+                maxLines: plusSettings.plusLabCompactDescriptionLines,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
@@ -394,10 +397,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             endIndent: 16,
             color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           ),
-          PageStorage(
-            bucket: PageStorageBucket(),
-            child: content,
-          ),
+          PageStorage(bucket: PageStorageBucket(), child: content),
         ],
       ),
     );
