@@ -338,6 +338,30 @@ class AppInstallService {
     'dev.thejaustin.obtainiumplus/native',
   );
 
+  /// Labels and small PNG icons ([sizePx] square) for [packages] in one
+  /// native call, rendered on a background thread (MainActivity
+  /// `getLabelsAndIcons`). Packages that no longer exist are omitted.
+  /// Throws [MissingPluginException]/[PlatformException] so callers can fall
+  /// back to the per-package plugin calls.
+  static Future<Map<String, ({String? label, Uint8List? icon})>>
+  getLabelsAndIcons(List<String> packages, {int sizePx = 96}) async {
+    final raw = await _nativeChannel.invokeMethod<Map<Object?, Object?>>(
+      'getLabelsAndIcons',
+      {'packages': packages, 'sizePx': sizePx},
+    );
+    final out = <String, ({String? label, Uint8List? icon})>{};
+    raw?.forEach((key, value) {
+      if (key is! String || value is! Map) return;
+      final label = value['label'];
+      final icon = value['icon'];
+      out[key] = (
+        label: label is String && label.isNotEmpty ? label : null,
+        icon: icon is Uint8List && icon.isNotEmpty ? icon : null,
+      );
+    });
+    return out;
+  }
+
   /// Abandons leftover PackageInstaller sessions for [packageName] so a fresh
   /// install does not hit STATUS_FAILURE_CONFLICT. Returns how many were cleared.
   static Future<int> abandonStaleSessions(String packageName) async {

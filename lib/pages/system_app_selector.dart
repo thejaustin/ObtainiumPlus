@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -118,6 +120,28 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     }
   }
 
+  /// Icon edge in physical pixels requested from the native batch call;
+  /// tiles draw at most ~48 dp.
+  static const int _iconSizePx = 96;
+  static const int _nativeBatchSize = 50;
+  bool _nativeLabelIconsUnavailable = false;
+  Timer? _refreshTimer;
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Coalesces icon/label arrivals into at most one rebuild per ~100 ms
+  /// instead of one per batch.
+  void _scheduleRefresh() {
+    if (_refreshTimer?.isActive ?? false) return;
+    _refreshTimer = Timer(const Duration(milliseconds: 100), () {
+      if (mounted) setState(() {});
+    });
+  }
+
   Future<void> _loadIcons(List<PackageInfo> packages) async {
     final toLoad = packages
         .where(
@@ -131,13 +155,75 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       if (pkg.packageName != null) _loadedIconPackages.add(pkg.packageName!);
     }
 
-    const batchSize = 6;
     // Build O(1) index map to eliminate repeated O(N) indexWhere lookups
     final Map<String, int> indexMap = {
       for (int i = 0; i < _apps.length; i++)
         if (_apps[i].packageName != null) _apps[i].packageName!: i,
     };
 
+    var remaining = toLoad;
+    if (!_nativeLabelIconsUnavailable) {
+      remaining = await _loadIconsNative(toLoad);
+    }
+    if (remaining.isNotEmpty && mounted) {
+      await _loadIconsPerPackage(remaining, indexMap);
+    }
+    if (!mounted) return;
+    _refreshTimer?.cancel();
+    // Labels arrive after the first sort (which ran on package names), so
+    // re-sort once now that they are in.
+    _sortApps();
+  }
+
+  /// One native call per [_nativeBatchSize] packages returning label + a
+  /// small pre-scaled icon each. Returns the packages it could not handle
+  /// (everything from the first failure on if the native method is missing).
+  Future<List<PackageInfo>> _loadIconsNative(List<PackageInfo> toLoad) async {
+    for (int i = 0; i < toLoad.length; i += _nativeBatchSize) {
+      if (!mounted) return const [];
+      final batch = toLoad.sublist(
+        i,
+        (i + _nativeBatchSize).clamp(0, toLoad.length),
+      );
+      Map<String, ({String? label, Uint8List? icon})> result;
+      try {
+        result = await AppInstallService.getLabelsAndIcons([
+          for (final p in batch) p.packageName!,
+        ], sizePx: _iconSizePx).timeout(const Duration(seconds: 20));
+      } on MissingPluginException {
+        _nativeLabelIconsUnavailable = true;
+        return toLoad.sublist(i);
+      } on PlatformException {
+        _nativeLabelIconsUnavailable = true;
+        return toLoad.sublist(i);
+      } on TimeoutException {
+        return toLoad.sublist(i);
+      }
+      if (!mounted) return const [];
+      // Re-index: a sort may have run while awaiting.
+      final indexMap = {
+        for (int j = 0; j < _apps.length; j++)
+          if (_apps[j].packageName != null) _apps[j].packageName!: j,
+      };
+      var anyUpdated = false;
+      result.forEach((pkgName, data) {
+        final idx = indexMap[pkgName];
+        if (idx == null) return;
+        if (data.icon != null) _apps[idx].icon = data.icon;
+        if (data.label != null) _apps[idx].appName = data.label;
+        anyUpdated = true;
+      });
+      if (anyUpdated) _scheduleRefresh();
+    }
+    return const [];
+  }
+
+  /// Fallback: two android_package_manager calls per package.
+  Future<void> _loadIconsPerPackage(
+    List<PackageInfo> toLoad,
+    Map<String, int> indexMap,
+  ) async {
+    const batchSize = 6;
     for (int i = 0; i < toLoad.length; i += batchSize) {
       if (!mounted) return;
       final batch = toLoad.sublist(
@@ -157,7 +243,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               onTimeout: () => null,
             );
             final idx = indexMap[pkg.packageName];
-            if (idx != null && idx < _apps.length) {
+            if (idx != null &&
+                idx < _apps.length &&
+                _apps[idx].packageName == pkg.packageName) {
               if (iconBytes != null) _apps[idx].icon = iconBytes;
               if (appName != null) _apps[idx].appName = appName;
               anyUpdated = true;
@@ -165,9 +253,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           } catch (_) {}
         }),
       );
-      if (mounted && anyUpdated) {
-        setState(() {});
-      }
+      if (mounted && anyUpdated) _scheduleRefresh();
     }
   }
 
@@ -1311,6 +1397,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           icon,
           width: size,
           height: size,
+          // Decode at display size, not the bitmap's full resolution.
+          cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
+          gaplessPlayback: true,
           fit: BoxFit.cover,
           filterQuality: FilterQuality.medium,
         ),
