@@ -151,31 +151,29 @@ class ShizukuInstaller extends Installer {
   /// Checks if ShizukuPlus (af.shizuku.plus.api), Dhizuku (bin.xposed.Dhizuku),
   /// or stock Shizuku (moe.shizuku.privileged.api) is installed.
   static Future<String?> getInstalledShizukuPackageId() async {
-    try {
-      final plus = await AppInstallService.getInstalledInfo(
-        AppConstants.shizukuPlusId,
-        printErr: false,
-      );
-      if (plus != null) return AppConstants.shizukuPlusId;
-      final dhizuku = await AppInstallService.getInstalledInfo(
-        'bin.xposed.Dhizuku',
-        printErr: false,
-      );
-      if (dhizuku != null) return 'bin.xposed.Dhizuku';
-      final stock = await AppInstallService.getInstalledInfo(
-        'moe.shizuku.privileged.api',
-        printErr: false,
-      );
-      if (stock != null) return 'moe.shizuku.privileged.api';
-    } catch (_) {}
+    // getInstalledInfo falls back to alias packages, so asking for Shizuku+
+    // could return stock Shizuku; only accept the exact package.
+    for (final id in [
+      AppConstants.shizukuPlusId,
+      'bin.xposed.Dhizuku',
+      'moe.shizuku.privileged.api',
+    ]) {
+      try {
+        final info = await AppInstallService.getInstalledInfo(
+          id,
+          printErr: false,
+        );
+        if (info?.packageName == id) return id;
+      } catch (_) {}
+    }
     return null;
   }
 
   /// Returns a friendly label for the active Shizuku provider
-  /// ('ShizukuPlus', 'Dhizuku', or 'Shizuku').
+  /// ('Shizuku+', 'Dhizuku', or 'Shizuku').
   static Future<String> getShizukuProviderLabel() async {
     final pkg = await getInstalledShizukuPackageId();
-    if (pkg == AppConstants.shizukuPlusId) return 'ShizukuPlus';
+    if (pkg == AppConstants.shizukuPlusId) return 'Shizuku+';
     if (pkg == 'bin.xposed.Dhizuku') return 'Dhizuku';
     return 'Shizuku';
   }
@@ -225,7 +223,7 @@ class ShizukuInstaller extends Installer {
     switch (code) {
       case -21:
       case 21:
-        return 'Installation blocked by system policy (e.g. Samsung One UI Auto Blocker). Disable Auto Blocker or exempt ObtainiumPlus.';
+        return 'Installation blocked by system policy (e.g. Samsung One UI Auto Blocker). Disable Auto Blocker or exempt Obtainium+.';
       case -1:
       case 1:
         return 'Signature conflict or downgrade disallowed. An existing version with conflicting keys is installed.';
