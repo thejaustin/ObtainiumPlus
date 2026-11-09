@@ -558,12 +558,7 @@ void main() {
       {'plusLabPlusFeaturesEntry': PlusFeaturesEntry.jumpToSection.index},
     ),
   ]) {
-    // Compact density on tab 0 hits a VisualThemeSelector overflow that
-    // exists without any Visual Lab option (visual_theme_selector.dart:356).
-    for (final tab in [
-      if (variant.$2['plusUseCompactSettings'] != true) 0,
-      6,
-    ]) {
+    for (final tab in [0, 6]) {
       testWidgets('visual lab "${variant.$1}" fits 360dp (tab $tab)', (
         tester,
       ) async {

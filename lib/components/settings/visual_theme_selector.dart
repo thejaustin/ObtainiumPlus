@@ -350,48 +350,56 @@ class _MockHalf extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Decorative thumbnail: clip instead of overflowing when compact density
+    // and large text make the preview shorter than its mock rows.
     return Container(
-      color: bgColor,
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 7,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: headerColor,
-              borderRadius: BorderRadius.circular(3),
+      clipBehavior: Clip.hardEdge,
+      decoration: BoxDecoration(color: bgColor),
+      child: OverflowBox(
+        alignment: Alignment.topLeft,
+        maxHeight: double.infinity,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 7,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: headerColor,
+                borderRadius: BorderRadius.circular(3),
+              ),
             ),
-          ),
-          const SizedBox(height: 5),
-          Container(
-            height: 5,
-            width: 18,
-            decoration: BoxDecoration(
-              color: itemColor,
-              borderRadius: BorderRadius.circular(2.5),
+            const SizedBox(height: 5),
+            Container(
+              height: 5,
+              width: 18,
+              decoration: BoxDecoration(
+                color: itemColor,
+                borderRadius: BorderRadius.circular(2.5),
+              ),
             ),
-          ),
-          const SizedBox(height: 3),
-          Container(
-            height: 12,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: itemColor.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(3.5),
+            const SizedBox(height: 3),
+            Container(
+              height: 12,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: itemColor.withValues(alpha: 0.6),
+                borderRadius: BorderRadius.circular(3.5),
+              ),
             ),
-          ),
-          const SizedBox(height: 3),
-          Container(
-            height: 12,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: itemColor.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(3.5),
+            const SizedBox(height: 3),
+            Container(
+              height: 12,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: itemColor.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(3.5),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

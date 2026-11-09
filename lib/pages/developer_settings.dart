@@ -19,6 +19,7 @@ import 'package:obtainium/pages/plugin_manager.dart';
 import 'package:android_package_manager/android_package_manager.dart'
     hide LaunchMode;
 import 'package:obtainium/pages/microg_hub.dart';
+import 'package:obtainium/pages/visual_lab_page.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
@@ -53,6 +54,19 @@ class DeveloperSettingsPage extends StatelessWidget {
         physics: plusSettings.scrollPhysics,
         padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
         children: [
+          _buildSection(context, tr('visualLab'), [
+            ListTile(
+              leading: const Icon(Icons.science_outlined),
+              title: Text(tr('visualLab')),
+              subtitle: Text(
+                tr('visualLabDescription'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () => pushRoute(context, const VisualLabPage()),
+            ),
+          ]),
           _buildSection(context, tr('playStoreAndPluginsExperimental'), [
             ListTile(
               leading: const Icon(Icons.security_outlined),

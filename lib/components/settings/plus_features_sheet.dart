@@ -10,8 +10,8 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
+import 'package:obtainium/services/shizuku_status_service.dart';
 import 'package:provider/provider.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
 /// Shows the Obtainium+ Features Overview & Live Diagnostics Sheet.
 Future<void> showPlusFeaturesSheet({required BuildContext context}) {
@@ -49,19 +49,16 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     _checkShizuku();
   }
 
+  // Same status source as the status card and Service Doctor, so the
+  // screens can't disagree.
   Future<void> _checkShizuku() async {
     try {
-      final label = await ShizukuInstaller.getShizukuProviderLabel();
-      final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
-      final status = await ShizukuApkInstaller().checkPermission().timeout(
-        const Duration(seconds: 2),
-        onTimeout: () => 'timeout',
-      );
+      final snap = await ShizukuStatusService.instance.refreshFrom(context);
       if (mounted) {
         setState(() {
-          _shizukuProvider = label;
-          _isShizukuInstalled = pkg != null;
-          _isShizukuGranted = status == 'authorized';
+          _shizukuProvider = snap.providerLabel;
+          _isShizukuInstalled = snap.isInstalled;
+          _isShizukuGranted = snap.isActive;
         });
       }
     } catch (_) {}
@@ -71,7 +68,8 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     if (_isBenchmarking) return;
     AppHaptics.selectionClick();
     setState(() => _isBenchmarking = true);
-    final latency = await ShizukuInstaller.measureBinderLatencyMs();
+    final latency =
+        (await ShizukuStatusService.instance.refreshFrom(context)).latencyMs;
     if (mounted) {
       setState(() {
         _binderLatencyMs = latency;
