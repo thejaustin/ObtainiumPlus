@@ -5,6 +5,7 @@ import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/shizuku_activity_log_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
+import 'package:obtainium/services/shizuku_status_service.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -51,11 +52,14 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     _pulseAnimation = Tween<double>(begin: 0.45, end: 1.0).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
+    ShizukuStatusService.instance.status.addListener(_onSharedStatus);
+    _onSharedStatus();
     _loadStatus();
   }
 
   @override
   void dispose() {
+    ShizukuStatusService.instance.status.removeListener(_onSharedStatus);
     WidgetsBinding.instance.removeObserver(this);
     _pulseController.dispose();
     super.dispose();
@@ -80,13 +84,21 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     }
   }
 
+  void _onSharedStatus() {
+    final snap = ShizukuStatusService.instance.status.value;
+    if (!mounted || snap == null) return;
+    setState(() {
+      _info = snap.toProviderInfo();
+      _isLoading = false;
+    });
+  }
+
   Future<void> _loadStatus() async {
-    final info = await ShizukuInstaller.getDetailedProviderInfo();
+    try {
+      await ShizukuStatusService.instance.refreshFrom(context);
+    } catch (_) {}
     if (mounted) {
-      setState(() {
-        _info = info;
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
       widget.onStatusChanged?.call();
     }
   }
@@ -95,12 +107,11 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
     if (_isTesting) return;
     AppHaptics.selectionClick();
     setState(() => _isTesting = true);
-    final info = await ShizukuInstaller.getDetailedProviderInfo();
+    try {
+      await ShizukuStatusService.instance.refreshFrom(context);
+    } catch (_) {}
     if (mounted) {
-      setState(() {
-        _info = info;
-        _isTesting = false;
-      });
+      setState(() => _isTesting = false);
       widget.onStatusChanged?.call();
     }
   }
@@ -239,12 +250,11 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                                       : colorScheme.secondary.withValues(
                                           alpha: 0.15,
                                         ),
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(CardMetrics.inner(cardRadius)),
                                 ),
                                 child: Text(
                                   info.providerLabel,
-                                  style: TextStyle(
-                                    fontSize: 10,
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: isPlus
                                         ? colorScheme.primary
@@ -311,7 +321,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         color: colorScheme.surfaceContainerHighest.withValues(
                           alpha: 0.5,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(CardMetrics.inner(cardRadius)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -328,8 +338,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                           const SizedBox(width: 4),
                           Text(
                             tr('binderLatency', args: ['$latency']),
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: latency < 50
                                   ? colorScheme.primary
@@ -351,7 +360,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         color: colorScheme.surfaceContainerHighest.withValues(
                           alpha: 0.5,
                         ),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(CardMetrics.inner(cardRadius)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -364,8 +373,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                           const SizedBox(width: 4),
                           Text(
                             tr('shizukuDirectIpc'),
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: colorScheme.primary,
                             ),
@@ -382,7 +390,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(CardMetrics.inner(cardRadius)),
                       onTap: () {
                         AppHaptics.lightImpact();
                         ShizukuInstaller.openShizukuManager();
@@ -396,7 +404,7 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                           color: colorScheme.tertiaryContainer.withValues(
                             alpha: 0.5,
                           ),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(CardMetrics.inner(cardRadius)),
                           border: Border.all(
                             color: colorScheme.tertiary.withValues(alpha: 0.4),
                           ),
@@ -446,7 +454,6 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         avatar: const Icon(Icons.open_in_new_rounded, size: 15),
                         label: Text(
                           isPlus ? tr('openShizukuPlus') : tr('openShizuku'),
-                          style: const TextStyle(fontSize: 12),
                         ),
                         onPressed: () {
                           AppHaptics.lightImpact();
@@ -467,7 +474,6 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                           : const Icon(Icons.refresh_rounded, size: 15),
                       label: Text(
                         _isTesting ? tr('testing') : tr('retest'),
-                        style: const TextStyle(fontSize: 12),
                       ),
                       onPressed: _testLatency,
                     ),
@@ -480,7 +486,6 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                         ),
                         label: Text(
                           tr('serviceDoctor'),
-                          style: const TextStyle(fontSize: 12),
                         ),
                         onPressed: () {
                           AppHaptics.selectionClick();
@@ -493,7 +498,6 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                       avatar: const Icon(Icons.assignment_outlined, size: 15),
                       label: Text(
                         tr('activityLog'),
-                        style: const TextStyle(fontSize: 12),
                       ),
                       onPressed: () {
                         AppHaptics.selectionClick();

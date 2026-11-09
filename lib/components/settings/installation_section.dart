@@ -18,7 +18,7 @@ import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
-import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
+import 'package:obtainium/services/shizuku_status_service.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
@@ -41,7 +41,6 @@ class _InstallationSectionState extends State<InstallationSection>
     with WidgetsBindingObserver {
   String? _installedShizukuPkg;
   bool _isShizukuGranted = false;
-  bool _isCheckingShizuku = false;
   int? _binderLatencyMs;
   bool _isTestingBinder = false;
 
@@ -49,11 +48,14 @@ class _InstallationSectionState extends State<InstallationSection>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    ShizukuStatusService.instance.status.addListener(_onShizukuStatus);
+    _onShizukuStatus();
     _checkShizukuStatus();
   }
 
   @override
   void dispose() {
+    ShizukuStatusService.instance.status.removeListener(_onShizukuStatus);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -65,35 +67,32 @@ class _InstallationSectionState extends State<InstallationSection>
     }
   }
 
+  /// Mirrors the shared status so this picker, the status card and Service
+  /// Doctor never disagree.
+  void _onShizukuStatus() {
+    final snap = ShizukuStatusService.instance.status.value;
+    if (!mounted || snap == null) return;
+    setState(() {
+      _installedShizukuPkg = snap.packageId;
+      _isShizukuGranted = snap.isActive;
+    });
+  }
+
   Future<void> _checkShizukuStatus() async {
-    if (_isCheckingShizuku) return;
-    _isCheckingShizuku = true;
     try {
-      final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
-      bool granted = false;
-      if (pkg != null) {
-        final status = await ShizukuApkInstaller().checkPermission();
-        granted =
-            status?.startsWith('authorized') == true ||
-            status?.startsWith('granted') == true;
-      }
-      if (mounted) {
-        setState(() {
-          _installedShizukuPkg = pkg;
-          _isShizukuGranted = granted;
-        });
-      }
-    } catch (_) {
-    } finally {
-      _isCheckingShizuku = false;
-    }
+      await ShizukuStatusService.instance.refreshFrom(context);
+    } catch (_) {}
   }
 
   Future<void> _testBinderLatency() async {
     if (_isTestingBinder) return;
     AppHaptics.selectionClick();
     setState(() => _isTestingBinder = true);
-    final latency = await ShizukuInstaller.measureBinderLatencyMs();
+    int? latency;
+    try {
+      final snap = await ShizukuStatusService.instance.refreshFrom(context);
+      latency = snap.latencyMs;
+    } catch (_) {}
     if (mounted) {
       setState(() {
         _binderLatencyMs = latency;
@@ -673,7 +672,7 @@ class _InstallationSectionState extends State<InstallationSection>
               ? Icons.electric_bolt_rounded
               : Icons.terminal_outlined,
           title: shizukuInstalled
-              ? (isShizukuPlus ? 'ShizukuPlus' : tr('installMethodShizuku'))
+              ? (isShizukuPlus ? 'Shizuku+' : tr('installMethodShizuku'))
               : tr('installMethodShizuku'),
           description: shizukuAvailable
               ? tr('installMethodShizukuDescription')
@@ -710,7 +709,7 @@ class _InstallationSectionState extends State<InstallationSection>
           child: currentMode == 'shizuku'
               ? ConnectedSettingContainer(
                   label: shizukuInstalled && isShizukuPlus
-                      ? 'ShizukuPlus'
+                      ? 'Shizuku+'
                       : tr('installMethodShizuku'),
                   margin: const EdgeInsets.only(
                     left: 20,
@@ -760,7 +759,10 @@ class _InstallationSectionState extends State<InstallationSection>
                         },
                       ),
 
-                      if (_isShizukuGranted)
+                      // The status card has its own latency retest; only
+                      // offer this one when the card is hidden.
+                      if (_isShizukuGranted &&
+                          !plusSettings.plusSettingsUseHeroCards)
                         ListTile(
                           dense: true,
                           leading: Icon(
@@ -833,9 +835,8 @@ class _InstallationSectionState extends State<InstallationSection>
                                   },
                                   child: Text(
                                     _binderLatencyMs != null
-                                        ? 'Retest'
-                                        : 'Test',
-                                    style: const TextStyle(fontSize: 12),
+                                        ? tr('diagRetest')
+                                        : tr('diagTest'),
                                   ),
                                 ),
                         ),
