@@ -4,7 +4,11 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:obtainium/components/settings/settings_category_bar_host.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/settings.dart';
+import 'package:obtainium/pages/visual_lab_page.dart';
+import 'package:obtainium/services/settings_section_controller.dart';
 import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/pages/onboarding.dart';
 import 'package:obtainium/utils/theme_builder.dart';
@@ -122,11 +126,12 @@ void main() {
   }
 
   setUp(() {
-    // plusSettingsBottomNavBar defaults to true, which renders a NavigationBar
-    // that requires MaterialLocalizations via _NavigationBarDestinationSemantics.
-    // Tests focus on settings-section stability, not nav-bar behaviour, so
-    // disable it here to keep the test harness simple.
-    SharedPreferences.setMockInitialValues({'plusSettingsBottomNavBar': false});
+    // The category bar defaults to the bottom placement, which renders a
+    // NavigationBar; tests focus on settings-section stability, so pin the
+    // top chips (the tab-switch test taps them).
+    SharedPreferences.setMockInitialValues({
+      'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
+    });
     FlutterSecureStorage.setMockInitialValues({});
   });
 
@@ -287,7 +292,8 @@ void main() {
   }
 
   // #340: with the main bottom bar off, settings shows its own bottom bar
-  // (plusSettingsBottomNavBar defaults to true); users got a black screen.
+  // (the bottom placement is the default); users got a black screen.
+  // Seeds only the pre-Visual-Lab bool, so this also covers its migration.
   for (final mainBar in [false, true]) {
     testWidgets('settings bottom bar builds (main bottom bar $mainBar)', (
       tester,
@@ -375,8 +381,8 @@ void main() {
     // The issue #217 corruption class: keys stored with the wrong type
     // (JSON import) or stale enum indexes must not blank the page
     SharedPreferences.setMockInitialValues({
-      'plusSettingsBottomNavBar':
-          false, // keep nav bar hidden (see setUp comment)
+      // keep the top chips (see setUp comment)
+      'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
       'plusSettingsCornerRadius': 16, // int where double expected
       'plusGlobalCornerRadius': 'oops', // string where double expected
       'theme': 99, // out-of-range enum index
@@ -397,7 +403,7 @@ void main() {
     'settings page displays organized layout and Obtainium+ chip without banner clutter',
     (tester) async {
       SharedPreferences.setMockInitialValues({
-        'plusSettingsBottomNavBar': false,
+        'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
       });
       late Widget app;
       await tester.runAsync(() async {
@@ -426,7 +432,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       SharedPreferences.setMockInitialValues({
-        'plusSettingsBottomNavBar': false,
+        'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
       });
       late Widget app;
       await tester.runAsync(() async {
@@ -453,6 +459,355 @@ void main() {
     },
     timeout: const Timeout(Duration(minutes: 1)),
   );
+
+  // ── Visual Lab ──────────────────────────────────────────────────────────
+
+  test(
+    'nav placement migrates from the old bool and survives type flips',
+    () async {
+      for (final c in <(Map<String, Object>, SettingsNavPlacement)>[
+        (<String, Object>{}, SettingsNavPlacement.bottom),
+        ({'plusSettingsBottomNavBar': true}, SettingsNavPlacement.bottom),
+        ({'plusSettingsBottomNavBar': false}, SettingsNavPlacement.top),
+        // New key wins over the old one
+        (
+          {
+            'plusSettingsBottomNavBar': false,
+            'plusSettingsNavPlacement': SettingsNavPlacement.merged.index,
+          },
+          SettingsNavPlacement.merged,
+        ),
+        // Out-of-range / type-flipped new key falls back to migration
+        (
+          {'plusSettingsBottomNavBar': false, 'plusSettingsNavPlacement': 9},
+          SettingsNavPlacement.top,
+        ),
+        ({'plusSettingsNavPlacement': 'merged'}, SettingsNavPlacement.bottom),
+      ]) {
+        SharedPreferences.setMockInitialValues(c.$1);
+        final prefs = await SharedPreferences.getInstance();
+        final plus = PlusSettingsProvider();
+        await plus.initializeSettings(prefs);
+        expect(plus.plusSettingsNavPlacement, c.$2, reason: '${c.$1}');
+      }
+      // Reset writes explicit defaults (not removal, which would re-migrate)
+      SharedPreferences.setMockInitialValues({
+        'plusSettingsBottomNavBar': false,
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final plus = PlusSettingsProvider();
+      await plus.initializeSettings(prefs);
+      plus.plusLabCompactDescriptionLines = 3;
+      plus.resetVisualLab();
+      expect(plus.plusSettingsNavPlacement, SettingsNavPlacement.bottom);
+      expect(plus.plusLabCompactDescriptionLines, 2);
+      expect(prefs.getInt('plusSettingsNavPlacement'), 0);
+    },
+  );
+
+  // Every non-default Visual Lab value on a 360dp phone at 1.3x text
+  // (the labelled-chip actions overflowed here by 146px before p15).
+  for (final variant in <(String, Map<String, Object>)>[
+    (
+      'placement bottom',
+      {'plusSettingsNavPlacement': SettingsNavPlacement.bottom.index},
+    ),
+    (
+      'placement merged (standalone falls back)',
+      {'plusSettingsNavPlacement': SettingsNavPlacement.merged.index},
+    ),
+    (
+      'placement merged without main bar',
+      {
+        'plusSettingsNavPlacement': SettingsNavPlacement.merged.index,
+        'plusEnableBottomNavBar': false,
+      },
+    ),
+    (
+      'labelled chip actions',
+      {
+        'plusLabSettingsAppBarActions':
+            SettingsAppBarActionsStyle.labelledChips.index,
+      },
+    ),
+    ('hero hidden', {'plusLabShowSettingsHero': false}),
+    ('hero topic chips hidden', {'plusLabShowHeroTopicChips': false}),
+    (
+      'compact header',
+      {'plusLabSettingsHeaderSize': SettingsHeaderSize.compact.index},
+    ),
+    (
+      'compact header without one-handed mode',
+      {
+        'plusLabSettingsHeaderSize': SettingsHeaderSize.compact.index,
+        'plusEnableOneHandedMode': false,
+      },
+    ),
+    (
+      'description lines 1 (compact)',
+      {'plusLabCompactDescriptionLines': 1, 'plusUseCompactSettings': true},
+    ),
+    (
+      'description lines 3 (compact)',
+      {'plusLabCompactDescriptionLines': 3, 'plusUseCompactSettings': true},
+    ),
+    ('blur off', {'plusLabNavBarBlur': NavBarBlurStrength.off.index}),
+    ('blur soft', {'plusLabNavBarBlur': NavBarBlurStrength.soft.index}),
+    (
+      'plus entry jump',
+      {'plusLabPlusFeaturesEntry': PlusFeaturesEntry.jumpToSection.index},
+    ),
+  ]) {
+    // Compact density on tab 0 hits a VisualThemeSelector overflow that
+    // exists without any Visual Lab option (visual_theme_selector.dart:356).
+    for (final tab in [
+      if (variant.$2['plusUseCompactSettings'] != true) 0,
+      6,
+    ]) {
+      testWidgets('visual lab "${variant.$1}" fits 360dp (tab $tab)', (
+        tester,
+      ) async {
+        tester.view.physicalSize = const Size(360, 780);
+        tester.view.devicePixelRatio = 1.0;
+        tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        SharedPreferences.setMockInitialValues({
+          'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
+          ...variant.$2,
+        });
+        late Widget app;
+        await tester.runAsync(() async {
+          await EasyLocalization.ensureInitialized();
+          app = await buildSettingsApp(tab);
+        });
+        await pumpCapturingErrors(tester, app);
+        expect(find.byType(SettingsPage), findsOneWidget);
+      }, timeout: const Timeout(Duration(minutes: 1)));
+    }
+  }
+
+  testWidgets('Obtainium+ jump entry opens the Advanced tab', (tester) async {
+    SharedPreferences.setMockInitialValues({
+      'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
+      'plusLabPlusFeaturesEntry': PlusFeaturesEntry.jumpToSection.index,
+    });
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0);
+    });
+    await pumpCapturingErrors(tester, app);
+    await tester.tap(find.byTooltip('Obtainium+'));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.takeException(), isNull);
+    expect(
+      find.text(translations['settingsTabAdvancedDebugDesc'] as String),
+      findsWidgets,
+    );
+  }, timeout: const Timeout(Duration(minutes: 1)));
+
+  testWidgets('Visual Lab page builds, switches and resets at 360dp', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 780);
+    tester.view.devicePixelRatio = 1.0;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0, home: const VisualLabPage());
+    });
+    final errors = <FlutterErrorDetails>[];
+    final base = FlutterError.onError;
+    FlutterError.onError = (d) {
+      errors.add(d);
+      base?.call(d);
+    };
+    try {
+      await tester.pumpWidget(app);
+      for (var i = 0; i < 40; i++) {
+        await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 50)),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        if (tester.any(find.byType(VisualLabPage))) break;
+      }
+      await tester.pump(const Duration(milliseconds: 500));
+      final merged = find.widgetWithText(
+        ChoiceChip,
+        translations['visualLabMerged'] as String,
+      );
+      await tester.drag(
+        find.byType(CustomScrollView).first,
+        const Offset(0, -250),
+      );
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(merged);
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(
+        Provider.of<PlusSettingsProvider>(
+          tester.element(find.byType(VisualLabPage)),
+          listen: false,
+        ).plusSettingsNavPlacement,
+        SettingsNavPlacement.merged,
+      );
+      final reset = find.byTooltip(translations['visualLabResetAll'] as String);
+      await tester.tap(reset);
+      await tester.pump(const Duration(milliseconds: 300));
+    } finally {
+      FlutterError.onError = base;
+    }
+    for (final d in errors) {
+      // ignore: avoid_print
+      print('──── visual lab error ────\n$d');
+    }
+    expect(tester.takeException(), isNull);
+    expect(errors, isEmpty);
+    final ctx = tester.element(find.byType(VisualLabPage));
+    expect(
+      Provider.of<PlusSettingsProvider>(
+        ctx,
+        listen: false,
+      ).plusSettingsNavPlacement,
+      SettingsNavPlacement.bottom,
+    );
+  }, timeout: const Timeout(Duration(minutes: 1)));
+
+  // Merged / hosted-bottom placements: a minimal stand-in for the home
+  // scaffold (extendBody + bottom bar hosting the category row above a
+  // NavigationBar) around the home-tab SettingsPage.
+  for (final separate in [false, true]) {
+    final mode = separate ? 'bottom (hosted)' : 'merged';
+    testWidgets('$mode category bar drives the settings tab at 360dp', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      SharedPreferences.setMockInitialValues({
+        'plusSettingsNavPlacement': separate
+            ? SettingsNavPlacement.bottom.index
+            : SettingsNavPlacement.merged.index,
+        'plusEnableBottomNavBar': true,
+      });
+      final controller = SettingsSectionController();
+      addTearDown(controller.dispose);
+      late Widget app;
+      await tester.runAsync(() async {
+        await EasyLocalization.ensureInitialized();
+        app = await buildSettingsApp(
+          0,
+          home: Scaffold(
+            extendBody: true,
+            body: SettingsPage(sectionController: controller),
+            bottomNavigationBar: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (separate)
+                      SettingsCategoryBarHost(
+                        controller: controller,
+                        show: true,
+                        separate: true,
+                      ),
+                    Material(
+                      key: const ValueKey('main_bar_surface'),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(32),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (!separate)
+                            SettingsCategoryBarHost(
+                              controller: controller,
+                              show: true,
+                              separate: false,
+                            ),
+                          NavigationBar(
+                            selectedIndex: 1,
+                            destinations: const [
+                              NavigationDestination(
+                                icon: Icon(Icons.apps),
+                                label: 'Apps',
+                              ),
+                              NavigationDestination(
+                                icon: Icon(Icons.settings),
+                                label: 'Settings',
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      });
+      await pumpCapturingErrors(tester, app);
+      // Only the hosted bar: the page hides its own dock/chips/NavigationBar
+      expect(find.byType(SettingsSectionDock), findsOneWidget);
+      expect(find.byType(ChoiceChip), findsNothing);
+
+      final dockRect = tester.getRect(find.byType(SettingsSectionDock));
+      final barRect = tester.getRect(find.byType(NavigationBar));
+      expect(dockRect.bottom, lessThanOrEqualTo(barRect.top + 0.5));
+      if (separate) {
+        expect(barRect.top - dockRect.bottom, closeTo(kSettingsDockGap, 0.5));
+      }
+
+      // Switch category from the hosted bar
+      final errors = <FlutterErrorDetails>[];
+      final base = FlutterError.onError;
+      FlutterError.onError = (d) {
+        errors.add(d);
+        base?.call(d);
+      };
+      try {
+        await tester.tap(
+          find.descendant(
+            of: find.byType(SettingsSectionDock),
+            matching: find.byTooltip(translations['notifications'] as String),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 400));
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(controller.section.value, 2);
+        expect(
+          find.text(translations['settingsTabNotificationsDesc'] as String),
+          findsWidgets,
+        );
+
+        // Content clears both bars: the page's bottom inset (which its
+        // trailing spacer adds) spans the hosted row and the main bar.
+        final pageInset = MediaQuery.paddingOf(
+          tester.element(find.byType(CustomScrollView).first),
+        ).bottom;
+        expect(pageInset, greaterThanOrEqualTo(780 - dockRect.top - 0.5));
+      } finally {
+        FlutterError.onError = base;
+      }
+      for (final d in errors) {
+        // ignore: avoid_print
+        print('──── merged bar error ────\n$d');
+      }
+      expect(tester.takeException(), isNull);
+      expect(errors, isEmpty);
+    }, timeout: const Timeout(Duration(minutes: 1)));
+  }
 }
 
 class _MemoryAssetLoader extends AssetLoader {

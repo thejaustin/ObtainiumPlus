@@ -27,6 +27,8 @@ import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/pages/system_updates.dart';
 import 'package:obtainium/pages/update_health.dart';
 import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
+import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/services/settings_section_controller.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/device_utils.dart';
@@ -38,9 +40,22 @@ import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
+/// Height of the floating category pill ([SettingsSectionDock] with its
+/// own surface): 5 + 40 + 5. Fixed so bottom padding can be exact.
+const double kSettingsDockHeight = 50.0;
+
+/// Gap between the separate category pill and whatever sits below it.
+const double kSettingsDockGap = 8.0;
+
 class SettingsPage extends StatefulWidget {
   final int? initialTab;
-  const SettingsPage({super.key, this.initialTab});
+
+  /// Set only for the home-tab instance: home hosts the category bar
+  /// (Visual Lab `bottom` / `merged` placements) and drives the selected
+  /// section through it. Standalone pushed pages leave this null.
+  final SettingsSectionController? sectionController;
+
+  const SettingsPage({super.key, this.initialTab, this.sectionController});
 
   @override
   State<SettingsPage> createState() => SettingsPageState();
@@ -67,6 +82,7 @@ class SettingsPageState extends State<SettingsPage> {
     }
     return _resultsKey;
   }
+
   final List<GlobalKey> _chipKeys = List.generate(5, (_) => GlobalKey());
   bool _noResults = false;
 
@@ -79,12 +95,55 @@ class SettingsPageState extends State<SettingsPage> {
     if (n.direction == ScrollDirection.reverse &&
         n.metrics.pixels > 24 &&
         n.metrics.extentAfter > 0) {
-      _dockVisible.value = false;
+      _setDockVisible(false);
     } else if (n.direction == ScrollDirection.forward ||
         n.metrics.pixels <= 24) {
-      _dockVisible.value = true;
+      _setDockVisible(true);
     }
     return false;
+  }
+
+  void _setDockVisible(bool visible) {
+    _dockVisible.value = visible;
+    widget.sectionController?.dockVisible.value = visible;
+  }
+
+  /// Visual Lab "jump" entry for the Obtainium+ button: opens the Advanced
+  /// tab and scrolls its Obtainium+ group (master switch + layout) into view.
+  void jumpToPlusFeatures() {
+    if (_searchQuery.isNotEmpty) _searchController.clear();
+    if (_selectedSectionIndex != 4) {
+      _selectSection(4);
+    } else {
+      AppHaptics.selectionClick();
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Element? found;
+      void visit(Element e) {
+        if (found != null) return;
+        if (e.widget is PlusFeaturesSection) {
+          found = e;
+          return;
+        }
+        e.visitChildren(visit);
+      }
+
+      (_resultsKey.currentContext as Element?)?.visitChildren(visit);
+      final target = found;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        alignment: 0.15,
+        duration: Duration(
+          milliseconds:
+              context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations
+              ? 350
+              : 0,
+        ),
+        curve: Curves.easeOutCubic,
+      );
+    });
   }
 
   void scrollToTop() {
@@ -117,7 +176,8 @@ class SettingsPageState extends State<SettingsPage> {
       _previousSectionIndex = _selectedSectionIndex;
       _selectedSectionIndex = index;
     });
-    _dockVisible.value = true;
+    widget.sectionController?.section.value = index;
+    _setDockVisible(true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || index < 0 || index >= _chipKeys.length) return;
       final chipContext = _chipKeys[index].currentContext;
@@ -160,13 +220,30 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _selectedSectionIndex = _mapInitialTab(widget.initialTab ?? 0);
+    final controller = widget.sectionController;
+    // The home tab's page is rebuilt on every tab switch; resume the
+    // category the hosted bar still shows.
+    _selectedSectionIndex = widget.initialTab != null || controller == null
+        ? _mapInitialTab(widget.initialTab ?? 0)
+        : controller.section.value.clamp(0, 4);
+    _previousSectionIndex = _selectedSectionIndex;
+    if (controller != null) {
+      controller.onSelect = _selectSection;
+      // Not during build: home's bar listens to these notifiers.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        controller.section.value = _selectedSectionIndex;
+        controller.searching.value = false;
+        controller.dockVisible.value = true;
+      });
+    }
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
       if (!mounted) return;
       setState(() {
         _searchQuery = _searchController.text.trim();
       });
+      widget.sectionController?.searching.value = _searchQuery.isNotEmpty;
     });
   }
 
@@ -183,6 +260,10 @@ class SettingsPageState extends State<SettingsPage> {
 
   @override
   void dispose() {
+    final controller = widget.sectionController;
+    if (controller != null && controller.onSelect == _selectSection) {
+      controller.onSelect = null;
+    }
     _searchController.dispose();
     _scrollController.dispose();
     _dockVisible.dispose();
@@ -205,12 +286,26 @@ class SettingsPageState extends State<SettingsPage> {
         plusSettings.plusEnableBottomNavBar &&
         !plusSettings.plusTopUILayout &&
         !settingsProvider.isTV;
+    final placement = plusSettings.plusSettingsNavPlacement;
+    // Home draws the category bar (separate pill or merged into its nav
+    // bar) when this is its tab and its bottom bar is showing.
+    final hostedBar =
+        widget.sectionController != null &&
+        hasMainBottomNavBar &&
+        placement != SettingsNavPlacement.top;
+    // Merged needs the main bar; anywhere else it behaves like bottom.
+    final effectivePlacement = placement == SettingsNavPlacement.merged
+        ? SettingsNavPlacement.bottom
+        : placement;
     final useSettingsScaffoldBottomBar =
-        plusSettings.plusSettingsBottomNavBar && !hasMainBottomNavBar;
+        effectivePlacement == SettingsNavPlacement.bottom &&
+        !hasMainBottomNavBar;
     final useSettingsFloatingBottomDock =
-        plusSettings.plusSettingsBottomNavBar && hasMainBottomNavBar;
+        effectivePlacement == SettingsNavPlacement.bottom &&
+        hasMainBottomNavBar &&
+        !hostedBar;
     final showTopPinnedCategoryBar =
-        !plusSettings.plusSettingsBottomNavBar && _searchQuery.isEmpty;
+        effectivePlacement == SettingsNavPlacement.top && _searchQuery.isEmpty;
     final isCompact = plusSettings.plusUseCompactSettings;
     final switcherId = _searchQuery.isNotEmpty
         ? 'search_$_searchQuery'
@@ -277,67 +372,18 @@ class SettingsPageState extends State<SettingsPage> {
               slivers: [
                 CustomAppBar(
                   title: tr('settings'),
-                  // Icon buttons, not pill chips: two labelled chips plus
-                  // the density toggle overflowed the bar at phone width.
-                  actions: [
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.88,
-                      child: IconButton(
-                        visualDensity: VisualDensity.compact,
-                        tooltip: 'Obtainium+',
-                        icon: Icon(
-                          Icons.stars_rounded,
-                          size: 20,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        onPressed: () => showPlusFeaturesSheet(context: context),
-                      ),
-                    ),
-                    FutureBuilder<dynamic>(
-                      future: _versionFuture,
-                      builder: (context, snap) {
-                        final String? v = snap.data?.versionName as String?;
-                        return ScaleTouchWrapper(
-                          hapticOnPressDown: true,
-                          scaleDownFactor: 0.88,
-                          child: IconButton(
-                            visualDensity: VisualDensity.compact,
-                            tooltip: (v != null && v.isNotEmpty)
-                                ? '${tr('viewChangelog')} ($v)'
-                                : tr('viewChangelog'),
-                            icon: const Icon(
-                              Icons.history_edu_rounded,
-                              size: 20,
-                            ),
-                            onPressed: () => showWhatsNewSheet(context),
-                          ),
-                        );
-                      },
-                    ),
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: false,
-                      scaleDownFactor: 0.88,
-                      child: IconButton(
-                        visualDensity: VisualDensity.compact,
-                        tooltip: tr('plusUseCompactSettings'),
-                        icon: Icon(
-                          plusSettings.plusUseCompactSettings
-                              ? Icons.density_small_rounded
-                              : Icons.density_medium_rounded,
-                          size: 20,
-                          color: plusSettings.plusUseCompactSettings
-                              ? Theme.of(context).colorScheme.primary
-                              : null,
-                        ),
-                        onPressed: () {
-                          final next = !plusSettings.plusUseCompactSettings;
-                          next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                          plusSettings.plusUseCompactSettings = next;
-                        },
-                      ),
-                    ),
-                  ],
+                  // Visual Lab: compact = the standard pinned toolbar; large
+                  // follows the one-handed reachability header (today).
+                  forceOneHanded:
+                      plusSettings.plusLabSettingsHeaderSize ==
+                          SettingsHeaderSize.compact
+                      ? false
+                      : null,
+                  actions:
+                      plusSettings.plusLabSettingsAppBarActions ==
+                          SettingsAppBarActionsStyle.labelledChips
+                      ? _buildLabelledChipActions(context, plusSettings)
+                      : _buildIconActions(context, plusSettings),
                   bottom: PreferredSize(
                     preferredSize: Size.fromHeight(isCompact ? 54 : 60),
                     child: Padding(
@@ -528,7 +574,8 @@ class SettingsPageState extends State<SettingsPage> {
                                   _selectSection(index);
                                 },
                               ),
-                            if (_searchQuery.isEmpty)
+                            if (_searchQuery.isEmpty &&
+                                plusSettings.plusLabShowSettingsHero)
                               SettingsHeroOverview(
                                 onSearchKeyword: (keyword) {
                                   _searchController.text = keyword;
@@ -817,11 +864,14 @@ class SettingsPageState extends State<SettingsPage> {
                               // paddingOf(bottom) already includes the main
                               // nav bar (Home uses extendBody) plus the system
                               // gesture inset, so only add our own clearance.
+                              // A hosted (home) bar is part of that inset too.
                               height: useSettingsScaffoldBottomBar
                                   ? 24.0
                                   : MediaQuery.paddingOf(context).bottom +
                                         (useSettingsFloatingBottomDock
-                                            ? 88.0
+                                            ? kSettingsDockGap +
+                                                  kSettingsDockHeight +
+                                                  16.0
                                             : 24.0),
                             ),
                           ],
@@ -837,7 +887,7 @@ class SettingsPageState extends State<SettingsPage> {
             Positioned(
               left: 16,
               right: 16,
-              bottom: MediaQuery.paddingOf(context).bottom + 12,
+              bottom: MediaQuery.paddingOf(context).bottom + kSettingsDockGap,
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 460),
@@ -861,7 +911,7 @@ class SettingsPageState extends State<SettingsPage> {
                         ),
                       );
                     },
-                    child: _SettingsFloatingSectionDock(
+                    child: SettingsSectionDock(
                       selectedIndex: _selectedSectionIndex,
                       isM3E: plusSettings.plusEnableMaterialExpressive,
                       animsEnabled: plusSettings.plusEnableEnhancedAnimations,
@@ -875,6 +925,172 @@ class SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  void _openPlusFeatures() {
+    final entry = context.read<PlusSettingsProvider>().plusLabPlusFeaturesEntry;
+    if (entry == PlusFeaturesEntry.jumpToSection) {
+      jumpToPlusFeatures();
+    } else {
+      showPlusFeaturesSheet(context: context);
+    }
+  }
+
+  Widget _buildDensityToggle(PlusSettingsProvider plusSettings) {
+    return ScaleTouchWrapper(
+      hapticOnPressDown: false,
+      scaleDownFactor: 0.88,
+      child: IconButton(
+        visualDensity: VisualDensity.compact,
+        tooltip: tr('plusUseCompactSettings'),
+        icon: Icon(
+          plusSettings.plusUseCompactSettings
+              ? Icons.density_small_rounded
+              : Icons.density_medium_rounded,
+          size: 20,
+          color: plusSettings.plusUseCompactSettings
+              ? Theme.of(context).colorScheme.primary
+              : null,
+        ),
+        onPressed: () {
+          final next = !plusSettings.plusUseCompactSettings;
+          next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+          plusSettings.plusUseCompactSettings = next;
+        },
+      ),
+    );
+  }
+
+  // Icon buttons, not pill chips: two labelled chips plus the density
+  // toggle overflowed the bar at phone width.
+  List<Widget> _buildIconActions(
+    BuildContext context,
+    PlusSettingsProvider plusSettings,
+  ) {
+    return [
+      ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.88,
+        child: IconButton(
+          visualDensity: VisualDensity.compact,
+          tooltip: 'Obtainium+',
+          icon: Icon(
+            Icons.stars_rounded,
+            size: 20,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          onPressed: _openPlusFeatures,
+        ),
+      ),
+      FutureBuilder<dynamic>(
+        future: _versionFuture,
+        builder: (context, snap) {
+          final String? v = snap.data?.versionName as String?;
+          return ScaleTouchWrapper(
+            hapticOnPressDown: true,
+            scaleDownFactor: 0.88,
+            child: IconButton(
+              visualDensity: VisualDensity.compact,
+              tooltip: (v != null && v.isNotEmpty)
+                  ? '${tr('viewChangelog')} ($v)'
+                  : tr('viewChangelog'),
+              icon: const Icon(Icons.history_edu_rounded, size: 20),
+              onPressed: () => showWhatsNewSheet(context),
+            ),
+          );
+        },
+      ),
+      _buildDensityToggle(plusSettings),
+    ];
+  }
+
+  /// Visual Lab opt-in: the pre-p15 labelled chips. They overflowed the bar
+  /// at 360dp (by ~146px), so they now sit in a width-capped horizontal
+  /// scroller instead of overflowing.
+  List<Widget> _buildLabelledChipActions(
+    BuildContext context,
+    PlusSettingsProvider plusSettings,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isM3E = plusSettings.plusEnableMaterialExpressive;
+    Widget chip({
+      required IconData icon,
+      required String label,
+      required String tooltip,
+      required VoidCallback onPressed,
+    }) {
+      return ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.92,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 4),
+          child: ActionChip(
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            tooltip: tooltip,
+            avatar: Icon(icon, size: 15, color: colorScheme.primary),
+            label: Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            shape: CardMetrics.shape(
+              CardMetrics.pill(plusSettings.plusGlobalCornerRadius),
+              expressive: isM3E,
+              side: BorderSide(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+              ),
+            ),
+            backgroundColor: colorScheme.surfaceContainerLow,
+            onPressed: () {
+              AppHaptics.selectionClick();
+              onPressed();
+            },
+          ),
+        ),
+      );
+    }
+
+    return [
+      ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.6,
+        ),
+        child: SingleChildScrollView(
+          key: const PageStorageKey<String>('settings_appbar_chips'),
+          scrollDirection: Axis.horizontal,
+          reverse: true,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              chip(
+                icon: Icons.stars_rounded,
+                label: 'Obtainium+',
+                tooltip: 'Obtainium+',
+                onPressed: _openPlusFeatures,
+              ),
+              FutureBuilder<dynamic>(
+                future: _versionFuture,
+                builder: (context, snap) {
+                  final String? v = snap.data?.versionName as String?;
+                  return chip(
+                    icon: Icons.history_edu_rounded,
+                    label: (v != null && v.isNotEmpty)
+                        ? v
+                        : tr('viewChangelog'),
+                    tooltip: tr('viewChangelog'),
+                    onPressed: () => showWhatsNewSheet(context),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      _buildDensityToggle(plusSettings),
+    ];
   }
 
   List<_SettingsLink> _links(BuildContext context) {
@@ -1410,19 +1626,27 @@ class _SettingsCategoryBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-class _SettingsFloatingSectionDock extends StatelessWidget {
+/// The Settings category bar: five sections, the selected one labelled.
+///
+/// With [surface] (default) it is a self-contained floating pill of fixed
+/// [kSettingsDockHeight]; without, just the row, for hosting inside another
+/// surface (the merged home nav bar).
+class SettingsSectionDock extends StatelessWidget {
   final int selectedIndex;
   final bool isM3E;
   final bool animsEnabled;
   final double cornerRadius;
   final ValueChanged<int> onSelect;
+  final bool surface;
 
-  const _SettingsFloatingSectionDock({
+  const SettingsSectionDock({
+    super.key,
     required this.selectedIndex,
     required this.isM3E,
     required this.animsEnabled,
     required this.cornerRadius,
     required this.onSelect,
+    this.surface = true,
   });
 
   static const _items = [
@@ -1458,88 +1682,91 @@ class _SettingsFloatingSectionDock extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final outer = CardMetrics.pill(cornerRadius);
     final inner = CardMetrics.inner(cornerRadius);
-    return Material(
-      elevation: 4,
-      shadowColor: Colors.black.withValues(alpha: 0.22),
-      color: cs.surfaceContainerHigh.withValues(alpha: 0.96),
-      shape: CardMetrics.shape(
-        outer,
-        expressive: isM3E,
-        side: BorderSide(color: cs.primary.withValues(alpha: 0.22), width: 1),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: List.generate(_items.length, (i) {
-            final sel = i == selectedIndex;
-            final item = _items[i];
-            return Expanded(
-              // Selected section gets the room for its label.
-              flex: sel ? 2 : 1,
-              child: Semantics(
-                button: true,
-                selected: sel,
-                label: tr(item.key),
-                excludeSemantics: true,
-                child: Tooltip(
-                  message: tr(item.key),
-                  child: ScaleTouchWrapper(
-                    hapticOnPressDown: false,
-                    scaleDownFactor: 0.92,
-                    child: InkWell(
-                      customBorder: CardMetrics.shape(inner, expressive: isM3E),
-                      onTap: () => onSelect(i),
-                      child: AnimatedContainer(
-                        duration: Duration(
-                          milliseconds: animsEnabled ? 240 : 0,
-                        ),
-                        curve: Easing.emphasizedDecelerate,
-                        constraints: const BoxConstraints(minHeight: 40),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 8,
-                          horizontal: 6,
-                        ),
-                        decoration: ShapeDecoration(
-                          color: sel ? cs.primaryContainer : Colors.transparent,
-                          shape: CardMetrics.shape(inner, expressive: isM3E),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              sel ? item.selectedIcon : item.icon,
-                              size: 18,
-                              color: sel
-                                  ? cs.onPrimaryContainer
-                                  : cs.onSurfaceVariant,
-                            ),
-                            if (sel) ...[
-                              const SizedBox(width: 5),
-                              Flexible(
-                                child: Text(
-                                  tr(item.key),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: cs.onPrimaryContainer,
-                                      ),
-                                ),
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(_items.length, (i) {
+          final sel = i == selectedIndex;
+          final item = _items[i];
+          return Expanded(
+            // Selected section gets the room for its label.
+            flex: sel ? 2 : 1,
+            child: Semantics(
+              button: true,
+              selected: sel,
+              label: tr(item.key),
+              excludeSemantics: true,
+              child: Tooltip(
+                message: tr(item.key),
+                child: ScaleTouchWrapper(
+                  hapticOnPressDown: false,
+                  scaleDownFactor: 0.92,
+                  child: InkWell(
+                    customBorder: CardMetrics.shape(inner, expressive: isM3E),
+                    onTap: () => onSelect(i),
+                    child: AnimatedContainer(
+                      duration: Duration(milliseconds: animsEnabled ? 240 : 0),
+                      curve: Easing.emphasizedDecelerate,
+                      constraints: const BoxConstraints(minHeight: 40),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 8,
+                        horizontal: 6,
+                      ),
+                      decoration: ShapeDecoration(
+                        color: sel ? cs.primaryContainer : Colors.transparent,
+                        shape: CardMetrics.shape(inner, expressive: isM3E),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            sel ? item.selectedIcon : item.icon,
+                            size: 18,
+                            color: sel
+                                ? cs.onPrimaryContainer
+                                : cs.onSurfaceVariant,
+                          ),
+                          if (sel) ...[
+                            const SizedBox(width: 5),
+                            Flexible(
+                              child: Text(
+                                tr(item.key),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: cs.onPrimaryContainer,
+                                    ),
                               ),
-                            ],
+                            ),
                           ],
-                        ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ),
-            );
-          }),
+            ),
+          );
+        }),
+      ),
+    );
+    if (!surface) return row;
+    return SizedBox(
+      height: kSettingsDockHeight,
+      child: Material(
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.22),
+        color: cs.surfaceContainerHigh.withValues(alpha: 0.96),
+        shape: CardMetrics.shape(
+          outer,
+          expressive: isM3E,
+          side: BorderSide(color: cs.primary.withValues(alpha: 0.22), width: 1),
         ),
+        clipBehavior: Clip.antiAlias,
+        child: row,
       ),
     );
   }
