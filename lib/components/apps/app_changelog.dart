@@ -14,7 +14,7 @@ void showChangeLogDialog(
   BuildContext context,
   App app,
   String? changesUrl,
-  AppSource appSource,
+  AppSource? appSource,
   String changeLog,
 ) {
   showDialog(
@@ -35,11 +35,15 @@ void showChangeLogDialog(
           changesUrl != null
               ? const SizedBox(height: 16)
               : const SizedBox.shrink(),
-          appSource.changeLogIfAnyIsMarkDown
-              ? SizedBox(
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height - 350,
-                  child: Markdown(
+          ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width,
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: (appSource?.changeLogIfAnyIsMarkDown ?? true)
+                ? Markdown(
+                    key: const PageStorageKey<String>('changelog_dialog_md'),
+                    shrinkWrap: true,
                     styleSheet: MarkdownStyleSheet(
                       blockquoteDecoration: BoxDecoration(
                         color:
@@ -56,18 +60,8 @@ void showChangeLogDialog(
                     data: changeLog,
                     onTapLink: (text, href, title) {
                       if (href != null) {
-                        String targetUrl = href;
-                        if (!href.startsWith('http://') &&
-                            !href.startsWith('https://')) {
-                          try {
-                            final uri = Uri.parse(app.url);
-                            if (uri.hasScheme && uri.host.isNotEmpty) {
-                              targetUrl = '${uri.origin}/$href';
-                            }
-                          } catch (_) {}
-                        }
                         launchUrlString(
-                          targetUrl,
+                          resolveChangeLogLink(app.url, href),
                           mode: LaunchMode.externalApplication,
                         );
                       }
@@ -79,9 +73,12 @@ void showChangeLogDialog(
                         ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
                       ],
                     ),
+                  )
+                : SingleChildScrollView(
+                    key: const PageStorageKey<String>('changelog_dialog_text'),
+                    child: Text(changeLog),
                   ),
-                )
-              : Text(changeLog),
+          ),
         ],
         singleNullReturnButton: tr('ok'),
       );
@@ -89,35 +86,65 @@ void showChangeLogDialog(
   );
 }
 
-Null Function()? getChangeLogFn(BuildContext context, App app) {
-  final AppSource appSource;
+/// Resolves a (possibly relative) link from release notes against the
+/// origin of the app's source URL.
+String resolveChangeLogLink(String appUrl, String href) {
+  if (href.startsWith('http://') || href.startsWith('https://')) return href;
   try {
-    appSource = SourceProvider().getSource(
+    final uri = Uri.parse(appUrl);
+    if (uri.hasScheme && uri.host.isNotEmpty) return '${uri.origin}/$href';
+  } catch (_) {}
+  return href;
+}
+
+AppSource? _sourceOrNull(App app) {
+  try {
+    return SourceProvider().getSource(
       app.url,
       overrideSource: app.overrideSource,
     );
   } catch (_) {
     return null;
   }
-  String? changesUrl = appSource.changeLogPageFromStandardUrl(app.url);
+}
+
+final RegExp _singleUrlChangeLog = RegExp(
+  r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?',
+);
+
+/// The "show changes" action for [app], or null when there is nothing to
+/// show. A single-line URL changelog (e.g. F-Droid's Changelog link) opens
+/// in the browser; other notes open in a dialog.
+///
+/// With [requireNotes] (app list tiles) the action exists only when the app
+/// has stored notes, and the source is resolved lazily on tap so list builds
+/// stay cheap. Otherwise (app page) the source's changes page is offered
+/// even without stored notes.
+Null Function()? getChangeLogFn(
+  BuildContext context,
+  App app, {
+  bool requireNotes = false,
+}) {
+  String? changesUrl;
   String? changeLog = app.changeLog;
-  if (changeLog?.split('\n').length == 1) {
-    if (RegExp(
-      r'(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?',
-    ).hasMatch(changeLog!)) {
-      if (changesUrl == null) {
-        changesUrl = changeLog;
-        changeLog = null;
-      }
-    }
+  if (changeLog != null &&
+      changeLog.split('\n').length == 1 &&
+      _singleUrlChangeLog.hasMatch(changeLog)) {
+    changesUrl = changeLog;
+    changeLog = null;
   }
-  return (changeLog == null && changesUrl == null)
-      ? null
-      : () {
-          if (changeLog != null) {
-            showChangeLogDialog(context, app, changesUrl, appSource, changeLog);
-          } else {
-            launchUrlString(changesUrl!, mode: LaunchMode.externalApplication);
-          }
-        };
+  if (changeLog == null && changesUrl == null) {
+    if (requireNotes) return null;
+    changesUrl = _sourceOrNull(app)?.changeLogPageFromStandardUrl(app.url);
+    if (changesUrl == null) return null;
+  }
+  return () {
+    if (changeLog != null) {
+      final appSource = _sourceOrNull(app);
+      changesUrl ??= appSource?.changeLogPageFromStandardUrl(app.url);
+      showChangeLogDialog(context, app, changesUrl, appSource, changeLog);
+    } else if (changesUrl != null) {
+      launchUrlString(changesUrl!, mode: LaunchMode.externalApplication);
+    }
+  };
 }

@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app_source.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/models/release_note.dart';
+import 'package:obtainium/services/http_service.dart' show ensureHttpSuccess;
 
 class Gitea extends AppSource {
   GitHub gh = GitHub(hostChanged: true);
@@ -49,6 +53,33 @@ class Gitea extends AppSource {
           .replace(path: apiPath, queryParameters: {'per_page': '100'})
           .toString();
     }, null);
+  }
+
+  @override
+  bool get supportsReleaseNotes => true;
+
+  @override
+  Future<List<ReleaseNote>> getReleaseNotes(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    int limit = 20,
+  }) async {
+    final standardUri = Uri.parse(standardUrl);
+    final url = standardUri
+        .replace(
+          path: '/api/v1/repos${standardUri.path}/releases',
+          queryParameters: {'limit': '${limit.clamp(1, 50)}'},
+        )
+        .toString();
+    final res = await gh.sourceRequest(url, additionalSettings);
+    ensureHttpSuccess(res);
+    return GitHub.releaseNotesFromGitHubLikeJson(
+      jsonDecode(res.body),
+      source: name,
+      includePrereleases: additionalSettings['includePrereleases'] == true,
+      isMarkdown: changeLogIfAnyIsMarkDown,
+      limit: limit,
+    );
   }
 
   AppNames getAppNames(String standardUrl) {

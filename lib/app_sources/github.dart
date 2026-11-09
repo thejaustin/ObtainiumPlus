@@ -12,6 +12,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/github_etag_cache.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/utils/string_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:obtainium/utils/version_utils.dart';
@@ -454,6 +455,63 @@ class GitHub extends AppSource {
     Map<String, dynamic> additionalSettings,
   ) async =>
       '${await getAPIHost(additionalSettings)}/repos${Uri.parse(standardUrl).path}';
+
+  @override
+  bool get supportsReleaseNotes => true;
+
+  @override
+  Future<List<ReleaseNote>> getReleaseNotes(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    int limit = 20,
+  }) async {
+    final url =
+        '${await convertStandardUrlToAPIUrl(standardUrl, additionalSettings)}'
+        '/releases?per_page=${limit.clamp(1, 100)}';
+    if (Uri.tryParse(url)?.host == 'api.github.com') {
+      // Don't spend a doomed request while the quota is known to be gone.
+      final authenticated =
+          additionalSettings['skipAuth'] != true &&
+          (await getTokenIfAny(additionalSettings))?.isNotEmpty == true;
+      final blockedMinutes = _apiBlockedMinutes(authenticated);
+      if (blockedMinutes != null) throw RateLimitError(blockedMinutes);
+    }
+    final res = await _sourceRequestWithAuthFallback(url, additionalSettings);
+    if (res.statusCode != 200) {
+      githubErrorCheck(res); // throws RateLimitError / auth errors
+      throw getObtainiumHttpError(res);
+    }
+    return releaseNotesFromGitHubLikeJson(
+      jsonDecode(res.body),
+      source: name,
+      includePrereleases: additionalSettings['includePrereleases'] == true,
+      isMarkdown: changeLogIfAnyIsMarkDown,
+      limit: limit,
+    );
+  }
+
+  /// Maps a GitHub or Gitea/Forgejo `/releases` response to notes, skipping
+  /// drafts and (unless [includePrereleases]) pre-releases.
+  static List<ReleaseNote> releaseNotesFromGitHubLikeJson(
+    Object? decoded, {
+    required String source,
+    required bool includePrereleases,
+    bool isMarkdown = true,
+    int? limit,
+  }) {
+    if (decoded is! List) return const [];
+    final notes = decoded
+        .map(
+          (r) => ReleaseNote.fromGitHubLike(
+            r,
+            source: source,
+            includePrereleases: includePrereleases,
+            isMarkdown: isMarkdown,
+          ),
+        )
+        .whereType<ReleaseNote>();
+    return (limit == null ? notes : notes.take(limit)).toList();
+  }
 
   /// Checks if the repository has been renamed or transferred.
   ///

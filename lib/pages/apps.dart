@@ -9,6 +9,7 @@ import 'package:obtainium/components/apps/category_filter_bar.dart';
 import 'package:obtainium/components/apps/niagara_alphabet_scrubber.dart';
 import 'package:obtainium/components/apps/tag_filter_bar.dart';
 import 'package:obtainium/components/apps/app_dashboard.dart';
+import 'package:obtainium/components/apps/app_changelog.dart' as changelog;
 import 'package:obtainium/components/common/contextual_tip.dart';
 import 'package:obtainium/components/add_app_sheet.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -38,8 +39,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/apps/app_list_view.dart';
 import 'package:obtainium/components/sort_filter_panel.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
-import 'package:markdown/markdown.dart' as md;
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/generated_form.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
@@ -57,7 +56,6 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/apps/category_sections.dart';
 import 'package:obtainium/models/app_in_memory.dart';
@@ -73,99 +71,10 @@ class AppsPage extends StatefulWidget {
   State<AppsPage> createState() => AppsPageState();
 }
 
-void showChangeLogDialog(
-  BuildContext context,
-  App app,
-  String? changesUrl,
-  AppSource appSource,
-  String changeLog,
-) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return GeneratedFormModal(
-        title: tr('changes'),
-        items: const [],
-        message: app.latestVersion,
-        additionalWidgets: [
-          changesUrl != null
-              ? LinkText(
-                  text: changesUrl,
-                  url: changesUrl,
-                  style: const TextStyle(fontStyle: FontStyle.italic),
-                )
-              : const SizedBox.shrink(),
-          changesUrl != null
-              ? const SizedBox(height: 16)
-              : const SizedBox.shrink(),
-          ConstrainedBox(
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width,
-              maxHeight: MediaQuery.of(context).size.height * 0.6,
-            ),
-            child: appSource.changeLogIfAnyIsMarkDown
-                ? Markdown(
-                    shrinkWrap: true,
-                    styleSheet: MarkdownStyleSheet(
-                      blockquoteDecoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                      ),
-                    ),
-                    data: changeLog,
-                    onTapLink: (text, href, title) {
-                      if (href != null) {
-                        launchUrlString(
-                          href.startsWith('http://') ||
-                                  href.startsWith('https://')
-                              ? href
-                              : '${Uri.parse(app.url).origin}/$href',
-                          mode: LaunchMode.externalApplication,
-                        );
-                      }
-                    },
-                    extensionSet: md.ExtensionSet(
-                      md.ExtensionSet.gitHubFlavored.blockSyntaxes,
-                      [
-                        md.EmojiSyntax(),
-                        ...md.ExtensionSet.gitHubFlavored.inlineSyntaxes,
-                      ],
-                    ),
-                  )
-                : SingleChildScrollView(child: Text(changeLog)),
-          ),
-        ],
-        singleNullReturnButton: tr('ok'),
-      );
-    },
-  );
-}
-
-Null Function()? getChangeLogFn(BuildContext context, App app) {
-  String? changesUrl;
-  String? changeLog = app.changeLog;
-  if (changeLog?.split('\n').length == 1 &&
-      RegExp(
-        '(http|ftp|https)://([\\w_-]+(?:(?:\\.[\\w_-]+)+))([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?',
-      ).hasMatch(changeLog!)) {
-    changesUrl = changeLog;
-    changeLog = null;
-  }
-  if (changeLog == null && changesUrl == null) return null;
-  return () {
-    var appSource = SourceProvider().getSource(
-      app.url,
-      overrideSource: app.overrideSource,
-    );
-    if (changesUrl == null) {
-      changesUrl = appSource.changeLogPageFromStandardUrl(app.url);
-    }
-    if (changeLog != null) {
-      showChangeLogDialog(context, app, changesUrl, appSource, changeLog);
-    } else if (changesUrl != null) {
-      launchUrlString(changesUrl!, mode: LaunchMode.externalApplication);
-    }
-  };
-}
+/// App-list tiles only offer "changes" when notes are stored; see
+/// [changelog.getChangeLogFn].
+Null Function()? getChangeLogFn(BuildContext context, App app) =>
+    changelog.getChangeLogFn(context, app, requireNotes: true);
 
 class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
   @override

@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
@@ -193,6 +196,33 @@ class Codeberg extends AppSource {
     } catch (e) {
       rethrowOrWrapError(e);
     }
+  }
+
+  @override
+  bool get supportsReleaseNotes => true;
+
+  @override
+  Future<List<ReleaseNote>> getReleaseNotes(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    int limit = 20,
+  }) async {
+    final standardUri = Uri.parse(standardUrl);
+    final url = standardUri
+        .replace(
+          path: '/api/v1/repos${standardUri.path}/releases',
+          queryParameters: {'limit': '${limit.clamp(1, 50)}'},
+        )
+        .toString();
+    final res = await sourceRequest(url, additionalSettings);
+    if (res.statusCode != 200) throw getObtainiumHttpError(res);
+    return GitHub.releaseNotesFromGitHubLikeJson(
+      jsonDecode(res.body),
+      source: name,
+      includePrereleases: additionalSettings['includePrereleases'] == true,
+      isMarkdown: changeLogIfAnyIsMarkDown,
+      limit: limit,
+    );
   }
 
   @override

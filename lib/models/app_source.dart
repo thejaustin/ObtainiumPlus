@@ -4,6 +4,7 @@ import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
+import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/host_request_gate.dart';
@@ -621,6 +622,19 @@ abstract class AppSource {
   String? changeLogPageFromStandardUrl(String standardUrl) {
     return changeLogPageIsStandardUrl ? standardUrl : null;
   }
+
+  /// Whether [getReleaseNotes] can return per-version notes for this source.
+  bool get supportsReleaseNotes => false;
+
+  /// Notes for the most recent published versions, newest first. Sources
+  /// without a releases API return an empty list; callers fall back to the
+  /// locally recorded version history. Only call on explicit user request
+  /// (never during update checks): it spends API quota.
+  Future<List<ReleaseNote>> getReleaseNotes(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    int limit = 20,
+  }) async => const [];
 
   Future<String?> getSourceNote() async {
     return null;

@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:http/http.dart';
 import 'package:obtainium/app_sources/github.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/min_update_age.dart';
@@ -141,6 +142,45 @@ class GitLab extends AppSource {
     return optionalAuth.isEmpty
         ? assetUrl
         : '$assetUrl${Uri.parse(assetUrl).query.isEmpty ? '?' : '&'}$optionalAuth';
+  }
+
+  @override
+  bool get supportsReleaseNotes => true;
+
+  @override
+  Future<List<ReleaseNote>> getReleaseNotes(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    int limit = 20,
+  }) async {
+    final names = _gh.getAppNames(standardUrl);
+    final String projectUriComponent =
+        '${Uri.encodeComponent(names.author)}%2F${Uri.encodeComponent(names.name)}';
+    final String? pat = await getPATIfAny(
+      hostChanged ? additionalSettings : {},
+    );
+    final String query = [
+      if (pat != null) 'private_token=$pat',
+      'per_page=${limit.clamp(1, 100)}',
+    ].join('&');
+    final Response res = await sourceRequest(
+      'https://${hosts[0]}/api/v4/projects/$projectUriComponent/releases?$query',
+      additionalSettings,
+    );
+    ensureHttpSuccess(res);
+    final decoded = jsonDecode(res.body);
+    if (decoded is! List) return const [];
+    return decoded
+        .map(
+          (r) => ReleaseNote.fromGitLab(
+            r,
+            source: name,
+            isMarkdown: changeLogIfAnyIsMarkDown,
+          ),
+        )
+        .whereType<ReleaseNote>()
+        .take(limit)
+        .toList();
   }
 
   @override
