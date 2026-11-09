@@ -31,6 +31,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/install_history_entry.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/services/apps_cache_index.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/services/offline_service.dart';
@@ -59,7 +60,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
-import 'package:obtainium/utils/version_utils.dart';
+import 'package:obtainium/utils/version_utils.dart' as version_utils;
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -1075,8 +1076,11 @@ class AppsProvider with ChangeNotifier {
         // Suppresses redundant disk+IPC work on rapid app switches.
         final stale =
             DateTime.now().difference(_lastLoadCompleted!).inSeconds > 30;
-        if (_needsBgReload || stale) {
+        if (_needsBgReload) {
+          _needsBgReload = false;
           await loadApps();
+        } else if (stale) {
+          await _refreshOnResume();
         }
       }
     });
@@ -2140,55 +2144,21 @@ class AppsProvider with ChangeNotifier {
     return modded ? app : null;
   }
 
+  // Thin wrappers over version_utils. These used to be private copies whose
+  // match step compared raw substrings without normalizeVersion, so an OS
+  // version "1.7.3-p15" never matched a tag "v1.7.3-p15" and the FIFTH step
+  // in getCorrectedInstallStatusAppIfPossible could not record the real
+  // install (self entry stuck on an old pseudo-version, "update available").
   MapEntry<bool, String>? reconcileVersionDifferences(
     String templateVersion,
     String comparisonVersion,
-  ) {
-    // Returns null if the versions don't share a common standard format
-    // Returns <true, comparisonVersion> if they share a common format and are equal
-    // Returns <false, templateVersion> if they share a common format but are not equal
-    // templateVersion must fully match a standard format, while comparisonVersion can have a substring match
-    var templateVersionFormats = findStandardFormatsForVersion(
-      templateVersion,
-      true,
-    );
-    var comparisonVersionFormats = findStandardFormatsForVersion(
-      comparisonVersion,
-      true,
-    );
-    if (comparisonVersionFormats.isEmpty) {
-      comparisonVersionFormats = findStandardFormatsForVersion(
-        comparisonVersion,
-        false,
-      );
-    }
-    var commonStandardFormats = templateVersionFormats.intersection(
-      comparisonVersionFormats,
-    );
-    if (commonStandardFormats.isEmpty) {
-      return null;
-    }
-    for (String pattern in commonStandardFormats) {
-      if (doStringsMatchUnderRegEx(
-        pattern,
-        comparisonVersion,
-        templateVersion,
-      )) {
-        return MapEntry(true, comparisonVersion);
-      }
-    }
-    return MapEntry(false, templateVersion);
-  }
+  ) => version_utils.reconcileVersionDifferences(
+    templateVersion,
+    comparisonVersion,
+  );
 
-  bool doStringsMatchUnderRegEx(String pattern, String value1, String value2) {
-    var r = RegExp(pattern);
-    var m1 = r.firstMatch(value1);
-    var m2 = r.firstMatch(value2);
-    return m1 != null && m2 != null
-        ? value1.substring(m1.start, m1.end) ==
-              value2.substring(m2.start, m2.end)
-        : false;
-  }
+  bool doStringsMatchUnderRegEx(String pattern, String value1, String value2) =>
+      version_utils.doStringsMatchUnderRegEx(pattern, value1, value2);
 
   Future<void> loadApps({String? singleId}) async {
     // Serialize concurrent loadApps() calls without busy-waiting.
@@ -2220,6 +2190,27 @@ class AppsProvider with ChangeNotifier {
     unawaited(_loadAppsPhase2(singleId));
   }
 
+  /// Resume after >30 s in the background: app data only changes on disk if
+  /// another isolate (background update task) or an import wrote it, so
+  /// compare the per-app files' signature first and only refresh installed
+  /// package info (phase 2) when it is unchanged.
+  Future<void> _refreshOnResume() async {
+    final known = _lastAppsDirSignature;
+    if (known != null) {
+      try {
+        final current = await AppsCacheIndex.dirSignature(
+          (await getAppsDir()).path,
+        );
+        if (current == known && appsLoadingCompleter == null) {
+          _lastLoadCompleted = DateTime.now();
+          await _loadAppsPhase2(null);
+          return;
+        }
+      } catch (_) {}
+    }
+    await loadApps();
+  }
+
   /// Phase 1: read app JSON files from disk and populate the in-memory map.
   ///
   /// This is intentionally fast (~10–50 ms) — no PackageManager IPC here.
@@ -2246,12 +2237,16 @@ class AppsProvider with ChangeNotifier {
       apps.remove(id);
     }
     notifyListeners();
+    unawaited(_saveAppsCacheIndex(appsDir.path));
   }
 
-  Future<void> _restoreQuarantinedApps(
+  /// Renames set-aside apps whose source resolves again back to `<id>.json`
+  /// and returns them so the caller can show them right away.
+  Future<List<App>> _restoreQuarantinedApps(
     Directory appsDir,
     SourceProvider sp,
   ) async {
+    final restored = <App>[];
     try {
       await for (final entity in appsDir.list()) {
         if (entity is! File) continue;
@@ -2274,12 +2269,43 @@ class AppsProvider with ChangeNotifier {
               entity.path.length - _quarantineSuffix.length,
             ),
           );
+          restored.add(app);
           logs.add('Restored previously unsupported app ${app.id}');
         } catch (_) {
           // Source still unavailable; leave it set aside.
         }
       }
     } catch (_) {}
+    return restored;
+  }
+
+  /// Adds apps brought back by [_restoreQuarantinedApps] to the in-memory list
+  /// (with their installed info) and refreshes the index, so they show up now
+  /// instead of only after the next full scan.
+  Future<void> _addRestoredApps(List<App> restored, String appsDirPath) async {
+    if (restored.isEmpty) return;
+    final sp = SourceProvider();
+    for (final app in restored) {
+      if (apps.containsKey(app.id)) continue;
+      String? sourceType;
+      try {
+        sourceType = sp
+            .getSource(app.url, overrideSource: app.overrideSource)
+            .sourceIdentifier;
+      } catch (_) {}
+      PackageInfo? info;
+      try {
+        info = await getInstalledInfo(app.id);
+      } catch (_) {}
+      apps[app.id] = AppInMemory(
+        getCorrectedInstallStatusAppIfPossible(app, info) ?? app,
+        null,
+        info,
+        _iconMemoryCache[app.id],
+        sourceType: sourceType,
+      );
+    }
+    unawaited(_saveAppsCacheIndex(appsDirPath));
   }
 
   Future<void> _loadAppsPhase1(String? singleId) async {
@@ -2291,151 +2317,74 @@ class AppsProvider with ChangeNotifier {
         (await AppFileService.initAppDirectories())['iconsCacheDir']!;
 
     int preloadedIcons = 0;
-    bool loadedFromCache = false;
 
-    // Fast-path: single aggregated index cache for instantaneous cold-start (<10ms)
-    final cacheFile = File('${appsDir.path}/apps_cache.json');
-    if (singleId == null && await cacheFile.exists()) {
-      try {
-        final content = await cacheFile.readAsString();
-        final dynamic decoded = jsonDecode(content);
-        final List<dynamic>? cachedList = decoded is Map
-            ? (decoded['apps'] as List<dynamic>?)
-            : null;
-        if (cachedList != null && cachedList.isNotEmpty) {
-          for (final raw in cachedList) {
-            try {
-              if (raw is! Map<String, dynamic>) continue;
-              final app = App.fromJson(raw);
-              String? sourceType;
-              try {
-                sourceType = sp
-                    .getSource(app.url, overrideSource: app.overrideSource)
-                    .sourceIdentifier;
-              } catch (_) {}
-
-              Uint8List? iconBytes =
-                  apps[app.id]?.icon ?? _iconMemoryCache[app.id];
-              if (iconBytes == null && preloadedIcons < 12) {
-                final iconFile = File('${iconsDir.path}/${app.id}.png');
-                if (iconFile.existsSync()) {
-                  preloadedIcons++;
-                  try {
-                    iconBytes = await iconFile.readAsBytes();
-                    _putIconMemory(app.id, iconBytes);
-                  } catch (_) {}
-                }
-              }
-
-              apps.update(
-                app.id,
-                (value) => AppInMemory(
-                  app,
-                  value.downloadProgress,
-                  value.installedInfo,
-                  value.icon ?? iconBytes,
-                  download: value.download,
-                  sourceType: sourceType,
-                ),
-                ifAbsent: () => AppInMemory(
-                  app,
-                  null,
-                  null,
-                  iconBytes,
-                  sourceType: sourceType,
-                ),
-              );
-            } catch (_) {}
-          }
-          loadedFromCache = apps.isNotEmpty;
-        }
-      } catch (e) {
-        logs.add('Could not load apps_cache.json index: $e');
-      }
+    // Reading + JSON-decoding hundreds of files (or the aggregated index) is
+    // pure I/O, so it runs off the UI isolate. The index is only used when it
+    // still matches the per-app files on disk ([AppsCacheIndex.scanSync]).
+    final scan = await AppsCacheIndex.scan(
+      appsDir.path,
+      singleId: singleId,
+      clearDirty: !_isBg,
+    );
+    for (final line in scan.logs) {
+      logs.add(line);
+    }
+    if (singleId == null && scan.signature != null) {
+      _lastAppsDirSignature = scan.signature;
     }
 
-    if (!loadedFromCache) {
-      final entities = await appsDir.list().toList();
-      await Future.wait(
-        entities.map((item) async {
-          final fileName = item.path.split('/').last.toLowerCase();
-          if (fileName == 'apps_cache.json' ||
-              fileName == 'apps_cache.json.tmp' ||
-              !fileName.endsWith('.json') ||
-              (singleId != null &&
-                  fileName != '${singleId.toLowerCase()}.json')) {
-            return;
-          }
-          App? app;
-          try {
-            final content = await File(item.path).readAsString();
-            app = App.fromJson(jsonDecode(content));
-          } catch (err) {
-            if (err is FormatException) {
-              logs.add('Corrupt JSON when loading App (will be ignored): $err');
-              try {
-                await item.rename('${item.path}.corrupt');
-              } catch (_) {}
-            } else if (err is FileSystemException) {
-              logs.add(
-                'Skipped missing/unreadable app file ${item.path}: $err',
-              );
-            } else {
-              logs.add(
-                'Skipped unreadable app file ${item.path}: $err',
-                level: LogLevel.warning,
-              );
-            }
-          }
-          if (app != null) {
-            String? sourceType;
-            try {
-              final src = sp.getSource(
-                app.url,
-                overrideSource: app.overrideSource,
-              );
-              sourceType = src.sourceIdentifier;
-            } catch (e) {
-              errors.add([app.id, app.finalName, e.toString()]);
-              return;
-            }
-            Uint8List? iconBytes =
-                apps[app.id]?.icon ?? _iconMemoryCache[app.id];
-            if (iconBytes == null &&
-                (singleId != null || preloadedIcons < 12)) {
-              final iconFile = File('${iconsDir.path}/${app.id}.png');
-              if (iconFile.existsSync()) {
-                preloadedIcons++;
-                try {
-                  iconBytes = await iconFile.readAsBytes();
-                  _putIconMemory(app.id, iconBytes);
-                } catch (_) {}
-              }
-            }
-            apps.update(
-              app.id,
-              (value) => AppInMemory(
-                app!,
-                value.downloadProgress,
-                value.installedInfo,
-                value.icon ?? iconBytes,
-                download: value.download,
-                sourceType: sourceType,
-              ),
-              ifAbsent: () => AppInMemory(
-                app!,
-                null,
-                null,
-                iconBytes,
-                sourceType: sourceType,
-              ),
-            );
-          }
-        }),
-      );
-      if (apps.isNotEmpty) {
-        unawaited(_saveAppsCacheIndex(appsDir.path));
+    for (final raw in scan.apps) {
+      App app;
+      try {
+        app = App.fromJson(raw);
+      } catch (err) {
+        logs.add(
+          'Skipped unreadable app data: $err',
+          level: LogLevel.warning,
+        );
+        continue;
       }
+      String? sourceType;
+      try {
+        sourceType = sp
+            .getSource(app.url, overrideSource: app.overrideSource)
+            .sourceIdentifier;
+      } catch (e) {
+        // Same as before the index existed: unresolvable sources found by a
+        // per-app scan are set aside; index entries are kept as they are.
+        if (!scan.fromCache) {
+          errors.add([app.id, app.finalName, e.toString()]);
+          continue;
+        }
+      }
+      Uint8List? iconBytes = apps[app.id]?.icon ?? _iconMemoryCache[app.id];
+      if (iconBytes == null && (singleId != null || preloadedIcons < 12)) {
+        final iconFile = File('${iconsDir.path}/${app.id}.png');
+        if (iconFile.existsSync()) {
+          preloadedIcons++;
+          try {
+            iconBytes = await iconFile.readAsBytes();
+            _putIconMemory(app.id, iconBytes);
+          } catch (_) {}
+        }
+      }
+      apps.update(
+        app.id,
+        (value) => AppInMemory(
+          app,
+          value.downloadProgress,
+          value.installedInfo,
+          value.icon ?? iconBytes,
+          download: value.download,
+          sourceType: sourceType,
+        ),
+        ifAbsent: () =>
+            AppInMemory(app, null, null, iconBytes, sourceType: sourceType),
+      );
+    }
+
+    if (singleId == null && !scan.fromCache && apps.isNotEmpty) {
+      unawaited(_saveAppsCacheIndex(appsDir.path));
     }
 
     if (errors.isNotEmpty) {
@@ -2446,24 +2395,22 @@ class AppsProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _saveAppsCacheIndex(String appsDirPath) async {
-    try {
-      final cacheFile = File('$appsDirPath/apps_cache.json');
-      final tmpCache = File(
-        '$appsDirPath/apps_cache.json.tmp_${DateTime.now().microsecondsSinceEpoch}',
-      );
-      final snapshot = apps.values
-          .toList()
-          .map((aim) => aim.app.toJson())
-          .toList();
-      final data = {
-        'version': 1,
-        'timestamp': DateTime.now().millisecondsSinceEpoch,
-        'apps': snapshot,
-      };
-      await tmpCache.writeAsString(jsonEncode(data));
-      await tmpCache.rename(cacheFile.path);
-    } catch (_) {}
+  /// Signature of the per-app files as of the last full phase-1 load; lets a
+  /// resume skip re-reading app data when nothing changed on disk.
+  String? _lastAppsDirSignature;
+
+  final AppsCacheWriter _appsCacheWriter = AppsCacheWriter();
+
+  /// Schedules a (debounced, serialised) rewrite of `apps_cache.json` from
+  /// the current in-memory apps. Only the foreground provider writes it; the
+  /// background-update provider's per-app writes make the index stale, which
+  /// the loader detects ([AppsCacheIndex.scanSync]).
+  Future<void> _saveAppsCacheIndex(String appsDirPath) {
+    if (_isBg || _disposed) return Future.value();
+    return _appsCacheWriter.schedule(
+      appsDirPath,
+      () => [for (final aim in apps.values.toList()) aim.app.toJson()],
+    );
   }
 
   /// Phase 2: query PackageManager for all installed packages, then reconcile
@@ -2578,7 +2525,8 @@ class AppsProvider with ChangeNotifier {
     try {
       final sp = SourceProvider();
       final appsDir = await getAppsDir();
-      await _restoreQuarantinedApps(appsDir, sp);
+      final restored = await _restoreQuarantinedApps(appsDir, sp);
+      await _addRestoredApps(restored, appsDir.path);
     } catch (_) {}
 
     // Proactively fetch any missing icons in the background without UI blocking.
@@ -2757,6 +2705,13 @@ class AppsProvider with ChangeNotifier {
   }) async {
     // Resolve the apps directory once instead of once per app in Future.wait.
     final appsDirPath = (await getAppsDir()).path;
+    if (_isBg) {
+      // The foreground's apps_cache.json may now hold older copies of these
+      // apps; make it rescan instead of trusting it (AppsCacheIndex docs).
+      try {
+        AppsCacheIndex.markDirtySync(appsDirPath);
+      } catch (_) {}
+    }
     // When not reusing cached info for a batch, one bulk query is faster than
     // N individual getInstalledInfo() Binder IPC calls inside Future.wait.
     Map<String, PackageInfo>? bulkInstalledMap;
@@ -3514,6 +3469,8 @@ class AppsProvider with ChangeNotifier {
     }
     _downloadCancellations.clear();
     _throttledNotifyTimer?.cancel();
+    // Write the latest index now rather than dropping a debounced write.
+    if (!_isBg) unawaited(_appsCacheWriter.flush());
     _disposed = true;
     foregroundSubscription?.cancel();
     _autoExportDebounce?.cancel();

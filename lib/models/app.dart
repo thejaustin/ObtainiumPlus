@@ -40,7 +40,7 @@ class App {
   List<VersionHistoryEntry> versionHistory = [];
   DateTime? firstInstalledAt;
   DateTime? lastInstalledAt;
-  List<InstallHistoryEntry> installHistory = [];
+  List<InstallHistoryEntry> installHistory;
 
   /// Effective first installed date, falling back to earliest install history entry.
   DateTime? get effectiveFirstInstalled =>
@@ -97,8 +97,10 @@ class App {
     this.updateHealthDismissedVersion,
     this.firstInstalledAt,
     this.lastInstalledAt,
-    this.installHistory = const [],
-  });
+    // Growable: install bookkeeping appends to it, and a `const []` default
+    // threw for every App built without an explicit list.
+    List<InstallHistoryEntry>? installHistory,
+  }) : installHistory = installHistory ?? [];
 
   @override
   String toString() {

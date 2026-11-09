@@ -17,6 +17,9 @@ import android.content.IntentFilter
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.database.Cursor
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Rect
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
@@ -28,7 +31,10 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
+import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -711,6 +717,16 @@ class MainActivity : FlutterActivity() {
                             result.error("PROFILE_DETECTION_FAILED", e.message, null)
                         }
                     }
+                    "getLabelsAndIcons" -> {
+                        val packages = call.argument<List<String>>("packages") ?: emptyList()
+                        val sizePx = (call.argument<Int>("sizePx") ?: 96).coerceIn(16, 512)
+                        labelIconExecutor.execute {
+                            val out = loadLabelsAndIcons(packages, sizePx)
+                            runOnUiThread {
+                                try { result.success(out) } catch (_: Exception) {}
+                            }
+                        }
+                    }
                     "getInstallerPackageName" -> {
                         val target = call.argument<String>("packageName")
                         if (target.isNullOrEmpty()) {
@@ -822,6 +838,42 @@ class MainActivity : FlutterActivity() {
             )
         }
         return mode == AppOpsManager.MODE_ALLOWED
+    }
+
+    /// Single worker so picker batches don't pile up threads; the package
+    /// manager and icon rendering run off the Android main thread.
+    private val labelIconExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+
+    /// Label + small PNG icon per package for the installed-apps picker. Icons
+    /// are rendered at [sizePx] instead of full size, so each one is a few KB.
+    private fun loadLabelsAndIcons(packages: List<String>, sizePx: Int): Map<String, Map<String, Any?>> {
+        val pm = packageManager
+        val out = HashMap<String, Map<String, Any?>>(packages.size)
+        for (pkg in packages) {
+            try {
+                val info = pm.getApplicationInfo(pkg, 0)
+                val label = try { pm.getApplicationLabel(info).toString() } catch (_: Exception) { null }
+                var icon: ByteArray? = null
+                try {
+                    val drawable = pm.getApplicationIcon(info)
+                    val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
+                    val canvas = Canvas(bitmap)
+                    val oldBounds = Rect(drawable.bounds)
+                    drawable.setBounds(0, 0, sizePx, sizePx)
+                    drawable.draw(canvas)
+                    drawable.bounds = oldBounds
+                    val stream = ByteArrayOutputStream()
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                    bitmap.recycle()
+                    icon = stream.toByteArray()
+                } catch (_: Exception) {
+                }
+                out[pkg] = mapOf("label" to label, "icon" to icon)
+            } catch (_: Exception) {
+                // Uninstalled since the list was taken, or not visible to us.
+            }
+        }
+        return out
     }
 
     private fun grantUsageAccessPrivileged(result: MethodChannel.Result) {
@@ -1055,6 +1107,7 @@ class MainActivity : FlutterActivity() {
             pendingPickerResult = null
             try { it.error("CANCELLED", "Activity destroyed", null) } catch (_: Exception) {}
         }
+        labelIconExecutor.shutdown()
         super.onDestroy()
     }
 
