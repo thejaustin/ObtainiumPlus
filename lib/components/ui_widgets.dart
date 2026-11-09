@@ -81,7 +81,28 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
   } else {
     AppLogger.info(e.toString());
   }
-  if (e is String || (e is ObtainiumError && !e.unexpected)) {
+  final isSimple = e is String || (e is ObtainiumError && !e.unexpected);
+  // A snackbar lands on the scaffold underneath a bottom sheet or dialog,
+  // where the sheet hides it (adding an app that already exists from the
+  // Add sheet looked like nothing happened). Use a dialog there instead.
+  if (isSimple && isError && ModalRoute.of(context) is PopupRoute) {
+    showDialog(
+      context: context,
+      builder: (ctx) => GlassDialog(
+        title: tr('error'),
+        icon: Icons.error_outline_rounded,
+        content: Text(e.toString()),
+        actions: [
+          FilledButton.tonal(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(tr('ok')),
+          ),
+        ],
+      ),
+    );
+    return;
+  }
+  if (isSimple) {
     final cs = Theme.of(context).colorScheme;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

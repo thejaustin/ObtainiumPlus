@@ -858,7 +858,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       badges: {if (updateCount > 0) 0: updateCount},
     );
 
-    final enableGlass = plusSettings.plusEnableGlassmorphism;
+    // Translucent surfaces only read well with blur behind them, so the
+    // Visual Lab "blur off" option also makes the bars opaque.
+    final enableGlass = blurEnabled;
 
     final Widget bar = isFloating
         ? RepaintBoundary(

@@ -75,6 +75,7 @@ class SettingsPageState extends State<SettingsPage> {
   // mounted during the crossfade, so a shared GlobalKey was duplicated.
   GlobalKey _resultsKey = GlobalKey();
   String? _resultsKeyId;
+  int _connectedSearchMatches = 0;
   GlobalKey _resultsKeyFor(String id) {
     if (id != _resultsKeyId) {
       _resultsKeyId = id;
@@ -92,6 +93,9 @@ class SettingsPageState extends State<SettingsPage> {
 
   bool _onUserScroll(UserScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false;
+    if (n.direction != ScrollDirection.idle) {
+      FocusManager.instance.primaryFocus?.unfocus();
+    }
     if (n.direction == ScrollDirection.reverse &&
         n.metrics.pixels > 24 &&
         n.metrics.extentAfter > 0) {
@@ -212,7 +216,8 @@ class SettingsPageState extends State<SettingsPage> {
           _searchQuery.isNotEmpty &&
           box is RenderBox &&
           box.hasSize &&
-          box.size.height < 1;
+          box.size.height < 1 &&
+          _connectedSearchMatches == 0;
       if (empty != _noResults) setState(() => _noResults = empty);
     });
   }
@@ -419,6 +424,11 @@ class SettingsPageState extends State<SettingsPage> {
                         ),
                         child: SearchBar(
                           controller: _searchController,
+                          // A focused field is re-focused when a pushed page
+                          // pops, popping the keyboard up unasked; drop focus
+                          // as soon as the user taps elsewhere.
+                          onTapOutside: (_) =>
+                              FocusManager.instance.primaryFocus?.unfocus(),
                           constraints: BoxConstraints(
                             minHeight: isCompact ? 42 : 48,
                             maxHeight: isCompact ? 46 : 52,
@@ -857,7 +867,9 @@ class SettingsPageState extends State<SettingsPage> {
                                 context,
                                 _selectedSectionIndex,
                                 isCompact,
-                              ),
+                              )
+                            else
+                              _buildConnectedSearchResults(context, isCompact),
                             const SizedBox(height: 24),
                             _buildFooter(context),
                             SizedBox(
@@ -1154,6 +1166,33 @@ class SettingsPageState extends State<SettingsPage> {
     BuildContext context,
     int sectionIndex,
     bool isCompact,
+  ) => ConnectedSettingsBar(
+    items: _connectedItemsForSection(context, sectionIndex),
+    isCompact: isCompact,
+  );
+
+  /// Page links (Logs, Developer & Diagnostics, …) live only in these
+  /// related bars, which are hidden while searching; match them too so a
+  /// search for "developer" finds something.
+  Widget _buildConnectedSearchResults(BuildContext context, bool isCompact) {
+    final q = _searchQuery.toLowerCase();
+    final seen = <String>{};
+    final matches = [
+      for (var i = 0; i <= 4; i++) ..._connectedItemsForSection(context, i),
+    ].where((item) {
+      final hit =
+          item.title.toLowerCase().contains(q) ||
+          (item.subtitle?.toLowerCase().contains(q) ?? false);
+      return hit && seen.add(item.title);
+    }).toList();
+    _connectedSearchMatches = matches.length;
+    if (matches.isEmpty) return const SizedBox.shrink();
+    return ConnectedSettingsBar(items: matches, isCompact: isCompact);
+  }
+
+  List<ConnectedSettingItem> _connectedItemsForSection(
+    BuildContext context,
+    int sectionIndex,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -1313,7 +1352,7 @@ class SettingsPageState extends State<SettingsPage> {
         break;
     }
 
-    return ConnectedSettingsBar(items: items, isCompact: isCompact);
+    return items;
   }
 }
 
@@ -1546,8 +1585,9 @@ class _SettingsCategoryBarDelegate extends SliverPersistentHeaderDelegate {
     return Container(
       height: height,
       decoration: BoxDecoration(
+        // Opaque: at 96% the content scrolling underneath showed through.
         color: isPinnedScrolled
-            ? colorScheme.surface.withValues(alpha: 0.96)
+            ? colorScheme.surfaceContainer
             : colorScheme.surface,
         border: isPinnedScrolled
             ? Border(

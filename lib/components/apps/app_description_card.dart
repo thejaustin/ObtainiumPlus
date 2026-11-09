@@ -1207,6 +1207,26 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
       ),
       data: text,
       imageDirectory: doc?.baseRaw.toString(),
+      // Android can't decode SVG (README badges are mostly shields.io SVGs),
+      // so render those as their alt text instead of a failed decode.
+      imageBuilder: (uri, title, alt) {
+        final resolved = uri.hasScheme
+            ? uri
+            : (doc?.resolve(uri.toString(), image: true) ?? uri);
+        final isSvg =
+            resolved.path.toLowerCase().endsWith('.svg') ||
+            resolved.host == 'img.shields.io' ||
+            resolved.host == 'badgen.net';
+        if (isSvg || !resolved.hasScheme) {
+          return (alt == null || alt.isEmpty)
+              ? const SizedBox.shrink()
+              : Text(alt, style: theme.textTheme.labelSmall);
+        }
+        return Image.network(
+          resolved.toString(),
+          errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+        );
+      },
       onTapLink: (text, href, title) {
         if (href == null || href.startsWith('#')) return;
         final target = doc?.resolve(href).toString() ?? href;
