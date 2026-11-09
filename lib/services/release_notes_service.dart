@@ -7,6 +7,7 @@ import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/release_notes_utils.dart';
+import 'package:obtainium/utils/string_utils.dart';
 import 'package:obtainium/utils/version_normalization.dart';
 
 class _CacheEntry {
@@ -108,20 +109,34 @@ class ReleaseNotesService {
     Map<String, dynamic> settings, {
     String? Function(String tag)? extractVersion,
   }) {
-    final pattern = settings['filterReleaseTitlesByRegEx'];
-    RegExp? titleRegex;
-    if (pattern is String && pattern.isNotEmpty) {
+    RegExp? regexFor(String key) {
+      final pattern = settings[key];
+      if (pattern is! String || pattern.isEmpty) return null;
       try {
-        titleRegex = RegExp(pattern);
-      } catch (_) {}
+        return RegExp(pattern);
+      } catch (_) {
+        return null;
+      }
     }
-    final invert = settings['invertReleaseTitlesFilter'] == true;
+
+    // Same rules as GitHub update checks: the title filter tests the release
+    // name (the tag only when the name is empty), the notes filter the body.
+    final titleRegex = regexFor('filterReleaseTitlesByRegEx');
+    final notesRegex = regexFor('filterReleaseNotesByRegEx');
+    final invertTitle = settings['invertReleaseTitlesFilter'] == true;
+    final invertNotes = settings['invertReleaseNotesFilter'] == true;
     final out = <ReleaseNote>[];
     for (final n in notes) {
-      if (titleRegex != null) {
-        final hit =
-            titleRegex.hasMatch(n.title ?? '') || titleRegex.hasMatch(n.version);
-        if (hit == invert) continue;
+      final name = (n.title?.trim().isNotEmpty ?? false)
+          ? n.title!.trim()
+          : n.version.trim();
+      if (titleRegex != null &&
+          !passesRegExFilter(titleRegex, name, invert: invertTitle)) {
+        continue;
+      }
+      if (notesRegex != null &&
+          !passesRegExFilter(notesRegex, n.body.trim(), invert: invertNotes)) {
+        continue;
       }
       String? extracted;
       try {

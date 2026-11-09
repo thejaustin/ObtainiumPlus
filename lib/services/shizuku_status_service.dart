@@ -5,7 +5,6 @@ import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/adb_port_prober.dart';
-import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
@@ -151,6 +150,7 @@ class ShizukuStatusService {
 
     String? raw;
     int? latency;
+    var timedOut = false;
     for (var i = 0; i <= _retryDelaysMs.length; i++) {
       final sw = Stopwatch()..start();
       try {
@@ -159,6 +159,12 @@ class ShizukuStatusService {
         raw = await ShizukuApkInstaller().checkPermission().timeout(
           _probeTimeout,
         );
+      } on TimeoutException {
+        // The binder answered with a permission prompt that is still open.
+        // Retrying would stack more prompts; the service is running.
+        timedOut = true;
+        raw = null;
+        break;
       } catch (_) {
         raw = null;
       }
@@ -178,7 +184,8 @@ class ShizukuStatusService {
     if (raw != null &&
         (raw.startsWith('granted') || raw.startsWith('authorized'))) {
       state = ShizukuServiceState.active;
-    } else if (raw == 'denied' ||
+    } else if (timedOut ||
+        raw == 'denied' ||
         raw == 'old_shizuku' ||
         raw == 'old_android_with_adb') {
       state = ShizukuServiceState.permissionNeeded;
@@ -213,20 +220,8 @@ class ShizukuStatusService {
   /// Exact-match lookup: `getInstalledInfo` falls back to package aliases,
   /// so asking for Shizuku+ can return stock Shizuku's info. Only trust the
   /// answer when the returned package is the one asked for.
-  static Future<String?> _installedProviderPackage() async {
-    for (final id in const [
-      AppConstants.shizukuPlusId,
-      AppConstants.shizukuStockId,
-      AppConstants.dhizukuId,
-    ]) {
-      try {
-        final info = await AppInstallService.getInstalledInfo(
-          id,
-          printErr: false,
-        );
-        if (info != null && (info.packageName ?? id) == id) return id;
-      } catch (_) {}
-    }
-    return null;
-  }
+  // One lookup shared with the install paths, so screens and installs can't
+  // name different providers.
+  static Future<String?> _installedProviderPackage() =>
+      ShizukuInstaller.getInstalledShizukuPackageId();
 }

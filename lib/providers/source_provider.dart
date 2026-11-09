@@ -624,6 +624,10 @@ class SourceProvider {
           detectedAt: e.detectedAt,
         );
       }
+      // Latest again (e.g. pre-releases turned off): keep newest-first order.
+      if (existing > 0 && currentApp.latestVersion != apk.version) {
+        list.insert(0, list.removeAt(existing));
+      }
       return list;
     }
     if (currentApp.latestVersion != apk.version) {

@@ -67,6 +67,7 @@ void main() {
       _app('1.2-beta', [_e('1.2-beta', 'b'), _e('1.1', 'a')]),
       _apk('1.1', 'a'),
     );
-    expect(h.map((e) => e.version), ['1.2-beta', '1.1']);
+    // Not duplicated, and the current latest moves back to the top.
+    expect(h.map((e) => e.version), ['1.1', '1.2-beta']);
   });
 }

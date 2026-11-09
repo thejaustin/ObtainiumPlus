@@ -17,12 +17,19 @@ class ReadmeDoc {
   final String? branch;
   final String repoLabel;
 
+  /// Repo-root bases for root-relative paths (`/docs/x.md`); default to the
+  /// README's own folder, which is the root for a top-level README.
+  final Uri? rootRaw;
+  final Uri? rootHtml;
+
   const ReadmeDoc({
     required this.markdown,
     required this.baseRaw,
     required this.baseHtml,
     required this.repoLabel,
     this.branch,
+    this.rootRaw,
+    this.rootHtml,
   });
 
   /// Resolve a link or image path from the README against the repo.
@@ -30,6 +37,11 @@ class ReadmeDoc {
     final u = Uri.tryParse(href);
     if (u == null || u.hasScheme || href.startsWith('#')) {
       return u ?? baseHtml;
+    }
+    if (href.startsWith('/') && !href.startsWith('//')) {
+      // Forges render these relative to the repo root, not the host root.
+      final root = image ? (rootRaw ?? baseRaw) : (rootHtml ?? baseHtml);
+      return root.resolve(href.substring(1));
     }
     return (image ? baseRaw : baseHtml).resolve(href);
   }
@@ -43,8 +55,23 @@ class ReadmeService {
 
   final Map<String, Future<ReadmeDoc?>> _cache = {};
 
-  Future<ReadmeDoc?> fetch(App app) {
+  /// [passive] is for background fallbacks (an app page opening): it only
+  /// tries quota-free requests (raw.githubusercontent.com) and never calls a
+  /// forge API, so browsing apps can't eat into the update checks' rate
+  /// limit. Passive misses aren't cached, so an explicit README view still
+  /// gets the full lookup.
+  Future<ReadmeDoc?> fetch(App app, {bool passive = false}) {
     final key = '${app.overrideSource ?? ''}|${app.url}';
+    final cached = _cache[key];
+    if (cached != null) return cached;
+    if (passive) {
+      return _fetch(app, passive: true).catchError((Object _) => null).then((
+        doc,
+      ) {
+        if (doc != null) _cache[key] = Future.value(doc);
+        return doc;
+      });
+    }
     return _cache.putIfAbsent(key, () async {
       try {
         return await _fetch(app);
@@ -56,7 +83,7 @@ class ReadmeService {
     });
   }
 
-  Future<ReadmeDoc?> _fetch(App app) async {
+  Future<ReadmeDoc?> _fetch(App app, {bool passive = false}) async {
     final AppSource source = SourceProvider().getSource(
       app.url,
       overrideSource: app.overrideSource,
@@ -83,11 +110,12 @@ class ReadmeService {
           repoLabel: '$o / $r',
         );
       }
+      if (passive) return null;
       final res = await source.sourceRequest(
         'https://api.github.com/repos/$o/$r/readme',
         settings,
       );
-      if (res.statusCode != 200) return null;
+      if (res.statusCode != 200) return _missingOrThrow(res.statusCode);
       final json = jsonDecode(res.body) as Map<String, dynamic>;
       final content = utf8.decode(
         base64.decode((json['content'] as String).replaceAll('\n', '')),
@@ -97,14 +125,23 @@ class ReadmeService {
       final html = Uri.parse(json['html_url'] as String);
       // download_url: raw.githubusercontent.com/o/r/<branch>/path/README.md
       final dlSegs = download.pathSegments;
+      final branch = dlSegs.length > 2 ? dlSegs[2] : null;
       return ReadmeDoc(
         markdown: content,
         baseRaw: download.resolve('.'),
         baseHtml: html.resolve('.'),
-        branch: dlSegs.length > 2 ? dlSegs[2] : null,
+        rootRaw: branch == null
+            ? null
+            : Uri.parse('https://raw.githubusercontent.com/$o/$r/$branch/'),
+        rootHtml: branch == null
+            ? null
+            : Uri.parse('https://github.com/$o/$r/blob/$branch/'),
+        branch: branch,
         repoLabel: '$o / $r',
       );
     }
+
+    if (passive) return null; // GitLab/Gitea only offer API endpoints
 
     if (source is GitLab) {
       final path = segs.takeWhile((s) => s != '-').join('/');
@@ -115,7 +152,8 @@ class ReadmeService {
         '$api/repository/files/README.md/raw?ref=${Uri.encodeComponent(branch)}',
         settings,
       );
-      if (res.statusCode != 200 || res.body.trim().isEmpty) return null;
+      if (res.statusCode != 200) return _missingOrThrow(res.statusCode);
+      if (res.body.trim().isEmpty) return null;
       return ReadmeDoc(
         markdown: res.body,
         baseRaw: Uri.parse('$host/$path/-/raw/$branch/'),
@@ -135,7 +173,8 @@ class ReadmeService {
         '${branch != null ? '?ref=${Uri.encodeComponent(branch)}' : ''}',
         settings,
       );
-      if (res.statusCode != 200 || res.body.trim().isEmpty) return null;
+      if (res.statusCode != 200) return _missingOrThrow(res.statusCode);
+      if (res.body.trim().isEmpty) return null;
       final ref = branch != null ? 'branch/$branch' : 'branch/main';
       return ReadmeDoc(
         markdown: res.body,
@@ -146,6 +185,14 @@ class ReadmeService {
       );
     }
     return null;
+  }
+
+  /// 404 means the repo has no README, which is cached. Anything else
+  /// (rate limit, server error) throws, so [fetch] drops it from the cache
+  /// and a later visit retries.
+  static ReadmeDoc? _missingOrThrow(int status) {
+    if (status == 404) return null;
+    throw StateError('README request failed with HTTP $status');
   }
 
   /// `default_branch` from a GitLab project or Gitea/Forgejo repo endpoint.

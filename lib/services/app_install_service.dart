@@ -159,7 +159,16 @@ class AppInstallService {
   }) async {
     if (packageName != null) {
       // Check fast in-memory package cache first (0ms IPC)
-      final byName = bypassCache ? null : _freshInstalledPackagesByName;
+      var byName = bypassCache ? null : _freshInstalledPackagesByName;
+      if (!bypassCache &&
+          byName == null &&
+          _cachedInstalledPackagesByName != null) {
+        // The list was loaded before but has expired: one bulk refresh (shared
+        // by concurrent callers) beats a binder call per app in loops such as
+        // imports.
+        await getAllInstalledInfo();
+        byName = _freshInstalledPackagesByName;
+      }
       if (byName != null) {
         final hit = byName[packageName];
         if (hit != null) return hit;

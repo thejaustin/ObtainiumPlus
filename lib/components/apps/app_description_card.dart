@@ -190,6 +190,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
   String? _webError;
   Future<ReadmeDoc?>? _readmeFuture;
   ReadmeDoc? _readme;
+  bool _readmeFullRequested = false;
 
   @override
   void initState() {
@@ -200,7 +201,22 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
   // Most apps have no manual "about" text, so every style showed "Empty
   // description content". The repo README is the natural fallback.
   void _startReadmeFetch() {
-    final future = ReadmeService.instance.fetch(widget.app.app);
+    _readmeFuture = null;
+    _readmeFullRequested = false;
+    // Passive unless the user chose the README style; skip entirely when the
+    // app has its own description or the webpage style is showing.
+    final style = context.read<PlusSettingsProvider>().plusAppDescriptionStyle;
+    final wantsReadme = style == AppDescriptionStyle.githubReadme;
+    final raw = widget.app.app.additionalSettings['about'];
+    final hasAbout = raw is String && raw.trim().isNotEmpty;
+    if (!wantsReadme && (hasAbout || style == AppDescriptionStyle.liveWebpage)) {
+      return;
+    }
+    _readmeFullRequested = wantsReadme;
+    final future = ReadmeService.instance.fetch(
+      widget.app.app,
+      passive: !wantsReadme,
+    );
     _readmeFuture = future;
     future.then((doc) {
       if (mounted && identical(_readmeFuture, future) && doc != null) {
@@ -716,7 +732,18 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
   ) {
     final app = widget.app;
 
-    _readmeFuture ??= ReadmeService.instance.fetch(app.app);
+    if (!_readmeFullRequested) {
+      // The README view itself may use the forge API (the page-open fetch
+      // was passive).
+      _readmeFullRequested = true;
+      final future = ReadmeService.instance.fetch(app.app);
+      _readmeFuture = future;
+      future.then((doc) {
+        if (mounted && identical(_readmeFuture, future) && doc != null) {
+          setState(() => _readme = doc);
+        }
+      });
+    }
     return FutureBuilder<ReadmeDoc?>(
       future: _readmeFuture,
       builder: (context, snap) {

@@ -2760,6 +2760,14 @@ class AppsProvider with ChangeNotifier {
           try {
             await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
             await tmpFile.rename(filePath);
+            if (_isBg) {
+              // Again after the write: a foreground scan that ran while this
+              // save awaited package info deleted the earlier marker and may
+              // have read the old file.
+              try {
+                AppsCacheIndex.markDirtySync(appsDirPath);
+              } catch (_) {}
+            }
           } catch (_) {
             try {
               await tmpFile.delete();
