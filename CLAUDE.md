@@ -46,6 +46,8 @@ Pushing to `main` triggers `build-apk.yml` automatically: analyze → flutter te
 | `BackdropFilter` / glassmorphism | Never use raw `BackdropFilter`. Always use `lib/components/common/conditional_blur.dart` → `ConditionalBlur(enabled: plusSettings.plusEnableGlassmorphism, sigma: N, child: ...)`. Remove `dart:ui` import after migration unless `ui.TextDirection` is needed |
 | Animation durations | Every duration must check the setting: `Duration(milliseconds: animsEnabled ? N : 0)`. Never hardcode durations. Read `plusEnableEnhancedAnimations` from `PlusSettingsProvider` |
 | `context.watch` vs `context.select` | `context.watch<P>()` rebuilds on ANY field change in P. `context.select<P,T>((p) => p.field)` rebuilds only when `field` changes. Use `select` in leaf widgets reading a single setting |
+| `ExpansionTile` / nested scrollables need their own `PageStorageKey<String>` | A plain `ValueKey` shares the parent scroll view's PageStorage slot; the tile read the scroll offset back as its expanded flag → "type 'double' is not a subtype of type 'bool?'" red cards after scrolling a settings tab (p15). Pinned by `settings_page_test` "switching tabs after scrolling" |
+| New en.json keys must exist in every locale | `test/translation_shape_test.dart` fails otherwise. Add the key to all `assets/translations/*.json` (English value is fine until translated) |
 | `command grep` not `grep` | Shell `grep` is overridden to `ugrep` which crashes. Always prefix with `command grep` |
 
 ## Performance patterns
