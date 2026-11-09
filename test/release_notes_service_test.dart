@@ -196,4 +196,41 @@ void main() {
       },
     );
   });
+
+  group('applyAppReleaseSettings', () {
+    ReleaseNote n(String tag, {String? title}) =>
+        ReleaseNote(version: tag, body: 'b $tag', source: 'GitHub', title: title);
+
+    test('title filter keeps only this app\'s releases', () {
+      final out = ReleaseNotesService.applyAppReleaseSettings(
+        [n('app-a-v2', title: 'App A 2'), n('app-b-v9', title: 'App B 9')],
+        {'filterReleaseTitlesByRegEx': 'App A'},
+      );
+      expect(out.map((e) => e.version), ['app-a-v2']);
+    });
+
+    test('inverted title filter drops matches', () {
+      final out = ReleaseNotesService.applyAppReleaseSettings(
+        [n('v1', title: 'nightly'), n('v2', title: 'stable')],
+        {
+          'filterReleaseTitlesByRegEx': 'nightly',
+          'invertReleaseTitlesFilter': true,
+        },
+      );
+      expect(out.map((e) => e.version), ['v2']);
+    });
+
+    test('version extraction maps tags; a throwing extractor keeps the tag', () {
+      final out = ReleaseNotesService.applyAppReleaseSettings(
+        [n('release-1.2.3'), n('weird')],
+        const {},
+        extractVersion: (tag) {
+          final m = RegExp(r'\d+\.\d+\.\d+').firstMatch(tag);
+          if (m == null) throw StateError('no version');
+          return m.group(0);
+        },
+      );
+      expect(out.map((e) => e.version), ['1.2.3', 'weird']);
+    });
+  });
 }

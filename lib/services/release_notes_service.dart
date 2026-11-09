@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/release_note.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/utils/release_notes_utils.dart';
 import 'package:obtainium/utils/version_normalization.dart';
@@ -73,11 +74,68 @@ class ReleaseNotesService {
       overrideSource: app.overrideSource,
     );
     if (!source.supportsReleaseNotes) return const [];
-    return source.getReleaseNotes(
+    final notes = await source.getReleaseNotes(
       app.url,
       app.additionalSettings,
       limit: limit,
     );
+    final sp = SettingsProvider();
+    await sp.initializeSettings();
+    return applyAppReleaseSettings(
+      notes,
+      app.additionalSettings,
+      extractVersion: source.suppressStandardVersionExtraction
+          ? null
+          : (tag) => extractVersionWithGlobalDefault(
+              app.additionalSettings,
+              sp,
+              tag,
+              allowGlobalDefault: !source.excludeCommonSettingKeys.contains(
+                'versionExtractionRegEx',
+              ),
+            ),
+    );
+  }
+
+  /// Applies the app's own release settings to fetched notes, the same way
+  /// update checks do: the release-title filter (with its invert option)
+  /// drops other apps' releases in shared repos, and version extraction
+  /// turns tags into the versions the app tracks, so the Latest/Installed
+  /// badges match.
+  @visibleForTesting
+  static List<ReleaseNote> applyAppReleaseSettings(
+    List<ReleaseNote> notes,
+    Map<String, dynamic> settings, {
+    String? Function(String tag)? extractVersion,
+  }) {
+    final pattern = settings['filterReleaseTitlesByRegEx'];
+    RegExp? titleRegex;
+    if (pattern is String && pattern.isNotEmpty) {
+      try {
+        titleRegex = RegExp(pattern);
+      } catch (_) {}
+    }
+    final invert = settings['invertReleaseTitlesFilter'] == true;
+    final out = <ReleaseNote>[];
+    for (final n in notes) {
+      if (titleRegex != null) {
+        final hit =
+            titleRegex.hasMatch(n.title ?? '') || titleRegex.hasMatch(n.version);
+        if (hit == invert) continue;
+      }
+      String? extracted;
+      try {
+        extracted = extractVersion?.call(n.version);
+      } catch (_) {
+        // A per-app regex that doesn't match this tag throws; keep the tag.
+      }
+      out.add(
+        extracted != null && extracted.isNotEmpty
+            ? n.copyWith(version: extracted)
+            : n,
+      );
+    }
+    return out;
   }
 
   /// Blanks the body of any entry whose notes are the same as the next-older

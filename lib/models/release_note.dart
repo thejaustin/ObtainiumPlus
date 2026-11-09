@@ -9,6 +9,9 @@ class ReleaseNote {
   final String source;
   final bool isPrerelease;
 
+  /// Release name/title as published (may differ from the tag).
+  final String? title;
+
   const ReleaseNote({
     required this.version,
     this.date,
@@ -17,16 +20,18 @@ class ReleaseNote {
     this.htmlUrl,
     required this.source,
     this.isPrerelease = false,
+    this.title,
   });
 
-  ReleaseNote copyWith({String? body}) => ReleaseNote(
-    version: version,
+  ReleaseNote copyWith({String? body, String? version}) => ReleaseNote(
+    version: version ?? this.version,
     date: date,
     body: body ?? this.body,
     isMarkdown: isMarkdown,
     htmlUrl: htmlUrl,
     source: source,
     isPrerelease: isPrerelease,
+    title: title,
   );
 
   /// Parses a GitHub or Gitea/Forgejo release object (same shape: tag_name,
@@ -53,6 +58,7 @@ class ReleaseNote {
       htmlUrl: json['html_url']?.toString(),
       source: source,
       isPrerelease: prerelease,
+      title: json['name']?.toString(),
     );
   }
 
@@ -76,6 +82,7 @@ class ReleaseNote {
       htmlUrl: links is Map ? links['self']?.toString() : null,
       source: source,
       isPrerelease: json['upcoming_release'] == true,
+      title: json['name']?.toString(),
     );
   }
 }
