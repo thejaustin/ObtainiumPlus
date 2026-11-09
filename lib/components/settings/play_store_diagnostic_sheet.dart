@@ -1,14 +1,13 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:obtainium/components/common/conditional_blur.dart';
-import 'package:obtainium/components/common/drag_handle.dart';
+import 'package:obtainium/components/settings/diagnostic_page_scaffold.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
 import 'package:obtainium/services/play_store_api.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
@@ -30,53 +29,52 @@ class DiagnosticStep {
   });
 }
 
-/// Comprehensive Google Play Store and microG diagnostic tester
+/// Opens the Google Play & network diagnostics. Kept under its old name so
+/// callers work; it's a page now, like the other diagnostic reports.
 Future<void> showPlayStoreDiagnosticSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.4),
-    builder: (ctx) => const _PlayStoreDiagnosticSheet(),
+  return Navigator.of(context).push<void>(
+    MaterialPageRoute(builder: (_) => const PlayStoreDiagnosticPage()),
   );
 }
 
-class _PlayStoreDiagnosticSheet extends StatefulWidget {
-  const _PlayStoreDiagnosticSheet();
+/// Step-by-step check of microG, VPN, token dispensers and the Play API.
+class PlayStoreDiagnosticPage extends StatefulWidget {
+  /// False skips the automatic run on open (tests; no network).
+  final bool autoRun;
+
+  const PlayStoreDiagnosticPage({super.key, this.autoRun = true});
 
   @override
-  State<_PlayStoreDiagnosticSheet> createState() =>
-      _PlayStoreDiagnosticSheetState();
+  State<PlayStoreDiagnosticPage> createState() =>
+      _PlayStoreDiagnosticPageState();
 }
 
-class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
+class _PlayStoreDiagnosticPageState extends State<PlayStoreDiagnosticPage> {
   bool _isRunning = false;
 
   late final List<DiagnosticStep> _steps = [
     DiagnosticStep(
-      title: 'microG / GMS Services',
-      description: 'Checks if Google Play Services or microG is accessible',
+      title: tr('playDiagGmsTitle'),
+      description: tr('playDiagGmsDesc'),
     ),
     DiagnosticStep(
-      title: 'VPN & IP Privacy Tunnel',
-      description: 'Checks active VPN status and leak protection',
+      title: tr('playDiagVpnTitle'),
+      description: tr('playDiagVpnDesc'),
     ),
     DiagnosticStep(
-      title: 'Token Dispenser & AAS Auth',
-      description:
-          'Pings Aurora token dispenser endpoints for latency & rate limits',
+      title: tr('playDiagDispenserTitle'),
+      description: tr('playDiagDispenserDesc'),
     ),
     DiagnosticStep(
-      title: 'Google Play API Protobuf Endpoints',
-      description:
-          'Performs live FDFE handshake with android.clients.google.com',
+      title: tr('playDiagApiTitle'),
+      description: tr('playDiagApiDesc'),
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _runDiagnostics();
+    if (widget.autoRun) _runDiagnostics();
   }
 
   Future<void> _runDiagnostics() async {
@@ -102,10 +100,10 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
       _steps[0].latencyMs = sw1.elapsedMilliseconds;
       if (available) {
         _steps[0].state = TestState.success;
-        _steps[0].detail = 'Services detected and active';
+        _steps[0].detail = tr('playDiagGmsOk');
       } else {
         _steps[0].state = TestState.warning;
-        _steps[0].detail = 'Not installed (Using anonymous dispensers)';
+        _steps[0].detail = tr('playDiagGmsMissing');
       }
     } catch (e) {
       sw1.stop();
@@ -124,15 +122,13 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
       _steps[1].latencyMs = sw2.elapsedMilliseconds;
       if (vpn) {
         _steps[1].state = TestState.success;
-        _steps[1].detail = 'Active VPN tunnel confirmed (Strict IP privacy on)';
+        _steps[1].detail = tr('playDiagVpnOn');
       } else if (plusSettings.requireVPNForPlayStore) {
         _steps[1].state = TestState.warning;
-        _steps[1].detail =
-            'VPN off — Play Store direct queries currently blocked';
+        _steps[1].detail = tr('playDiagVpnRequired');
       } else {
         _steps[1].state = TestState.success;
-        _steps[1].detail =
-            'Direct network connection (VPN requirement disabled)';
+        _steps[1].detail = tr('playDiagVpnOff');
       }
     } catch (e) {
       sw2.stop();
@@ -149,7 +145,7 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
     if (dispensers.isEmpty) {
       sw3.stop();
       _steps[2].state = TestState.warning;
-      _steps[2].detail = 'No dispensers configured';
+      _steps[2].detail = tr('playDiagNoDispensers');
     } else {
       final url = dispensers.first;
       try {
@@ -160,11 +156,13 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
         _steps[2].latencyMs = sw3.elapsedMilliseconds;
         if (res.statusCode == 200) {
           _steps[2].state = TestState.success;
-          _steps[2].detail =
-              'Dispenser active (${dispensers.length} available)';
+          _steps[2].detail = tr(
+            'playDiagDispenserOk',
+            args: ['${dispensers.length}'],
+          );
         } else if (res.statusCode == 429) {
           _steps[2].state = TestState.warning;
-          _steps[2].detail = 'Rate limited by dispenser (HTTP 429)';
+          _steps[2].detail = tr('playDiagRateLimited');
         } else {
           _steps[2].state = TestState.warning;
           _steps[2].detail = 'HTTP ${res.statusCode}';
@@ -173,7 +171,7 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
         sw3.stop();
         _steps[2].latencyMs = sw3.elapsedMilliseconds;
         _steps[2].state = TestState.warning;
-        _steps[2].detail = 'Connection timed out (${e.runtimeType})';
+        _steps[2].detail = tr('playDiagTimedOut', args: ['${e.runtimeType}']);
       }
     }
     if (mounted) setState(() {});
@@ -199,8 +197,7 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
         sw4.stop();
         _steps[3].latencyMs = sw4.elapsedMilliseconds;
         _steps[3].state = TestState.warning;
-        _steps[3].detail =
-            'No active token — configure a dispenser or microG account';
+        _steps[3].detail = tr('playInspectorNoToken');
       } else {
         final api = PlayStoreApi(
           authProvider: authProvider,
@@ -211,10 +208,13 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
         _steps[3].latencyMs = sw4.elapsedMilliseconds;
         if (details != null && details['title'] != null) {
           _steps[3].state = TestState.success;
-          _steps[3].detail = 'FDFE Protobuf connected: "${details['title']}"';
+          _steps[3].detail = tr(
+            'playDiagApiOk',
+            args: ['${details['title']}'],
+          );
         } else {
           _steps[3].state = TestState.success;
-          _steps[3].detail = 'Play Store endpoint responded (HTTP 200)';
+          _steps[3].detail = tr('playDiagApiResponded');
         }
       }
     } catch (e) {
@@ -230,249 +230,71 @@ class _PlayStoreDiagnosticSheetState extends State<_PlayStoreDiagnosticSheet> {
     }
   }
 
-  Widget _buildStateIcon(TestState state, ColorScheme colors) {
+  Widget _stateIcon(TestState state, ColorScheme cs) {
     switch (state) {
       case TestState.pending:
-        return Icon(
-          Icons.circle_outlined,
-          size: 20,
-          color: colors.onSurfaceVariant.withValues(alpha: 0.4),
-        );
+        return Icon(Icons.radio_button_unchecked_rounded, color: cs.outline);
       case TestState.running:
         return const SizedBox(
-          width: 20,
-          height: 20,
-          child: const ExpressiveCircularProgressIndicator(strokeWidth: 2),
+          width: 24,
+          height: 24,
+          child: ExpressiveCircularProgressIndicator(strokeWidth: 2.5),
         );
       case TestState.success:
-        return Icon(
-          Icons.check_circle_rounded,
-          size: 22,
-          color: colors.primary,
-        );
+        return Icon(Icons.check_circle_rounded, color: cs.primary);
       case TestState.warning:
-        return Icon(Icons.warning_amber_rounded, size: 22, color: Colors.amber);
+        return Icon(Icons.warning_amber_rounded, color: cs.tertiary);
       case TestState.failure:
-        return Icon(Icons.error_outline_rounded, size: 22, color: colors.error);
+        return Icon(Icons.error_rounded, color: cs.error);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final enableGlass = plusSettings.plusEnableGlassmorphism;
-    final sheetRadius = Radius.circular(
-      plusSettings.plusGlobalCornerRadius.clamp(20.0, 32.0),
-    );
-
-    return ClipRRect(
-      borderRadius: BorderRadius.vertical(top: sheetRadius),
-      child: ConditionalBlur(
-        enabled: enableGlass,
-        sigma: AppConstants.glassBlurSigmaSoft,
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.85,
-          ),
-          decoration: BoxDecoration(
-            color: enableGlass
-                ? colorScheme.surface.withValues(
-                    alpha: AppConstants.glassSurfaceAlphaStrong,
-                  )
-                : colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.vertical(top: sheetRadius),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 10),
-                const Center(child: DragHandle()),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer.withValues(
-                            alpha: 0.7,
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.play_arrow_rounded,
-                          color: colorScheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Google Play & Network Diagnostics',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Live endpoint latency, auth tokens & protobuf tester',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Re-run',
-                        icon: const Icon(Icons.refresh_rounded),
-                        onPressed: _isRunning ? null : _runDiagnostics,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
-                    itemCount: _steps.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, i) {
-                      final s = _steps[i];
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(
-                              alpha: 0.25,
-                            ),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 2),
-                              child: _buildStateIcon(s.state, colorScheme),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          s.title,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: theme.textTheme.bodyMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                      ),
-                                      if (s.latencyMs != null)
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color:
-                                                colorScheme.secondaryContainer,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                          ),
-                                          child: Text(
-                                            '${s.latencyMs} ms',
-                                            style: theme.textTheme.labelSmall
-                                                ?.copyWith(
-                                                  color: colorScheme
-                                                      .onSecondaryContainer,
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    s.description,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: colorScheme.onSurfaceVariant
-                                          .withValues(alpha: 0.8),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  if (s.detail != null) ...[
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      s.detail!,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: s.state == TestState.failure
-                                                ? colorScheme.error
-                                                : (s.state == TestState.warning
-                                                      ? Colors.amber.shade700
-                                                      : colorScheme.primary),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      FilledButton.tonal(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(tr('close')),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+    final cs = Theme.of(context).colorScheme;
+    return DiagnosticPageScaffold(
+      title: tr('playDiagTitle'),
+      subtitle: tr('playDiagSubtitle'),
+      storageKey: 'play_diagnostic_scroll',
+      actions: [
+        IconButton(
+          tooltip: tr('diagRunAgain'),
+          icon: const Icon(Icons.refresh_rounded),
+          onPressed: _isRunning ? null : _runDiagnostics,
         ),
-      ),
+      ],
+      children: [
+        ExpressiveSettingsGroup(
+          title: tr('playDiagChecks'),
+          icon: Icons.network_check_rounded,
+          children: [
+            for (final step in _steps)
+              ListTile(
+                leading: _stateIcon(step.state, cs),
+                title: Text(
+                  step.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  step.detail ?? step.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: step.state == TestState.failure
+                      ? TextStyle(color: cs.error)
+                      : null,
+                ),
+                trailing: step.latencyMs == null
+                    ? null
+                    : Text(
+                        tr('diagLatencyMs', args: ['${step.latencyMs}']),
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(color: cs.onSurfaceVariant),
+                      ),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

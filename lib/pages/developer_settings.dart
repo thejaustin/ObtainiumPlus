@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -22,6 +21,8 @@ import 'package:android_package_manager/android_package_manager.dart'
 import 'package:obtainium/pages/microg_hub.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/glass_dialog.dart';
+import 'package:obtainium/components/common/conditional_blur.dart';
+import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
@@ -33,7 +34,6 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/play_store_diagnostic_sheet.dart';
 import 'package:obtainium/components/settings/play_store_inspector_sheet.dart';
 import 'package:obtainium/components/settings/multi_user_diagnostic_sheet.dart';
-import 'package:obtainium/components/settings/usage_access_card.dart';
 
 class DeveloperSettingsPage extends StatelessWidget {
   final ScrollController? scrollController;
@@ -131,18 +131,22 @@ class DeveloperSettingsPage extends StatelessWidget {
               ),
             ListTile(
               leading: const Icon(Icons.network_check_rounded),
-              title: const Text('Google Play & Network Diagnostics'),
-              subtitle: const Text(
-                'Test FDFE endpoints, latency, microG, AAS tokens & VPN',
+              title: Text(tr('playDiagTitle')),
+              subtitle: Text(
+                tr('playDiagEntryDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showPlayStoreDiagnosticSheet(context),
             ),
             ListTile(
               leading: const Icon(Icons.developer_board_rounded),
-              title: const Text('Play Store App Inspector'),
-              subtitle: const Text(
-                'Live protobuf details & split APK delivery sandbox',
+              title: Text(tr('playInspectorTitle')),
+              subtitle: Text(
+                tr('playInspectorEntryDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showPlayStoreInspectorSheet(context),
@@ -216,9 +220,11 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             SwitchListTile.adaptive(
               secondary: const Icon(Icons.cloud_sync_outlined),
-              title: const Text('Prefer Quota-Free Registries'),
-              subtitle: const Text(
-                'Query IzzyOnDroid & F-Droid index caches before calling rate-limited GitHub APIs',
+              title: Text(tr('devPreferQuotaFreeRegistries')),
+              subtitle: Text(
+                tr('devPreferQuotaFreeRegistriesDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               value: context
                   .watch<PlusSettingsProvider>()
@@ -364,14 +370,28 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
             ListTile(
               leading: const Icon(Icons.supervised_user_circle_outlined),
-              title: const Text('Multi-User & Parallel Environment'),
-              subtitle: const Text(
-                'Inspect Insular, Shelter, Dual Messenger & installer sources',
+              title: Text(tr('multiUserTitle')),
+              subtitle: Text(
+                tr('multiUserEntryDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => showMultiUserDiagnosticSheet(context),
             ),
-            const UsageAccessCard(margin: EdgeInsets.only(top: 8, bottom: 4)),
+            // Usage access has its full card in Settings > Behavior; Service
+            // Doctor shows its status next to battery and Shizuku+.
+            ListTile(
+              leading: const Icon(Icons.health_and_safety_outlined),
+              title: Text(tr('serviceDoctor')),
+              subtitle: Text(
+                tr('serviceDoctorEntryDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showDeviceOptimizationSheet(context: context),
+            ),
           ]),
           _buildSection(context, tr('expressiveDesignShapes'), [
             SwitchListTile.adaptive(
@@ -600,10 +620,9 @@ class DeveloperSettingsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
             child: Text(
               title,
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.3,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -643,7 +662,7 @@ class DeveloperSettingsPage extends StatelessWidget {
             color: enableGlass
                 ? cs.surface.withValues(alpha: 0.78)
                 : cs.surfaceContainerLow,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+            borderRadius: BorderRadius.vertical(top: _sheetRadius(context)),
             border: Border.all(
               color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.12),
               width: 1,
@@ -695,15 +714,11 @@ class DeveloperSettingsPage extends StatelessWidget {
             ),
           ),
         );
-        final clipped = ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: sheet,
-        );
-        if (!enableGlass) return clipped;
         return ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+          borderRadius: BorderRadius.vertical(top: _sheetRadius(context)),
+          child: ConditionalBlur(
+            enabled: enableGlass,
+            sigma: AppConstants.glassBlurSigma,
             child: sheet,
           ),
         );
@@ -1051,7 +1066,7 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
         color: enableGlass
             ? cs.surface.withValues(alpha: 0.78)
             : cs.surfaceContainerLow,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: _sheetRadius(context)),
         border: Border.all(
           color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.12),
           width: 1,
@@ -1115,15 +1130,11 @@ class _SpoofingManagerSheetState extends State<_SpoofingManagerSheet> {
         ],
       ),
     );
-    final clipped = ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: content,
-    );
-    if (!enableGlass) return clipped;
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+      borderRadius: BorderRadius.vertical(top: _sheetRadius(context)),
+      child: ConditionalBlur(
+        enabled: enableGlass,
+        sigma: AppConstants.glassBlurSigma,
         child: content,
       ),
     );
@@ -1159,7 +1170,7 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
         color: enableGlass
             ? cs.surface.withValues(alpha: 0.78)
             : cs.surfaceContainerLow,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: _sheetRadius(context)),
         border: Border.all(
           color: cs.onSurface.withValues(alpha: enableGlass ? 0.18 : 0.12),
           width: 1,
@@ -1252,15 +1263,11 @@ class _DispenserManagerSheetState extends State<_DispenserManagerSheet> {
         ],
       ),
     );
-    final clipped = ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: content,
-    );
-    if (!enableGlass) return clipped;
     return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+      borderRadius: BorderRadius.vertical(top: _sheetRadius(context)),
+      child: ConditionalBlur(
+        enabled: enableGlass,
+        sigma: AppConstants.glassBlurSigma,
         child: content,
       ),
     );
@@ -1326,4 +1333,14 @@ Future<void> checkAndPromptBanWarnings(BuildContext context) async {
       plusSettings.plusEnableBanWarnings = true;
     }
   }
+}
+
+/// Top corner radius for this page's bottom sheets, matching
+/// `showDraggableModalBottomSheet` (user's corner radius, clamped).
+Radius _sheetRadius(BuildContext context) {
+  final plus = context.read<PlusSettingsProvider>();
+  final base = plus.plusOverrideIndividualCornerRadius
+      ? plus.plusHomeCornerRadius
+      : plus.plusGlobalCornerRadius;
+  return Radius.circular(base.clamp(20.0, 36.0));
 }

@@ -1,38 +1,34 @@
 import 'dart:convert';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/components/common/conditional_blur.dart';
-import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
-import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/diagnostic_page_scaffold.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/play_store_api.dart';
-import 'package:obtainium/utils/app_constants.dart';
-import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
-/// Shows an interactive developer sandbox to query Google Play FDFE protobuf endpoints live.
+/// Opens the Play Store app inspector. Kept under its old name so callers
+/// work; it's a page now (keyboard input plus long output).
 Future<void> showPlayStoreInspectorSheet(BuildContext context) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.4),
-    builder: (ctx) => const PlayStoreInspectorSheet(),
+  return Navigator.of(context).push<void>(
+    MaterialPageRoute(builder: (_) => const PlayStoreInspectorPage()),
   );
 }
 
-class PlayStoreInspectorSheet extends StatefulWidget {
-  const PlayStoreInspectorSheet({super.key});
+/// Developer sandbox that queries the Google Play FDFE details and delivery
+/// endpoints for one package.
+class PlayStoreInspectorPage extends StatefulWidget {
+  const PlayStoreInspectorPage({super.key});
 
   @override
-  State<PlayStoreInspectorSheet> createState() =>
-      _PlayStoreInspectorSheetState();
+  State<PlayStoreInspectorPage> createState() => _PlayStoreInspectorPageState();
 }
 
-class _PlayStoreInspectorSheetState extends State<PlayStoreInspectorSheet> {
+class _PlayStoreInspectorPageState extends State<PlayStoreInspectorPage> {
   final TextEditingController _packageController = TextEditingController(
     text: 'com.google.android.keep',
   );
@@ -92,9 +88,7 @@ class _PlayStoreInspectorSheetState extends State<PlayStoreInspectorSheet> {
       }
 
       if (!authProvider.hasActiveToken) {
-        throw Exception(
-          'No active Google Play token available. Configure a dispenser or microG account first.',
-        );
+        throw Exception(tr('playInspectorNoToken'));
       }
 
       final api = PlayStoreApi(
@@ -106,9 +100,7 @@ class _PlayStoreInspectorSheetState extends State<PlayStoreInspectorSheet> {
       sw.stop();
 
       if (details == null) {
-        throw Exception(
-          'Play Store returned empty or not found for package "$pkg".',
-        );
+        throw Exception(tr('playInspectorNotFound', args: [pkg]));
       }
 
       List<String> delivery = [];
@@ -153,362 +145,146 @@ class _PlayStoreInspectorSheetState extends State<PlayStoreInspectorSheet> {
     );
     AppHaptics.lightImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Play Store response copied to clipboard'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(tr('playInspectorCopied')),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
+
+  Widget _metaRow(String label, String value) => ListTile(
+    dense: true,
+    title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+    trailing: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 180),
+      child: Text(
+        value,
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        textAlign: TextAlign.end,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final cs = theme.colorScheme;
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final enableGlass = plusSettings.plusEnableGlassmorphism;
-    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusSettingsCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(baseRadius);
+    final cs = Theme.of(context).colorScheme;
+    final result = _result;
+    final notes = (result?['recentChangesHtml'] as String?)
+        ?.replaceAll(RegExp(r'<[^>]*>'), '')
+        .trim();
 
-    final Widget sheetContent = Container(
-      decoration: BoxDecoration(
-        color: enableGlass
-            ? cs.surface.withValues(alpha: 0.88)
-            : cs.surfaceContainerHigh,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border.all(
-          color: cs.outlineVariant.withValues(alpha: 0.35),
-          width: 1,
+    return DiagnosticPageScaffold(
+      title: tr('playInspectorTitle'),
+      subtitle: tr('playInspectorSubtitle'),
+      storageKey: 'play_inspector_scroll',
+      actions: [
+        IconButton(
+          tooltip: tr('playInspectorCopyJson'),
+          icon: const Icon(Icons.data_object_rounded),
+          onPressed: result == null ? null : _copyResultJson,
         ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const DragHandle(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 16, 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.developer_board_rounded,
-                        color: cs.onPrimaryContainer,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Play Store FDFE Inspector',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            'Live protobuf endpoint & split delivery test',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_result != null)
-                      ScaleTouchWrapper(
-                        hapticOnPressDown: true,
-                        scaleDownFactor: 0.88,
-                        child: IconButton(
-                          icon: const Icon(Icons.copy_rounded, size: 20),
-                          tooltip: 'Copy Payload JSON',
-                          onPressed: _copyResultJson,
-                        ),
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
+      ],
+      children: [
+        ExpressiveSettingsGroup(
+          title: tr('playInspectorQuery'),
+          icon: Icons.manage_search_rounded,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: TextField(
+                controller: _packageController,
+                enabled: !_isLoading,
+                keyboardType: TextInputType.url,
+                autocorrect: false,
+                textInputAction: TextInputAction.search,
+                onSubmitted: (_) => _inspectPackage(),
+                decoration: InputDecoration(
+                  labelText: tr('appId'),
+                  hintText: 'com.google.android.keep',
+                  prefixIcon: const Icon(Icons.android_rounded),
+                  suffixIcon: IconButton(
+                    tooltip: tr('playInspectorRun'),
+                    icon: const Icon(Icons.search_rounded),
+                    onPressed: _isLoading ? null : () => _inspectPackage(),
+                  ),
                 ),
               ),
-              const Divider(height: 1),
-              Flexible(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                  shrinkWrap: true,
-                  children: [
-                    // Package Input Field
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _packageController,
-                            autocorrect: false,
-                            decoration: InputDecoration(
-                              labelText: 'Package Name',
-                              hintText: 'e.g. com.google.android.keep',
-                              prefixIcon: const Icon(Icons.android_rounded),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                            ),
-                            onSubmitted: (_) => _inspectPackage(),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        ScaleTouchWrapper(
-                          hapticOnPressDown: true,
-                          scaleDownFactor: 0.92,
-                          child: FilledButton.tonal(
-                            onPressed: _isLoading
-                                ? null
-                                : () => _inspectPackage(),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 15,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: ExpressiveCircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                    ),
-                                  )
-                                : const Icon(Icons.send_rounded),
-                          ),
-                        ),
-                      ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 4,
+                children: [
+                  for (final sample in _quickSamples)
+                    ActionChip(
+                      label: Text(sample.split('.').last),
+                      onPressed: _isLoading
+                          ? null
+                          : () => _inspectPackage(sample),
                     ),
-                    const SizedBox(height: 10),
-                    // Quick Samples
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: _quickSamples.map((sample) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 6.0),
-                            child: ActionChip(
-                              label: Text(
-                                sample.split('.').last,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              onPressed: _isLoading
-                                  ? null
-                                  : () => _inspectPackage(sample),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Error Box
-                    if (_errorMessage != null)
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: cs.errorContainer.withValues(alpha: 0.6),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: cs.error.withValues(alpha: 0.4),
-                          ),
-                        ),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              color: cs.error,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                _errorMessage!,
-                                style: TextStyle(
-                                  color: cs.onErrorContainer,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Results Box
-                    if (_result != null) ...[
-                      Card(
-                        elevation: 0,
-                        color: cs.surfaceContainerLow,
-                        shape: CardMetrics.shape(
-                          cardRadius,
-                          expressive: plusSettings.plusEnableMaterialExpressive,
-                          side: BorderSide(
-                            color: cs.outlineVariant.withValues(alpha: 0.35),
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _result!['title'] ??
-                                          _packageController.text,
-                                      style: theme.textTheme.titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                    ),
-                                  ),
-                                  if (_queryLatencyMs != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: cs.secondaryContainer,
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '${_queryLatencyMs}ms',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: cs.onSecondaryContainer,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              if (_result!['developerName'] != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 2.0),
-                                  child: Text(
-                                    _result!['developerName'],
-                                    style: TextStyle(
-                                      color: cs.primary,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(height: 12),
-                              _buildMetaRow(
-                                'Version String',
-                                _result!['versionString']?.toString() ?? 'N/A',
-                                cs,
-                              ),
-                              _buildMetaRow(
-                                'Version Code',
-                                _result!['versionCode']?.toString() ?? 'N/A',
-                                cs,
-                              ),
-                              _buildMetaRow(
-                                'FDFE Status',
-                                _result!['status'] ?? 'unknown',
-                                cs,
-                              ),
-                              _buildMetaRow(
-                                'Split Delivery URLs',
-                                '${_deliveryUrls.length} splits detected',
-                                cs,
-                              ),
-                              if (_result!['recentChangesHtml'] != null &&
-                                  (_result!['recentChangesHtml'] as String)
-                                      .isNotEmpty) ...[
-                                const Divider(height: 20),
-                                Text(
-                                  'Release Notes',
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  _result!['recentChangesHtml']
-                                      .toString()
-                                      .replaceAll(RegExp(r'<[^>]*>'), ''),
-                                  maxLines: 4,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        if (_isLoading)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 32),
+            child: Center(child: ExpressiveCircularProgressIndicator()),
+          ),
+        if (_errorMessage != null)
+          ExpressiveSettingsGroup(
+            title: tr('playInspectorFailed'),
+            icon: Icons.error_outline_rounded,
+            children: [
+              ListTile(
+                leading: Icon(Icons.error_outline_rounded, color: cs.error),
+                title: Text(_errorMessage!),
+                subtitle: _queryLatencyMs == null
+                    ? null
+                    : Text(tr('diagLatencyMs', args: ['$_queryLatencyMs'])),
               ),
             ],
           ),
-        ),
-      ),
-    );
-
-    return Dismissible(
-      key: const Key('play_store_inspector_dismissible'),
-      direction: DismissDirection.down,
-      onDismissed: (_) => Navigator.of(context).pop(),
-      child: ConditionalBlur(
-        enabled: enableGlass,
-        sigma: 20,
-        child: sheetContent,
-      ),
-    );
-  }
-
-  Widget _buildMetaRow(String label, String value, ColorScheme cs) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: cs.onSurfaceVariant),
+        if (result != null)
+          ExpressiveSettingsGroup(
+            title: (result['title'] as String?) ?? _packageController.text,
+            description: result['developerName'] as String?,
+            icon: Icons.shop_rounded,
+            children: [
+              _metaRow(
+                tr('playInspectorLatency'),
+                tr('diagLatencyMs', args: ['${_queryLatencyMs ?? '-'}']),
+              ),
+              _metaRow(
+                tr('playInspectorVersionName'),
+                result['versionString']?.toString() ?? '-',
+              ),
+              _metaRow(
+                tr('playInspectorVersionCode'),
+                result['versionCode']?.toString() ?? '-',
+              ),
+              _metaRow(
+                tr('playInspectorStatus'),
+                result['status']?.toString() ?? '-',
+              ),
+              _metaRow(
+                tr('playInspectorSplits'),
+                '${_deliveryUrls.length}',
+              ),
+              if (notes != null && notes.isNotEmpty)
+                ListTile(
+                  title: Text(tr('playInspectorReleaseNotes')),
+                  subtitle: Text(notes),
+                ),
+            ],
           ),
-          Flexible(
-            child: Text(
-              value,
-              textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 }

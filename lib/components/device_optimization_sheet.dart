@@ -1,26 +1,23 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:obtainium/components/glass_dialog.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/components/settings/diagnostic_page_scaffold.dart';
+import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
-import 'package:obtainium/components/settings/usage_access_card.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/services/device_compatibility_service.dart';
-import 'package:obtainium/utils/app_constants.dart';
-import 'package:obtainium/components/common/expressive_progress_indicator.dart';
+import 'package:obtainium/services/shizuku_status_service.dart';
+import 'package:obtainium/services/usage_stats_service.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
-import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:shizuku_apk_installer/shizuku_apk_installer.dart';
 
-/// Live connectivity and permission status for Shizuku/ShizukuPlus.
-enum ShizukuLiveStatus { active, permissionNeeded, notRunning, rootless }
-
-/// Opens the Device Compatibility & Performance page (Service Doctor).
+/// Opens Service Doctor (device compatibility & performance).
 ///
-/// This used to be a bottom sheet that embedded the Shizuku status card,
+/// It used to be a bottom sheet that embedded the Shizuku status card,
 /// whose "Service Doctor" chip opened the sheet again, stacking copies. It is
 /// long-form reference content, so it's a page now.
 Future<void> showDeviceOptimizationSheet({required BuildContext context}) {
@@ -36,44 +33,7 @@ class DeviceOptimizationPage extends StatefulWidget {
   State<DeviceOptimizationPage> createState() => _DeviceOptimizationPageState();
 }
 
-class _DeviceOptimizationPageState extends State<DeviceOptimizationPage> {
-  final _scrollController = ScrollController();
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(tr('devicePerformanceAndCompatibility'))),
-      body: SafeArea(
-        top: false,
-        child: DeviceOptimizationSheetContent(
-          scrollController: _scrollController,
-        ),
-      ),
-    );
-  }
-}
-
-class DeviceOptimizationSheetContent extends StatefulWidget {
-  final ScrollController scrollController;
-
-  const DeviceOptimizationSheetContent({
-    super.key,
-    required this.scrollController,
-  });
-
-  @override
-  State<DeviceOptimizationSheetContent> createState() =>
-      _DeviceOptimizationSheetContentState();
-}
-
-class _DeviceOptimizationSheetContentState
-    extends State<DeviceOptimizationSheetContent>
+class _DeviceOptimizationPageState extends State<DeviceOptimizationPage>
     with WidgetsBindingObserver {
   DeviceOEM? _selectedOEM;
   DeviceOEM _detectedOEM = DeviceOEM.generic;
@@ -84,10 +44,20 @@ class _DeviceOptimizationSheetContentState
   int _sdkInt = 0;
   bool _isLoading = true;
   bool? _isBatteryUnrestricted;
-  ShizukuLiveStatus _shizukuStatus = ShizukuLiveStatus.rootless;
-  bool _isShizukuPlus = false;
-  int? _binderLatencyMs;
-  bool _isTestingBinder = false;
+  bool? _isUsageAccessGranted;
+
+  static const List<DeviceOEM> _supportedOEMs = [
+    DeviceOEM.samsung,
+    DeviceOEM.xiaomi,
+    DeviceOEM.oneplus,
+    DeviceOEM.nothing,
+    DeviceOEM.pixel,
+    DeviceOEM.vivo,
+    DeviceOEM.transsion,
+    DeviceOEM.motorola,
+    DeviceOEM.huawei,
+    DeviceOEM.generic,
+  ];
 
   @override
   void initState() {
@@ -104,92 +74,54 @@ class _DeviceOptimizationSheetContentState
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _refreshLiveStatus();
-    }
-  }
-
-  Future<ShizukuLiveStatus> _evaluateShizukuStatus() async {
-    try {
-      final pkg = await ShizukuInstaller.getInstalledShizukuPackageId();
-      if (pkg == null) {
-        _isShizukuPlus = false;
-        return ShizukuLiveStatus.rootless;
-      }
-      _isShizukuPlus = pkg == AppConstants.shizukuPlusId;
-      final status = await ShizukuApkInstaller().checkPermission();
-      if (status?.startsWith('authorized') == true ||
-          status?.startsWith('granted') == true) {
-        return ShizukuLiveStatus.active;
-      }
-      if (status == 'denied') {
-        return ShizukuLiveStatus.permissionNeeded;
-      }
-      return ShizukuLiveStatus.notRunning;
-    } catch (_) {
-      _isShizukuPlus = false;
-      return ShizukuLiveStatus.rootless;
-    }
+    if (state == AppLifecycleState.resumed) _refreshLiveStatus();
   }
 
   Future<void> _refreshLiveStatus() async {
-    bool? isUnrestricted;
+    bool? unrestricted;
+    bool? usage;
     try {
-      isUnrestricted =
+      unrestricted =
           await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
     } catch (_) {}
-    final shizuku = await _evaluateShizukuStatus();
-    if (mounted) {
-      setState(() {
-        _isBatteryUnrestricted = isUnrestricted;
-        _shizukuStatus = shizuku;
-      });
-    }
+    try {
+      usage = await UsageStatsService.isUsageAccessGranted();
+    } catch (_) {}
+    if (!mounted) return;
+    setState(() {
+      _isBatteryUnrestricted = unrestricted;
+      _isUsageAccessGranted = usage;
+    });
+    // The status card on this page re-probes Shizuku itself; both read the
+    // shared ShizukuStatusService result.
+    try {
+      await ShizukuStatusService.instance.refreshFrom(context);
+    } catch (_) {}
   }
 
   Future<void> _loadDeviceInfo() async {
-    final oem = await DeviceUtils.getDeviceOEM();
-    final summary = await DeviceUtils.getDeviceSummary();
-    bool? isUnrestricted;
+    DeviceOEM oem = DeviceOEM.generic;
+    String summary = '';
     try {
-      isUnrestricted =
-          await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
-    } catch (_) {}
-    final shizuku = await _evaluateShizukuStatus();
-    try {
+      oem = await DeviceUtils.getDeviceOEM();
+      summary = await DeviceUtils.getDeviceSummary();
       final info = await DeviceUtils.getAndroidInfo();
       _deviceManufacturer = info.manufacturer;
       _deviceModel = info.model;
       _androidVersion = info.version.release;
       _sdkInt = info.version.sdkInt;
     } catch (_) {}
-
-    if (mounted) {
-      setState(() {
-        _detectedOEM = oem;
-        _selectedOEM = oem;
-        _deviceSummary = summary;
-        _isBatteryUnrestricted = isUnrestricted;
-        _shizukuStatus = shizuku;
-        _isLoading = false;
-      });
-    }
+    await _refreshLiveStatus();
+    if (!mounted) return;
+    setState(() {
+      _detectedOEM = oem;
+      _selectedOEM ??= oem;
+      _deviceSummary = summary;
+      _isLoading = false;
+    });
   }
 
-  static const List<DeviceOEM> _supportedOEMs = [
-    DeviceOEM.samsung,
-    DeviceOEM.xiaomi,
-    DeviceOEM.oneplus,
-    DeviceOEM.nothing,
-    DeviceOEM.pixel,
-    DeviceOEM.vivo,
-    DeviceOEM.transsion,
-    DeviceOEM.motorola,
-    DeviceOEM.huawei,
-    DeviceOEM.generic,
-  ];
-
-  String _getOEMLabel(DeviceOEM oem) {
+  String _oemLabel(DeviceOEM oem) {
     switch (oem) {
       case DeviceOEM.samsung:
         return 'Samsung One UI';
@@ -212,11 +144,11 @@ class _DeviceOptimizationSheetContentState
       case DeviceOEM.motorola:
         return 'Motorola';
       case DeviceOEM.generic:
-        return 'Stock Android';
+        return tr('serviceDoctorStockAndroid');
     }
   }
 
-  IconData _getOEMIcon(DeviceOEM oem) {
+  IconData _oemIcon(DeviceOEM oem) {
     switch (oem) {
       case DeviceOEM.samsung:
         return Icons.phone_android_rounded;
@@ -243,908 +175,340 @@ class _DeviceOptimizationSheetContentState
     }
   }
 
-  void _copySpecsToClipboard(BuildContext context) {
+  void _copySpecs() {
     AppHaptics.lightImpact();
     final specs = _deviceSummary.isNotEmpty
         ? _deviceSummary
-        : 'Manufacturer: $_deviceManufacturer\nModel: $_deviceModel\nAndroid: $_androidVersion (API $_sdkInt)\nPlatform: ${_getOEMLabel(_detectedOEM)}';
+        : '$_deviceManufacturer $_deviceModel\n'
+              'Android $_androidVersion (API $_sdkInt)\n'
+              '${_oemLabel(_detectedOEM)}';
     Clipboard.setData(ClipboardData(text: specs));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(tr('specsCopiedToClipboard')),
         behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  String _getShizukuChipLabel() {
-    final name = _isShizukuPlus ? 'ShizukuPlus' : 'Shizuku';
-    switch (_shizukuStatus) {
-      case ShizukuLiveStatus.active:
-        return '$name: Active (Turbo)';
-      case ShizukuLiveStatus.permissionNeeded:
-        return '$name: Tap to Authorize';
-      case ShizukuLiveStatus.notRunning:
-        return '$name: Not Running (Tap)';
-      case ShizukuLiveStatus.rootless:
-        return 'Rootless Mode (Active)';
-    }
-  }
-
-  IconData _getShizukuChipIcon() {
-    switch (_shizukuStatus) {
-      case ShizukuLiveStatus.active:
-        return _isShizukuPlus
-            ? Icons.electric_bolt_rounded
-            : Icons.bolt_rounded;
-      case ShizukuLiveStatus.permissionNeeded:
-        return Icons.key_rounded;
-      case ShizukuLiveStatus.notRunning:
-        return Icons.play_arrow_rounded;
-      case ShizukuLiveStatus.rootless:
-        return Icons.verified_user_outlined;
-    }
-  }
-
-  Color _getShizukuChipColor(ColorScheme colorScheme) {
-    switch (_shizukuStatus) {
-      case ShizukuLiveStatus.active:
-        return colorScheme.primary;
-      case ShizukuLiveStatus.permissionNeeded:
-        return colorScheme.tertiary;
-      case ShizukuLiveStatus.notRunning:
-        return colorScheme.primary;
-      case ShizukuLiveStatus.rootless:
-        return colorScheme.tertiary;
-    }
-  }
-
-  Future<void> _handleShizukuChipTap(BuildContext context) async {
+  Future<void> _fixBattery() async {
     AppHaptics.selectionClick();
-    switch (_shizukuStatus) {
-      case ShizukuLiveStatus.active:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              _isShizukuPlus
-                  ? 'ShizukuPlus Turbo Mode is active. Elevated Unified Privilege binder IPC enables sub-second installs.'
-                  : 'Shizuku Turbo Mode is active. Elevated binder IPC enables sub-second installs.',
-            ),
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-        break;
-      case ShizukuLiveStatus.permissionNeeded:
+    await DeviceCompatibilityService.requestIgnoreBatteryOptimizations();
+    final unrestricted =
+        await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
+    if (mounted) setState(() => _isBatteryUnrestricted = unrestricted);
+  }
+
+  Future<void> _onShizukuTap(ShizukuStatusSnapshot? snap) async {
+    if (snap == null) return;
+    AppHaptics.selectionClick();
+    switch (snap.state) {
+      case ShizukuServiceState.permissionNeeded:
         try {
           await ShizukuApkInstaller().checkPermission();
-          _refreshLiveStatus();
         } catch (_) {}
-        break;
-      case ShizukuLiveStatus.notRunning:
+        if (mounted) unawaited(_refreshLiveStatus());
+      case ShizukuServiceState.notRunning:
         await ShizukuInstaller.openShizukuManager();
-        break;
-      case ShizukuLiveStatus.rootless:
-        showDialog<void>(
-          context: context,
-          builder: (dialogCtx) => GlassDialog(
-            title: 'Rootless Mode Active',
-            icon: Icons.verified_user_outlined,
-            content: const Text(
-              'ObtainiumPlus operates with 100% native Android package management without requiring root or ADB access.\n\n'
-              '• Android 14+: Background updates install silently via "Update Ownership" & "User Pre-approval".\n\n'
-              '• Earlier Android versions: Installing or launching Shizuku / ShizukuPlus enables silent elevated background installations.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogCtx).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+      case ShizukuServiceState.active:
+      case ShizukuServiceState.notInstalled:
         break;
     }
   }
 
-  Future<void> _testBinderLatency() async {
-    if (_isTestingBinder) return;
-    AppHaptics.selectionClick();
-    setState(() => _isTestingBinder = true);
-    final latency = await ShizukuInstaller.measureBinderLatencyMs();
-    if (mounted) {
-      setState(() {
-        _binderLatencyMs = latency;
-        _isTestingBinder = false;
-      });
+  Widget _shizukuTile(ShizukuStatusSnapshot? snap) {
+    final cs = Theme.of(context).colorScheme;
+    final name = snap?.providerLabel ?? 'Shizuku+';
+    final String title;
+    final String subtitle;
+    final IconData icon;
+    final Color color;
+    if (snap == null) {
+      title = tr('checkingShizukuStatus');
+      subtitle = tr('probingDaemon');
+      icon = Icons.hourglass_top_rounded;
+      color = cs.onSurfaceVariant;
+    } else {
+      switch (snap.state) {
+        case ShizukuServiceState.active:
+          title = tr('serviceDoctorShizukuActive', args: [name]);
+          subtitle = tr('serviceDoctorShizukuActiveDesc', args: [name]);
+          icon = Icons.electric_bolt_rounded;
+          color = cs.primary;
+        case ShizukuServiceState.permissionNeeded:
+          title = tr('serviceDoctorShizukuPermission', args: [name]);
+          subtitle = tr('serviceDoctorShizukuPermissionDesc', args: [name]);
+          icon = Icons.key_rounded;
+          color = cs.tertiary;
+        case ShizukuServiceState.notRunning:
+          title = tr('serviceDoctorShizukuStopped', args: [name]);
+          subtitle = tr('serviceDoctorShizukuStoppedDesc', args: [name]);
+          icon = Icons.power_off_rounded;
+          color = cs.error;
+        case ShizukuServiceState.notInstalled:
+          title = tr('serviceDoctorShizukuMissing');
+          subtitle = tr('serviceDoctorShizukuMissingDesc');
+          icon = Icons.verified_user_outlined;
+          color = cs.onSurfaceVariant;
+      }
     }
+    final actionable =
+        snap?.state == ShizukuServiceState.permissionNeeded ||
+        snap?.state == ShizukuServiceState.notRunning;
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      subtitle: Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+      trailing: actionable ? const Icon(Icons.chevron_right_rounded) : null,
+      onTap: actionable ? () => _onShizukuTap(snap) : null,
+    );
+  }
+
+  Widget _buildDeviceGroup() {
+    final cs = Theme.of(context).colorScheme;
+    final deviceName = _deviceModel.isNotEmpty
+        ? '$_deviceManufacturer $_deviceModel'
+        : tr('serviceDoctorDeviceUnknown');
+    return ExpressiveSettingsGroup(
+      title: tr('serviceDoctorThisDevice'),
+      icon: Icons.smartphone_rounded,
+      children: [
+        ListTile(
+          leading: Icon(_oemIcon(_detectedOEM)),
+          title: Text(deviceName, maxLines: 1, overflow: TextOverflow.ellipsis),
+          subtitle: Text(
+            tr(
+              'serviceDoctorAndroidVersion',
+              args: [_androidVersion, '$_sdkInt', _oemLabel(_detectedOEM)],
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: IconButton(
+            tooltip: tr('copySpecs'),
+            icon: const Icon(Icons.copy_rounded),
+            onPressed: _copySpecs,
+          ),
+        ),
+        if (_isBatteryUnrestricted != null)
+          ListTile(
+            leading: Icon(
+              _isBatteryUnrestricted!
+                  ? Icons.battery_charging_full_rounded
+                  : Icons.battery_alert_rounded,
+              color: _isBatteryUnrestricted! ? cs.primary : cs.error,
+            ),
+            title: Text(
+              _isBatteryUnrestricted!
+                  ? tr('batteryUnrestricted')
+                  : tr('batteryOptimized'),
+            ),
+            subtitle: Text(
+              _isBatteryUnrestricted!
+                  ? tr('serviceDoctorBatteryOk')
+                  : tr('serviceDoctorBatteryFix'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: _isBatteryUnrestricted!
+                ? null
+                : const Icon(Icons.chevron_right_rounded),
+            onTap: _isBatteryUnrestricted! ? null : _fixBattery,
+          ),
+        ValueListenableBuilder<ShizukuStatusSnapshot?>(
+          valueListenable: ShizukuStatusService.instance.status,
+          builder: (_, snap, _) => _shizukuTile(snap),
+        ),
+        if (_isUsageAccessGranted != null)
+          // The full Usage access card lives in Settings > Behavior, next to
+          // the feature that uses it; this row only reports and links out.
+          ListTile(
+            leading: Icon(
+              Icons.query_stats_rounded,
+              color: _isUsageAccessGranted! ? cs.primary : cs.tertiary,
+            ),
+            title: Text(tr('serviceDoctorUsageAccess')),
+            subtitle: Text(
+              _isUsageAccessGranted!
+                  ? tr('serviceDoctorUsageAccessGranted')
+                  : tr('serviceDoctorUsageAccessMissing'),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: const Icon(Icons.open_in_new_rounded),
+            onTap: () async {
+              AppHaptics.selectionClick();
+              await UsageStatsService.openUsageAccessSettings();
+            },
+          ),
+      ],
+    );
+  }
+
+  Widget _buildOemPicker(DeviceOEM active) {
+    return SingleChildScrollView(
+      key: const PageStorageKey<String>('service_doctor_oem_chips'),
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        spacing: 8,
+        children: [
+          for (final oem in _supportedOEMs)
+            ChoiceChip(
+              showCheckmark: false,
+              avatar: Icon(_oemIcon(oem)),
+              label: Text(
+                oem == _detectedOEM
+                    ? '${_oemLabel(oem)} · ${tr('you')}'
+                    : _oemLabel(oem),
+              ),
+              selected: oem == active,
+              onSelected: (selected) {
+                if (!selected) return;
+                AppHaptics.selectionClick();
+                setState(() => _selectedOEM = oem);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildGuide(DeviceOEM active) {
+    final cs = Theme.of(context).colorScheme;
+    final guide = DeviceCompatibilityService.getGuideForOEM(active);
+    return [
+      ExpressiveSettingsGroup(
+        title: guide.title,
+        description: guide.subtitle,
+        icon: _oemIcon(guide.oem),
+        children: [
+          if (active != _detectedOEM)
+            ListTile(
+              leading: const Icon(Icons.visibility_outlined),
+              title: Text(
+                tr('serviceDoctorViewingOther', args: [_oemLabel(active)]),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: TextButton(
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  setState(() => _selectedOEM = _detectedOEM);
+                },
+                child: Text(tr('myDevice')),
+              ),
+            ),
+          for (final action in guide.actions)
+            ListTile(
+              leading: const Icon(Icons.launch_rounded),
+              title: Text(
+                action.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                action.description,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+              onTap: () async {
+                AppHaptics.lightImpact();
+                final ok = await action.action();
+                if (!ok && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(tr('serviceDoctorSettingNotOpened')),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              },
+            ),
+        ],
+      ),
+      if (guide.highlights.isNotEmpty)
+        ExpressiveSettingsGroup(
+          title: tr('knownOEMBehaviors'),
+          icon: Icons.warning_amber_rounded,
+          children: [
+            for (final item in guide.highlights)
+              ListTile(
+                leading: Icon(Icons.info_outline_rounded, color: cs.tertiary),
+                title: Text(item),
+              ),
+          ],
+        ),
+      if (guide.steps.isNotEmpty)
+        ExpressiveSettingsGroup(
+          title: tr('recommendedConfigurationSteps'),
+          icon: Icons.checklist_rounded,
+          children: [
+            for (final entry in guide.steps.asMap().entries)
+              ListTile(
+                leading: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: cs.primaryContainer,
+                  foregroundColor: cs.onPrimaryContainer,
+                  child: Text(
+                    '${entry.key + 1}',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: cs.onPrimaryContainer,
+                    ),
+                  ),
+                ),
+                title: Text(entry.value),
+              ),
+          ],
+        ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final activeOEM = _selectedOEM ?? _detectedOEM;
-    final guide = DeviceCompatibilityService.getGuideForOEM(activeOEM);
-    final isViewingDetected = activeOEM == _detectedOEM;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 4, 20, 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              tr('devicePerformanceAndCompatibilitySubtitle'),
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+    final active = _selectedOEM ?? _detectedOEM;
+    return DiagnosticPageScaffold(
+      title: tr('serviceDoctor'),
+      subtitle: tr('devicePerformanceAndCompatibility'),
+      storageKey: 'service_doctor_scroll',
+      children: _isLoading
+          ? const [
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: 48),
+                child: Center(child: ExpressiveCircularProgressIndicator()),
               ),
-            ),
-          ),
-        ),
-
-        // Horizontally scrolling OEM selection tabs
-        SizedBox(
-          height: 52,
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            scrollDirection: Axis.horizontal,
-            itemCount: _supportedOEMs.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
-            itemBuilder: (context, index) {
-              final oem = _supportedOEMs[index];
-              final isSelected = oem == activeOEM;
-              final isDetected = oem == _detectedOEM;
-              return ChoiceChip(
-                showCheckmark: false,
-                avatar: Icon(
-                  _getOEMIcon(oem),
-                  size: 16,
-                  color: isSelected
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurfaceVariant,
-                ),
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(_getOEMLabel(oem)),
-                    if (isDetected) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? colorScheme.onPrimary.withValues(alpha: 0.25)
-                              : colorScheme.primary.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          tr('you'),
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                            color: isSelected
-                                ? colorScheme.onPrimary
-                                : colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    AppHaptics.selectionClick();
-                    setState(() => _selectedOEM = oem);
-                  }
-                },
-              );
-            },
-          ),
-        ),
-
-        // Main scrollable guide content
-        Expanded(
-          child: _isLoading
-              ? const Center(child: ExpressiveCircularProgressIndicator())
-              : ListView(
-                  controller: widget.scrollController,
-                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                  children: [
-                    // Hero Diagnostics Banner
-                    Card(
-                      elevation: 0,
-                      color: colorScheme.primaryContainer.withValues(
-                        alpha: 0.35,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: colorScheme.primary.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(
-                                      alpha: 0.12,
-                                    ),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    _getOEMIcon(_detectedOEM),
-                                    color: colorScheme.primary,
-                                    size: 24,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              _deviceModel.isNotEmpty
-                                                  ? '$_deviceManufacturer $_deviceModel'
-                                                  : 'Detected Device',
-                                              style: theme.textTheme.titleMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                    color:
-                                                        colorScheme.onSurface,
-                                                  ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: colorScheme.primary
-                                                  .withValues(alpha: 0.15),
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                              border: Border.all(
-                                                color: colorScheme.primary
-                                                    .withValues(alpha: 0.4),
-                                                width: 0.8,
-                                              ),
-                                            ),
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle_rounded,
-                                                  size: 11,
-                                                  color: colorScheme.primary,
-                                                ),
-                                                const SizedBox(width: 3),
-                                                Text(
-                                                  tr('active'),
-                                                  style: TextStyle(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: colorScheme.primary,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        'Android $_androidVersion (API $_sdkInt) • ${_getOEMLabel(_detectedOEM)}',
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color:
-                                                  colorScheme.onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                if (_isBatteryUnrestricted != null) ...[
-                                  ScaleTouchWrapper(
-                                    hapticOnPressDown:
-                                        _isBatteryUnrestricted != true,
-                                    scaleDownFactor: 0.90,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(8),
-                                      onTap: _isBatteryUnrestricted == true
-                                          ? null
-                                          : () async {
-                                              AppHaptics.selectionClick();
-                                              await DeviceCompatibilityService.requestIgnoreBatteryOptimizations();
-                                              final unrestricted =
-                                                  await DeviceCompatibilityService.isIgnoringBatteryOptimizations();
-                                              if (mounted) {
-                                                setState(
-                                                  () => _isBatteryUnrestricted =
-                                                      unrestricted,
-                                                );
-                                              }
-                                            },
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _isBatteryUnrestricted == true
-                                              ? colorScheme.primary.withValues(
-                                                  alpha: 0.15,
-                                                )
-                                              : colorScheme.errorContainer
-                                                    .withValues(alpha: 0.6),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          border: Border.all(
-                                            color:
-                                                _isBatteryUnrestricted == true
-                                                ? colorScheme.primary
-                                                      .withValues(alpha: 0.4)
-                                                : colorScheme.error.withValues(
-                                                    alpha: 0.4,
-                                                  ),
-                                            width: 0.8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              _isBatteryUnrestricted == true
-                                                  ? Icons
-                                                        .battery_charging_full_rounded
-                                                  : Icons.battery_alert_rounded,
-                                              size: 13,
-                                              color:
-                                                  _isBatteryUnrestricted == true
-                                                  ? colorScheme.primary
-                                                  : colorScheme.error,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              _isBatteryUnrestricted == true
-                                                  ? tr('batteryUnrestricted')
-                                                  : tr('batteryOptimized'),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                color:
-                                                    _isBatteryUnrestricted ==
-                                                        true
-                                                    ? colorScheme.primary
-                                                    : colorScheme.error,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                ScaleTouchWrapper(
-                                  hapticOnPressDown: true,
-                                  scaleDownFactor: 0.90,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(8),
-                                    onTap: () => _handleShizukuChipTap(context),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _getShizukuChipColor(
-                                          colorScheme,
-                                        ).withValues(alpha: 0.15),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: _getShizukuChipColor(
-                                            colorScheme,
-                                          ).withValues(alpha: 0.4),
-                                          width: 0.8,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            _getShizukuChipIcon(),
-                                            size: 13,
-                                            color: _getShizukuChipColor(
-                                              colorScheme,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            _getShizukuChipLabel(),
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _getShizukuChipColor(
-                                                colorScheme,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                if (_shizukuStatus ==
-                                        ShizukuLiveStatus.active ||
-                                    _binderLatencyMs != null ||
-                                    _isTestingBinder)
-                                  ScaleTouchWrapper(
-                                    hapticOnPressDown: !_isTestingBinder,
-                                    scaleDownFactor: 0.90,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(8),
-                                      onTap: _testBinderLatency,
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: colorScheme.tertiaryContainer
-                                              .withValues(alpha: 0.4),
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          border: Border.all(
-                                            color: colorScheme.tertiary
-                                                .withValues(alpha: 0.4),
-                                            width: 0.8,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.speed_rounded,
-                                              size: 13,
-                                              color: colorScheme.tertiary,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              _isTestingBinder
-                                                  ? tr('testing')
-                                                  : _binderLatencyMs != null
-                                                  ? tr(
-                                                      'binderLatency',
-                                                      args: [
-                                                        '$_binderLatencyMs',
-                                                      ],
-                                                    )
-                                                  : tr('testBinderConnection'),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                color: colorScheme
-                                                    .onTertiaryContainer,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ScaleTouchWrapper(
-                                  hapticOnPressDown: true,
-                                  child: TextButton.icon(
-                                    style: TextButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
-                                      ),
-                                    ),
-                                    icon: const Icon(
-                                      Icons.copy_rounded,
-                                      size: 14,
-                                    ),
-                                    label: Text(tr('copySpecs')),
-                                    onPressed: () =>
-                                        _copySpecsToClipboard(context),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    // Guide Switcher Notice
-                    if (!isViewingDetected) ...[
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.secondaryContainer.withValues(
-                            alpha: 0.4,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.secondary.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline_rounded,
-                              size: 18,
-                              color: colorScheme.secondary,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Viewing instructions for ${_getOEMLabel(activeOEM)}.',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSecondaryContainer,
-                                ),
-                              ),
-                            ),
-                            TextButton(
-                              style: TextButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                ),
-                              ),
-                              onPressed: () {
-                                AppHaptics.selectionClick();
-                                setState(() => _selectedOEM = _detectedOEM);
-                              },
-                              child: Text(tr('myDevice')),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-
-                    const SizedBox(height: 16),
-
-                    AnimatedSwitcher(
-                      duration: Duration(
-                        milliseconds: plusSettings.plusEnableEnhancedAnimations
-                            ? 260
-                            : 0,
-                      ),
-                      switchInCurve: Curves.easeOutCubic,
-                      switchOutCurve: Curves.easeInCubic,
-                      transitionBuilder: (child, anim) {
-                        return FadeTransition(
-                          opacity: anim,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0.0, 0.03),
-                              end: Offset.zero,
-                            ).animate(anim),
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: KeyedSubtree(
-                        key: ValueKey<DeviceOEM>(activeOEM),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            // Guide Header
-                            Row(
-                              children: [
-                                Icon(
-                                  _getOEMIcon(guide.oem),
-                                  color: colorScheme.primary,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    guide.title,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.onSurface,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              guide.subtitle,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Quick Action Shortcuts Section
-                            if (guide.actions.isNotEmpty) ...[
-                              Text(
-                                'Direct Settings Shortcuts',
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              ...guide.actions.map(
-                                (action) => Card(
-                                  margin: const EdgeInsets.only(bottom: 8),
-                                  elevation: 0,
-                                  color: colorScheme.surfaceContainerLow,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    side: BorderSide(
-                                      color: colorScheme.outline.withValues(
-                                        alpha: 0.1,
-                                      ),
-                                    ),
-                                  ),
-                                  child: ListTile(
-                                    contentPadding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 2,
-                                    ),
-                                    leading: Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primaryContainer
-                                            .withValues(alpha: 0.5),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Icon(
-                                        Icons.launch_rounded,
-                                        color: colorScheme.primary,
-                                        size: 18,
-                                      ),
-                                    ),
-                                    title: Text(
-                                      action.label,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                    subtitle: Text(
-                                      action.description,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                    trailing: FilledButton.tonal(
-                                      style: FilledButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                        ),
-                                      ),
-                                      onPressed: () async {
-                                        AppHaptics.lightImpact();
-                                        final ok = await action.action();
-                                        if (!ok && context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            const SnackBar(
-                                              content: Text(
-                                                'Setting could not be opened automatically. Please check system settings.',
-                                              ),
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: Text(tr('openSetting')),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-
-                            // Important Highlights Section
-                            Text(
-                              tr('knownOEMBehaviors'),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ...guide.highlights.map(
-                              (item) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        top: 3,
-                                        right: 10,
-                                      ),
-                                      child: Icon(
-                                        Icons.warning_amber_rounded,
-                                        size: 17,
-                                        color: colorScheme.error,
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        item,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: colorScheme.onSurface,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 16),
-
-                            // Recommended Step-by-Step Setup
-                            Text(
-                              tr('recommendedConfigurationSteps'),
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            ...guide.steps.asMap().entries.map(
-                              (entry) => Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 24,
-                                      height: 24,
-                                      margin: const EdgeInsets.only(
-                                        right: 10,
-                                        top: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primaryContainer,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          '${entry.key + 1}',
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: colorScheme
-                                                    .onPrimaryContainer,
-                                              ),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        entry.value,
-                                        style: theme.textTheme.bodyMedium
-                                            ?.copyWith(
-                                              color: colorScheme.onSurface,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            // Shizuku & ShizukuPlus Hero Status Card
-                            const ShizukuStatusCard(
-                              margin: EdgeInsets.zero,
-                              showDoctorChip: false,
-                            ),
-
-                            const SizedBox(height: 14),
-
-                            // Usage Access (PACKAGE_USAGE_STATS) Elevation Card
-                            const UsageAccessCard(margin: EdgeInsets.zero),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Non-root / Non-ADB Pro-tip Card
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: colorScheme.tertiaryContainer.withValues(
-                          alpha: 0.4,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.tertiary.withValues(alpha: 0.25),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.verified_user_outlined,
-                            color: colorScheme.tertiary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  tr('rootlessSilentUpdates'),
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: colorScheme.tertiary,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  tr('rootlessSilentUpdatesDesc'),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onTertiaryContainer,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ],
+            ]
+          : [
+              _buildDeviceGroup(),
+              // Live provider status, with the one binder latency retest.
+              const ShizukuStatusCard(
+                margin: EdgeInsets.zero,
+                showDoctorChip: false,
+              ),
+              ExpressiveSettingsGroup(
+                title: tr('serviceDoctorOemGuide'),
+                description: tr('devicePerformanceAndCompatibilitySubtitle'),
+                icon: Icons.tune_rounded,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: _buildOemPicker(active),
+                  ),
+                ],
+              ),
+              ..._buildGuide(active),
+              ExpressiveSettingsGroup(
+                title: tr('rootlessSilentUpdates'),
+                icon: Icons.verified_user_outlined,
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.system_update_rounded),
+                    title: Text(tr('rootlessSilentUpdatesDesc')),
+                  ),
+                ],
+              ),
+            ],
     );
   }
 }
