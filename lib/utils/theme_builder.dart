@@ -505,7 +505,13 @@ class ThemeBuilder {
       iconColor: colorScheme.onSurfaceVariant,
       // Montserrat runs wide: without tighter tracking, setting titles wrap
       // to two or three lines and outweigh the section headers above them.
+      // inherit: false like Material's own defaults: ListTile animates
+      // between its theme style and the default, and TextStyle.lerp throws
+      // when the two disagree on `inherit` (seen while typing in search).
       titleTextStyle: TextStyle(
+        inherit: false,
+        textBaseline: TextBaseline.alphabetic,
+        leadingDistribution: TextLeadingDistribution.even,
         fontFamily: fontFamily,
         fontSize: 15,
         height: 1.3,
@@ -514,6 +520,9 @@ class ThemeBuilder {
         color: colorScheme.onSurface,
       ),
       subtitleTextStyle: TextStyle(
+        inherit: false,
+        textBaseline: TextBaseline.alphabetic,
+        leadingDistribution: TextLeadingDistribution.even,
         fontFamily: fontFamily,
         fontSize: 13,
         height: 1.35,

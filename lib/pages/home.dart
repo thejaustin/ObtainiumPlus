@@ -488,6 +488,18 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
   }
 
+  /// Back with a text field focused (e.g. settings search) should only drop
+  /// focus. It used to also switch to the Apps tab, tearing the settings page
+  /// down mid-keyboard-dismiss ('_dependents.isEmpty' assertion).
+  bool _dismissFocusedTextField() {
+    final focus = FocusManager.instance.primaryFocus;
+    final isText =
+        focus?.context?.findAncestorStateOfType<EditableTextState>() != null;
+    if (!isText) return false;
+    focus!.unfocus();
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsProvider = context.watch<SettingsProvider>();
@@ -555,6 +567,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         canPop: false,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
+          if (_dismissFocusedTextField()) return;
           setIsReversing(
             selectedIndexHistory.length >= 2
                 ? selectedIndexHistory.reversed.toList()[1]
@@ -627,6 +640,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        if (_dismissFocusedTextField()) return;
         if (showNavBar) {
           setIsReversing(
             selectedIndexHistory.length >= 2

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:obtainium/components/settings/connected_settings_bar.dart';
 import 'package:obtainium/components/settings/settings_category_bar_host.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -582,6 +583,52 @@ void main() {
       }, timeout: const Timeout(Duration(minutes: 1)));
     }
   }
+
+  // Device run: searching "dev" showed no Developer & Diagnostics link, and
+  // typing then clearing the search threw (TextStyle lerp / dependents).
+  testWidgets('searching settings finds page links without errors', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(400, 860);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0);
+    });
+    final errors = <FlutterErrorDetails>[];
+    final baseHandler = FlutterError.onError;
+    FlutterError.onError = errors.add;
+    try {
+      await tester.pumpWidget(app);
+      await pumpUntilMounted(tester);
+      await tester.tap(find.byType(SearchBar));
+      await tester.pump();
+      for (final text in ['d', 'de', 'dev']) {
+        await tester.enterText(find.byType(SearchBar), text);
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.pump(const Duration(milliseconds: 600));
+      final link = find.descendant(
+        of: find.byType(ConnectedSettingsBar),
+        matching: find.text(translations['developerAndDiagnostics'] as String),
+      );
+      expect(link, findsOneWidget);
+      // Visible without scrolling (it used to sit below every result).
+      expect(tester.getRect(link).top, lessThan(860));
+      await tester.enterText(find.byType(SearchBar), '');
+      await tester.pump(const Duration(milliseconds: 600));
+    } finally {
+      FlutterError.onError = baseHandler;
+    }
+    for (final d in errors) {
+      // ignore: avoid_print
+      print('──── captured error detail ────\n${d.exceptionAsString()}');
+    }
+    expect(errors, isEmpty);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
   testWidgets('Obtainium+ jump entry opens the Advanced tab', (tester) async {
     SharedPreferences.setMockInitialValues({

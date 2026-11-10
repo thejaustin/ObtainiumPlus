@@ -584,6 +584,10 @@ class SettingsPageState extends State<SettingsPage> {
                                   _selectSection(index);
                                 },
                               ),
+                            // Matching pages first: below every matching
+                            // setting they ended up off-screen on phones.
+                            if (_searchQuery.isNotEmpty)
+                              _buildConnectedSearchResults(context, isCompact),
                             if (_searchQuery.isEmpty &&
                                 plusSettings.plusLabShowSettingsHero)
                               SettingsHeroOverview(
@@ -867,9 +871,7 @@ class SettingsPageState extends State<SettingsPage> {
                                 context,
                                 _selectedSectionIndex,
                                 isCompact,
-                              )
-                            else
-                              _buildConnectedSearchResults(context, isCompact),
+                              ),
                             const SizedBox(height: 24),
                             _buildFooter(context),
                             SizedBox(
