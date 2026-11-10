@@ -242,8 +242,8 @@ jobs:
 
       - name: Build APK
         run: |
-          flutter build apk --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
-          flutter build apk --split-per-abi --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}"
+          flutter build apk --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" --dart-define=GITHUB_OAUTH_CLIENT_ID="${{ vars.GITHUB_OAUTH_CLIENT_ID }}"
+          flutter build apk --split-per-abi --flavor normal --no-pub --tree-shake-icons --dart-define=SENTRY_DSN="${{ secrets.SENTRY_DSN }}" --dart-define=GITHUB_OAUTH_CLIENT_ID="${{ vars.GITHUB_OAUTH_CLIENT_ID }}"
           find build/app/outputs/flutter-apk/ -name "app-*normal*.apk" -exec bash -c 'mv "$1" "${1//-normal/}"' -- {} \;
           if [ "${{ steps.detect_build.outputs.is_dev }}" = "true" ]; then
             for f in build/app/outputs/flutter-apk/*.apk; do

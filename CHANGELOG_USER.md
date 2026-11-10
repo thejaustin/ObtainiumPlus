@@ -16,6 +16,8 @@
 - The app library repairs its index if it drifts from the saved apps, so apps can't silently go missing from the list.
 - Only one notice about Google's sideloading changes at startup, with up-to-date wording (the extra dialog repeated it with old dates).
 - The Add app sheet no longer shows two drag handles.
+- "Sign in with GitHub" for the API token was pointed at an OAuth app that doesn't exist, so it could never work. It's hidden until a real one is configured. When enabled it saves the token by itself, copies the code for you, and handles GitHub asking it to slow down or the code expiring.
+- Back with the settings search keyboard open now just closes the keyboard instead of also switching tabs, and matching pages such as Developer & Diagnostics show at the top of search results.
 - Shizuku shows "permission needed" instead of "not running" while its permission prompt is still open, and no longer stacks repeated prompts.
 - README links and images that start with "/" open inside the repo instead of the site root.
 

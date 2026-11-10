@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/services/github_device_flow.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
@@ -413,7 +414,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
   String? _userCode;
   String? _verificationUri;
   String? _statusMessage;
-  Timer? _pollTimer;
+  bool _statusIsError = false;
+  bool _oauthCancelled = false;
   bool _isVerifying = false;
   String? _verificationResult;
   bool _verificationSuccess = false;
@@ -428,7 +430,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
 
   @override
   void dispose() {
-    _pollTimer?.cancel();
+    _oauthCancelled = true;
     _controller.dispose();
     super.dispose();
   }
@@ -503,61 +505,66 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
   }
 
   Future<void> _startOAuthFlow() async {
+    _oauthCancelled = false;
     setState(() {
       _isPolling = true;
-      _statusMessage = 'Requesting device code from GitHub...';
+      _statusIsError = false;
+      _statusMessage = tr('oauthRequestingCode');
       _userCode = null;
       _verificationUri = null;
     });
-
     try {
-      final response = await http.post(
-        Uri.parse('https://github.com/login/device/code'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({'client_id': 'Ov23liZc2J5VeeV8tS08'}),
+      final code = await GitHubDeviceFlow.requestCode();
+      if (!mounted || _oauthCancelled) return;
+      setState(() {
+        _userCode = code.userCode;
+        _verificationUri = code.verificationUri;
+        _statusMessage = tr('oauthEnterCode');
+      });
+      final token = await GitHubDeviceFlow.pollForToken(
+        code,
+        isCancelled: () => _oauthCancelled || !mounted,
       );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (!mounted) return;
-        final deviceCode = data['device_code']?.toString() ?? '';
-        final userCode = data['user_code']?.toString() ?? '';
-        final verificationUri = data['verification_uri']?.toString() ?? '';
-        final interval = ((data['interval'] as num?)?.toInt() ?? 5) + 1;
-
-        setState(() {
-          _userCode = userCode;
-          _verificationUri = verificationUri;
-          _statusMessage =
-              'Open the verification link, enter the code, and approve access.';
-        });
-
-        _pollTimer?.cancel();
-        _pollTimer = Timer.periodic(Duration(seconds: interval), (timer) async {
-          await _pollForToken(deviceCode, timer);
-        });
-      } else {
-        if (!mounted) return;
-        setState(() {
-          _isPolling = false;
-          _statusMessage =
-              'OAuth Device Flow unavailable (${response.statusCode}). Please use the "Generate Token on GitHub" button above.';
-        });
-      }
+      if (!mounted || token == null) return;
+      // Save straight away: the old flow filled the field and left saving to
+      // the user, so backing out lost a successful sign-in.
+      _controller.text = token;
+      widget.settings.setSettingString(widget.settingId, token);
+      AppHaptics.selectionClick();
+      setState(() {
+        _isPolling = false;
+        _userCode = null;
+        _verificationUri = null;
+        _statusIsError = false;
+        _statusMessage = tr('oauthSignedIn');
+      });
+    } on DeviceFlowError catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isPolling = false;
+        _userCode = null;
+        _verificationUri = null;
+        _statusIsError = true;
+        _statusMessage = e.isExpired
+            ? tr('oauthCodeExpired')
+            : e.isDenied
+            ? tr('oauthDenied')
+            : tr('oauthFailed', args: [e.message]);
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isPolling = false;
-        _statusMessage = 'Connection error: $e. Please use manual PAT above.';
+        _userCode = null;
+        _verificationUri = null;
+        _statusIsError = true;
+        _statusMessage = tr('oauthFailed', args: [e.toString()]);
       });
     }
   }
 
   void _cancelOAuthFlow() {
-    _pollTimer?.cancel();
+    _oauthCancelled = true;
     setState(() {
       _isPolling = false;
       _userCode = null;
@@ -566,49 +573,14 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
     });
   }
 
-  Future<void> _pollForToken(String deviceCode, Timer timer) async {
-    try {
-      final response = await http.post(
-        Uri.parse('https://github.com/login/oauth/access_token'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'client_id': 'Ov23liZc2J5VeeV8tS08',
-          'device_code': deviceCode,
-          'grant_type': 'urn:ietf:params:oauth:grant-type:device_code',
-        }),
-      );
-
-      if (!mounted) return;
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        if (data['access_token'] != null) {
-          timer.cancel();
-          final token = data['access_token']?.toString() ?? '';
-          if (!mounted) return;
-          setState(() {
-            _controller.text = token;
-            _isPolling = false;
-            _userCode = null;
-            _statusMessage = 'Signed in successfully! Click Save below.';
-          });
-          AppHaptics.selectionClick();
-        } else if (data['error'] == 'authorization_pending') {
-          // Keep polling
-        } else {
-          timer.cancel();
-          if (!mounted) return;
-          setState(() {
-            _isPolling = false;
-            _statusMessage =
-                'OAuth session ended: ${data['error_description'] ?? data['error'] ?? 'Unknown'}';
-          });
-        }
-      }
-    } catch (_) {
-      // Ignore poll network glitches
+  Future<void> _copyCodeAndOpen() async {
+    final code = _userCode;
+    final uri = _verificationUri;
+    if (code != null) {
+      await Clipboard.setData(ClipboardData(text: code));
+    }
+    if (uri != null) {
+      await launchUrlString(uri, mode: LaunchMode.externalApplication);
     }
   }
 
@@ -667,6 +639,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
               ),
             ),
           ),
+          if (GitHubDeviceFlow.isConfigured)
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
@@ -696,7 +669,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                       child: OutlinedButton.icon(
                         onPressed: _startOAuthFlow,
                         icon: const Icon(Icons.devices_rounded),
-                        label: const Text('Connect via Device Flow'),
+                        label: Text(tr('oauthConnect')),
                       ),
                     ),
                   ),
@@ -709,24 +682,27 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                       child: Column(
                         children: [
                           if (_userCode != null)
-                            Text(
+                            SelectableText(
                               _userCode!,
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2,
-                              ),
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 2,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
+                                  ),
                             ),
                           const SizedBox(height: 8),
                           Text(
                             _statusMessage ?? '',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onPrimaryContainer,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                ),
                           ),
                         ],
                       ),
@@ -737,14 +713,9 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                       hapticOnPressDown: true,
                       scaleDownFactor: 0.94,
                       child: TextButton.icon(
-                        onPressed: () {
-                          launchUrlString(
-                            _verificationUri!,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        },
+                        onPressed: _copyCodeAndOpen,
                         icon: const Icon(Icons.open_in_browser),
-                        label: const Text('Open Verification Page'),
+                        label: Text(tr('oauthCopyAndOpen')),
                       ),
                     ),
                   if (_isPolling) ...[
@@ -777,9 +748,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                     child: Text(
                       _statusMessage!,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Theme.of(context).colorScheme.error,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: _statusIsError
+                            ? Theme.of(context).colorScheme.error
+                            : Theme.of(context).colorScheme.primary,
                       ),
                     ),
                   ),
