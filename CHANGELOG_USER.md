@@ -14,11 +14,15 @@
 - The multi-user diagnostic lists your profiles instead of always saying none were found.
 - Obtainium+ showed an older installed version than the one actually installed (the "v" in tags wasn't ignored).
 - The app library repairs its index if it drifts from the saved apps, so apps can't silently go missing from the list.
+- Only one notice about Google's sideloading changes at startup, with up-to-date wording (the extra dialog repeated it with old dates).
+- The Add app sheet no longer shows two drag handles.
+- Shizuku shows "permission needed" instead of "not running" while its permission prompt is still open, and no longer stacks repeated prompts.
+- README links and images that start with "/" open inside the repo instead of the site root.
 
 ### Improved
 - About card: the README tab now loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links, and apps without a description show their README.
 - GitLab and Google Play (native) apps now show release notes.
-- Version History now loads the latest 20 releases with their notes from GitHub, GitLab, Codeberg and Gitea when you expand it, instead of only the versions this device happened to see. It follows each app's release-title filter and version extraction settings.
+- Version History now loads the latest 20 releases with their notes from GitHub, GitLab, Codeberg, Gitea and F-Droid (from the app's changelog) when you expand it, instead of only the versions this device happened to see. It follows each app's release-title filter and version extraction settings.
 - Service Doctor, Play Store diagnostics and inspector, and the multi-user diagnostic are full pages that match the rest of settings.
 - The installed-apps picker loads small icons and names in batches and sorts by app name.
 - The settings category bar no longer sits on top of the main navigation bar.

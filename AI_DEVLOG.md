@@ -7,6 +7,32 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-09 (later) — Claude: Pre-Push Review, Push, Startup Notice, Leak
+
+- **Pushed** as `feature/review-2026-11`. A `feature/*` push is a CI dev build: no version bump and no commit to main.
+  - Build APK passed.
+  - Commit lint failed on `i18n:` (8cb092f74), which is already published and wasn't rewritten. Only `build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test` are allowed.
+- **Pre-push `/code-review high` found 10 issues, all fixed (bf9484d5f):**
+  - Shizuku probe timeout now means permission needed, with no retries, and status and installs share one package lookup.
+  - Background saves re-mark the app index dirty after each write.
+  - Notes use the update checks' name-else-tag title filter and the notes filter.
+  - README: root-relative paths resolve against the repo root; non-404 failures aren't cached; page opens use only quota-free requests (`passive`).
+  - An expired package cache refreshes once in bulk.
+  - The current latest moves to the top of history.
+  - The npm `package*.json` files in assets/translations had picked up locale keys from the sync script; reverted. **Exclude them from any locale script.**
+- **Startup:** removed the one-time "Note" dialog about Google developer verification (upstream text, gated on `year == 2026`, which duplicated the banner). The banner text is updated: rolling out since Sep 30 2026, Obtainium+ name. Other locales still have the old banner text.
+- **LeakCanary** (debug only, has its own launcher entry):
+  - background_fetch 1.7.0's `BackgroundFetchModule.sInstance.mFetchCallback.mEventSink` held the old engine, and through LocalizationPlugin the destroyed MainActivity.
+  - `MainActivity.onDestroy` clears it by reflection; ProGuard keeps `com.transistorsoft.**`.
+  - Read leaks with `run-as <pkg> cat databases/leaks.db`.
+- **F-Droid notes:** `splitChangelogSections` plus `FDroid.getReleaseNotes` (metadata Changelog → GitHub/GitLab raw). Checked on fdroidclient: 166 sections.
+- **Device QA:** use `am start -f 0x10008000 -n <pkg>/dev.thejaustin.obtainiumplus.MainActivity`, not `monkey`, which opens LeakCanary. Stop if the user is using the phone.
+- **Still open:**
+  - Picker: load visible rows first.
+  - Secure Folder name via Shizuku `pm list users`.
+  - Placeholder icon (image decode error; predates this work).
+  - Full device pass of the Visual Lab, notes and diagnostics.
+
 ## 2026-11-09 — Claude: Review Follow-Through (4 Worktree Agents) + Visual Lab
 
 - **Process:** four agents worked in `~/projects/op-wt-{notes,cache,diag,lab}` (branches `wt/*`) on disjoint files, each owning one en.json anchor. They left changes uncommitted; the lead committed and merged into `fix/review-2026-11`.
