@@ -222,31 +222,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         }
       }
       if (!mounted) return;
-      if (!sp.googleVerificationWarningShown && DateTime.now().year == 2026) {
-        await showDialog(
-          context: context,
-          builder: (BuildContext ctx) {
-            return GeneratedFormModal(
-              title: tr('note'),
-              items: const [],
-              message:
-                  "${tr('googleVerificationWarningP1')}\n\n${tr('googleVerificationWarningP3')}",
-              additionalWidgets: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: LinkText(
-                    text: tr('googleVerificationWarningP2'),
-                    url: 'https://keepandroidopen.org/',
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-              singleNullReturnButton: tr('ok'),
-            );
-          },
-        );
-        sp.googleVerificationWarningShown = true;
-      }
+      // The old one-time "Note" dialog about Google's developer verification
+      // repeated the sideloading banner on the Apps page (and its dates went
+      // stale), so the banner is the only notice now.
       await _showKnownIssues();
     });
   }

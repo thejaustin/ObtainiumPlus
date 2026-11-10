@@ -16,7 +16,6 @@ import 'package:obtainium/components/category_editor_selector.dart';
 import 'package:obtainium/components/tag_editor.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/pages/home.dart';
@@ -1474,7 +1473,8 @@ class AddAppPageState extends State<AddAppPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Center(child: DragHandle()),
+                // No DragHandle here: every modal caller opens this through
+                // showDraggableModalBottomSheet, which already draws one.
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,

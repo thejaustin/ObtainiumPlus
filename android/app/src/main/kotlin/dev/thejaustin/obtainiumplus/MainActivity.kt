@@ -1108,7 +1108,32 @@ class MainActivity : FlutterActivity() {
             try { it.error("CANCELLED", "Activity destroyed", null) } catch (_: Exception) {}
         }
         labelIconExecutor.shutdown()
+        releaseBackgroundFetchEventSink()
         super.onDestroy()
+    }
+
+    /// background_fetch 1.7.0 keeps a process-wide singleton whose stream
+    /// handler holds the last EventSink, and through the old engine's plugins
+    /// this destroyed Activity, until another Activity attaches (LeakCanary:
+    /// BackgroundFetchModule.sInstance). The plugin is null-safe here (it logs
+    /// and skips), and the next engine sets a new sink when Dart re-listens.
+    private fun releaseBackgroundFetchEventSink() {
+        try {
+            val module = Class.forName(
+                "com.transistorsoft.flutter.backgroundfetch.BackgroundFetchModule"
+            )
+            val instance = module.getDeclaredField("sInstance")
+                .apply { isAccessible = true }
+                .get(null) ?: return
+            val handler = module.getDeclaredField("mFetchCallback")
+                .apply { isAccessible = true }
+                .get(instance) ?: return
+            handler.javaClass.getDeclaredField("mEventSink")
+                .apply { isAccessible = true }
+                .set(handler, null)
+        } catch (_: Throwable) {
+            // Plugin internals changed; nothing to release.
+        }
     }
 
     /**
