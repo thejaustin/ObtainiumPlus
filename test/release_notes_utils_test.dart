@@ -53,4 +53,34 @@ void main() {
       normalizeReleaseNotes('-  Fix A '),
     );
   });
+
+  group('splitChangelogSections', () {
+    test('splits markdown headings and keeps sub-headings in the body', () {
+      const c = '''
+# Changelog
+
+## [2.1.0] - 2026-10-01
+- New thing
+### Fixed
+- A bug
+
+## v2.0.9
+- Old thing
+''';
+      final s = splitChangelogSections(c);
+      expect(s.map((e) => e.$1), ['2.1.0', '2.0.9']);
+      expect(s.first.$2, contains('A bug'));
+      expect(s.last.$2, '- Old thing');
+    });
+
+    test('bare version lines', () {
+      final s = splitChangelogSections('v3.2\n* a\nv3.1\n* b\n');
+      expect(s.map((e) => e.$1), ['3.2', '3.1']);
+      expect(s.first.$2, '* a');
+    });
+
+    test('no versions → empty', () {
+      expect(splitChangelogSections('# Notes\nnothing here'), isEmpty);
+    });
+  });
 }

@@ -11,6 +11,7 @@ import 'package:obtainium/app_sources/gitlab.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
 class FDroidPageMetadata {
@@ -25,6 +26,63 @@ class FDroidPageMetadata {
 
 class FDroid extends AppSource {
   static const _maxChangeLogCodeUnits = 2048;
+
+  @override
+  bool get supportsReleaseNotes => true;
+
+  /// Per-version notes from the project CHANGELOG linked in the app's
+  /// F-Droid metadata (GitHub/GitLab files only), split by version heading.
+  @override
+  Future<List<ReleaseNote>> getReleaseNotes(
+    String standardUrl,
+    Map<String, dynamic> additionalSettings, {
+    int limit = 20,
+  }) async {
+    if (hostChanged && !hostIdenticalDespiteAnyChange) return const [];
+    final appId = await tryInferringAppId(standardUrl);
+    if (appId == null) return const [];
+    final meta = await sourceRequest(
+      '$_fdroidDataBaseUrl/$appId.yml',
+      additionalSettings,
+    );
+    if (meta.statusCode != 200) return const [];
+    final changelogUrl = meta.body
+        .split('\n')
+        .where((l) => l.startsWith('Changelog: '))
+        .map((l) => l.substring('Changelog: '.length).trim())
+        .firstOrNull;
+    if (changelogUrl == null || !changelogUrl.contains('/blob/')) {
+      return const [];
+    }
+    final isForgeFile = [
+      () => GitHub(hostChanged: true).sourceSpecificStandardizeURL(changelogUrl),
+      () => GitLab(hostChanged: true).sourceSpecificStandardizeURL(changelogUrl),
+    ].any((standardize) {
+      try {
+        standardize();
+        return true;
+      } on InvalidURLError {
+        return false;
+      }
+    });
+    if (!isForgeFile) return const [];
+    final res = await sourceRequest(
+      changelogUrl.replaceFirst('/blob/', '/raw/'),
+      additionalSettings,
+    );
+    if (res.statusCode != 200) return const [];
+    return splitChangelogSections(res.body)
+        .take(limit)
+        .map(
+          (s) => ReleaseNote(
+            version: s.$1,
+            body: s.$2,
+            htmlUrl: changelogUrl,
+            source: name,
+          ),
+        )
+        .toList();
+  }
   static const _pageCacheDuration = Duration(minutes: 10);
   final Map<String, ({FDroidPageMetadata data, DateTime at})> _pageCache = {};
   static const String _fdroidDataBaseUrl =
