@@ -2023,7 +2023,14 @@ class AppsProvider with ChangeNotifier {
               ? installedInfo!.versionName
               : installedInfo?.versionCode.toString());
     // FIRST, COMPARE THE APP'S REPORTED AND REAL INSTALLED VERSIONS, WHERE ONE IS NULL
-    if (installedInfo == null && app.installedVersion != null && !trackOnly) {
+    if (shouldClearInstalledVersion(
+      installedInfoMissing: installedInfo == null,
+      trackOnly: trackOnly,
+      isBackground: _isBg,
+      versionDetectionIsStandard: versionDetectionIsStandard,
+      installedVersion: app.installedVersion,
+      latestVersion: app.latestVersion,
+    )) {
       // App says it's installed but isn't really (and isn't track only) - set to not installed
       app.installedVersion = null;
       modded = true;
@@ -2459,6 +2466,16 @@ class AppsProvider with ChangeNotifier {
               break;
             }
           }
+        }
+        // The bulk list can be incomplete (a truncated Binder transaction),
+        // so confirm a recorded install with a per-app lookup before
+        // treating it as uninstalled (upstream #3215).
+        if (installedInfo == null &&
+            app.installedVersion != null &&
+            app.additionalSettings['trackOnly'] != true) {
+          installedInfo = await getInstalledInfo(appId);
+          if (!apps.containsKey(appId)) continue;
+          app = apps[appId]!.app;
         }
         final moddedApp = getCorrectedInstallStatusAppIfPossible(
           app,
