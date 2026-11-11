@@ -26,7 +26,8 @@
 - GitLab and Google Play (native) apps now show release notes.
 - Version History now loads the latest 20 releases with their notes from GitHub, GitLab, Codeberg, Gitea and F-Droid (from the app's changelog) when you expand it, instead of only the versions this device happened to see. It follows each app's release-title filter and version extraction settings.
 - Service Doctor, Play Store diagnostics and inspector, and the multi-user diagnostic are full pages that match the rest of settings.
-- The installed-apps picker loads small icons and names in batches and sorts by app name.
+- The installed-apps picker loads small icons and names in batches and sorts by app name. The rows on screen fill in first.
+- With Shizuku, the profiles page also names users whose apps Android hides from other apps, such as Secure Folder.
 - The settings category bar no longer sits on top of the main navigation bar.
 - New Visual Lab in Developer & Diagnostics: try alternative layouts, such as the settings category bar at the top or merged into the main navigation bar, a smaller settings header, or less blur. Everything starts at the current look and can be reset.
 - Importing many installed apps saves them in batches instead of one at a time.

@@ -7,6 +7,21 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-10 — Claude: Sentry Reopen Loop, Picker Order, Hidden Users
+
+- **Already on the branch, not logged before:**
+  - ec27e45b9: settings search lists page links first; back with the keyboard open only closes the keyboard.
+  - dec2697cf: GitHub OAuth device flow. The shipped client ID was never a registered app. The ID now comes from the `GITHUB_OAUTH_CLIENT_ID` repo **variable** (not a secret), which **isn't set yet**, so sign-in stays hidden. To enable it, register an OAuth app with Device Flow turned on, then run `gh variable set GITHUB_OAUTH_CLIENT_ID -R thejaustin/ObtainiumPlus`.
+- **GitHub issues:** only Sentry crash issues are open (#338, #299, #298).
+  - **#338** (`MaterialLocalizations.of` null check): first seen Oct 14, 2 events, 1 user. The `material_ui` delegate fix (64c86d475) landed Oct 18. Every app locale is in both `kMaterialSupportedLanguages` sets.
+  - It kept reopening because `sentry-sync.yml` reopened any closed issue whose Sentry issue was unresolved, even with no new events. Now an issue stays closed when `lastSeen <= closed_at`. Issues closed as completed are also PUT `resolved` in Sentry; that needs a token with `event:write`, and with the current read-only token the call just logs the HTTP status.
+  - **#298/#299**: one SIGSEGV with no stack (Sep 14). #298 is Sentry's own duplicate of #299. Not actionable.
+  - There's no local Sentry token, so event stacks can't be read from here.
+- **Picker:** `_loadIcons` sorts packages by display rank (shown rows, then hidden system and tracked apps) and the first native batch is 16 packages.
+- **Hidden users:** native `listUsersPrivileged` runs `pm list users` through Shizuku (reflected `newProcess`, the same pattern as the usage-access grant) and returns null without Shizuku. `parsePmListUsers` (top level, tested in `pm_list_users_test.dart`) feeds the profiles page, which lists users missing from `LauncherApps` and uses the device's own name for numbered profiles. New key `multiUserHiddenProfileDesc`, in all locales.
+- **Startup `FlutterSecureStorage` "bad base-64":** the plugin's `readAll` logs it and catches it (flutter_secure_storage 10.3.4, line 549). Three instances use different options (`auth_provider` sets `encryptedSharedPreferences: true`). Not unified, because that could lose stored auth bundles. Leave it unless it causes a real failure.
+- **Still open:** placeholder icon (needs a device repro; the README SVG decode case was fixed in ada21c0f6), a device pass of Visual Lab, notes and diagnostics, and merging `feature/review-2026-11` into main.
+
 ## 2026-11-09 (later) — Claude: Pre-Push Review, Push, Startup Notice, Leak
 
 - **Pushed** as `feature/review-2026-11`. A `feature/*` push is a CI dev build: no version bump and no commit to main.
