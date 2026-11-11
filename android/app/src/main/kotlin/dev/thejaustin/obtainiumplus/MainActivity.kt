@@ -28,6 +28,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
+import android.view.HapticFeedbackConstants
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
@@ -753,6 +754,26 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
+                    "performHaptic" -> {
+                        // Opt-in native haptics (Plus "native haptics" preview):
+                        // the constant name maps to View.performHapticFeedback,
+                        // which also honours the system touch-feedback setting.
+                        val constant = hapticConstantFor(call.argument<String>("constant"))
+                        if (constant == null) {
+                            result.success(false)
+                        } else {
+                            result.success(window.decorView.performHapticFeedback(constant))
+                        }
+                    }
+                    "isSystemHapticsEnabled" -> {
+                        @Suppress("DEPRECATION")
+                        val on = Settings.System.getInt(
+                            contentResolver,
+                            Settings.System.HAPTIC_FEEDBACK_ENABLED,
+                            1,
+                        ) != 0
+                        result.success(on)
+                    }
                     else -> result.notImplemented()
                 }
             } catch (e: Exception) {
@@ -760,6 +781,33 @@ class MainActivity : FlutterActivity() {
                 // MissingPluginException instead of a catchable PlatformException.
                 try { result.error("NATIVE_ERROR", e.message, null) } catch (_: Exception) {}
             }
+        }
+    }
+
+    /**
+     * Maps a Dart haptic name to a [HapticFeedbackConstants] value, with
+     * pre-API-34 / pre-API-30 fallbacks. Unknown names return null.
+     */
+    private fun hapticConstantFor(name: String?): Int? {
+        val sdk = Build.VERSION.SDK_INT
+        val u = Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+        val r = Build.VERSION_CODES.R
+        return when (name) {
+            "TOGGLE_ON" -> if (sdk >= u) HapticFeedbackConstants.TOGGLE_ON else HapticFeedbackConstants.VIRTUAL_KEY
+            "TOGGLE_OFF" -> if (sdk >= u) HapticFeedbackConstants.TOGGLE_OFF else HapticFeedbackConstants.CLOCK_TICK
+            "SEGMENT_TICK" -> if (sdk >= u) HapticFeedbackConstants.SEGMENT_TICK else HapticFeedbackConstants.CLOCK_TICK
+            "SEGMENT_FREQUENT_TICK" -> if (sdk >= u) HapticFeedbackConstants.SEGMENT_FREQUENT_TICK else HapticFeedbackConstants.CLOCK_TICK
+            "GESTURE_THRESHOLD_ACTIVATE" -> if (sdk >= u) HapticFeedbackConstants.GESTURE_THRESHOLD_ACTIVATE else HapticFeedbackConstants.CONTEXT_CLICK
+            "GESTURE_THRESHOLD_DEACTIVATE" -> if (sdk >= u) HapticFeedbackConstants.GESTURE_THRESHOLD_DEACTIVATE else HapticFeedbackConstants.CLOCK_TICK
+            "CONFIRM" -> if (sdk >= r) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY
+            "REJECT" -> if (sdk >= r) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
+            "GESTURE_START" -> if (sdk >= r) HapticFeedbackConstants.GESTURE_START else HapticFeedbackConstants.CLOCK_TICK
+            "GESTURE_END" -> if (sdk >= r) HapticFeedbackConstants.GESTURE_END else HapticFeedbackConstants.CLOCK_TICK
+            "CLOCK_TICK" -> HapticFeedbackConstants.CLOCK_TICK
+            "CONTEXT_CLICK" -> HapticFeedbackConstants.CONTEXT_CLICK
+            "VIRTUAL_KEY" -> HapticFeedbackConstants.VIRTUAL_KEY
+            "LONG_PRESS" -> HapticFeedbackConstants.LONG_PRESS
+            else -> null
         }
     }
 
