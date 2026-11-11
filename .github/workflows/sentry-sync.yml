@@ -7,6 +7,8 @@ name: Sentry → GitHub Issue Sync
 # Required GitHub secret: SENTRY_AUTH_TOKEN
 #   Generate at: https://sentry.io/settings/account/api/auth-tokens/
 #   Scopes needed: project:read, event:read, issue:read
+#   Add event:write to also resolve a Sentry issue when its GitHub issue is
+#   closed as completed (otherwise it is only kept closed).
 on:
   schedule:
     - cron: '0 */6 * * *'

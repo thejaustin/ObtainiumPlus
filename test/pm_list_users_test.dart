@@ -4,7 +4,7 @@ import 'package:obtainium/components/settings/multi_user_diagnostic_sheet.dart';
 void main() {
   test('parses pm list users output', () {
     const out = '''Users:
-	UserInfo{0:Owner:c13} running
+	UserInfo{0:Owner:4c13} running
 	UserInfo{95:DUAL_APP:4001010} running
 	UserInfo{150:Secure Folder:10001030} running
 ''';

@@ -144,6 +144,8 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
     return tr('multiUserOtherProfile', args: ['$userId']);
   }
 
+  // The report is meant for public issues, so it uses generic labels only:
+  // device user names are often people's real names.
   void _copyReport() {
     final buffer = StringBuffer()
       ..writeln('### ${tr('multiUserTitle')}')
@@ -151,7 +153,7 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
       ..writeln();
     for (final entry in _byUser.entries) {
       buffer.writeln(
-        '#### ${_labelFor(entry.key)} (user ${entry.key}) - '
+        '#### ${profileLabel(entry.key)} (user ${entry.key}) - '
         '${entry.value.length}',
       );
       for (final app in entry.value.take(30)) {
@@ -167,7 +169,7 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
     }
     for (final e in _hiddenUsers.entries) {
       buffer.writeln(
-        '#### ${e.value.isEmpty ? profileLabel(e.key) : e.value} '
+        '#### ${profileLabel(e.key)} '
         '- ${tr('multiUserHiddenProfileDesc', args: ['${e.key}'])}',
       );
     }

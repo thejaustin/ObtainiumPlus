@@ -912,8 +912,10 @@ class MainActivity : FlutterActivity() {
             ) as? Process
             val proc = p ?: return null
             proc.outputStream.close()
+            // pm exits after printing; the Dart side times out the call.
             val text = proc.inputStream.bufferedReader().use { it.readText() }
-            if (!proc.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) null else text
+            proc.waitFor()
+            text
         } catch (_: Throwable) {
             null
         } finally {
