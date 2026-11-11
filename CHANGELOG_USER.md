@@ -3,6 +3,7 @@
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ### Fixed
+- "Add to Obtainium" links from app stores such as ShizuStore and ObtainX, and links shared to Obtainium+ from other apps, open correctly again instead of failing with "invalid input".
 - Some app icons stayed as placeholders until the app was restarted, when the icon was requested before installed apps had been scanned.
 - Links like "CHANGELOG.md" in GitHub release notes open the file at that release instead of a broken github.com page, and line breaks in release notes are kept (from Obtainium).
 - Settings tabs no longer show red "Something went wrong" cards after scrolling another tab.
