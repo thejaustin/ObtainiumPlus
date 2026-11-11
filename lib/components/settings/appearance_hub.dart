@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -36,6 +37,80 @@ class AppearanceHub extends StatelessWidget {
     motionContent,
     settingsPageContent,
   ];
+
+  /// Current-value summaries for the cards (Live summaries preview): the
+  /// design system and colour source, every corner radius in use, motion
+  /// speed and haptics, and the settings page layout. Order matches
+  /// [contents].
+  static List<String> liveSummaries({
+    required PlusSettingsProvider plus,
+    required ThemeSettingsProvider theme,
+    required double animationSpeed,
+  }) {
+    final mode = theme.theme == ThemeSettings.system
+        ? tr('followSystem')
+        : (theme.useBlackTheme
+              ? 'AMOLED'
+              : (theme.theme == ThemeSettings.light
+                    ? tr('light')
+                    : tr('dark')));
+    final themeParts = <String>[
+      plus.plusEnableMaterialExpressive ? 'M3E' : 'Obtainium+',
+      mode,
+      if (theme.useMaterialYou) 'Monet',
+      if (plus.plusEnableGlassmorphism) tr('hubSummaryGlass'),
+    ];
+
+    final shapeParts = <String>[
+      tr(
+        'hubSummaryCornerDp',
+        args: ['${plus.plusGlobalCornerRadius.round()}'],
+      ),
+      if (plus.plusOverrideIndividualCornerRadius) ...[
+        tr('hubSummaryHomeDp', args: ['${plus.plusHomeCornerRadius.round()}']),
+        tr(
+          'hubSummarySettingsDp',
+          args: ['${plus.plusSettingsCornerRadius.round()}'],
+        ),
+      ],
+    ];
+
+    final speed = animationSpeed.toStringAsFixed(
+      animationSpeed == animationSpeed.roundToDouble() ? 0 : 1,
+    );
+    final motionParts = <String>[
+      plus.plusEnableEnhancedAnimations
+          ? tr('hubSummarySpeed', args: [speed])
+          : tr('hubSummaryAnimOff'),
+      if (plus.plusEnableBouncyPhysics) tr('hubSummaryBouncy'),
+      tr('hubSummaryHaptics', args: [plus.plusHapticIntensity.name]),
+    ];
+
+    final placement = switch (plus.plusSettingsNavPlacement) {
+      SettingsNavPlacement.bottom => tr('visualLabBottom'),
+      SettingsNavPlacement.top => tr('visualLabTop'),
+      SettingsNavPlacement.merged => tr('visualLabMerged'),
+    };
+    final pageParts = <String>[
+      placement,
+      if (plus.plusUseCompactSettings) tr('hubSummaryCompact'),
+      plus.plusSettingsGroupStyle == SettingsGroupStyle.segmented
+          ? tr(
+              'hubSummaryGroupsSegmented',
+              args: [
+                '${plus.plusSettingsGroupOuterRadius.round()}',
+                '${plus.plusSettingsGroupInnerRadius.round()}',
+              ],
+            )
+          : tr('hubSummaryCards'),
+    ];
+    return [
+      themeParts.join(' · '),
+      shapeParts.join(' · '),
+      motionParts.join(' · '),
+      pageParts.join(' · '),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,12 +150,22 @@ class AppearanceHub extends StatelessWidget {
         ? '$placement · ${tr('hubSummaryCompact')}'
         : placement;
 
+    final live = plusSettings.plusSettingsLiveSummaries
+        ? liveSummaries(
+            plus: plusSettings,
+            theme: themeSettings,
+            animationSpeed: context
+                .watch<SettingsProvider>()
+                .animationSpeedMultiplier,
+          )
+        : null;
+
     final hubCards = [
       (
         icon: Icons.palette_rounded,
         title: tr('settingsAppearanceThemesAndColors'),
         desc: tr('settingsAppearanceThemesAndColorsDesc'),
-        summary: themeSummary,
+        summary: live?[0] ?? themeSummary,
         color: colorScheme.primary,
         content: themeContent,
       ),
@@ -88,7 +173,7 @@ class AppearanceHub extends StatelessWidget {
         icon: Icons.rounded_corner_rounded,
         title: tr('settingsAppearanceShapes'),
         desc: tr('settingsAppearanceShapesDesc'),
-        summary: shapesSummary,
+        summary: live?[1] ?? shapesSummary,
         color: colorScheme.primary,
         content: shapesContent,
       ),
@@ -96,7 +181,7 @@ class AppearanceHub extends StatelessWidget {
         icon: Icons.auto_awesome_motion_rounded,
         title: tr('settingsAppearanceMotionHaptics'),
         desc: tr('settingsAppearanceMotionHapticsDesc'),
-        summary: motionSummary,
+        summary: live?[2] ?? motionSummary,
         color: colorScheme.primary,
         content: motionContent,
       ),
@@ -104,7 +189,7 @@ class AppearanceHub extends StatelessWidget {
         icon: Icons.dashboard_customize_outlined,
         title: tr('settingsAppearanceSettingsPage'),
         desc: tr('settingsAppearanceSettingsPageDesc'),
-        summary: settingsPageSummary,
+        summary: live?[3] ?? settingsPageSummary,
         color: colorScheme.primary,
         content: settingsPageContent,
       ),
