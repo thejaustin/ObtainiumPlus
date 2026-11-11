@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/settings_section.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -20,6 +22,10 @@ class ExpressiveSettingsGroup extends StatefulWidget {
   final VoidCallback? onReset;
   final String? persistKey;
 
+  /// Null follows `plusSettingsGroupStyle` (default card = this widget's
+  /// classic look); segmented renders through [SegmentedSettingsGroup].
+  final SettingsGroupStyle? style;
+
   const ExpressiveSettingsGroup({
     super.key,
     this.title,
@@ -31,6 +37,7 @@ class ExpressiveSettingsGroup extends StatefulWidget {
     this.icon,
     this.onReset,
     this.persistKey,
+    this.style,
   });
 
   @override
@@ -87,6 +94,23 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
 
   @override
   Widget build(BuildContext context) {
+    final groupStyle =
+        widget.style ??
+        context.select<PlusSettingsProvider, SettingsGroupStyle>(
+          (p) => p.plusSettingsGroupStyle,
+        );
+    if (groupStyle == SettingsGroupStyle.segmented) {
+      return SegmentedSettingsGroup(
+        title: widget.title,
+        description: widget.description ?? widget.helpText,
+        icon: widget.icon,
+        isExpandable: widget.isExpandable,
+        initiallyExpanded: widget.initiallyExpanded,
+        onReset: widget.onReset,
+        persistKey: widget.persistKey,
+        children: widget.children,
+      );
+    }
     final (isCompact, isM3E, useGlass, baseRadius, descriptionLines) = context
         .select<PlusSettingsProvider, (bool, bool, bool, double, int)>(
           (p) => (
@@ -122,7 +146,10 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             if (isCompact)
               // Compact applies to every row in the group, including plain
               // ListTiles that don't check the setting themselves.
-              Theme(data: _compactTheme(context), child: visibleChildren[index])
+              Theme(
+                data: settingsCompactTheme(context),
+                child: visibleChildren[index],
+              )
             else
               visibleChildren[index],
             if (index < visibleChildren.length - 1)
@@ -316,21 +343,6 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     );
   }
 
-  ThemeData _compactTheme(BuildContext context) {
-    final theme = Theme.of(context);
-    final tiles = theme.listTileTheme;
-    return theme.copyWith(
-      visualDensity: VisualDensity.compact,
-      listTileTheme: tiles.copyWith(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14),
-        // Badges are 30-36px; a fixed slot keeps every title on one edge.
-        minLeadingWidth: 36,
-        titleTextStyle: tiles.titleTextStyle?.copyWith(fontSize: 14),
-        subtitleTextStyle: tiles.subtitleTextStyle?.copyWith(fontSize: 12),
-      ),
-    );
-  }
-
   /// Every group header uses this, expandable or not, so section titles read
   /// as one level above the rows inside them.
   TextStyle? _headerTitleStyle(BuildContext context, ColorScheme colorScheme) =>
@@ -404,4 +416,21 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       ),
     );
   }
+}
+
+/// Compact-density theme applied to every row of a settings group,
+/// including plain ListTiles that don't check the setting themselves.
+ThemeData settingsCompactTheme(BuildContext context) {
+  final theme = Theme.of(context);
+  final tiles = theme.listTileTheme;
+  return theme.copyWith(
+    visualDensity: VisualDensity.compact,
+    listTileTheme: tiles.copyWith(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+      // Badges are 30-36px; a fixed slot keeps every title on one edge.
+      minLeadingWidth: 36,
+      titleTextStyle: tiles.titleTextStyle?.copyWith(fontSize: 14),
+      subtitleTextStyle: tiles.subtitleTextStyle?.copyWith(fontSize: 12),
+    ),
+  );
 }
