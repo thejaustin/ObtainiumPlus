@@ -65,20 +65,13 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final animate = AppMotion.enabledForDependencies(context);
-    _expandController
-      ..duration = animate ? _expandDuration : Duration.zero
-      ..reverseDuration = animate ? _collapseDuration : Duration.zero;
-  }
-
-  @override
   void dispose() {
     _expandController.dispose();
     super.dispose();
   }
 
+  // Motion off jumps the controller (see below), so its durations only apply
+  // when motion is on; no listening dependency needed here.
   void _handleExpansionChange(bool expanded) {
     AppHaptics.selectionClick();
     if (AppMotion.enabledNow(context)) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -113,7 +114,7 @@ void main() {
         tester,
       ) async {
         await pumpHarness(tester, inAppMotion: inApp, osDisableAnimations: os);
-        pushRoute<void>(homeKey.currentContext!, buildSubpage());
+        unawaited(pushRoute<void>(homeKey.currentContext!, buildSubpage()));
         await tester.pump();
 
         expect(find.byType(SettingsSubpage), findsOneWidget);
@@ -126,7 +127,7 @@ void main() {
 
     testWidgets('still animates with motion on', (tester) async {
       await pumpHarness(tester, inAppMotion: true);
-      pushRoute<void>(homeKey.currentContext!, buildSubpage());
+      unawaited(pushRoute<void>(homeKey.currentContext!, buildSubpage()));
       await tester.pump();
 
       expect(tester.hasRunningAnimations, isTrue);
