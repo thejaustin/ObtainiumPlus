@@ -5,7 +5,10 @@ import 'dart:convert';
 import 'package:app_links/app_links.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/dcl_warning_dialog.dart';
 import 'package:obtainium/pages/onboarding.dart';
+import 'package:permission_handler/permission_handler.dart'
+    show openAppSettings;
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/force_update_dialog.dart';
@@ -220,6 +223,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           // Also when backed out of, so it never nags on later launches.
           sp.welcomeShown = true;
         }
+      }
+      if (!mounted) return;
+      if (sp.memoryDclRestricted &&
+          sp.useAndroidCertStore &&
+          !sp.dclWarningShown) {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => DclWarningDialog(
+            autofocus: sp.isTV,
+            onOpenSettings: () => unawaited(openAppSettings()),
+          ),
+        );
+        if (!sp.dclWarningShown) sp.dclWarningShown = true;
       }
       if (!mounted) return;
       // The old one-time "Note" dialog about Google's developer verification

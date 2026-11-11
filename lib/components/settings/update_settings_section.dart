@@ -73,6 +73,11 @@ class UpdateSettingsSection extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => NavHelper.pushUpdateHealthPage(context),
         ),
+      if (_matches(
+        tr('excludedCategoriesFromChecks'),
+        desc: tr('excludedCategoriesFromChecksDescription'),
+      ))
+        const _ExcludedCategoriesTile(),
       if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
       if (_matches(tr('checkOnStart'), desc: tr('checkOnStartDescription')))
         Consumer<UpdateSettingsProvider>(
@@ -1320,6 +1325,91 @@ class _RunBgUpdateCheckNowButtonState
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Lets the user pick categories whose apps are skipped by update checks.
+class _ExcludedCategoriesTile extends StatelessWidget {
+  const _ExcludedCategoriesTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final excluded = context.select<SettingsProvider, Set<String>>(
+      (s) => s.categoriesExcludedFromChecks,
+    );
+    final count = excluded.length;
+    return ListTile(
+      leading: buildSettingsIconBadge(
+        context,
+        Icons.folder_off_outlined,
+        active: count > 0,
+      ),
+      title: Text(tr('excludedCategoriesFromChecks')),
+      subtitle: Text(
+        count == 0
+            ? tr('excludedCategoriesFromChecksDescription')
+            : excluded.join(', '),
+      ),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => showDialog<void>(
+        context: context,
+        builder: (_) => MultiProvider(
+          providers: [
+            ChangeNotifierProvider<SettingsProvider>.value(
+              value: context.read<SettingsProvider>(),
+            ),
+            ChangeNotifierProvider<ViewSettingsProvider>.value(
+              value: context.read<ViewSettingsProvider>(),
+            ),
+          ],
+          child: const _ExcludedCategoriesDialog(),
+        ),
+      ),
+    );
+  }
+}
+
+class _ExcludedCategoriesDialog extends StatelessWidget {
+  const _ExcludedCategoriesDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final categories = context
+        .read<ViewSettingsProvider>()
+        .categories
+        .keys
+        .toList();
+    final excluded = settings.categoriesExcludedFromChecks;
+    return GlassDialog(
+      title: tr('excludedCategoriesFromChecks'),
+      icon: Icons.folder_off_outlined,
+      content: categories.isEmpty
+          ? Text(tr('noCategories'))
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final c in categories)
+                  CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(c),
+                    value: excluded.contains(c),
+                    onChanged: (v) {
+                      AppHaptics.selectionClick();
+                      final next = Set<String>.from(excluded);
+                      v == true ? next.add(c) : next.remove(c);
+                      settings.categoriesExcludedFromChecks = next;
+                    },
+                  ),
+              ],
+            ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(tr('ok')),
+        ),
+      ],
     );
   }
 }

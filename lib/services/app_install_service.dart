@@ -20,6 +20,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/installers/installer.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/installers/install_landed.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
@@ -91,8 +92,7 @@ class AppInstallService {
   /// the pre-install version until something invalidated the cache.
   static Map<String, PackageInfo>? get _freshInstalledPackagesByName {
     final ts = _cachedInstalledPackagesTimestamp;
-    if (ts == null ||
-        DateTime.now().difference(ts) >= _installedPackagesTtl) {
+    if (ts == null || DateTime.now().difference(ts) >= _installedPackagesTtl) {
       return null;
     }
     return _cachedInstalledPackagesByName;
@@ -535,10 +535,14 @@ class AppInstallService {
       return false;
     }
 
-    if (behaviorSettings.installerMode == 'root') {
+    final appInstallerMode = installerModeFor(
+      app,
+      behaviorSettings.installerMode,
+    );
+    if (appInstallerMode == InstallerMode.root.name) {
       return true;
     }
-    if (behaviorSettings.useShizuku) {
+    if (appInstallerMode == InstallerMode.shizuku.name) {
       final status = await ShizukuInstaller(
         SettingsProvider(behaviorSettings.prefs),
       ).checkPermissionWithRetry();
@@ -976,7 +980,7 @@ class AppInstallService {
       }
     }
 
-    final installer = Installer.create(settingsProvider);
+    final installer = Installer.create(settingsProvider, apps[file.appId]?.app);
     final nonNullNewInfo = newInfo;
 
     try {
@@ -1232,7 +1236,7 @@ class AppInstallService {
   }) async {
     var somethingInstalled = false;
     final settingsProvider = SettingsProvider(behaviorSettings.prefs);
-    final installer = Installer.create(settingsProvider);
+    final installer = Installer.create(settingsProvider, apps[dir.appId]?.app);
     try {
       MultiAppMultiError errors = MultiAppMultiError();
       if (installer.wantsContainerHandoff) {

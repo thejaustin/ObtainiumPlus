@@ -11,6 +11,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/apps_provider.dart';
+import 'package:obtainium/components/apps/update_health_note.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -671,6 +672,7 @@ class _AppPageState extends State<AppPage> {
                   appsProvider: appsProvider,
                   onUpdate: (id) => getUpdate(id),
                 ),
+                if (app != null) UpdateHealthNote(app: app.app),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(cardRadius),
                   child: ConditionalBlur(

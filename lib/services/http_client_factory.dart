@@ -37,7 +37,9 @@ class HttpClientFactory {
 
   static http.Client? _cronet;
   static bool _cronetUnavailable = false;
+  static bool _androidCertStoreEnabled = true;
   static bool _loggedDclRestricted = false;
+  static bool _loggedCertStoreDisabled = false;
   static final Map<String, Future<http.Client>> _ioClients = {};
 
   /// Google Play endpoints keep the dart:io client from [createHttpClient],
@@ -47,6 +49,25 @@ class HttpClientFactory {
       host.contains('play.googleapis.com');
 
   static bool get isCronetInUse => _cronet != null;
+
+  /// The "Use Android certificate store" setting. When off, requests use the
+  /// dart:io client even if Cronet could start. Applies to new requests.
+  static void setAndroidCertStoreEnabled(bool enabled) {
+    _androidCertStoreEnabled = enabled;
+    _loggedCertStoreDisabled = false;
+  }
+
+  /// Whether the embedded Cronet client may be used right now.
+  static bool shouldUseCronet({
+    required bool isAndroid,
+    required bool androidCertStoreEnabled,
+    required bool execmemRestricted,
+    required bool cronetUnavailable,
+  }) =>
+      isAndroid &&
+      androidCertStoreEnabled &&
+      !execmemRestricted &&
+      !cronetUnavailable;
 
   static Future<http.Client> clientFor(Uri url, {bool allowInsecure = false}) =>
       resolver(url, allowInsecure: allowInsecure);
@@ -103,15 +124,30 @@ class HttpClientFactory {
   }
 
   static http.Client? _tryCronet() {
-    if (!Platform.isAndroid || _cronetUnavailable) return null;
-    if (_cronet != null) return _cronet;
-    if (DclSupport.isExecmemRestricted) {
-      if (!_loggedDclRestricted) {
-        _loggedDclRestricted = true;
-        AppLogger.info('HTTP: Android memory DCL restricted; using dart:io');
+    final execmemRestricted =
+        _androidCertStoreEnabled && DclSupport.isExecmemRestricted;
+    if (!shouldUseCronet(
+      isAndroid: Platform.isAndroid,
+      androidCertStoreEnabled: _androidCertStoreEnabled,
+      execmemRestricted: execmemRestricted,
+      cronetUnavailable: _cronetUnavailable,
+    )) {
+      if (Platform.isAndroid) {
+        if (!_androidCertStoreEnabled) {
+          if (!_loggedCertStoreDisabled) {
+            _loggedCertStoreDisabled = true;
+            AppLogger.info(
+              'HTTP: Android certificate store disabled; using dart:io',
+            );
+          }
+        } else if (execmemRestricted && !_loggedDclRestricted) {
+          _loggedDclRestricted = true;
+          AppLogger.info('HTTP: Android memory DCL restricted; using dart:io');
+        }
       }
       return null;
     }
+    if (_cronet != null) return _cronet;
     try {
       final engine = CronetEngine.build(
         // Sources fronted by Cloudflare fingerprint the user agent; keep the
