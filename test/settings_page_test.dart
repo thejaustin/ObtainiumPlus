@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/components/settings/connected_settings_bar.dart';
 import 'package:obtainium/components/settings/settings_category_bar_host.dart';
+import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/settings.dart';
 import 'package:obtainium/pages/visual_lab_page.dart';
@@ -47,6 +48,7 @@ void main() {
     bool matchSystemMaterialStyle = false,
     Brightness brightness = Brightness.light,
     Widget? home,
+    Map<String, dynamic>? translationsOverride,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final settings = SettingsProvider();
@@ -67,7 +69,7 @@ void main() {
       startLocale: locale,
       path: 'assets/translations',
       fallbackLocale: locale,
-      assetLoader: _MemoryAssetLoader(translations),
+      assetLoader: _MemoryAssetLoader(translationsOverride ?? translations),
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: settings),
@@ -850,6 +852,90 @@ void main() {
       expect(errors, isEmpty);
     }, timeout: const Timeout(Duration(minutes: 1)));
   }
+  // Search must work in the user's language: the German title below is
+  // translated in de.json, and the English description only exists as the
+  // row's subtitle.
+  Map<String, dynamic> localeWithFallback(String name) => {
+    ...translations,
+    ...(jsonDecode(File('assets/translations/$name.json').readAsStringSync())
+        as Map<String, dynamic>),
+  };
+
+  // The full page crossfades tab -> results with a shared GlobalKey, which
+  // trips a duplicate-key assertion in tests, so search is exercised on the
+  // section widget directly (this is the code path the page delegates to).
+  Future<void> searchFor(
+    WidgetTester tester,
+    String query, {
+    Locale locale = const Locale('en'),
+    Map<String, dynamic>? translationsOverride,
+  }) async {
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(
+        0,
+        locale: locale,
+        translationsOverride: translationsOverride,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: AppsViewSettingsSection(
+              onSetState: (fn) => fn(),
+              searchQuery: query,
+            ),
+          ),
+        ),
+      );
+    });
+    await tester.pumpWidget(app);
+    for (var i = 0; i < 40; i++) {
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 50)),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      if (tester.any(find.byType(AppsViewSettingsSection))) break;
+    }
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(tester.takeException(), isNull);
+  }
+
+  testWidgets('search finds a row by its translated title in German', (
+    tester,
+  ) async {
+    final de = localeWithFallback('de');
+    final title = de['groupByCategory'] as String;
+    expect(title, isNot(translations['groupByCategory']));
+    await searchFor(
+      tester,
+      title,
+      locale: const Locale('de'),
+      translationsOverride: de,
+    );
+    expect(find.text(title), findsWidgets);
+  }, timeout: const Timeout(Duration(minutes: 1)));
+
+  testWidgets('search matches a row by its description text', (tester) async {
+    final description = translations['buryNonInstalledDescription'] as String;
+    final title = translations['buryNonInstalled'] as String;
+    final needle = description.substring(1, description.length - 1);
+    expect(title.toLowerCase(), isNot(contains(needle.toLowerCase())));
+    await searchFor(tester, needle);
+    expect(find.text(title), findsWidgets);
+  }, timeout: const Timeout(Duration(minutes: 1)));
+
+  testWidgets('search matches translated keyword needles', (tester) async {
+    final de = {
+      ...localeWithFallback('de'),
+      'searchKeywordDefaultAppDetailsTab': 'standardreiter',
+    };
+    await searchFor(
+      tester,
+      'standardreiter',
+      locale: const Locale('de'),
+      translationsOverride: de,
+    );
+    expect(find.byType(SegmentedButton<AppDescriptionStyle>), findsOneWidget);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 }
 
 class _MemoryAssetLoader extends AssetLoader {

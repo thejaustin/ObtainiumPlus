@@ -22,10 +22,12 @@ class NotificationSettingsSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   String _formatHour(int hour) {
@@ -70,7 +72,7 @@ class NotificationSettingsSection extends StatelessWidget {
               ),
             ),
           if (settings.enableAllPlusFeatures) ...[
-            if (_matches(tr('plusEnableNotificationEnhancements')))
+            if (_matches(tr('plusEnableNotificationEnhancements'), desc: tr('plusEnableNotificationEnhancementsDescription')))
               SwitchListTile.adaptive(
                 secondary: buildSettingsIconBadge(
                   context,

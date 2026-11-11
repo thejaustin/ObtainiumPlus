@@ -102,10 +102,12 @@ class _InstallationSectionState extends State<InstallationSection>
     }
   }
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(widget.showAdvancedSettings ?? false)) return false;
     if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(widget.searchQuery!.toLowerCase());
+    final q = widget.searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -118,13 +120,13 @@ class _InstallationSectionState extends State<InstallationSection>
       builder: (context, behaviorSettings, child) {
         final List<Widget> methodChildren = [
           // Installer method selector — unified radio picker
-          if (_matches(tr('useShizuku')) ||
-              _matches(tr('rootInstaller')) ||
+          if (_matches(tr('useShizuku'), desc: tr('useShizukuDescription')) ||
+              _matches(tr('rootInstaller'), desc: tr('rootInstallerDescription')) ||
               _matches(tr('installMethod')) ||
               _matches(tr('installerMethodLabel')) ||
-              _matches(tr('shizukuPretendToBeGooglePlay')) ||
-              _matches(tr('shizukuFallbackToSystem')) ||
-              _matches('binder') ||
+              _matches(tr('shizukuPretendToBeGooglePlay'), desc: tr('shizukuPretendToBeGooglePlayDescription')) ||
+              _matches(tr('shizukuFallbackToSystem'), desc: tr('shizukuFallbackToSystemDescription')) ||
+              (_matches('binder') || _matches(tr('searchKeywordBinder'))) ||
               !isSearching)
             _buildInstallerMethodSelector(
               context,
@@ -136,12 +138,12 @@ class _InstallationSectionState extends State<InstallationSection>
         final List<Widget> optionsChildren = [
           // Device Compatibility & Performance
           if (_matches(tr('devicePerformanceAndCompatibility')) ||
-              _matches('compatibility') ||
-              _matches('performance') ||
-              _matches('device tuning') ||
-              _matches('device optimization') ||
-              _matches('tuning') ||
-              _matches('speed') ||
+              (_matches('compatibility') || _matches(tr('searchKeywordCompatibility'))) ||
+              (_matches('performance') || _matches(tr('searchKeywordPerformance'))) ||
+              (_matches('device tuning') || _matches(tr('searchKeywordDeviceTuning'))) ||
+              (_matches('device optimization') || _matches(tr('searchKeywordDeviceOptimization'))) ||
+              (_matches('tuning') || _matches(tr('searchKeywordTuning'))) ||
+              (_matches('speed') || _matches(tr('searchKeywordSpeed'))) ||
               _matches('oem') ||
               _matches('samsung') ||
               _matches('xiaomi') ||
@@ -154,7 +156,7 @@ class _InstallationSectionState extends State<InstallationSection>
               _matches('transsion') ||
               _matches('motorola') ||
               _matches('autoblocker') ||
-              _matches('freeze') ||
+              (_matches('freeze') || _matches(tr('searchKeywordFreeze'))) ||
               !isSearching)
             ListTile(
               leading: buildSettingsIconBadge(
@@ -217,7 +219,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Import Installed Apps
-          if (_matches(tr('importInstalledApps')))
+          if (_matches(tr('importInstalledApps'), desc: tr('importInstalledAppsDescription')))
             ListTile(
               leading: buildSettingsIconBadge(
                 context,
@@ -258,7 +260,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Standalone Installer
-          if (_matches(tr('plusEnableStandaloneInstaller')))
+          if (_matches(tr('plusEnableStandaloneInstaller'), desc: tr('plusEnableStandaloneInstallerDescription')))
             buildFeatureToggle<PlusSettingsProvider>(
               context,
               icon: Icons.install_mobile_outlined,
@@ -269,7 +271,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Smart Retries & Caching
-          if (_matches(tr('plusSmartRetries'), isAdvanced: true))
+          if (_matches(tr('plusSmartRetries'), desc: tr('plusSmartRetriesDescription'), isAdvanced: true))
             buildFeatureToggle<PlusSettingsProvider>(
               context,
               icon: Icons.bolt_outlined,
@@ -280,7 +282,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Update Ownership (Android 14+)
-          if (_matches(tr('plusUpdateOwnership'), isAdvanced: true))
+          if (_matches(tr('plusUpdateOwnership'), desc: tr('plusUpdateOwnershipDescription'), isAdvanced: true))
             buildFeatureToggle<PlusSettingsProvider>(
               context,
               icon: Icons.security_update_good_rounded,
@@ -291,7 +293,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // User Pre-approval (Android 14+)
-          if (_matches(tr('plusUserPreapproval'), isAdvanced: true))
+          if (_matches(tr('plusUserPreapproval'), desc: tr('plusUserPreapprovalDescription'), isAdvanced: true))
             buildFeatureToggle<PlusSettingsProvider>(
               context,
               icon: Icons.touch_app_outlined,
@@ -302,7 +304,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Another build of the app already installed
-          if (_matches(tr('askAboutOtherInstalledBuilds')))
+          if (_matches(tr('askAboutOtherInstalledBuilds'), desc: tr('askAboutOtherInstalledBuildsDescription')))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,
@@ -317,11 +319,11 @@ class _InstallationSectionState extends State<InstallationSection>
                 behaviorSettings.askAboutOtherInstalledBuilds = v;
               },
             ),
-          if (_matches(tr('askAboutOtherInstalledBuilds')))
+          if (_matches(tr('askAboutOtherInstalledBuilds'), desc: tr('askAboutOtherInstalledBuildsDescription')))
             const _ForgetVariantChoicesTile(),
 
           // App Verifier
-          if (_matches(tr('beforeNewInstallsShareToAppVerifier')))
+          if (_matches(tr('beforeNewInstallsShareToAppVerifier'), desc: tr('beforeNewInstallsShareToAppVerifierDescription')))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,
@@ -340,7 +342,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // MicroG Compat Hub
-          if (_matches(tr('plusEnableMicroGHub'), isAdvanced: true))
+          if (_matches(tr('plusEnableMicroGHub'), desc: tr('plusEnableMicroGHubDescription'), isAdvanced: true))
             buildFeatureToggle<PlusSettingsProvider>(
               context,
               icon: Icons.hub_outlined,
@@ -351,7 +353,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Allow Third-Party Sources
-          if (_matches(tr('allowThirdPartySources')))
+          if (_matches(tr('allowThirdPartySources'), desc: tr('allowThirdPartySourcesDescription')))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,
@@ -368,7 +370,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Use Play Store App Links
-          if (_matches(tr('usePlayStoreAppLinks')))
+          if (_matches(tr('usePlayStoreAppLinks'), desc: tr('usePlayStoreAppLinksDescription')))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,
@@ -385,7 +387,7 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
 
           // Parallel Downloads
-          if (_matches(tr('parallelDownloads'), isAdvanced: true))
+          if (_matches(tr('parallelDownloads'), desc: tr('parallelDownloadsDescription'), isAdvanced: true))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,

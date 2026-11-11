@@ -45,13 +45,13 @@ class AppearanceHub extends StatelessWidget {
     }
 
     final List<String> tileDecor = [];
-    if (plusSettings.plusGridSquareTiles) tileDecor.add('Square 1:1');
-    if (plusSettings.plusGridCardlessStyle) tileDecor.add('Cardless');
-    if (plusSettings.plusGridAmbientIconHalo) tileDecor.add('Icon halo');
-    if (plusSettings.plusUpdateExpressiveBadge) tileDecor.add('Update pill');
-    if (plusSettings.plusPinnedBorderAccent) tileDecor.add('Pinned border');
-    if (plusSettings.plusCategoryAccentRibbon) tileDecor.add('Category ribbon');
-    if (plusSettings.plusIconRimBorder) tileDecor.add('Icon rim');
+    if (plusSettings.plusGridSquareTiles) tileDecor.add(tr('hubSummarySquare'));
+    if (plusSettings.plusGridCardlessStyle) tileDecor.add(tr('hubSummaryCardless'));
+    if (plusSettings.plusGridAmbientIconHalo) tileDecor.add(tr('hubSummaryIconHalo'));
+    if (plusSettings.plusUpdateExpressiveBadge) tileDecor.add(tr('hubSummaryUpdatePill'));
+    if (plusSettings.plusPinnedBorderAccent) tileDecor.add(tr('hubSummaryPinnedBorder'));
+    if (plusSettings.plusCategoryAccentRibbon) tileDecor.add(tr('hubSummaryCategoryRibbon'));
+    if (plusSettings.plusIconRimBorder) tileDecor.add(tr('hubSummaryIconRim'));
     final tileSummary = tileDecor.isEmpty
         ? tr('plusAppTileStyling')
         : tileDecor.take(3).join(' · ');
@@ -59,15 +59,15 @@ class AppearanceHub extends StatelessWidget {
     String capitalized(String s) =>
         s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
     final layoutSummary =
-        '${capitalized(viewSettings.globalViewMode.name)} · ${capitalized(viewSettings.appListDensity.name)}${isCompact ? ' · Compact' : ''}';
+        '${capitalized(viewSettings.globalViewMode.name)} · ${capitalized(viewSettings.appListDensity.name)}${isCompact ? ' · ${tr('hubSummaryCompact')}' : ''}';
 
     final List<String> motionDecor = [];
-    if (plusSettings.plusEnableGlassmorphism) motionDecor.add('Glass');
-    if (plusSettings.plusEnableBouncyPhysics) motionDecor.add('Bouncy');
-    if (plusSettings.plusEnableEnhancedAnimations) motionDecor.add('Smooth');
+    if (plusSettings.plusEnableGlassmorphism) motionDecor.add(tr('hubSummaryGlass'));
+    if (plusSettings.plusEnableBouncyPhysics) motionDecor.add(tr('hubSummaryBouncy'));
+    if (plusSettings.plusEnableEnhancedAnimations) motionDecor.add(tr('hubSummarySmooth'));
     final motionSummary = motionDecor.isEmpty
-        ? 'Corner: ${plusSettings.plusGlobalCornerRadius.round()}dp'
-        : '${motionDecor.join(" · ")} · ${plusSettings.plusGlobalCornerRadius.round()}dp';
+        ? tr('hubSummaryCornerDp', args: ['${plusSettings.plusGlobalCornerRadius.round()}'])
+        : '${motionDecor.join(" · ")} · ${tr('hubSummaryDp', args: ['${plusSettings.plusGlobalCornerRadius.round()}'])}';
 
     final hubCards = [
       (

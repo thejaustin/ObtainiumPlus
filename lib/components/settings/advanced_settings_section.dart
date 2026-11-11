@@ -37,10 +37,12 @@ class AdvancedSettingsSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -62,7 +64,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     ];
 
     final List<Widget> dataGroup = [
-      if (_matches(tr('importExport')))
+      if (_matches(tr('importExport'), desc: tr('importExportDesc')))
         ListTile(
           leading: buildSettingsIconBadge(
             context,
@@ -70,16 +72,18 @@ class AdvancedSettingsSection extends StatelessWidget {
             active: true,
           ),
           title: Text(tr('importExport')),
-          subtitle: const Text(
-            'Backup, restore, import, or export settings and apps',
-          ),
+          subtitle: Text(tr('importExportDesc')),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
           onTap: () {
             AppHaptics.selectionClick();
             pushRoute(context, const ImportExportPage());
           },
         ),
-      if (_matches(tr('autoExportOnChanges'), isAdvanced: true))
+      if (_matches(
+        tr('autoExportOnChanges'),
+        desc: tr('autoExportOnChangesDescription'),
+        isAdvanced: true,
+      ))
         _buildSettingsToggle(
           context,
           icon: Icons.backup_outlined,
@@ -89,7 +93,11 @@ class AdvancedSettingsSection extends StatelessWidget {
           onChanged: (s, v) => s.autoExportOnChanges = v,
         ),
       if (plusFeaturesEnabled &&
-          _matches(tr('backupEncryption'), isAdvanced: true))
+          _matches(
+            tr('backupEncryption'),
+            desc: tr('backupEncryptionDescription'),
+            isAdvanced: true,
+          ))
         Consumer<PlusSettingsProvider>(
           builder: (context, plusSettings, child) {
             return SwitchListTile.adaptive(
@@ -121,7 +129,10 @@ class AdvancedSettingsSection extends StatelessWidget {
     ];
 
     final List<Widget> devGroup = [
-      if (_matches(tr('showAdvancedSettings')))
+      if (_matches(
+        tr('showAdvancedSettings'),
+        desc: tr('showAdvancedSettingsDescription'),
+      ))
         Consumer<PlusSettingsProvider>(
           builder: (context, plusSettings, child) {
             return SwitchListTile.adaptive(
@@ -140,7 +151,10 @@ class AdvancedSettingsSection extends StatelessWidget {
             );
           },
         ),
-      if (_matches(tr('enableDeepLogging')))
+      if (_matches(
+        tr('enableDeepLogging'),
+        desc: tr('enableDeepLoggingDescription'),
+      ))
         _buildSettingsToggle(
           context,
           icon: Icons.bug_report_outlined,
@@ -157,7 +171,10 @@ class AdvancedSettingsSection extends StatelessWidget {
         settingId: 'github-creds',
         helpUrl:
             'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
-        visible: _matches(tr('plusGithubToken')),
+        visible: _matches(
+          tr('plusGithubToken'),
+          desc: tr('plusGithubTokenDescription'),
+        ),
       ),
       _buildTokenConfigTile(
         context,
@@ -167,9 +184,15 @@ class AdvancedSettingsSection extends StatelessWidget {
         settingId: 'gitlab-creds',
         helpUrl:
             'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
-        visible: _matches(tr('plusGitlabToken')),
+        visible: _matches(
+          tr('plusGitlabToken'),
+          desc: tr('plusGitlabTokenDescription'),
+        ),
       ),
-      if (_matches(tr('dontShowTrackOnlyWarnings')))
+      if (_matches(
+        tr('dontShowTrackOnlyWarnings'),
+        desc: tr('dontShowTrackOnlyWarningsDescription'),
+      ))
         _buildSettingsToggle(
           context,
           icon: Icons.report_off_outlined,
@@ -178,7 +201,10 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: (s) => s.hideTrackOnlyWarning,
           onChanged: (s, v) => s.hideTrackOnlyWarning = v,
         ),
-      if (_matches(tr('dontShowAPKOriginWarnings')))
+      if (_matches(
+        tr('dontShowAPKOriginWarnings'),
+        desc: tr('dontShowAPKOriginWarningsDescription'),
+      ))
         _buildSettingsToggle(
           context,
           icon: Icons.security_outlined,
@@ -187,7 +213,10 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: (s) => s.hideAPKOriginWarning,
           onChanged: (s, v) => s.hideAPKOriginWarning = v,
         ),
-      if (_matches(tr('enableContextualTips')))
+      if (_matches(
+        tr('enableContextualTips'),
+        desc: tr('enableContextualTipsDescription'),
+      ))
         _buildSettingsToggle(
           context,
           icon: Icons.lightbulb_outline,
@@ -199,7 +228,11 @@ class AdvancedSettingsSection extends StatelessWidget {
             if (v) s.resetTips();
           },
         ),
-      if (_matches(tr('highlightTouchTargets'), isAdvanced: true))
+      if (_matches(
+        tr('highlightTouchTargets'),
+        desc: tr('highlightTouchTargetsDescription'),
+        isAdvanced: true,
+      ))
         _buildSettingsToggle(
           context,
           icon: Icons.touch_app_outlined,
@@ -208,7 +241,7 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: (s) => s.highlightTouchTargets,
           onChanged: (s, v) => s.highlightTouchTargets = v,
         ),
-      if (_matches(tr('factoryReset')))
+      if (_matches(tr('factoryReset'), desc: tr('factoryResetDescription')))
         ListTile(
           leading: buildSettingsIconBadge(
             context,
@@ -240,10 +273,8 @@ class AdvancedSettingsSection extends StatelessWidget {
       children: [
         if (hasPlus)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : 'Obtainium+ & Interface',
-            description: isSearching
-                ? null
-                : 'Configure Obtainium+ enhancements and settings layout',
+            title: isSearching ? null : tr('advancedPlusGroupTitle'),
+            description: isSearching ? null : tr('advancedPlusGroupDesc'),
             persistKey: 'advanced_plus',
             icon: Icons.stars_rounded,
             isExpandable: !isSearching,
@@ -254,9 +285,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         if (hasData)
           ExpressiveSettingsGroup(
             title: isSearching ? null : tr('importExport'),
-            description: isSearching
-                ? null
-                : 'Backup, restore, and data management',
+            description: isSearching ? null : tr('advancedDataGroupDesc'),
             persistKey: 'advanced_data',
             icon: Icons.backup_rounded,
             isExpandable: !isSearching,
@@ -464,7 +493,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final login = data['login']?.toString() ?? 'Authenticated';
+        final login = data['login']?.toString() ?? tr('githubAuthenticated');
         final remaining = response.headers['x-ratelimit-remaining'] ?? '5000';
         final limit = response.headers['x-ratelimit-limit'] ?? '5000';
         setState(() {
@@ -610,7 +639,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                     );
                   },
                   icon: const Icon(Icons.public_rounded, size: 18),
-                  label: const Text('Public Repos (No Scope / Safest)'),
+                  label: Text(tr('githubTokenPublicRepos')),
                 ),
               ),
               ScaleTouchWrapper(
@@ -625,7 +654,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                     );
                   },
                   icon: const Icon(Icons.lock_outline_rounded, size: 18),
-                  label: const Text('Private Repos ("repo" Scope)'),
+                  label: Text(tr('githubTokenPrivateRepos')),
                 ),
               ),
             ],
@@ -641,127 +670,131 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             ),
           ),
           if (GitHubDeviceFlow.isConfigured)
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              key: const PageStorageKey<String>('settings_oauth_device_flow'),
-              onExpansionChanged: (_) => AppHaptics.selectionClick(),
-              expansionAnimationStyle: AnimationStyle(
-                curve: Easing.emphasizedDecelerate,
-                reverseCurve: Easing.emphasizedAccelerate,
-                duration: AppMotion.duration(
-                  context,
-                  const Duration(milliseconds: 280),
+            Theme(
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                key: const PageStorageKey<String>('settings_oauth_device_flow'),
+                onExpansionChanged: (_) => AppHaptics.selectionClick(),
+                expansionAnimationStyle: AnimationStyle(
+                  curve: Easing.emphasizedDecelerate,
+                  reverseCurve: Easing.emphasizedAccelerate,
+                  duration: AppMotion.duration(
+                    context,
+                    const Duration(milliseconds: 280),
+                  ),
                 ),
-              ),
-              tilePadding: EdgeInsets.zero,
-              leading: const Icon(Icons.login_rounded, size: 20),
-              title: Text(
-                tr('oauthDeviceFlowAlternative'),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+                tilePadding: EdgeInsets.zero,
+                leading: const Icon(Icons.login_rounded, size: 20),
+                title: Text(
+                  tr('oauthDeviceFlowAlternative'),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              children: [
-                if (!_isPolling && _userCode == null) ...[
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0),
-                    child: ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.94,
-                      child: OutlinedButton.icon(
-                        onPressed: _startOAuthFlow,
-                        icon: const Icon(Icons.devices_rounded),
-                        label: Text(tr('oauthConnect')),
+                children: [
+                  if (!_isPolling && _userCode == null) ...[
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: OutlinedButton.icon(
+                          onPressed: _startOAuthFlow,
+                          icon: const Icon(Icons.devices_rounded),
+                          label: Text(tr('oauthConnect')),
+                        ),
                       ),
                     ),
-                  ),
-                ] else ...[
-                  Card(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        children: [
-                          if (_userCode != null)
-                            SelectableText(
-                              _userCode!,
-                              style: Theme.of(context).textTheme.headlineSmall
+                  ] else ...[
+                    Card(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            if (_userCode != null)
+                              SelectableText(
+                                _userCode!,
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 2,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimaryContainer,
+                                    ),
+                              ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _statusMessage ?? '',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2,
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.onPrimaryContainer,
                                   ),
                             ),
-                          const SizedBox(height: 8),
-                          Text(
-                            _statusMessage ?? '',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onPrimaryContainer,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (_verificationUri != null)
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.94,
-                      child: TextButton.icon(
-                        onPressed: _copyCodeAndOpen,
-                        icon: const Icon(Icons.open_in_browser),
-                        label: Text(tr('oauthCopyAndOpen')),
-                      ),
-                    ),
-                  if (_isPolling) ...[
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 6.0),
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: ExpressiveCircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
+                          ],
                         ),
                       ),
                     ),
-                    ScaleTouchWrapper(
-                      hapticOnPressDown: true,
-                      scaleDownFactor: 0.94,
-                      child: TextButton.icon(
-                        onPressed: _cancelOAuthFlow,
-                        icon: const Icon(Icons.cancel_outlined, size: 16),
-                        label: Text(tr('cancel')),
+                    if (_verificationUri != null)
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: TextButton.icon(
+                          onPressed: _copyCodeAndOpen,
+                          icon: const Icon(Icons.open_in_browser),
+                          label: Text(tr('oauthCopyAndOpen')),
+                        ),
                       ),
-                    ),
+                    if (_isPolling) ...[
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 6.0),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: ExpressiveCircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.94,
+                        child: TextButton.icon(
+                          onPressed: _cancelOAuthFlow,
+                          icon: const Icon(Icons.cancel_outlined, size: 16),
+                          label: Text(tr('cancel')),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
-                if (_statusMessage != null && !_isPolling && _userCode == null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    child: Text(
-                      _statusMessage!,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: _statusIsError
-                            ? Theme.of(context).colorScheme.error
-                            : Theme.of(context).colorScheme.primary,
+                  if (_statusMessage != null &&
+                      !_isPolling &&
+                      _userCode == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6.0),
+                      child: Text(
+                        _statusMessage!,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: _statusIsError
+                              ? Theme.of(context).colorScheme.error
+                              : Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
           const SizedBox(height: 8),
         ],
         TextField(

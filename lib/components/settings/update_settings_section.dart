@@ -43,10 +43,12 @@ class UpdateSettingsSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -72,7 +74,7 @@ class UpdateSettingsSection extends StatelessWidget {
           onTap: () => NavHelper.pushUpdateHealthPage(context),
         ),
       if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
-      if (_matches(tr('checkOnStart')))
+      if (_matches(tr('checkOnStart'), desc: tr('checkOnStartDescription')))
         Consumer<UpdateSettingsProvider>(
           builder: (context, updateSettings, _) => SwitchListTile.adaptive(
             secondary: buildSettingsIconBadge(
@@ -114,13 +116,19 @@ class UpdateSettingsSection extends StatelessWidget {
           getValue: (s) => s.bgGuardWhileCharging,
           setValue: (s, v) => s.bgGuardWhileCharging = v,
         ),
-      if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+      if (_matches(
+        tr('onlyCheckInstalledOrTrackOnlyApps'),
+        desc: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
+      ))
         GenericBooleanControlGrid<UpdateSettingsProvider>(
           // The surrounding group already shows this title, except in search.
           title: isSearching ? tr('sectionDeviceOptions') : '',
           embedded: true,
           settings: [
-            if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+            if (_matches(
+              tr('onlyCheckInstalledOrTrackOnlyApps'),
+              desc: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
+            ))
               (
                 icon: Icons.check_circle_outline,
                 label: tr('onlyCheckInstalledOrTrackOnlyApps'),
@@ -131,7 +139,10 @@ class UpdateSettingsSection extends StatelessWidget {
           ],
         ),
       _buildForegroundServiceSection(context),
-      if (_matches(tr('xiaomiBatteryTroubleshooting')))
+      if (_matches(
+        tr('xiaomiBatteryTroubleshooting'),
+        desc: tr('xiaomiBatteryTroubleshootingDescription'),
+      ))
         _buildXiaomiTroubleshooting(context),
     ];
 
@@ -196,7 +207,11 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildConcurrencyLimitTile(BuildContext context) {
-    if (!_matches(tr('plusUpdateCheckConcurrency'), isAdvanced: true)) {
+    if (!_matches(
+      tr('plusUpdateCheckConcurrency'),
+      desc: tr('plusUpdateCheckConcurrencyDescription'),
+      isAdvanced: true,
+    )) {
       return const SizedBox.shrink();
     }
     return Consumer<SettingsProvider>(
@@ -229,7 +244,11 @@ class UpdateSettingsSection extends StatelessWidget {
   }
 
   Widget _buildDownloadConcurrencyTile(BuildContext context) {
-    if (!_matches(tr('plusDownloadConcurrency'), isAdvanced: true)) {
+    if (!_matches(
+      tr('plusDownloadConcurrency'),
+      desc: tr('plusDownloadConcurrencyDescription'),
+      isAdvanced: true,
+    )) {
       return const SizedBox.shrink();
     }
     return Consumer<SettingsProvider>(
@@ -490,7 +509,10 @@ class UpdateSettingsSection extends StatelessWidget {
                 },
               ),
             if (plusSettings.enableAllPlusFeatures &&
-                (_matches(tr('plusEnableUpdateSchedule')) ||
+                (_matches(
+                      tr('plusEnableUpdateSchedule'),
+                      desc: tr('plusEnableUpdateScheduleDescription'),
+                    ) ||
                     _matches(tr('updateSchedule')))) ...[
               SwitchListTile.adaptive(
                 secondary: buildSettingsIconBadge(
@@ -620,7 +642,11 @@ class UpdateSettingsSection extends StatelessWidget {
                   if (_matches(tr('preferredUpdateSource')))
                     _buildSourceChipGrid(context, behaviorSettings),
                   if (plusSettings.enableAllPlusFeatures &&
-                      _matches(tr('plusSystemUpdateScanner'), isAdvanced: true))
+                      _matches(
+                        tr('plusSystemUpdateScanner'),
+                        desc: tr('plusSystemUpdateScannerDescription'),
+                        isAdvanced: true,
+                      ))
                     SwitchListTile.adaptive(
                       secondary: buildSettingsIconBadge(
                         context,
@@ -676,7 +702,10 @@ class UpdateSettingsSection extends StatelessWidget {
                       },
                     ),
                   if (plusSettings.enableAllPlusFeatures &&
-                      _matches(tr('plusEnableAutoUpdateRules')))
+                      _matches(
+                        tr('plusEnableAutoUpdateRules'),
+                        desc: tr('plusEnableAutoUpdateRulesDescription'),
+                      ))
                     SwitchListTile.adaptive(
                       secondary: buildSettingsIconBadge(
                         context,
@@ -695,7 +724,10 @@ class UpdateSettingsSection extends StatelessWidget {
                     ),
                   if (plusSettings.enableAllPlusFeatures &&
                       plusSettings.plusEnableAutoUpdateRules &&
-                      _matches(tr('autoUpdateRules')))
+                      _matches(
+                        tr('autoUpdateRules'),
+                        desc: tr('autoUpdateRulesDescription'),
+                      ))
                     ConnectedSettingContainer(
                       child: ListTile(
                         leading: buildSettingsIconBadge(
