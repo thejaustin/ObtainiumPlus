@@ -402,6 +402,13 @@ class _InstallationSectionState extends State<InstallationSection>
                 behaviorSettings.parallelDownloads = v;
               },
             ),
+
+          // Android certificate store (embedded Cronet vs dart:io)
+          if (_matches(
+            tr('androidCertStore'),
+            desc: tr('androidCertStoreHelp'),
+          ))
+            const _AndroidCertStoreTile(),
         ];
 
         final hasMethod = methodChildren.any(
@@ -927,6 +934,40 @@ class _ForgetVariantChoicesTile extends StatelessWidget {
         }
         await appsProvider.saveApps(remembered);
       },
+    );
+  }
+}
+
+
+/// "Use Android certificate store" row: on by default; shown off and disabled
+/// while Android blocks dynamic code loading (Cronet cannot run then).
+class _AndroidCertStoreTile extends StatelessWidget {
+  const _AndroidCertStoreTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final blocked = settings.memoryDclRestricted;
+    final enabled = settings.useAndroidCertStore && !blocked;
+    return SwitchListTile.adaptive(
+      secondary: buildSettingsIconBadge(
+        context,
+        Icons.verified_user_outlined,
+        active: enabled,
+      ),
+      title: Text(tr('androidCertStore')),
+      subtitle: Text(
+        blocked
+            ? tr('androidCertStoreUnavailable')
+            : tr('androidCertStoreHelp'),
+      ),
+      value: enabled,
+      onChanged: blocked
+          ? null
+          : (v) {
+              v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              settings.useAndroidCertStore = v;
+            },
     );
   }
 }
