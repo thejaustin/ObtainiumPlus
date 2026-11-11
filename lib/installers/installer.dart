@@ -4,8 +4,18 @@ import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/installers/stock_installer.dart';
 import 'package:obtainium/models/app.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
+
+/// The installer mode for [app]: its own `installerMode` setting when it sets
+/// a known one, otherwise [globalMode].
+String installerModeFor(App? app, String globalMode) {
+  final own = app?.settings.getStringOrNull('installerMode');
+  return own != null && InstallerMode.values.any((m) => m.name == own)
+      ? own
+      : globalMode;
+}
 
 String installerPackageNameForApp(App app, {required bool googlePlayDefault}) {
   var isGalaxyStore = false;
@@ -88,9 +98,10 @@ abstract class Installer {
 
   Installer(this.settingsProvider);
 
-  /// Creates the appropriate [Installer] strategy based on [settingsProvider.installerMode].
-  factory Installer.create(SettingsProvider settingsProvider) {
-    switch (settingsProvider.installerMode) {
+  /// Creates the appropriate [Installer] strategy for [app]'s install method,
+  /// or for [settingsProvider.installerMode] when the app doesn't set one.
+  factory Installer.create(SettingsProvider settingsProvider, [App? app]) {
+    switch (installerModeFor(app, settingsProvider.installerMode)) {
       case 'shizuku':
         return ShizukuInstaller(settingsProvider);
       case 'external':
