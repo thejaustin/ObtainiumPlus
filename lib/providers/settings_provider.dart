@@ -16,6 +16,8 @@ import 'package:obtainium/main.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
+import 'package:obtainium/services/dcl_support.dart';
+import 'package:obtainium/services/http_client_factory.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -131,6 +133,7 @@ class SettingsProvider with ChangeNotifier {
   ]) async {
     prefs = existingPrefs ?? prefs ?? await SharedPreferences.getInstance();
     AppLogger.verbose = enableDeepLogging;
+    HttpClientFactory.setAndroidCertStoreEnabled(useAndroidCertStore);
 
     final secureFuture = _loadSecureSettings();
     if (deferSecureStorage) {
@@ -949,6 +952,43 @@ class SettingsProvider with ChangeNotifier {
 
   set showUpdateHealthIndicator(bool val) {
     prefs?.setBool('showUpdateHealthIndicator', val);
+    notifyListeners();
+  }
+
+  /// Opt-in (preview): show a link to the app's update-health options on the
+  /// app page when the app has update-health issues.
+  bool get showUpdateHealthAppNote {
+    return _getBool('showUpdateHealthAppNote') ?? false;
+  }
+
+  set showUpdateHealthAppNote(bool val) {
+    prefs?.setBool('showUpdateHealthAppNote', val);
+    notifyListeners();
+  }
+
+  /// True when Android blocks executable memory (GrapheneOS "Dynamic code
+  /// loading via memory"); embedded Cronet cannot run then.
+  bool get memoryDclRestricted => DclSupport.isExecmemRestricted;
+
+  /// "Use Android certificate store" (default on): route HTTPS through the
+  /// embedded Cronet client. Turning it off, or a DCL restriction, falls back
+  /// to dart:io.
+  bool get useAndroidCertStore {
+    return _getBool('useAndroidCertStore') ?? true;
+  }
+
+  set useAndroidCertStore(bool value) {
+    prefs?.setBool('useAndroidCertStore', value);
+    HttpClientFactory.setAndroidCertStoreEnabled(value);
+    notifyListeners();
+  }
+
+  bool get dclWarningShown {
+    return _getBool('dclWarningShown') ?? false;
+  }
+
+  set dclWarningShown(bool value) {
+    prefs?.setBool('dclWarningShown', value);
     notifyListeners();
   }
 

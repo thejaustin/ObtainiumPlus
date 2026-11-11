@@ -196,8 +196,15 @@ class AppUpdateService {
     Map<String, AppInMemory> apps, {
     DateTime? ignoreAppsCheckedAfter,
     bool onlyCheckInstalledOrTrackOnlyApps = false,
+    Set<String> excludedCategories = const {},
   }) {
     List<String> appIds = apps.values
+        .where((app) => !app.app.disabled)
+        .where(
+          (app) =>
+              excludedCategories.isEmpty ||
+              !app.app.categories.any(excludedCategories.contains),
+        )
         .where(
           (app) =>
               app.app.lastUpdateCheck == null ||
@@ -272,6 +279,7 @@ class AppUpdateService {
     DateTime? ignoreAppsCheckedAfter,
     bool throwErrorsForRetry = false,
     List<String>? specificIds,
+    Set<String> excludedCategories = const {},
     bool gettingUpdates = false,
     Function(bool)? setGettingUpdates,
     bool ignoreCache = false,
@@ -287,6 +295,7 @@ class AppUpdateService {
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
           onlyCheckInstalledOrTrackOnlyApps:
               updateSettings.onlyCheckInstalledOrTrackOnlyApps,
+          excludedCategories: excludedCategories,
         );
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();

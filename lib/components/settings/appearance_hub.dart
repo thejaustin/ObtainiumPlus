@@ -4,35 +4,118 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
-import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
-/// Compartmentalized Appearance Hub for Material 3 Expressive settings
+/// Look & motion hub: Theme & colour, Shapes, Motion & haptics and
+/// Settings page, each opening its own subpage.
 class AppearanceHub extends StatelessWidget {
   final Future<AndroidDeviceInfo>? androidInfoFuture;
   final Widget themeContent;
-  final Widget appTileContent;
-  final Widget layoutNavContent;
-  final Widget motionPhysicsContent;
+  final Widget shapesContent;
+  final Widget motionContent;
+  final Widget settingsPageContent;
 
   const AppearanceHub({
     super.key,
     required this.androidInfoFuture,
     required this.themeContent,
-    required this.appTileContent,
-    required this.layoutNavContent,
-    required this.motionPhysicsContent,
+    required this.shapesContent,
+    required this.motionContent,
+    required this.settingsPageContent,
   });
+
+  /// Every subpage body, in card order (the settings tree test mounts them).
+  List<Widget> get contents => [
+    themeContent,
+    shapesContent,
+    motionContent,
+    settingsPageContent,
+  ];
+
+  /// Current-value summaries for the cards (Live summaries preview): the
+  /// design system and colour source, every corner radius in use, motion
+  /// speed and haptics, and the settings page layout. Order matches
+  /// [contents].
+  static List<String> liveSummaries({
+    required PlusSettingsProvider plus,
+    required ThemeSettingsProvider theme,
+    required double animationSpeed,
+  }) {
+    final mode = theme.theme == ThemeSettings.system
+        ? tr('followSystem')
+        : (theme.useBlackTheme
+              ? 'AMOLED'
+              : (theme.theme == ThemeSettings.light
+                    ? tr('light')
+                    : tr('dark')));
+    final themeParts = <String>[
+      plus.plusEnableMaterialExpressive ? 'M3E' : 'Obtainium+',
+      mode,
+      if (theme.useMaterialYou) 'Monet',
+      if (plus.plusEnableGlassmorphism) tr('hubSummaryGlass'),
+    ];
+
+    final shapeParts = <String>[
+      tr(
+        'hubSummaryCornerDp',
+        args: ['${plus.plusGlobalCornerRadius.round()}'],
+      ),
+      if (plus.plusOverrideIndividualCornerRadius) ...[
+        tr('hubSummaryHomeDp', args: ['${plus.plusHomeCornerRadius.round()}']),
+        tr(
+          'hubSummarySettingsDp',
+          args: ['${plus.plusSettingsCornerRadius.round()}'],
+        ),
+      ],
+    ];
+
+    final speed = animationSpeed.toStringAsFixed(
+      animationSpeed == animationSpeed.roundToDouble() ? 0 : 1,
+    );
+    final motionParts = <String>[
+      plus.plusEnableEnhancedAnimations
+          ? tr('hubSummarySpeed', args: [speed])
+          : tr('hubSummaryAnimOff'),
+      if (plus.plusEnableBouncyPhysics) tr('hubSummaryBouncy'),
+      tr('hubSummaryHaptics', args: [plus.plusHapticIntensity.name]),
+    ];
+
+    final placement = switch (plus.plusSettingsNavPlacement) {
+      SettingsNavPlacement.bottom => tr('visualLabBottom'),
+      SettingsNavPlacement.top => tr('visualLabTop'),
+      SettingsNavPlacement.merged => tr('visualLabMerged'),
+    };
+    final pageParts = <String>[
+      placement,
+      if (plus.plusUseCompactSettings) tr('hubSummaryCompact'),
+      plus.plusSettingsGroupStyle == SettingsGroupStyle.segmented
+          ? tr(
+              'hubSummaryGroupsSegmented',
+              args: [
+                '${plus.plusSettingsGroupOuterRadius.round()}',
+                '${plus.plusSettingsGroupInnerRadius.round()}',
+              ],
+            )
+          : tr('hubSummaryCards'),
+    ];
+    return [
+      themeParts.join(' · '),
+      shapeParts.join(' · '),
+      motionParts.join(' · '),
+      pageParts.join(' · '),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeSettings = context.watch<ThemeSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final viewSettings = context.watch<ViewSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final isCompact = plusSettings.plusUseCompactSettings;
 
@@ -44,72 +127,73 @@ class AppearanceHub extends StatelessWidget {
       themeSummary += ' · Monet';
     }
 
-    final List<String> tileDecor = [];
-    if (plusSettings.plusGridSquareTiles) tileDecor.add(tr('hubSummarySquare'));
-    if (plusSettings.plusGridCardlessStyle) tileDecor.add(tr('hubSummaryCardless'));
-    if (plusSettings.plusGridAmbientIconHalo) tileDecor.add(tr('hubSummaryIconHalo'));
-    if (plusSettings.plusUpdateExpressiveBadge) tileDecor.add(tr('hubSummaryUpdatePill'));
-    if (plusSettings.plusPinnedBorderAccent) tileDecor.add(tr('hubSummaryPinnedBorder'));
-    if (plusSettings.plusCategoryAccentRibbon) tileDecor.add(tr('hubSummaryCategoryRibbon'));
-    if (plusSettings.plusIconRimBorder) tileDecor.add(tr('hubSummaryIconRim'));
-    final tileSummary = tileDecor.isEmpty
-        ? tr('plusAppTileStyling')
-        : tileDecor.take(3).join(' · ');
-
-    String capitalized(String s) =>
-        s.isEmpty ? s : '${s[0].toUpperCase()}${s.substring(1)}';
-    final layoutSummary =
-        '${capitalized(viewSettings.globalViewMode.name)} · ${capitalized(viewSettings.appListDensity.name)}${isCompact ? ' · ${tr('hubSummaryCompact')}' : ''}';
+    final radiusDp = plusSettings.plusGlobalCornerRadius.round();
+    final shapesSummary = tr('hubSummaryCornerDp', args: ['$radiusDp']);
 
     final List<String> motionDecor = [];
-    if (plusSettings.plusEnableGlassmorphism) motionDecor.add(tr('hubSummaryGlass'));
-    if (plusSettings.plusEnableBouncyPhysics) motionDecor.add(tr('hubSummaryBouncy'));
-    if (plusSettings.plusEnableEnhancedAnimations) motionDecor.add(tr('hubSummarySmooth'));
+    if (plusSettings.plusEnableEnhancedAnimations) {
+      motionDecor.add(tr('hubSummarySmooth'));
+    }
+    if (plusSettings.plusEnableBouncyPhysics) {
+      motionDecor.add(tr('hubSummaryBouncy'));
+    }
     final motionSummary = motionDecor.isEmpty
-        ? tr('hubSummaryCornerDp', args: ['${plusSettings.plusGlobalCornerRadius.round()}'])
-        : '${motionDecor.join(" · ")} · ${tr('hubSummaryDp', args: ['${plusSettings.plusGlobalCornerRadius.round()}'])}';
+        ? tr('settingsAppearanceMotionHaptics')
+        : motionDecor.join(' · ');
+
+    final placement = switch (plusSettings.plusSettingsNavPlacement) {
+      SettingsNavPlacement.bottom => tr('visualLabBottom'),
+      SettingsNavPlacement.top => tr('visualLabTop'),
+      SettingsNavPlacement.merged => tr('visualLabMerged'),
+    };
+    final settingsPageSummary = isCompact
+        ? '$placement · ${tr('hubSummaryCompact')}'
+        : placement;
+
+    final live = plusSettings.plusSettingsLiveSummaries
+        ? liveSummaries(
+            plus: plusSettings,
+            theme: themeSettings,
+            animationSpeed: context
+                .watch<SettingsProvider>()
+                .animationSpeedMultiplier,
+          )
+        : null;
 
     final hubCards = [
       (
         icon: Icons.palette_rounded,
         title: tr('settingsAppearanceThemesAndColors'),
         desc: tr('settingsAppearanceThemesAndColorsDesc'),
-        summary: themeSummary,
+        summary: live?[0] ?? themeSummary,
         color: colorScheme.primary,
         content: themeContent,
       ),
       (
-        icon: Icons.style_rounded,
-        title: tr('settingsAppearanceAppTileStyling'),
-        desc: tr('settingsAppearanceAppTileStylingDesc'),
-        summary: tileSummary,
+        icon: Icons.rounded_corner_rounded,
+        title: tr('settingsAppearanceShapes'),
+        desc: tr('settingsAppearanceShapesDesc'),
+        summary: live?[1] ?? shapesSummary,
         color: colorScheme.primary,
-        content: appTileContent,
-      ),
-      (
-        icon: Icons.dashboard_customize_outlined,
-        title: tr('settingsAppearanceLayoutNav'),
-        desc: tr('settingsAppearanceLayoutNavDesc'),
-        summary: layoutSummary,
-        color: colorScheme.primary,
-        content: layoutNavContent,
+        content: shapesContent,
       ),
       (
         icon: Icons.auto_awesome_motion_rounded,
-        title: tr('settingsAppearanceMotionPhysics'),
-        desc: tr('settingsAppearanceMotionPhysicsDesc'),
-        summary: motionSummary,
+        title: tr('settingsAppearanceMotionHaptics'),
+        desc: tr('settingsAppearanceMotionHapticsDesc'),
+        summary: live?[2] ?? motionSummary,
         color: colorScheme.primary,
-        content: motionPhysicsContent,
+        content: motionContent,
+      ),
+      (
+        icon: Icons.dashboard_customize_outlined,
+        title: tr('settingsAppearanceSettingsPage'),
+        desc: tr('settingsAppearanceSettingsPageDesc'),
+        summary: live?[3] ?? settingsPageSummary,
+        color: colorScheme.primary,
+        content: settingsPageContent,
       ),
     ];
-
-    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusSettingsCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(baseRadius);
-    final innerRadius = CardMetrics.inner(cardRadius);
-    final badgeSize = isCompact ? 30.0 : 36.0;
 
     final appearanceSiblings = hubCards.map((card) {
       return SettingsSubpageSibling(
@@ -126,126 +210,6 @@ class AppearanceHub extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Padding(
-            padding: EdgeInsets.only(bottom: isCompact ? 6 : 10),
-            child: Card(
-              elevation: 0,
-              margin: EdgeInsets.zero,
-              color: plusSettings.plusEnableGlassmorphism
-                  ? colorScheme.surfaceContainerLow.withValues(alpha: 0.7)
-                  : colorScheme.surfaceContainerLow,
-              shape: CardMetrics.shape(
-                cardRadius,
-                expressive: isM3E,
-                side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  isCompact ? 14 : 16,
-                  isCompact ? 10 : 14,
-                  isCompact ? 14 : 16,
-                  isCompact ? 10 : 14,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: badgeSize,
-                          height: badgeSize,
-                          decoration: ShapeDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.12),
-                            shape: CardMetrics.shape(
-                              innerRadius,
-                              expressive: isM3E,
-                            ),
-                          ),
-                          child: Icon(
-                            isM3E
-                                ? Icons.brush_rounded
-                                : Icons.auto_awesome_rounded,
-                            size: isCompact ? 16 : 18,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                tr('designSystemThemeStyle'),
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: 0,
-                                      color: colorScheme.onSurface,
-                                    ),
-                              ),
-                              if (!isCompact) ...[
-                                const SizedBox(height: 2),
-                                Text(
-                                  isM3E
-                                      ? tr('materialExpressiveThemeDescription')
-                                      : tr('obtainiumPlusThemeDescription'),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(
-                                    context,
-                                  ).listTileTheme.subtitleTextStyle,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: isCompact ? 8 : 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: SegmentedButton<bool>(
-                        style: SegmentedButton.styleFrom(
-                          visualDensity: isCompact
-                              ? VisualDensity.compact
-                              : VisualDensity.standard,
-                        ),
-                        segments: [
-                          ButtonSegment<bool>(
-                            value: false,
-                            label: Text(tr('obtainiumPlusThemeShort')),
-                            tooltip: tr('obtainiumPlusTheme'),
-                            icon: const Icon(
-                              Icons.auto_awesome_rounded,
-                              size: 16,
-                            ),
-                          ),
-                          ButtonSegment<bool>(
-                            value: true,
-                            label: Text(tr('materialExpressiveThemeShort')),
-                            tooltip: tr('materialExpressiveTheme'),
-                            icon: const Icon(Icons.brush_rounded, size: 16),
-                          ),
-                        ],
-                        selected: {isM3E},
-                        onSelectionChanged: (Set<bool> newSelection) {
-                          final next = newSelection.first;
-                          next ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                          plusSettings.plusEnableMaterialExpressive = next;
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
           LayoutBuilder(
             builder: (context, constraints) {
               final bool useTwoColumns = constraints.maxWidth >= 560;

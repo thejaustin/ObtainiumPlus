@@ -2,7 +2,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/connected_setting_container.dart';
+import 'package:obtainium/components/settings/app_behavior_section.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/settings_sections.dart';
+import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/shizuku_status_card.dart';
 import 'package:obtainium/components/system_app_selector_sheet.dart';
@@ -121,11 +124,20 @@ class _InstallationSectionState extends State<InstallationSection>
         final List<Widget> methodChildren = [
           // Installer method selector — unified radio picker
           if (_matches(tr('useShizuku'), desc: tr('useShizukuDescription')) ||
-              _matches(tr('rootInstaller'), desc: tr('rootInstallerDescription')) ||
+              _matches(
+                tr('rootInstaller'),
+                desc: tr('rootInstallerDescription'),
+              ) ||
               _matches(tr('installMethod')) ||
               _matches(tr('installerMethodLabel')) ||
-              _matches(tr('shizukuPretendToBeGooglePlay'), desc: tr('shizukuPretendToBeGooglePlayDescription')) ||
-              _matches(tr('shizukuFallbackToSystem'), desc: tr('shizukuFallbackToSystemDescription')) ||
+              _matches(
+                tr('shizukuPretendToBeGooglePlay'),
+                desc: tr('shizukuPretendToBeGooglePlayDescription'),
+              ) ||
+              _matches(
+                tr('shizukuFallbackToSystem'),
+                desc: tr('shizukuFallbackToSystemDescription'),
+              ) ||
               (_matches('binder') || _matches(tr('searchKeywordBinder'))) ||
               !isSearching)
             _buildInstallerMethodSelector(
@@ -135,13 +147,18 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
         ];
 
-        final List<Widget> optionsChildren = [
+        // Installer: the method picker comes first (see methodChildren).
+        final List<Widget> installerChildren = [
           // Device Compatibility & Performance
           if (_matches(tr('devicePerformanceAndCompatibility')) ||
-              (_matches('compatibility') || _matches(tr('searchKeywordCompatibility'))) ||
-              (_matches('performance') || _matches(tr('searchKeywordPerformance'))) ||
-              (_matches('device tuning') || _matches(tr('searchKeywordDeviceTuning'))) ||
-              (_matches('device optimization') || _matches(tr('searchKeywordDeviceOptimization'))) ||
+              (_matches('compatibility') ||
+                  _matches(tr('searchKeywordCompatibility'))) ||
+              (_matches('performance') ||
+                  _matches(tr('searchKeywordPerformance'))) ||
+              (_matches('device tuning') ||
+                  _matches(tr('searchKeywordDeviceTuning'))) ||
+              (_matches('device optimization') ||
+                  _matches(tr('searchKeywordDeviceOptimization'))) ||
               (_matches('tuning') || _matches(tr('searchKeywordTuning'))) ||
               (_matches('speed') || _matches(tr('searchKeywordSpeed'))) ||
               _matches('oem') ||
@@ -217,24 +234,107 @@ class _InstallationSectionState extends State<InstallationSection>
                 showDeviceOptimizationSheet(context: context);
               },
             ),
+        ];
 
-          // Import Installed Apps
-          if (_matches(tr('importInstalledApps'), desc: tr('importInstalledAppsDescription')))
-            ListTile(
-              leading: buildSettingsIconBadge(
+        // Downloads: parallel downloads is the master of the concurrency.
+        final showDownloadLimit = _matches(
+          tr('plusDownloadConcurrency'),
+          desc: tr('plusDownloadConcurrencyDescription'),
+          isAdvanced: true,
+        );
+        final List<Widget> downloadChildren = [
+          // Parallel Downloads
+          if (_matches(
+            tr('parallelDownloads'),
+            desc: tr('parallelDownloadsDescription'),
+            isAdvanced: true,
+          ))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
                 context,
-                Icons.install_mobile_rounded,
-                active: true,
+                Icons.file_download_outlined,
+                active: behaviorSettings.parallelDownloads,
               ),
-              title: Text(tr('importInstalledApps')),
-              subtitle: Text(tr('importInstalledAppsDescription')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                AppHaptics.selectionClick();
-                showSystemAppSelectorSheet(context: context);
+              title: Text(tr('parallelDownloads')),
+              subtitle: Text(tr('parallelDownloadsDescription')),
+              value: behaviorSettings.parallelDownloads,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.parallelDownloads = v;
               },
             ),
+          if (showDownloadLimit)
+            SettingsChildRows(
+              enabled: behaviorSettings.parallelDownloads,
+              children: [
+                Consumer<SettingsProvider>(
+                  builder: (context, settings, _) => SettingsSliderTile(
+                    icon: Icons.download_for_offline_outlined,
+                    title: tr('plusDownloadConcurrency'),
+                    subtitle: tr('plusDownloadConcurrencyDescription'),
+                    value: (settings.updateDownloadConcurrencyLimit - 1)
+                        .toDouble()
+                        .clamp(0, 4),
+                    defaultValue: 0.0,
+                    min: 0,
+                    max: 4,
+                    divisions: 4,
+                    labelBuilder: (v) => (v.round() + 1).toString(),
+                    onChanged: (val) {
+                      settings.updateDownloadConcurrencyLimit = val.round() + 1;
+                    },
+                  ),
+                ),
+              ],
+            ),
+        ];
 
+        final List<Widget> beforeChildren = [
+          // Another build of the app already installed
+          if (_matches(
+            tr('askAboutOtherInstalledBuilds'),
+            desc: tr('askAboutOtherInstalledBuildsDescription'),
+          ))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.layers_outlined,
+                active: behaviorSettings.askAboutOtherInstalledBuilds,
+              ),
+              title: Text(tr('askAboutOtherInstalledBuilds')),
+              subtitle: Text(tr('askAboutOtherInstalledBuildsDescription')),
+              value: behaviorSettings.askAboutOtherInstalledBuilds,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.askAboutOtherInstalledBuilds = v;
+              },
+            ),
+          if (_matches(
+            tr('askAboutOtherInstalledBuilds'),
+            desc: tr('askAboutOtherInstalledBuildsDescription'),
+          ))
+            const _ForgetVariantChoicesTile(),
+          // App Verifier
+          if (_matches(
+            tr('beforeNewInstallsShareToAppVerifier'),
+            desc: tr('beforeNewInstallsShareToAppVerifierDescription'),
+          ))
+            SwitchListTile.adaptive(
+              secondary: buildSettingsIconBadge(
+                context,
+                Icons.verified_user_outlined,
+                active: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+              ),
+              title: Text(tr('beforeNewInstallsShareToAppVerifier')),
+              subtitle: Text(
+                tr('beforeNewInstallsShareToAppVerifierDescription'),
+              ),
+              value: behaviorSettings.beforeNewInstallsShareToAppVerifier,
+              onChanged: (v) {
+                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                behaviorSettings.beforeNewInstallsShareToAppVerifier = v;
+              },
+            ),
           // Install Unknown Apps (system settings shortcut)
           if (_matches(tr('installUnknownApps')))
             ListTile(
@@ -258,102 +358,14 @@ class _InstallationSectionState extends State<InstallationSection>
                 }
               },
             ),
+        ];
 
-          // Standalone Installer
-          if (_matches(tr('plusEnableStandaloneInstaller'), desc: tr('plusEnableStandaloneInstallerDescription')))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.install_mobile_outlined,
-              title: tr('plusEnableStandaloneInstaller'),
-              subtitle: tr('plusEnableStandaloneInstallerDescription'),
-              value: (s) => s.plusEnableStandaloneInstaller,
-              onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
-            ),
-
-          // Smart Retries & Caching
-          if (_matches(tr('plusSmartRetries'), desc: tr('plusSmartRetriesDescription'), isAdvanced: true))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.bolt_outlined,
-              title: tr('plusSmartRetries'),
-              subtitle: tr('plusSmartRetriesDescription'),
-              value: (s) => s.plusEnableSmartRetries,
-              onChanged: (s, v) => s.plusEnableSmartRetries = v,
-            ),
-
-          // Update Ownership (Android 14+)
-          if (_matches(tr('plusUpdateOwnership'), desc: tr('plusUpdateOwnershipDescription'), isAdvanced: true))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.security_update_good_rounded,
-              title: tr('plusUpdateOwnership'),
-              subtitle: tr('plusUpdateOwnershipDescription'),
-              value: (s) => s.plusEnableUpdateOwnership,
-              onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
-            ),
-
-          // User Pre-approval (Android 14+)
-          if (_matches(tr('plusUserPreapproval'), desc: tr('plusUserPreapprovalDescription'), isAdvanced: true))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.touch_app_outlined,
-              title: tr('plusUserPreapproval'),
-              subtitle: tr('plusUserPreapprovalDescription'),
-              value: (s) => s.plusEnableUserPreapproval,
-              onChanged: (s, v) => s.plusEnableUserPreapproval = v,
-            ),
-
-          // Another build of the app already installed
-          if (_matches(tr('askAboutOtherInstalledBuilds'), desc: tr('askAboutOtherInstalledBuildsDescription')))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.layers_outlined,
-                active: behaviorSettings.askAboutOtherInstalledBuilds,
-              ),
-              title: Text(tr('askAboutOtherInstalledBuilds')),
-              subtitle: Text(tr('askAboutOtherInstalledBuildsDescription')),
-              value: behaviorSettings.askAboutOtherInstalledBuilds,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.askAboutOtherInstalledBuilds = v;
-              },
-            ),
-          if (_matches(tr('askAboutOtherInstalledBuilds'), desc: tr('askAboutOtherInstalledBuildsDescription')))
-            const _ForgetVariantChoicesTile(),
-
-          // App Verifier
-          if (_matches(tr('beforeNewInstallsShareToAppVerifier'), desc: tr('beforeNewInstallsShareToAppVerifierDescription')))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
-                context,
-                Icons.verified_user_outlined,
-                active: behaviorSettings.beforeNewInstallsShareToAppVerifier,
-              ),
-              title: Text(tr('beforeNewInstallsShareToAppVerifier')),
-              subtitle: Text(
-                tr('beforeNewInstallsShareToAppVerifierDescription'),
-              ),
-              value: behaviorSettings.beforeNewInstallsShareToAppVerifier,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.beforeNewInstallsShareToAppVerifier = v;
-              },
-            ),
-
-          // MicroG Compat Hub
-          if (_matches(tr('plusEnableMicroGHub'), desc: tr('plusEnableMicroGHubDescription'), isAdvanced: true))
-            buildFeatureToggle<PlusSettingsProvider>(
-              context,
-              icon: Icons.hub_outlined,
-              title: tr('plusEnableMicroGHub'),
-              subtitle: tr('plusEnableMicroGHubDescription'),
-              value: (s) => s.plusEnableMicroGHub,
-              onChanged: (s, v) => s.plusEnableMicroGHub = v,
-            ),
-
+        final List<Widget> sourceChildren = [
           // Allow Third-Party Sources
-          if (_matches(tr('allowThirdPartySources'), desc: tr('allowThirdPartySourcesDescription')))
+          if (_matches(
+            tr('allowThirdPartySources'),
+            desc: tr('allowThirdPartySourcesDescription'),
+          ))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,
@@ -368,9 +380,11 @@ class _InstallationSectionState extends State<InstallationSection>
                 behaviorSettings.allowThirdPartySources = v;
               },
             ),
-
           // Use Play Store App Links
-          if (_matches(tr('usePlayStoreAppLinks'), desc: tr('usePlayStoreAppLinksDescription')))
+          if (_matches(
+            tr('usePlayStoreAppLinks'),
+            desc: tr('usePlayStoreAppLinksDescription'),
+          ))
             SwitchListTile.adaptive(
               secondary: buildSettingsIconBadge(
                 context,
@@ -385,62 +399,167 @@ class _InstallationSectionState extends State<InstallationSection>
                 behaviorSettings.usePlayStoreAppLinks = v;
               },
             ),
+          // MicroG Compat Hub
+          if (_matches(
+            tr('plusEnableMicroGHub'),
+            desc: tr('plusEnableMicroGHubDescription'),
+            isAdvanced: true,
+          ))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.hub_outlined,
+              title: tr('plusEnableMicroGHub'),
+              subtitle: tr('plusEnableMicroGHubDescription'),
+              value: (s) => s.plusEnableMicroGHub,
+              onChanged: (s, v) => s.plusEnableMicroGHub = v,
+            ),
+          // Android certificate store (embedded Cronet vs dart:io)
+          if (_matches(
+            tr('androidCertStore'),
+            desc: tr('androidCertStoreHelp'),
+          ))
+            const _AndroidCertStoreTile(),
+        ];
 
-          // Parallel Downloads
-          if (_matches(tr('parallelDownloads'), desc: tr('parallelDownloadsDescription'), isAdvanced: true))
-            SwitchListTile.adaptive(
-              secondary: buildSettingsIconBadge(
+        final List<Widget> moreChildren = [
+          // Standalone Installer
+          if (_matches(
+            tr('plusEnableStandaloneInstaller'),
+            desc: tr('plusEnableStandaloneInstallerDescription'),
+          ))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.install_mobile_outlined,
+              title: tr('plusEnableStandaloneInstaller'),
+              subtitle: tr('plusEnableStandaloneInstallerDescription'),
+              value: (s) => s.plusEnableStandaloneInstaller,
+              onChanged: (s, v) => s.plusEnableStandaloneInstaller = v,
+            ),
+          // Smart Retries & Caching
+          if (_matches(
+            tr('plusSmartRetries'),
+            desc: tr('plusSmartRetriesDescription'),
+            isAdvanced: true,
+          ))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.bolt_outlined,
+              title: tr('plusSmartRetries'),
+              subtitle: tr('plusSmartRetriesDescription'),
+              value: (s) => s.plusEnableSmartRetries,
+              onChanged: (s, v) => s.plusEnableSmartRetries = v,
+            ),
+          // Update Ownership (Android 14+)
+          if (_matches(
+            tr('plusUpdateOwnership'),
+            desc: tr('plusUpdateOwnershipDescription'),
+            isAdvanced: true,
+          ))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.security_update_good_rounded,
+              title: tr('plusUpdateOwnership'),
+              subtitle: tr('plusUpdateOwnershipDescription'),
+              value: (s) => s.plusEnableUpdateOwnership,
+              onChanged: (s, v) => s.plusEnableUpdateOwnership = v,
+            ),
+          // User Pre-approval (Android 14+)
+          if (_matches(
+            tr('plusUserPreapproval'),
+            desc: tr('plusUserPreapprovalDescription'),
+            isAdvanced: true,
+          ))
+            buildFeatureToggle<PlusSettingsProvider>(
+              context,
+              icon: Icons.touch_app_outlined,
+              title: tr('plusUserPreapproval'),
+              subtitle: tr('plusUserPreapprovalDescription'),
+              value: (s) => s.plusEnableUserPreapproval,
+              onChanged: (s, v) => s.plusEnableUserPreapproval = v,
+            ),
+          // Import Installed Apps
+          if (_matches(
+            tr('importInstalledApps'),
+            desc: tr('importInstalledAppsDescription'),
+          ))
+            ListTile(
+              leading: buildSettingsIconBadge(
                 context,
-                Icons.file_download_outlined,
-                active: behaviorSettings.parallelDownloads,
+                Icons.install_mobile_rounded,
+                active: true,
               ),
-              title: Text(tr('parallelDownloads')),
-              subtitle: Text(tr('parallelDownloadsDescription')),
-              value: behaviorSettings.parallelDownloads,
-              onChanged: (v) {
-                v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                behaviorSettings.parallelDownloads = v;
+              title: Text(tr('importInstalledApps')),
+              subtitle: Text(tr('importInstalledAppsDescription')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                AppHaptics.selectionClick();
+                showSystemAppSelectorSheet(context: context);
               },
             ),
         ];
 
-        final hasMethod = methodChildren.any(
-          (w) => !(w is SizedBox && w.child == null),
-        );
-        final hasOptions = optionsChildren.any(
-          (w) => !(w is SizedBox && w.child == null),
-        );
-
-        if (!hasMethod && !hasOptions) {
-          return const SizedBox.shrink();
-        }
+        bool present(List<Widget> ws) =>
+            ws.any((w) => !(w is SizedBox && w.child == null));
+        String? label(String key) => isSearching ? null : tr(key);
+        final moreBody = present(moreChildren)
+            ? ExpressiveSettingsGroup(
+                title: label('settingsMore'),
+                persistKey: 'install.more',
+                icon: Icons.more_horiz_rounded,
+                children: moreChildren,
+              )
+            : null;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (hasMethod)
+            if (present(methodChildren) || present(installerChildren))
               ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('installerMethodLabel'),
+                title: label('installerMethodLabel'),
                 description: isSearching ? null : tr('installationGroupDesc'),
                 persistKey: 'installation_method',
                 icon: Icons.install_mobile_rounded,
-                isExpandable: !isSearching,
-                initiallyExpanded: true,
-                children: methodChildren,
+                children: [...methodChildren, ...installerChildren],
               ),
-            if (hasMethod && hasOptions) const SizedBox(height: 12),
-            if (hasOptions)
+            if (present(downloadChildren))
               ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('installation'),
-                description: isSearching
-                    ? null
-                    : tr('devicePerformanceAndCompatibilitySubtitle'),
-                persistKey: 'installation_options',
-                icon: Icons.security_rounded,
-                isExpandable: !isSearching,
-                initiallyExpanded: true,
-                children: optionsChildren,
+                title: label('settingsGroupDownloads'),
+                persistKey: 'install.downloads',
+                icon: Icons.file_download_outlined,
+                children: downloadChildren,
               ),
+            if (present(beforeChildren))
+              ExpressiveSettingsGroup(
+                title: label('settingsGroupBeforeInstalling'),
+                persistKey: 'install.before',
+                icon: Icons.fact_check_outlined,
+                children: beforeChildren,
+              ),
+            if (present(sourceChildren))
+              ExpressiveSettingsGroup(
+                title: label('settingsGroupSources'),
+                persistKey: 'install.sources',
+                icon: Icons.source_outlined,
+                children: sourceChildren,
+              ),
+            AppBehaviorSection(
+              searchQuery: widget.searchQuery,
+              showAdvancedSettings: widget.showAdvancedSettings,
+              part: AppBehaviorPart.safety,
+            ),
+            if (moreBody != null)
+              isSearching
+                  ? moreBody
+                  : ExpressiveSettingsGroup(
+                      persistKey: 'install.moreLink',
+                      children: [
+                        SettingsSubpageLink.more(
+                          subtitle: tr('settingsMoreInstallDesc'),
+                          searching: false,
+                          child: moreBody,
+                        ),
+                      ],
+                    ),
           ],
         );
       },
@@ -927,6 +1046,39 @@ class _ForgetVariantChoicesTile extends StatelessWidget {
         }
         await appsProvider.saveApps(remembered);
       },
+    );
+  }
+}
+
+/// "Use Android certificate store" row: on by default; shown off and disabled
+/// while Android blocks dynamic code loading (Cronet cannot run then).
+class _AndroidCertStoreTile extends StatelessWidget {
+  const _AndroidCertStoreTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<SettingsProvider>();
+    final blocked = settings.memoryDclRestricted;
+    final enabled = settings.useAndroidCertStore && !blocked;
+    return SwitchListTile.adaptive(
+      secondary: buildSettingsIconBadge(
+        context,
+        Icons.verified_user_outlined,
+        active: enabled,
+      ),
+      title: Text(tr('androidCertStore')),
+      subtitle: Text(
+        blocked
+            ? tr('androidCertStoreUnavailable')
+            : tr('androidCertStoreHelp'),
+      ),
+      value: enabled,
+      onChanged: blocked
+          ? null
+          : (v) {
+              v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              settings.useAndroidCertStore = v;
+            },
     );
   }
 }

@@ -2353,10 +2353,7 @@ class AppsProvider with ChangeNotifier {
       try {
         app = App.fromJson(raw);
       } catch (err) {
-        logs.add(
-          'Skipped unreadable app data: $err',
-          level: LogLevel.warning,
-        );
+        logs.add('Skipped unreadable app data: $err', level: LogLevel.warning);
         continue;
       }
       String? sourceType;
@@ -2651,8 +2648,8 @@ class AppsProvider with ChangeNotifier {
         }
       }
       try {
-        icon ??=
-            await apps[appId]?.installedInfo?.applicationInfo?.getAppIcon();
+        icon ??= await apps[appId]?.installedInfo?.applicationInfo
+            ?.getAppIcon();
       } catch (e) {
         LogsProvider().add('Failed to load live icon for $appId: $e');
       }
@@ -2986,6 +2983,27 @@ class AppsProvider with ChangeNotifier {
       }
     });
     viewSettings.setCategories(cats, appsProvider: this);
+  }
+
+  /// Sets the persisted `disabled` flag on every tracked app in [appIds]
+  /// (unknown IDs are ignored). Disabled apps are skipped by update checks.
+  Future<void> setAppsDisabled(Iterable<String> appIds, bool disabled) async {
+    final current = appIds
+        .map((id) => apps[id]?.app)
+        .whereType<App>()
+        .where((a) => a.disabled != disabled)
+        .toList();
+    if (current.isEmpty) return;
+    await saveApps(current.map((a) => a.copyWith(disabled: disabled)).toList());
+  }
+
+  /// Flips the `disabled` flag of one app; returns the new state.
+  Future<bool> toggleAppDisabled(String appId) async {
+    final app = apps[appId]?.app;
+    if (app == null) return false;
+    final next = !app.disabled;
+    await setAppsDisabled([appId], next);
+    return next;
   }
 
   Future<App?> checkUpdate(String appId, {bool ignoreCache = false}) async {

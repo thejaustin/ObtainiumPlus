@@ -10,7 +10,9 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 
 /// Developer options for A/B testing visual choices in-app. Every option
-/// defaults to the shipped look; older variants are opt-in.
+/// defaults to the shipped look; older variants are opt-in. The category
+/// bar placement, description lines and the expressive previews live in
+/// Look & motion (Settings page / Motion & haptics).
 class VisualLabPage extends StatelessWidget {
   const VisualLabPage({super.key});
 
@@ -66,18 +68,6 @@ class VisualLabPage extends StatelessWidget {
                     persistKey: 'visualLab:navigation',
                     icon: Icons.space_dashboard_rounded,
                     children: [
-                      _ChoiceOption<SettingsNavPlacement>(
-                        title: tr('visualLabNavPlacement'),
-                        description: tr('visualLabNavPlacementDesc'),
-                        value: plus.plusSettingsNavPlacement,
-                        defaultValue: SettingsNavPlacement.bottom,
-                        options: {
-                          SettingsNavPlacement.bottom: tr('visualLabBottom'),
-                          SettingsNavPlacement.top: tr('visualLabTop'),
-                          SettingsNavPlacement.merged: tr('visualLabMerged'),
-                        },
-                        onChanged: (v) => plus.plusSettingsNavPlacement = v,
-                      ),
                       _ChoiceOption<NavBarBlurStrength>(
                         title: tr('visualLabNavBlur'),
                         description: tr('visualLabNavBlurDesc'),
@@ -156,15 +146,6 @@ class VisualLabPage extends StatelessWidget {
                           false: tr('visualLabHide'),
                         },
                         onChanged: (v) => plus.plusLabShowHeroTopicChips = v,
-                      ),
-                      _ChoiceOption<int>(
-                        title: tr('visualLabDescriptionLines'),
-                        description: tr('visualLabDescriptionLinesDesc'),
-                        value: plus.plusLabCompactDescriptionLines,
-                        defaultValue: 2,
-                        options: const {1: '1', 2: '2', 3: '3'},
-                        onChanged: (v) =>
-                            plus.plusLabCompactDescriptionLines = v,
                       ),
                     ],
                   ),

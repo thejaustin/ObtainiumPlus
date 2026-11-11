@@ -5,6 +5,7 @@ import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/app_source_helpers.dart';
 import 'package:obtainium/models/release_note.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/host_request_gate.dart';
@@ -417,6 +418,20 @@ abstract class AppSource {
     [GeneratedFormSwitch('trackOnly', label: tr('trackOnly'))],
     [GeneratedFormTextField('appName', label: tr('appName'), required: false)],
     [GeneratedFormTextField('appAuthor', label: tr('author'), required: false)],
+    [
+      GeneratedFormDropdown(
+        'installerMode',
+        [
+          MapEntry('', tr('useGlobalDefault')),
+          MapEntry(InstallerMode.system.name, tr('installMethodSystem')),
+          MapEntry(InstallerMode.shizuku.name, tr('installMethodShizuku')),
+          MapEntry(InstallerMode.external.name, tr('installMethodExternal')),
+          MapEntry(InstallerMode.root.name, tr('installMethodRoot')),
+        ],
+        label: tr('installMethod'),
+        required: false,
+      ),
+    ],
     [
       GeneratedFormSwitch(
         'shizukuPretendToBeGooglePlay',

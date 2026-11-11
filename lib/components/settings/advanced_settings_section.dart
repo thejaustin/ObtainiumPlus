@@ -24,9 +24,11 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/pages/import_export.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
-import 'package:obtainium/components/settings/settings_layout_selector.dart';
+import 'package:obtainium/components/settings/settings_sections.dart';
+import 'package:obtainium/components/settings/troubleshooting_section.dart';
 
-/// Advanced / warnings settings section
+/// Advanced tab: advanced-settings switch, Obtainium+, backup, accounts,
+/// warnings & tips, troubleshooting, developer and reset.
 class AdvancedSettingsSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
@@ -59,8 +61,6 @@ class AdvancedSettingsSection extends StatelessWidget {
         showAdvancedSettings: showAdvancedSettings,
         embedded: true,
       ),
-      if (searchQuery == null || searchQuery!.isEmpty)
-        const SettingsLayoutSelector(embedded: true),
     ];
 
     final List<Widget> dataGroup = [
@@ -128,7 +128,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         ),
     ];
 
-    final List<Widget> devGroup = [
+    final List<Widget> topGroup = [
       if (_matches(
         tr('showAdvancedSettings'),
         desc: tr('showAdvancedSettingsDescription'),
@@ -151,44 +151,54 @@ class AdvancedSettingsSection extends StatelessWidget {
             );
           },
         ),
-      if (_matches(
-        tr('enableDeepLogging'),
-        desc: tr('enableDeepLoggingDescription'),
-      ))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.bug_report_outlined,
-          title: tr('enableDeepLogging'),
-          subtitle: tr('enableDeepLoggingDescription'),
-          value: (s) => s.enableDeepLogging,
-          onChanged: (s, v) => s.enableDeepLogging = v,
-        ),
-      _buildTokenConfigTile(
-        context,
-        icon: Icons.login_outlined,
-        title: tr('plusGithubToken'),
-        subtitle: tr('plusGithubTokenDescription'),
-        settingId: 'github-creds',
-        helpUrl:
-            'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
-        visible: _matches(
+    ];
+
+    // Accounts: the GitHub and GitLab tokens on their own page.
+    final tokenMatches =
+        _matches(
           tr('plusGithubToken'),
           desc: tr('plusGithubTokenDescription'),
-        ),
-      ),
-      _buildTokenConfigTile(
-        context,
-        icon: Icons.login_outlined,
-        title: tr('plusGitlabToken'),
-        subtitle: tr('plusGitlabTokenDescription'),
-        settingId: 'gitlab-creds',
-        helpUrl:
-            'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
-        visible: _matches(
+        ) ||
+        _matches(
           tr('plusGitlabToken'),
           desc: tr('plusGitlabTokenDescription'),
-        ),
+        ) ||
+        _matches(tr('settingsAccountsTokens'));
+    final tokensBody = Builder(
+      builder: (ctx) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildTokenConfigTile(
+            ctx,
+            icon: Icons.login_outlined,
+            title: tr('plusGithubToken'),
+            subtitle: tr('plusGithubTokenDescription'),
+            settingId: 'github-creds',
+            helpUrl:
+                'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
+            visible: _matches(
+              tr('plusGithubToken'),
+              desc: tr('plusGithubTokenDescription'),
+            ),
+          ),
+          _buildTokenConfigTile(
+            ctx,
+            icon: Icons.login_outlined,
+            title: tr('plusGitlabToken'),
+            subtitle: tr('plusGitlabTokenDescription'),
+            settingId: 'gitlab-creds',
+            helpUrl:
+                'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
+            visible: _matches(
+              tr('plusGitlabToken'),
+              desc: tr('plusGitlabTokenDescription'),
+            ),
+          ),
+        ],
       ),
+    );
+
+    final List<Widget> warningsGroup = [
       if (_matches(
         tr('dontShowTrackOnlyWarnings'),
         desc: tr('dontShowTrackOnlyWarningsDescription'),
@@ -228,19 +238,9 @@ class AdvancedSettingsSection extends StatelessWidget {
             if (v) s.resetTips();
           },
         ),
-      if (_matches(
-        tr('highlightTouchTargets'),
-        desc: tr('highlightTouchTargetsDescription'),
-        isAdvanced: true,
-      ))
-        _buildSettingsToggle(
-          context,
-          icon: Icons.touch_app_outlined,
-          title: tr('highlightTouchTargets'),
-          subtitle: tr('highlightTouchTargetsDescription'),
-          value: (s) => s.highlightTouchTargets,
-          onChanged: (s, v) => s.highlightTouchTargets = v,
-        ),
+    ];
+
+    final List<Widget> resetGroup = [
       if (_matches(tr('factoryReset'), desc: tr('factoryResetDescription')))
         ListTile(
           leading: buildSettingsIconBadge(
@@ -260,48 +260,93 @@ class AdvancedSettingsSection extends StatelessWidget {
         ),
     ];
 
-    final hasPlus =
-        !isSearching ||
-        plusGroup.any((w) => !(w is SizedBox && w.child == null));
-    final hasData = dataGroup.any((w) => !(w is SizedBox && w.child == null));
-    final hasDev = devGroup.any((w) => !(w is SizedBox && w.child == null));
-
-    if (!hasPlus && !hasData && !hasDev) return const SizedBox.shrink();
+    bool present(List<Widget> ws) =>
+        ws.any((w) => !(w is SizedBox && w.child == null));
+    String? label(String key) => isSearching ? null : tr(key);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (hasPlus)
+        if (present(topGroup))
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('advancedPlusGroupTitle'),
+            persistKey: 'advanced.top',
+            children: topGroup,
+          ),
+        if (!isSearching || present(plusGroup))
+          ExpressiveSettingsGroup(
+            title: label('advancedPlusGroupTitle'),
             description: isSearching ? null : tr('advancedPlusGroupDesc'),
             persistKey: 'advanced_plus',
             icon: Icons.stars_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
             children: plusGroup,
           ),
-        if (hasPlus && (hasData || hasDev)) const SizedBox(height: 12),
-        if (hasData)
+        if (present(dataGroup))
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('importExport'),
+            title: label('settingsGroupBackup'),
             description: isSearching ? null : tr('advancedDataGroupDesc'),
             persistKey: 'advanced_data',
             icon: Icons.backup_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
             children: dataGroup,
           ),
-        if (hasData && hasDev) const SizedBox(height: 12),
-        if (hasDev)
+        if (tokenMatches)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('advanced'),
-            description: isSearching ? null : tr('advancedGroupDesc'),
-            persistKey: 'advanced_system',
-            icon: Icons.settings_applications_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
-            children: devGroup,
+            title: label('settingsGroupAccounts'),
+            persistKey: 'advanced.accounts',
+            icon: Icons.key_rounded,
+            children: [
+              SettingsSubpageLink(
+                icon: Icons.key_rounded,
+                title: tr('settingsAccountsTokens'),
+                subtitle: tr('settingsAccountsTokensDesc'),
+                searching: isSearching,
+                child: tokensBody,
+              ),
+            ],
+          ),
+        if (present(warningsGroup))
+          ExpressiveSettingsGroup(
+            title: label('settingsGroupWarningsTips'),
+            persistKey: 'advanced.warnings',
+            icon: Icons.tips_and_updates_outlined,
+            children: warningsGroup,
+          ),
+        TroubleshootingSection(
+          searchQuery: searchQuery,
+          showAdvancedSettings: showAdvancedSettings,
+          extraRows: [
+            if (_matches(
+              tr('enableDeepLogging'),
+              desc: tr('enableDeepLoggingDescription'),
+            ))
+              _buildSettingsToggle(
+                context,
+                icon: Icons.bug_report_outlined,
+                title: tr('enableDeepLogging'),
+                subtitle: tr('enableDeepLoggingDescription'),
+                value: (s) => s.enableDeepLogging,
+                onChanged: (s, v) => s.enableDeepLogging = v,
+              ),
+            if (_matches(
+              tr('highlightTouchTargets'),
+              desc: tr('highlightTouchTargetsDescription'),
+              isAdvanced: true,
+            ))
+              _buildSettingsToggle(
+                context,
+                icon: Icons.touch_app_outlined,
+                title: tr('highlightTouchTargets'),
+                subtitle: tr('highlightTouchTargetsDescription'),
+                value: (s) => s.highlightTouchTargets,
+                onChanged: (s, v) => s.highlightTouchTargets = v,
+              ),
+          ],
+        ),
+        if (present(resetGroup))
+          ExpressiveSettingsGroup(
+            title: label('settingsGroupReset'),
+            persistKey: 'advanced.reset',
+            icon: Icons.restart_alt_rounded,
+            children: resetGroup,
           ),
       ],
     );

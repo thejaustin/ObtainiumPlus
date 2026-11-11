@@ -11,17 +11,14 @@ import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/providers/theme_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/utils/locale_constants.dart';
 import 'package:provider/provider.dart';
-import 'package:obtainium/components/settings/settings_layout_selector.dart';
+import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
-import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
-import 'package:obtainium/utils/motion.dart';
 
 /// Theme & Colors settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -54,80 +51,19 @@ class ThemeSettingsSection extends StatelessWidget {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
     final themeSettings = context.watch<ThemeSettingsProvider>();
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
+    // In a subpage each group gets its open label; while searching the
+    // matching rows are listed without labels, as everywhere else.
+    String? label(String key) => isSearching ? null : tr(key);
 
-    List<Widget> advancedWidgets = [
-      if (_matches(tr('glassmorphismUI'), desc: tr('glassmorphismUIDescription')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.blur_on_rounded,
-          title: tr('glassmorphismUI'),
-          subtitle: tr('glassmorphismUIDescription'),
-          value: (s) => s.plusEnableGlassmorphism,
-          onChanged: (s, v) => s.plusEnableGlassmorphism = v,
-        ),
-      if (_matches(tr('plusCollapsibleAbout'), desc: tr('plusCollapsibleAboutDescription')) ||
-          _matches(tr('plusPopupSlider'), desc: tr('plusPopupSliderDescription'), isAdvanced: true))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.unfold_less_rounded,
-          title: tr('plusCollapsibleAbout'),
-          subtitle: tr('plusCollapsibleAboutDescription'),
-          value: (s) => s.plusEnablePopupSlider,
-          onChanged: (s, v) => s.plusEnablePopupSlider = v,
-        ),
-      if (_matches(tr('plusExpressiveProgress'), desc: tr('plusExpressiveProgressDescription')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.auto_mode_rounded,
-          title: tr('plusExpressiveProgress'),
-          subtitle: tr('plusExpressiveProgressDescription'),
-          value: (s) => s.plusEnableExpressiveProgress,
-          onChanged: (s, v) => s.plusEnableExpressiveProgress = v,
-        ),
-      if (_matches(tr('plusBouncyPhysics'), desc: tr('plusBouncyPhysicsDescription')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.unfold_more_rounded,
-          title: tr('plusBouncyPhysics'),
-          subtitle: tr('plusBouncyPhysicsDescription'),
-          value: (s) => s.plusEnableBouncyPhysics,
-          onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
-        ),
-      if (_matches(tr('plusOneHandedMode'), desc: tr('plusOneHandedModeDescription')))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.swipe_down_rounded,
-          title: tr('plusOneHandedMode'),
-          subtitle: tr('plusOneHandedModeDescription'),
-          value: (s) => s.plusEnableOneHandedMode,
-          onChanged: (s, v) => s.plusEnableOneHandedMode = v,
-        ),
-      if (_matches(tr('plusTopUILayout'), desc: tr('plusTopUILayoutDescription'), isAdvanced: true))
-        buildFeatureToggle<PlusSettingsProvider>(
-          context,
-          icon: Icons.vertical_align_top_rounded,
-          title: tr('plusTopUILayout'),
-          subtitle: tr('plusTopUILayoutDescription'),
-          value: (s) => s.plusTopUILayout,
-          onChanged: (s, v) => s.plusTopUILayout = v,
-        ),
-    ];
-
-    List<Widget> themeWidgets = [
-      if ((subCategory != 'theme' || isSearching) &&
-          (_matches(tr('designSystemThemeStyle')) ||
-              _matches(tr('obtainiumPlusTheme'), desc: tr('obtainiumPlusThemeDescription')) ||
-              _matches(tr('materialExpressiveTheme'), desc: tr('materialExpressiveThemeDescription')) ||
-              _matches(tr('plusMaterialExpressive'), desc: tr('plusMaterialExpressiveDescription'))))
-        _buildDesignSystemSelector(context),
+    final themeWidgets = <Widget>[
       if (_matches(tr('theme'), desc: tr('themeDescription')))
         plusSettings.plusSettingsUseVisualThemePicker
             ? const VisualThemeSelector(embedded: true)
             : _buildThemeSegmented(context),
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
-      if (_matches(tr('themePresets'), desc: tr('themePresetsDescription'))) _buildThemePresets(context),
+      if (_matches(tr('themePresets'), desc: tr('themePresetsDescription')))
+        _buildThemePresets(context),
       if (_matches(tr('useBlackTheme'), desc: tr('useBlackThemeDescription')) &&
           !plusSettings.plusSettingsUseVisualThemePicker &&
           themeSettings.theme != ThemeSettings.light)
@@ -139,148 +75,67 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.useBlackTheme,
           onChanged: (s, v) => s.useBlackTheme = v,
         ),
-      _buildMaterialYouToggle(context),
-      _buildMatchSystemMaterialStyleToggle(context),
+    ];
+
+    final colourWidgets = <Widget>[
+      if (_matches(tr('useMaterialYou'))) _buildMaterialYouToggle(context),
+      if (_matches(
+        tr('matchSystemMaterialStyle'),
+        desc: tr('matchSystemMaterialStyleSubtitle'),
+      ))
+        _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
-      if (_matches(tr('navigationLabels'), desc: tr('navigationLabelsDescription')) ||
-          _matches(tr('plusNavBarAlwaysShowLabels'), desc: tr('plusNavBarAlwaysShowLabelsDescription')))
-        _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
-      if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
-      if (_matches(tr('language'))) _buildLanguagePicker(context),
-
-      // Advanced/Experimental Section
-      if (plusSettings.enableAllPlusFeatures && advancedWidgets.isNotEmpty)
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: ExpansionTile(
-            key: const PageStorageKey<String>('settings_advanced_theming'),
-            onExpansionChanged: (_) => AppHaptics.selectionClick(),
-            expansionAnimationStyle: AnimationStyle(
-              curve: Easing.emphasizedDecelerate,
-              reverseCurve: Easing.emphasizedAccelerate,
-              duration: AppMotion.duration(
-                context,
-                const Duration(milliseconds: 280),
-              ),
-            ),
-            leading: buildSettingsIconBadge(context, Icons.science_outlined),
-            title: Text(tr('advancedTheming')),
-            subtitle: Text(tr('advancedThemingDescription')),
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.errorContainer
-                        .withValues(alpha: AppOpacity.medium),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.error.withValues(alpha: AppOpacity.low),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.warning_amber_rounded,
-                        size: 20,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          tr('experimentalModeInfo'),
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onErrorContainer,
-                              ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              ...advancedWidgets,
-            ],
-          ),
-        ),
     ];
 
-    List<Widget> animationWidgets = [
-      if (_matches(tr('plusEnhancedAnimations'), desc: tr('plusEnhancedAnimationsDescription')))
+    // Design system: the only home of these two (the Look & motion hub
+    // card and the Obtainium+ sheet link here).
+    final designWidgets = <Widget>[
+      if (plusSettings.enableAllPlusFeatures &&
+          (_matches(tr('designSystemThemeStyle')) ||
+              _matches(
+                tr('obtainiumPlusTheme'),
+                desc: tr('obtainiumPlusThemeDescription'),
+              ) ||
+              _matches(
+                tr('materialExpressiveTheme'),
+                desc: tr('materialExpressiveThemeDescription'),
+              ) ||
+              _matches(
+                tr('plusMaterialExpressive'),
+                desc: tr('plusMaterialExpressiveDescription'),
+              )))
+        _buildDesignSystemSelector(context),
+      if (_matches(
+        tr('glassmorphismUI'),
+        desc: tr('glassmorphismUIDescription'),
+      ))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
-          icon: Icons.auto_awesome_motion_rounded,
-          title: tr('plusEnhancedAnimations'),
-          subtitle: tr('plusEnhancedAnimationsDescription'),
-          value: (s) => s.plusEnableEnhancedAnimations,
-          onChanged: (s, v) => s.plusEnableEnhancedAnimations = v,
-        ),
-      if (_matches(tr('disablePageTransitions'), desc: tr('disablePageTransitionsDescription'), isAdvanced: true))
-        buildFeatureToggle<BehaviorSettingsProvider>(
-          context,
-          icon: Icons.animation_outlined,
-          title: tr('disablePageTransitions'),
-          subtitle: tr('disablePageTransitionsDescription'),
-          value: (s) => s.disablePageTransitions,
-          onChanged: (s, v) => s.disablePageTransitions = v,
-        ),
-      if (_matches(tr('reversePageTransitions'), desc: tr('reversePageTransitionsDescription')) &&
-          !behaviorSettings.disablePageTransitions)
-        buildFeatureToggle<BehaviorSettingsProvider>(
-          context,
-          icon: Icons.swap_horizontal_circle_outlined,
-          title: tr('reversePageTransitions'),
-          subtitle: tr('reversePageTransitionsDescription'),
-          value: (s) => s.reversePageTransitions,
-          onChanged: (s, v) => s.reversePageTransitions = v,
-        ),
-      if (_matches(tr('animationSpeed')))
-        Consumer<BehaviorSettingsProvider>(
-          builder: (context, settings, child) => SettingsSliderTile(
-            icon: Icons.speed_outlined,
-            title: tr('animationSpeed'),
-            value: settings.animationSpeedMultiplier.clamp(0.25, 2.0),
-            defaultValue: 1.0,
-            min: 0.25,
-            max: 2.0,
-            divisions: 7,
-            labelBuilder: (v) => '${(v * 100).round()}%',
-            onChanged: (val) {
-              const steps = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-              final nearest = steps.reduce(
-                (a, b) => (a - val).abs() < (b - val).abs() ? a : b,
-              );
-              settings.animationSpeedMultiplier = nearest;
-            },
-          ),
-        ),
-      if (plusSettings.enableAllPlusFeatures &&
-          plusSettings.plusDeveloperMode &&
-          (_matches('third party loading indicator') || _matches(tr('searchKeywordLoadingIndicator'))))
-        SwitchListTile.adaptive(
-          secondary: buildSettingsIconBadge(
-            context,
-            Icons.refresh_rounded,
-            active: plusSettings.plusDevUseThirdPartyLoadingIndicator,
-          ),
-          title: Text(tr('plusUseWavyLoadingSpinner')),
-          subtitle: Text(tr('plusUseWavyLoadingSpinnerDesc')),
-          value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
-          onChanged: (val) {
-            val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-            plusSettings.plusDevUseThirdPartyLoadingIndicator = val;
-          },
+          icon: Icons.blur_on_rounded,
+          title: tr('glassmorphismUI'),
+          subtitle: tr('glassmorphismUIDescription'),
+          value: (s) => s.plusEnableGlassmorphism,
+          onChanged: (s, v) => s.plusEnableGlassmorphism = v,
         ),
     ];
 
-    List<Widget> shapeWidgets = [
+    final textWidgets = <Widget>[
+      if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
+      if (_matches(tr('language'))) _buildLanguagePicker(context),
+      if (_matches(
+            tr('navigationLabels'),
+            desc: tr('navigationLabelsDescription'),
+          ) ||
+          _matches(
+            tr('plusNavBarAlwaysShowLabels'),
+            desc: tr('plusNavBarAlwaysShowLabelsDescription'),
+          ))
+        _buildNavigationLabelSegmented(context),
+    ];
+
+    final shapeWidgets = <Widget>[
       _buildCornerRadiusPreview(context, plusSettings),
       if (_matches(tr('plusGlobalCornerRadius')))
         SettingsSliderTile(
@@ -294,7 +149,10 @@ class ThemeSettingsSection extends StatelessWidget {
           labelBuilder: (v) => '${v.toInt()}px',
           onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
         ),
-      if (_matches(tr('plusOverrideIndividualCornerRadius'), desc: tr('plusOverrideIndividualCornerRadiusDescription')))
+      if (_matches(
+        tr('plusOverrideIndividualCornerRadius'),
+        desc: tr('plusOverrideIndividualCornerRadiusDescription'),
+      ))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.tune_rounded,
@@ -303,61 +161,113 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusOverrideIndividualCornerRadius,
           onChanged: (s, v) => s.plusOverrideIndividualCornerRadius = v,
         ),
-      if (plusSettings.plusOverrideIndividualCornerRadius) ...[
-        if (_matches(tr('plusHomeCornerRadius')))
-          SettingsSliderTile(
-            icon: Icons.home_max_rounded,
-            title: tr('plusHomeCornerRadius'),
-            value: plusSettings.plusHomeCornerRadius,
-            defaultValue: 20.0,
-            min: 0,
-            max: 40,
-            divisions: 40,
-            labelBuilder: (v) => '${v.toInt()}px',
-            onChanged: (val) => plusSettings.plusHomeCornerRadius = val,
+      if (plusSettings.plusOverrideIndividualCornerRadius &&
+          (_matches(tr('plusHomeCornerRadius')) ||
+              _matches(tr('plusSettingsCornerRadius'))))
+        ConnectedSettingContainer(
+          child: Column(
+            children: [
+              if (_matches(tr('plusHomeCornerRadius')))
+                SettingsSliderTile(
+                  icon: Icons.home_max_rounded,
+                  title: tr('plusHomeCornerRadius'),
+                  value: plusSettings.plusHomeCornerRadius,
+                  defaultValue: 20.0,
+                  min: 0,
+                  max: 40,
+                  divisions: 40,
+                  labelBuilder: (v) => '${v.toInt()}px',
+                  onChanged: (val) => plusSettings.plusHomeCornerRadius = val,
+                ),
+              if (_matches(tr('plusSettingsCornerRadius')))
+                SettingsSliderTile(
+                  icon: Icons.settings_suggest_rounded,
+                  title: tr('plusSettingsCornerRadius'),
+                  value: plusSettings.plusSettingsCornerRadius,
+                  defaultValue: 20.0,
+                  min: 0,
+                  max: 40,
+                  divisions: 40,
+                  labelBuilder: (v) => '${v.toInt()}px',
+                  onChanged: (val) =>
+                      plusSettings.plusSettingsCornerRadius = val,
+                ),
+            ],
           ),
-        if (_matches(tr('plusSettingsCornerRadius')))
-          SettingsSliderTile(
-            icon: Icons.settings_suggest_rounded,
-            title: tr('plusSettingsCornerRadius'),
-            value: plusSettings.plusSettingsCornerRadius,
-            defaultValue: 20.0,
-            min: 0,
-            max: 40,
-            divisions: 40,
-            labelBuilder: (v) => '${v.toInt()}px',
-            onChanged: (val) => plusSettings.plusSettingsCornerRadius = val,
-          ),
-      ],
+        ),
+    ];
+
+    // "More…" of Look & motion: rarely changed layout switches.
+    final moreWidgets = <Widget>[
+      if (_matches(
+        tr('plusOneHandedMode'),
+        desc: tr('plusOneHandedModeDescription'),
+      ))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.swipe_down_rounded,
+          title: tr('plusOneHandedMode'),
+          subtitle: tr('plusOneHandedModeDescription'),
+          value: (s) => s.plusEnableOneHandedMode,
+          onChanged: (s, v) => s.plusEnableOneHandedMode = v,
+        ),
+      if (_matches(
+        tr('plusTopUILayout'),
+        desc: tr('plusTopUILayoutDescription'),
+        isAdvanced: true,
+      ))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.vertical_align_top_rounded,
+          title: tr('plusTopUILayout'),
+          subtitle: tr('plusTopUILayoutDescription'),
+          value: (s) => s.plusTopUILayout,
+          onChanged: (s, v) => s.plusTopUILayout = v,
+        ),
     ];
 
     final showTheme = subCategory == null || subCategory == 'theme';
-    final showMotion = subCategory == null || subCategory == 'motion';
+    final showShapes = subCategory == null || subCategory == 'shapes';
+    final showMore = subCategory == null || subCategory == 'more';
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (subCategory == null)
-          SettingsLayoutSelector(isSearching: isSearching),
         if (showTheme && themeWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching || subCategory != null ? null : tr('appearance'),
-            persistKey: 'appearance',
+            title: label('theme'),
+            persistKey: 'look.theme',
             icon: Icons.palette_rounded,
             helpText: tr('appearanceHelp'),
-            isExpandable: !isSearching && subCategory == null,
-            initiallyExpanded: true,
             children: themeWidgets,
           ),
-        if (showMotion && shapeWidgets.isNotEmpty)
+        if (showTheme && colourWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching || subCategory != null
-                ? null
-                : tr('plusShapesAndCorners'),
+            title: label('colour'),
+            persistKey: 'look.colour',
+            icon: Icons.color_lens_outlined,
+            children: colourWidgets,
+          ),
+        if (showTheme && designWidgets.isNotEmpty)
+          ExpressiveSettingsGroup(
+            title: label('designSystemThemeStyle'),
+            persistKey: 'look.designSystem',
+            icon: Icons.brush_rounded,
+            children: designWidgets,
+          ),
+        if (showTheme && textWidgets.isNotEmpty)
+          ExpressiveSettingsGroup(
+            title: label('settingsGroupTextLanguage'),
+            persistKey: 'look.textLanguage',
+            icon: Icons.translate_rounded,
+            children: textWidgets,
+          ),
+        if (showShapes && shapeWidgets.length > 1)
+          ExpressiveSettingsGroup(
+            title: label('plusShapesAndCorners'),
             persistKey: 'plusShapesAndCorners',
             icon: Icons.rounded_corner_rounded,
             helpText: tr('shapesHelp'),
-            isExpandable: !isSearching && subCategory == null,
-            initiallyExpanded: true,
             onReset: () {
               AppHaptics.heavyImpact();
               plusSettings.plusGlobalCornerRadius = 20.0;
@@ -367,14 +277,12 @@ class ThemeSettingsSection extends StatelessWidget {
             },
             children: shapeWidgets,
           ),
-        if (showMotion && animationWidgets.isNotEmpty)
+        if (showMore && moreWidgets.isNotEmpty)
           ExpressiveSettingsGroup(
-            title: isSearching || subCategory != null ? null : tr('animations'),
-            persistKey: 'animations',
-            icon: Icons.animation_rounded,
-            isExpandable: !isSearching && subCategory == null,
-            initiallyExpanded: true,
-            children: animationWidgets,
+            title: label('settingsMore'),
+            persistKey: 'look.more',
+            icon: Icons.more_horiz_rounded,
+            children: moreWidgets,
           ),
       ],
     );
@@ -480,23 +388,31 @@ class ThemeSettingsSection extends StatelessWidget {
                             ),
                           ),
                         ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'App Name',
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                            Text(
-                              'v1.0.0',
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                            ),
-                          ],
+                        // Flexible: the mock tile is fixed-width and the
+                        // labels overflowed it at large text sizes.
+                        Flexible(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'App Name',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                'v1.0.0',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),

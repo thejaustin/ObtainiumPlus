@@ -7,6 +7,26 @@ import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 
+/// Drops names from the stored `categoriesExcludedFromChecks` set that are not
+/// in [remaining] (a deleted or renamed category). Unreadable stored data is
+/// left for [SettingsProvider.categoriesExcludedFromChecks] to treat as empty.
+void pruneCategoryExclusions(
+  SharedPreferences? prefs,
+  Iterable<String> remaining,
+) {
+  final raw = prefs?.safeString('categoriesExcludedFromChecks');
+  if (raw == null || raw.isEmpty) return;
+  try {
+    final decoded = jsonDecode(raw);
+    if (decoded is! List) return;
+    final keep = remaining.toSet();
+    final kept = decoded.map((e) => e.toString()).where(keep.contains).toList();
+    if (kept.length != decoded.length) {
+      prefs?.setString('categoriesExcludedFromChecks', jsonEncode(kept));
+    }
+  } catch (_) {}
+}
+
 class ViewSettingsProvider with ChangeNotifier {
   SharedPreferences? prefs;
 
@@ -127,6 +147,9 @@ class ViewSettingsProvider with ChangeNotifier {
       }
     }
     prefs?.setString('categories', safeJsonEncode(cats));
+    // Deleted/renamed categories must not leave stale exclusions behind
+    // (the setting lives in SettingsProvider; same prefs store).
+    pruneCategoryExclusions(prefs, cats.keys);
     notifyListeners();
   }
 

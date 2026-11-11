@@ -124,6 +124,9 @@ class BackgroundUpdateService {
                     onlyCheckInstalledOrTrackOnlyApps: appsProvider
                         .updateSettings
                         .onlyCheckInstalledOrTrackOnlyApps,
+                    excludedCategories: appsProvider
+                        .settingsProvider
+                        .categoriesExcludedFromChecks,
                   ).map((e) => MapEntry(e, 0))
                 : <MapEntry<String, int>>[])),
       ];

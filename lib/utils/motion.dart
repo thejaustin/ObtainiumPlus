@@ -22,6 +22,24 @@ abstract final class M3Springs {
   static final SpringDescription effectsFast = _spring(1.0, 3800);
   static final SpringDescription effectsDefault = _spring(1.0, 1600);
   static final SpringDescription effectsSlow = _spring(1.0, 800);
+
+  // Legacy micro-interaction springs, folded in from AppConstants with
+  // their exact values (AppConstants.pressSpring etc. now alias these).
+  static const SpringDescription press = SpringDescription(
+    mass: 1.0,
+    stiffness: 150.0,
+    damping: 12.0,
+  );
+  static const SpringDescription bounce = SpringDescription(
+    mass: 1.0,
+    stiffness: 100.0,
+    damping: 10.0,
+  );
+  static const SpringDescription gentle = SpringDescription(
+    mass: 1.0,
+    stiffness: 120.0,
+    damping: 15.0,
+  );
 }
 
 /// A spring sampled as a [Curve], for duration-based APIs (AnimatedFoo,
@@ -66,6 +84,12 @@ abstract final class AppMotion {
   static final SpringCurve spatial = SpringCurve(M3Springs.spatialDefault);
   static final SpringCurve spatialSlow = SpringCurve(M3Springs.spatialSlow);
   static final SpringCurve effects = SpringCurve(M3Springs.effectsDefault);
+  static final SpringCurve effectsSlow = SpringCurve(M3Springs.effectsSlow);
+  static final SpringCurve effectsFast = SpringCurve(M3Springs.effectsFast);
+
+  /// Settle time of [curve] when motion is on, otherwise zero.
+  static Duration springDuration(BuildContext context, SpringCurve curve) =>
+      enabled(context) ? curve.duration : Duration.zero;
 
   /// Call from `build` only; rebuilds when either setting changes.
   static bool enabled(BuildContext context) {

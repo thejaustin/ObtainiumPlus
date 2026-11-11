@@ -27,6 +27,7 @@ import 'package:obtainium/utils/logger.dart';
 import 'package:provider/provider.dart';
 
 import 'package:obtainium/installers/installer.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
@@ -944,12 +945,22 @@ class AppDownloadService {
     return {'newInfo': newInfo, 'apkDir': apkDir};
   }
 
+  /// Whether [app] installs through Shizuku (its own install method, else the
+  /// global one).
+  static bool _usesShizuku(
+    App? app,
+    BehaviorSettingsProvider behaviorSettings,
+  ) =>
+      installerModeFor(app, behaviorSettings.installerMode) ==
+      InstallerMode.shizuku.name;
+
   static Future<void> _checkInstallPermissions(
     SettingsProvider settingsProvider,
     BehaviorSettingsProvider behaviorSettings,
-    bool willBeSilent,
-  ) async {
-    final installer = Installer.create(settingsProvider);
+    bool willBeSilent, [
+    App? app,
+  ]) async {
+    final installer = Installer.create(settingsProvider, app);
     if (installer is ExternalInstaller) {
       if (behaviorSettings.externalInstallerPackage == null) {
         throw ObtainiumError(tr('externalInstallerRequired'));
@@ -1041,7 +1052,9 @@ class AppDownloadService {
           ? context
           : null;
       bool needBGWorkaround =
-          (willBeSilent && context == null && !behaviorSettings.useShizuku) ||
+          (willBeSilent &&
+              context == null &&
+              !_usesShizuku(apps[id]?.app, behaviorSettings)) ||
           AppConstants.plusAppIds.contains(id) ||
           apps[id]!.app.additionalSettings['persistentVersionTracking'] == true;
       bool shizukuPretendToBeGooglePlay =
@@ -1051,7 +1064,7 @@ class AppDownloadService {
 
       logs.logEvent('InstallStarted', {
         'appId': id,
-        'shizuku': behaviorSettings.useShizuku,
+        'shizuku': _usesShizuku(apps[id]?.app, behaviorSettings),
         'bgWorkaround': needBGWorkaround,
       });
 
@@ -1105,7 +1118,7 @@ class AppDownloadService {
         }
       }
       if (willBeSilent && context == null && apps[id] != null) {
-        if (!behaviorSettings.useShizuku) {
+        if (!_usesShizuku(apps[id]?.app, behaviorSettings)) {
           notificationsProvider?.notify(
             SilentUpdateAttemptNotification([apps[id]!.app], id: id.hashCode),
           );
@@ -1202,12 +1215,13 @@ class AppDownloadService {
         settingsProvider,
         behaviorSettings,
         willBeSilent,
+        apps[currentId]!.app,
       );
 
       if (!willBeSilent &&
           context != null &&
           context.mounted &&
-          !behaviorSettings.useShizuku) {
+          !_usesShizuku(apps[currentId]?.app, behaviorSettings)) {
         await waitForUserToReturnToForeground(context);
       }
     } catch (e) {

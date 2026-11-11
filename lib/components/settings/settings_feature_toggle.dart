@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/common/morph_switch.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/settings_row.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -73,6 +76,8 @@ Widget buildSettingsIconBadge(
 /// Any T that is a PlusSettingsProvider is still automatically hidden when
 /// `enableAllPlusFeatures` is off, since that's runtime provider state the
 /// caller can't cheaply check without watching the provider itself.
+/// [hideWhenPlusOff] false keeps a non-Plus-branded row (stored in the Plus
+/// provider for history) visible regardless.
 Widget buildFeatureToggle<T extends ChangeNotifier>(
   BuildContext context, {
   required IconData icon,
@@ -80,6 +85,7 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
   required String? subtitle,
   required bool Function(T) value,
   required void Function(T, bool) onChanged,
+  bool hideWhenPlusOff = true,
 }) {
   return Consumer<T>(
     builder: (context, settings, child) {
@@ -87,7 +93,9 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
         (p) => p.plusUseCompactSettings,
       );
       final plusGatedOff =
-          settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
+          hideWhenPlusOff &&
+          settings is PlusSettingsProvider &&
+          !settings.enableAllPlusFeatures;
       if (plusGatedOff) {
         return const SizedBox.shrink();
       }
@@ -95,6 +103,25 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
       final compactLines = context.select<PlusSettingsProvider, int>(
         (s) => s.plusLabCompactDescriptionLines,
       );
+      final (switchStyle, iconMorph) = context
+          .select<PlusSettingsProvider, (SettingsSwitchStyle, bool)>(
+            (p) => (p.plusSwitchStyle, p.plusIconMorphOnToggle),
+          );
+      // Expressive-kit previews: only when one is switched on. The default
+      // (classic switch, no icon morph) keeps the SwitchListTile below.
+      if (switchStyle != SettingsSwitchStyle.classic || iconMorph) {
+        return _KitToggleRow(
+          icon: icon,
+          title: title,
+          subtitle: subtitle,
+          value: isEnabled,
+          switchStyle: switchStyle,
+          iconMorph: iconMorph,
+          isCompact: isCompact,
+          compactLines: compactLines,
+          onChanged: (v) => onChanged(settings, v),
+        );
+      }
 
       // The switch's onChanged fires toggleOn/toggleOff; a press-down haptic
       // here as well would buzz twice for one change.
@@ -133,4 +160,70 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
       );
     },
   );
+}
+
+/// Toggle row drawn with the expressive kit (SettingsRow + MorphSwitch +
+/// ToggleIconBadge). The whole row toggles; one haptic per change.
+class _KitToggleRow extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final SettingsSwitchStyle switchStyle;
+  final bool iconMorph;
+  final bool isCompact;
+  final int compactLines;
+  final ValueChanged<bool> onChanged;
+
+  const _KitToggleRow({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.switchStyle,
+    required this.iconMorph,
+    required this.isCompact,
+    required this.compactLines,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final (shape, morphStyle) = context
+        .select<PlusSettingsProvider, (IconMorphShape, IconMorphStyle)>(
+          (p) => (p.plusIconMorphShape, p.plusIconMorphStyle),
+        );
+    return SettingsRow(
+      toggled: value,
+      leading: ToggleIconBadge(
+        icon: icon,
+        active: value,
+        morphOnToggle: iconMorph,
+        fill: switchStyle == SettingsSwitchStyle.iconSwitch,
+        shape: shape,
+        style: morphStyle,
+        size: isCompact ? 30 : 36,
+      ),
+      title: Text(title),
+      summary: (subtitle != null && subtitle!.isNotEmpty)
+          ? Text(
+              subtitle!,
+              maxLines: isCompact ? compactLines : 3,
+              overflow: TextOverflow.ellipsis,
+            )
+          : null,
+      onTap: () {
+        AppHaptics.toggled(!value);
+        onChanged(!value);
+      },
+      // The row carries the switch semantics.
+      trailing: ExcludeSemantics(
+        child: MorphSwitch(
+          value: value,
+          style: switchStyle,
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
 }

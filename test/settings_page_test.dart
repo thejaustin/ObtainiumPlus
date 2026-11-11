@@ -227,9 +227,9 @@ void main() {
       await tester.pumpWidget(app);
       await pumpUntilMounted(tester);
       for (final tabKey in [
-        'settingsTabUpdatesInstall',
-        'settingsTabNotifications',
-        'settingsTabBehavior',
+        'settingsTabHomeLibrary',
+        'settingsTabUpdatesNotifications',
+        'settingsTabInstallSafety',
         'settingsTabAdvancedDebug',
       ]) {
         await tester.drag(
@@ -683,23 +683,20 @@ void main() {
         if (tester.any(find.byType(VisualLabPage))) break;
       }
       await tester.pump(const Duration(milliseconds: 500));
-      final merged = find.widgetWithText(
+      final compact = find.widgetWithText(
         ChoiceChip,
-        translations['visualLabMerged'] as String,
+        translations['visualLabCompact'] as String,
       );
-      await tester.drag(
-        find.byType(CustomScrollView).first,
-        const Offset(0, -250),
-      );
+      await tester.ensureVisible(compact);
       await tester.pump(const Duration(milliseconds: 300));
-      await tester.tap(merged);
+      await tester.tap(compact);
       await tester.pump(const Duration(milliseconds: 300));
       expect(
         Provider.of<PlusSettingsProvider>(
           tester.element(find.byType(VisualLabPage)),
           listen: false,
-        ).plusSettingsNavPlacement,
-        SettingsNavPlacement.merged,
+        ).plusLabSettingsHeaderSize,
+        SettingsHeaderSize.compact,
       );
       final reset = find.byTooltip(translations['visualLabResetAll'] as String);
       await tester.tap(reset);
@@ -718,8 +715,8 @@ void main() {
       Provider.of<PlusSettingsProvider>(
         ctx,
         listen: false,
-      ).plusSettingsNavPlacement,
-      SettingsNavPlacement.bottom,
+      ).plusLabSettingsHeaderSize,
+      SettingsHeaderSize.large,
     );
   }, timeout: const Timeout(Duration(minutes: 1)));
 
@@ -824,14 +821,16 @@ void main() {
         await tester.tap(
           find.descendant(
             of: find.byType(SettingsSectionDock),
-            matching: find.byTooltip(translations['notifications'] as String),
+            matching: find.byTooltip(translations['updates'] as String),
           ),
         );
         await tester.pump(const Duration(milliseconds: 400));
         await tester.pump(const Duration(milliseconds: 400));
         expect(controller.section.value, 2);
         expect(
-          find.text(translations['settingsTabNotificationsDesc'] as String),
+          find.text(
+            translations['settingsTabUpdatesNotificationsDesc'] as String,
+          ),
           findsWidgets,
         );
 

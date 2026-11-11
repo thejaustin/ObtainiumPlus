@@ -1,4 +1,5 @@
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,11 +22,13 @@ class PlusSettingsProvider with ChangeNotifier {
   Future<void> initializeSettings(SharedPreferences prefs) async {
     _prefs = prefs;
     _cache.clear();
+    _syncHaptics();
     notifyListeners();
   }
 
   void clearCache() {
     _cache.clear();
+    _syncHaptics();
     _scheduleNotify();
   }
 
@@ -343,6 +346,149 @@ class PlusSettingsProvider with ChangeNotifier {
     plusLabCompactDescriptionLines = 2;
     plusLabNavBarBlur = NavBarBlurStrength.strong;
     plusLabPlusFeaturesEntry = PlusFeaturesEntry.sheet;
+    resetExpressiveKit();
+  }
+
+  // ── Expressive settings kit (previews, all opt-in). Every default is the
+  // shipped look and feel; the corner radii only apply to the segmented
+  // group style. ──
+
+  static const double groupOuterRadiusMax = 28;
+  static const double groupOuterRadiusDefault = 16;
+  static const double groupInnerRadiusDefault = 4;
+
+  SettingsGroupStyle get plusSettingsGroupStyle => _getEnum(
+    'plusSettingsGroupStyle',
+    SettingsGroupStyle.values,
+    defaultValue: SettingsGroupStyle.card,
+  );
+  set plusSettingsGroupStyle(SettingsGroupStyle val) =>
+      _setEnum('plusSettingsGroupStyle', val);
+
+  /// Outer corners of a segmented group (M3E list spec: 16 dp), 0–28.
+  double get plusSettingsGroupOuterRadius => _getDouble(
+    'plusSettingsGroupOuterRadius',
+    defaultValue: groupOuterRadiusDefault,
+  ).clamp(0.0, groupOuterRadiusMax);
+  set plusSettingsGroupOuterRadius(double val) => _setDouble(
+    'plusSettingsGroupOuterRadius',
+    val.clamp(0.0, groupOuterRadiusMax),
+  );
+
+  /// Inner (joined) corners of a segmented group (M3E list spec: 4 dp),
+  /// never larger than the outer radius.
+  double get plusSettingsGroupInnerRadius => _getDouble(
+    'plusSettingsGroupInnerRadius',
+    defaultValue: groupInnerRadiusDefault,
+  ).clamp(0.0, plusSettingsGroupOuterRadius);
+  set plusSettingsGroupInnerRadius(double val) => _setDouble(
+    'plusSettingsGroupInnerRadius',
+    val.clamp(0.0, groupOuterRadiusMax),
+  );
+
+  SettingsSwitchStyle get plusSwitchStyle => _getEnum(
+    'plusSwitchStyle',
+    SettingsSwitchStyle.values,
+    defaultValue: SettingsSwitchStyle.classic,
+  );
+  set plusSwitchStyle(SettingsSwitchStyle val) =>
+      _setEnum('plusSwitchStyle', val);
+
+  bool get plusIconMorphOnToggle =>
+      _getBool('plusIconMorphOnToggle', defaultValue: false);
+  set plusIconMorphOnToggle(bool val) => _setBool('plusIconMorphOnToggle', val);
+
+  IconMorphShape get plusIconMorphShape => _getEnum(
+    'plusIconMorphShape',
+    IconMorphShape.values,
+    defaultValue: IconMorphShape.squircle,
+  );
+  set plusIconMorphShape(IconMorphShape val) =>
+      _setEnum('plusIconMorphShape', val);
+
+  IconMorphStyle get plusIconMorphStyle => _getEnum(
+    'plusIconMorphStyle',
+    IconMorphStyle.values,
+    defaultValue: IconMorphStyle.morph,
+  );
+  set plusIconMorphStyle(IconMorphStyle val) =>
+      _setEnum('plusIconMorphStyle', val);
+
+  /// Low-end option: keep position springs, skip shape morphs.
+  bool get plusReduceShapeMorphs =>
+      _getBool('plusReduceShapeMorphs', defaultValue: false);
+  set plusReduceShapeMorphs(bool val) => _setBool('plusReduceShapeMorphs', val);
+
+  HapticIntensity get plusHapticIntensity => _getEnum(
+    'plusHapticIntensity',
+    HapticIntensity.values,
+    defaultValue: HapticIntensity.standard,
+  );
+  set plusHapticIntensity(HapticIntensity val) {
+    _setEnum('plusHapticIntensity', val);
+    _syncHaptics();
+  }
+
+  /// Also respect Android's system "touch feedback" setting.
+  bool get plusHapticFollowSystem =>
+      _getBool('plusHapticFollowSystem', defaultValue: false);
+  set plusHapticFollowSystem(bool val) {
+    _setBool('plusHapticFollowSystem', val);
+    _syncHaptics();
+  }
+
+  /// Use Android's own haptic constants (TOGGLE_ON/OFF, SEGMENT_TICK).
+  bool get plusNativeHaptics =>
+      _getBool('plusNativeHaptics', defaultValue: false);
+  set plusNativeHaptics(bool val) {
+    _setBool('plusNativeHaptics', val);
+    _syncHaptics();
+  }
+
+  /// Pushes the haptic options into [AppHaptics]' statics (it is called
+  /// from places with no BuildContext).
+  void _syncHaptics() {
+    AppHaptics.intensity = plusHapticIntensity;
+    AppHaptics.useNative = plusNativeHaptics;
+    AppHaptics.followSystem = plusHapticFollowSystem;
+    AppHaptics.watchSystemSetting(plusHapticFollowSystem);
+  }
+
+  /// Settings-page extras (previews, all off by default).
+  /// Predictive back (gesture pops) on settings subpages.
+  bool get plusSettingsPredictiveBack =>
+      _getBool('plusSettingsPredictiveBack', defaultValue: false);
+  set plusSettingsPredictiveBack(bool val) =>
+      _setBool('plusSettingsPredictiveBack', val);
+
+  /// Tapping a search result jumps to its row and highlights it.
+  bool get plusSettingsSearchJump =>
+      _getBool('plusSettingsSearchJump', defaultValue: false);
+  set plusSettingsSearchJump(bool val) =>
+      _setBool('plusSettingsSearchJump', val);
+
+  /// Look & motion hub cards show the current values.
+  bool get plusSettingsLiveSummaries =>
+      _getBool('plusSettingsLiveSummaries', defaultValue: false);
+  set plusSettingsLiveSummaries(bool val) =>
+      _setBool('plusSettingsLiveSummaries', val);
+
+  /// Writes every expressive-kit option's default explicitly.
+  void resetExpressiveKit() {
+    plusSettingsPredictiveBack = false;
+    plusSettingsSearchJump = false;
+    plusSettingsLiveSummaries = false;
+    plusSettingsGroupStyle = SettingsGroupStyle.card;
+    plusSettingsGroupOuterRadius = groupOuterRadiusDefault;
+    plusSettingsGroupInnerRadius = groupInnerRadiusDefault;
+    plusSwitchStyle = SettingsSwitchStyle.classic;
+    plusIconMorphOnToggle = false;
+    plusIconMorphShape = IconMorphShape.squircle;
+    plusIconMorphStyle = IconMorphStyle.morph;
+    plusReduceShapeMorphs = false;
+    plusHapticIntensity = HapticIntensity.standard;
+    plusHapticFollowSystem = false;
+    plusNativeHaptics = false;
   }
 
   bool get plusShowAdvancedSettings =>

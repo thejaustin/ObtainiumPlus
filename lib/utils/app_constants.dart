@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// Application-wide constants
 class AppConstants {
@@ -46,26 +47,15 @@ class AppConstants {
   static const Curve expressiveSpring = Cubic(0.34, 1.56, 0.64, 1.0);
 
   // Spring Physics for Micro-interactions
+  // Folded into M3Springs (lib/utils/motion.dart); kept as aliases.
   /// Spring physics for press animations
-  static const SpringDescription pressSpring = SpringDescription(
-    mass: 1.0,
-    stiffness: 150.0,
-    damping: 12.0,
-  );
+  static const SpringDescription pressSpring = M3Springs.press;
 
   /// Spring physics for bounce effects
-  static const SpringDescription bounceSpring = SpringDescription(
-    mass: 1.0,
-    stiffness: 100.0,
-    damping: 10.0,
-  );
+  static const SpringDescription bounceSpring = M3Springs.bounce;
 
   /// Spring physics for gentle rebounds
-  static const SpringDescription gentleSpring = SpringDescription(
-    mass: 1.0,
-    stiffness: 120.0,
-    damping: 15.0,
-  );
+  static const SpringDescription gentleSpring = M3Springs.gentle;
 
   // UI Layout Constants
   /// Default border radius for cards and containers

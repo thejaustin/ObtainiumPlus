@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
-import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/components/settings/usage_access_card.dart';
@@ -16,15 +16,22 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 
-/// App behavior and interaction settings section
+/// Which slice of the former Behavior tab to render. Swipe, library and
+/// Discover live in Home & library; safety lives in Install & safety
+/// (haptics moved to Look & motion → Motion & haptics).
+enum AppBehaviorPart { swipe, library, discover, safety }
+
+/// Behaviour rows that moved into other tabs, one [part] at a time.
 class AppBehaviorSection extends StatelessWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
+  final AppBehaviorPart part;
 
   const AppBehaviorSection({
     super.key,
     this.searchQuery,
     this.showAdvancedSettings,
+    required this.part,
   });
 
   bool _matches(String text, {bool isAdvanced = false, String? desc}) {
@@ -38,168 +45,94 @@ class AppBehaviorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
-    final plusSettings = context.watch<PlusSettingsProvider>();
-
-    final hasHaptics =
-        _matches(tr('enableHapticFeedback'), desc: tr('enableHapticFeedbackDescription')) ||
-        _matches(tr('enableUndoForAppRemoval'), desc: tr('enableUndoForAppRemovalDescription'));
-    final hasSwipe =
-        _matches(tr('enableSwipeGestures'), desc: tr('enableSwipeGesturesDescription')) ||
-        _matches(tr('swipeRightAction'), desc: tr('swipeRightActionDescription')) ||
-        _matches(tr('swipeLeftAction'), desc: tr('swipeLeftActionDescription'));
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isWide = constraints.maxWidth >= 720 && !isSearching;
-
-        final hapticsWidget = hasHaptics
-            ? GenericBooleanControlGrid<BehaviorSettingsProvider>(
-                title: tr('interactionAndHaptics'),
-                settings: [
-                  if (_matches(tr('enableHapticFeedback'), desc: tr('enableHapticFeedbackDescription')))
-                    (
-                      icon: Icons.vibration_outlined,
-                      label: tr('enableHapticFeedback'),
-                      description: tr('enableHapticFeedbackDescription'),
-                      getValue: (s) => s.enableHapticFeedback,
-                      setValue: (s, v) => s.enableHapticFeedback = v,
-                    ),
-                  if (_matches(tr('enableUndoForAppRemoval'), desc: tr('enableUndoForAppRemovalDescription')))
-                    (
-                      icon: Icons.undo_outlined,
-                      label: tr('enableUndoForAppRemoval'),
-                      description: tr('enableUndoForAppRemovalDescription'),
-                      getValue: (s) => s.enableUndoForAppRemoval,
-                      setValue: (s, v) => s.enableUndoForAppRemoval = v,
-                    ),
-                ],
-              )
-            : null;
-
-        final swipeWidget = hasSwipe
-            ? ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('swipeGestures'),
-                description: isSearching ? null : tr('swipeGesturesGroupDesc'),
-                persistKey: 'swipeGestures',
-                icon: Icons.gesture_rounded,
-                isExpandable: !isSearching,
-                initiallyExpanded: true,
-                children: [
-                  if (_matches(tr('enableSwipeGestures'), desc: tr('enableSwipeGesturesDescription')))
-                    _buildFeatureToggle(
-                      context,
-                      icon: Icons.swipe_outlined,
-                      title: tr('enableSwipeGestures'),
-                      subtitle: tr('enableSwipeGesturesDescription'),
-                      value: (s) => s.enableSwipeGestures,
-                      onChanged: (s, v) => s.enableSwipeGestures = v,
-                    ),
-                  if (_matches(tr('swipeRightAction'), desc: tr('swipeRightActionDescription')) ||
-                      _matches(tr('swipeLeftAction'), desc: tr('swipeLeftActionDescription')))
-                    Consumer<BehaviorSettingsProvider>(
-                      builder: (context, settings, child) {
-                        return AnimatedSize(
-                          duration: Duration(
-                            milliseconds:
-                                plusSettings.plusEnableEnhancedAnimations
-                                ? 250
-                                : 0,
-                          ),
-                          curve: Curves.easeInOutCubic,
-                          child: settings.enableSwipeGestures
-                              ? ConnectedSettingContainer(
-                                  child: Column(
-                                    children: [
-                                      const SwipePreviewWidget(),
-                                      const Divider(height: 1),
-                                      if (_matches(tr('swipeRightAction'), desc: tr('swipeRightActionDescription')))
-                                        _buildSwipeActionDropdown(
-                                          context,
-                                          isRight: true,
-                                        ),
-                                      if (_matches(tr('swipeLeftAction'), desc: tr('swipeLeftActionDescription')))
-                                        _buildSwipeActionDropdown(
-                                          context,
-                                          isRight: false,
-                                        ),
-                                    ],
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
-                        );
-                      },
-                    ),
-                ],
-              )
-            : null;
-
-        final usageAccessWidget = _buildUsageAccessGroup(context, isSearching);
-        final libraryStorageWidget = _buildLibraryStorageGroup(
-          context,
-          isSearching,
-        );
-        final discoverySafetyWidget = _buildDiscoverySafetyGroup(
-          context,
-          isSearching,
-        );
-
-        if (isWide) {
-          final leftChildren = [
-            ?hapticsWidget,
-            if (hapticsWidget != null && swipeWidget != null)
-              const SizedBox(height: 12),
-            ?swipeWidget,
-          ];
-
-          final rightChildren = [
-            ?usageAccessWidget,
-            if (usageAccessWidget != null && libraryStorageWidget != null)
-              const SizedBox(height: 12),
-            ?libraryStorageWidget,
-            if (libraryStorageWidget != null || usageAccessWidget != null)
-              const SizedBox(height: 12),
-            discoverySafetyWidget,
-          ];
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: leftChildren,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: rightChildren,
-                ),
-              ),
-            ],
-          );
-        }
-
+    switch (part) {
+      case AppBehaviorPart.swipe:
+        return _buildSwipeGroup(context, isSearching) ??
+            const SizedBox.shrink();
+      case AppBehaviorPart.library:
+        final usage = _buildUsageAccessGroup(context, isSearching);
+        final library = _buildLibraryStorageGroup(context, isSearching);
+        if (usage == null && library == null) return const SizedBox.shrink();
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ?hapticsWidget,
-            if (hapticsWidget != null && swipeWidget != null)
-              const SizedBox(height: 12),
-            ?swipeWidget,
-            if (swipeWidget != null && usageAccessWidget != null)
-              const SizedBox(height: 12),
-            ?usageAccessWidget,
-            if (usageAccessWidget != null && libraryStorageWidget != null)
-              const SizedBox(height: 12),
-            ?libraryStorageWidget,
-            if (libraryStorageWidget != null || usageAccessWidget != null)
-              const SizedBox(height: 12),
-            discoverySafetyWidget,
-          ],
+          children: [?library, ?usage],
         );
-      },
+      case AppBehaviorPart.discover:
+        return _buildDiscoverGroup(context, isSearching);
+      case AppBehaviorPart.safety:
+        return _buildSafetyGroup(context, isSearching);
+    }
+  }
+
+  /// Swipe actions: `enableSwipeGestures` is the master; the expressive
+  /// style (`plusEnableSwipeActions`) is its child, since the app list
+  /// needs both on to swipe.
+  Widget? _buildSwipeGroup(BuildContext context, bool isSearching) {
+    final behavior = context.watch<BehaviorSettingsProvider>();
+    final children = <Widget>[
+      if (_matches(
+            tr('expressiveSwipeStyle'),
+            desc: tr('plusEnableSwipeActionsDescription'),
+          ) ||
+          _matches(tr('plusEnableSwipeActions')))
+        buildFeatureToggle<PlusSettingsProvider>(
+          context,
+          icon: Icons.swipe_rounded,
+          title: tr('expressiveSwipeStyle'),
+          subtitle: tr('plusEnableSwipeActionsDescription'),
+          value: (s) => s.plusEnableSwipeActions,
+          onChanged: (s, v) => s.plusEnableSwipeActions = v,
+        ),
+      if (!isSearching) const SwipePreviewWidget(),
+      if (_matches(
+        tr('swipeRightAction'),
+        desc: tr('swipeRightActionDescription'),
+      ))
+        _buildSwipeActionDropdown(context, isRight: true),
+      if (_matches(
+        tr('swipeLeftAction'),
+        desc: tr('swipeLeftActionDescription'),
+      ))
+        _buildSwipeActionDropdown(context, isRight: false),
+    ];
+    final rows = <Widget>[
+      if (_matches(
+        tr('enableSwipeGestures'),
+        desc: tr('enableSwipeGesturesDescription'),
+      ))
+        _buildFeatureToggle(
+          context,
+          icon: Icons.swipe_outlined,
+          title: tr('enableSwipeGestures'),
+          subtitle: tr('enableSwipeGesturesDescription'),
+          value: (s) => s.enableSwipeGestures,
+          onChanged: (s, v) => s.enableSwipeGestures = v,
+        ),
+      if (children.isNotEmpty)
+        SettingsChildRows(
+          enabled: behavior.enableSwipeGestures,
+          children: children,
+        ),
+      if (_matches(
+        tr('enableUndoForAppRemoval'),
+        desc: tr('enableUndoForAppRemovalDescription'),
+      ))
+        _buildFeatureToggle(
+          context,
+          icon: Icons.undo_outlined,
+          title: tr('enableUndoForAppRemoval'),
+          subtitle: tr('enableUndoForAppRemovalDescription'),
+          value: (s) => s.enableUndoForAppRemoval,
+          onChanged: (s, v) => s.enableUndoForAppRemoval = v,
+        ),
+    ];
+    if (rows.isEmpty) return null;
+    return ExpressiveSettingsGroup(
+      title: isSearching ? null : tr('swipeGestures'),
+      description: isSearching ? null : tr('swipeGesturesGroupDesc'),
+      persistKey: 'swipeGestures',
+      icon: Icons.gesture_rounded,
+      children: rows,
     );
   }
 
@@ -428,7 +361,10 @@ class AppBehaviorSection extends StatelessWidget {
   }
 
   Widget? _buildLibraryStorageGroup(BuildContext context, bool isSearching) {
-    final hasRemove = _matches(tr('removeOnExternalUninstall'), desc: tr('removeOnExternalUninstallDescription'));
+    final hasRemove = _matches(
+      tr('removeOnExternalUninstall'),
+      desc: tr('removeOnExternalUninstallDescription'),
+    );
     if (!hasRemove) return null;
 
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
@@ -458,49 +394,74 @@ class AppBehaviorSection extends StatelessWidget {
     );
   }
 
-  Widget _buildDiscoverySafetyGroup(BuildContext context, bool isSearching) {
+  /// Discover (+): `plusEnableDiscover` is the master of the suggestions.
+  Widget _buildDiscoverGroup(BuildContext context, bool isSearching) {
     return Consumer<PlusSettingsProvider>(
       builder: (context, settings, child) {
         if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
-
-        final hasDiscover =
-            _matches(tr('plusDiscover'), desc: tr('plusDiscoverDescription')) ||
-            _matches(tr('plusDiscoverSuggestions'), desc: tr('plusDiscoverSuggestionsDescription'));
-        final hasBanWarnings = _matches(
-          tr('plusEnableBanWarnings'),
-          isAdvanced: true,
+        final showMaster = _matches(
+          tr('plusDiscover'),
+          desc: tr('plusDiscoverDescription'),
         );
+        final showChild = _matches(
+          tr('plusDiscoverSuggestions'),
+          desc: tr('plusDiscoverSuggestionsDescription'),
+        );
+        if (!showMaster && !showChild) return const SizedBox.shrink();
+        return ExpressiveSettingsGroup(
+          title: isSearching ? null : tr('plusDiscover'),
+          persistKey: 'home.discover',
+          icon: Icons.explore_outlined,
+          children: [
+            if (showMaster)
+              buildFeatureToggle<PlusSettingsProvider>(
+                context,
+                icon: Icons.explore_outlined,
+                title: tr('plusDiscover'),
+                subtitle: tr('plusDiscoverDescription'),
+                value: (s) => s.plusEnableDiscover,
+                onChanged: (s, v) => s.plusEnableDiscover = v,
+              ),
+            if (showChild)
+              SettingsChildRows(
+                enabled: settings.plusEnableDiscover,
+                children: [
+                  buildFeatureToggle<PlusSettingsProvider>(
+                    context,
+                    icon: Icons.auto_awesome_outlined,
+                    title: tr('plusDiscoverSuggestions'),
+                    subtitle: tr('plusDiscoverSuggestionsDescription'),
+                    value: (s) => s.plusDiscoverSuggestions,
+                    onChanged: (s, v) => s.plusDiscoverSuggestions = v,
+                  ),
+                ],
+              ),
+          ],
+        );
+      },
+    );
+  }
 
-        if (!hasDiscover && !hasBanWarnings) return const SizedBox.shrink();
+  /// Safety: ban warnings and their threshold.
+  Widget _buildSafetyGroup(BuildContext context, bool isSearching) {
+    return Consumer<PlusSettingsProvider>(
+      builder: (context, settings, child) {
+        if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
+        final hasBanWarnings =
+            _matches(
+              tr('plusEnableBanWarnings'),
+              desc: tr('plusEnableBanWarningsDescription'),
+              isAdvanced: true,
+            ) ||
+            _matches(tr('plusBanWarningThreshold'), isAdvanced: true);
+        if (!hasBanWarnings) return const SizedBox.shrink();
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (hasDiscover)
-              GenericBooleanControlGrid<PlusSettingsProvider>(
-                title: tr('plusDiscover'),
-                settings: [
-                  if (_matches(tr('plusDiscover'), desc: tr('plusDiscoverDescription')))
-                    (
-                      icon: Icons.explore_outlined,
-                      label: tr('plusDiscover'),
-                      description: tr('plusDiscoverDescription'),
-                      getValue: (s) => s.plusEnableDiscover,
-                      setValue: (s, v) => s.plusEnableDiscover = v,
-                    ),
-                  if (_matches(tr('plusDiscoverSuggestions'), desc: tr('plusDiscoverSuggestionsDescription')))
-                    (
-                      icon: Icons.auto_awesome_outlined,
-                      label: tr('plusDiscoverSuggestions'),
-                      description: tr('plusDiscoverSuggestionsDescription'),
-                      getValue: (s) => s.plusDiscoverSuggestions,
-                      setValue: (s, v) => s.plusDiscoverSuggestions = v,
-                    ),
-                ],
-              ),
             if (hasBanWarnings)
               ExpressiveSettingsGroup(
-                title: isSearching ? null : tr('safetyAndRateLimits'),
+                title: isSearching ? null : tr('settingsGroupSafety'),
                 description: isSearching
                     ? null
                     : tr('safetyAndRateLimitsGroupDesc'),

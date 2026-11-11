@@ -1,3 +1,5 @@
+import 'package:obtainium/components/settings/theme_settings_section.dart';
+import 'package:obtainium/pages/settings_subpage.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_utils.dart';
@@ -407,154 +409,39 @@ class DeveloperSettingsPage extends StatelessWidget {
               onTap: () => showDeviceOptimizationSheet(context: context),
             ),
           ]),
+          // Corner radius and the expressive progress bar each have one
+          // home in Look & motion; this links to the Shapes page.
           _buildSection(context, tr('expressiveDesignShapes'), [
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.gesture_rounded),
-              title: Text(tr('squigglyProgressBars')),
-              subtitle: Text(tr('usePlayStoreStyleSinusoidal')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .plusEnableExpressiveProgress,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context
-                        .read<PlusSettingsProvider>()
-                        .plusEnableExpressiveProgress =
-                    val;
-              },
-            ),
-            const Divider(),
             ListTile(
               leading: const Icon(Icons.rounded_corner_rounded),
-              title: Text(tr('globalCornerRadius')),
-              subtitle: Text(
-                tr(
-                  'defaultRoundednessCards',
-                  args: [
-                    context
-                        .watch<PlusSettingsProvider>()
-                        .plusGlobalCornerRadius
-                        .toInt()
-                        .toString(),
-                  ],
-                ),
-              ),
-            ),
-            Slider(
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .plusGlobalCornerRadius,
-              min: 0,
-              max: 40,
-              divisions: 40,
-              onChanged: (val) =>
-                  context.read<PlusSettingsProvider>().plusGlobalCornerRadius =
-                      val,
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.tune_rounded),
-              title: Text(tr('overrideIndividualRadii')),
-              subtitle: Text(tr('fineTuneRoundedness')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .plusOverrideIndividualCornerRadius,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context
-                        .read<PlusSettingsProvider>()
-                        .plusOverrideIndividualCornerRadius =
-                    val;
-              },
-            ),
-            if (context
-                .watch<PlusSettingsProvider>()
-                .plusOverrideIndividualCornerRadius) ...[
-              ListTile(
-                leading: const Icon(Icons.home_max_rounded),
-                title: Text(tr('homeScreenRadius')),
-                subtitle: Text(
-                  tr(
-                    'roundednessDashboardElements',
-                    args: [
-                      context
-                          .watch<PlusSettingsProvider>()
-                          .plusHomeCornerRadius
-                          .toInt()
-                          .toString(),
-                    ],
+              title: Text(tr('settingsAppearanceShapes')),
+              subtitle: Text(tr('settingsAppearanceShapesDesc')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => pushRoute(
+                context,
+                SettingsSubpage(
+                  title: tr('settingsAppearanceShapes'),
+                  icon: Icons.rounded_corner_rounded,
+                  child: const ThemeSettingsSection(
+                    androidInfoFuture: null,
+                    colorsNameMap: <ColorSwatch<Object>, String>{},
+                    subCategory: 'shapes',
                   ),
                 ),
               ),
-              Slider(
-                value: context
-                    .watch<PlusSettingsProvider>()
-                    .plusHomeCornerRadius,
-                min: 0,
-                max: 40,
-                divisions: 40,
-                onChanged: (val) =>
-                    context.read<PlusSettingsProvider>().plusHomeCornerRadius =
-                        val,
-              ),
-              ListTile(
-                leading: const Icon(Icons.settings_suggest_rounded),
-                title: Text(tr('settingsRadius')),
-                subtitle: Text(
-                  tr(
-                    'roundednessSettingsGroups',
-                    args: [
-                      context
-                          .watch<PlusSettingsProvider>()
-                          .plusSettingsCornerRadius
-                          .toInt()
-                          .toString(),
-                    ],
-                  ),
-                ),
-              ),
-              Slider(
-                value: context
-                    .watch<PlusSettingsProvider>()
-                    .plusSettingsCornerRadius,
-                min: 0,
-                max: 40,
-                divisions: 40,
-                onChanged: (val) =>
-                    context
-                            .read<PlusSettingsProvider>()
-                            .plusSettingsCornerRadius =
-                        val,
-              ),
-            ],
-          ]),
-          _buildSection(context, tr('experimentalFeatures'), [
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.compare_arrows_outlined),
-              title: Text(tr('legacyUiComparison')),
-              subtitle: Text(tr('injectsFabsAppList')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .plusShowLegacyUIComparison,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context
-                        .read<PlusSettingsProvider>()
-                        .plusShowLegacyUIComparison =
-                    val;
-              },
             ),
             SwitchListTile.adaptive(
-              secondary: const Icon(Icons.science_outlined),
-              title: Text(tr('advancedTheming')),
-              subtitle: Text(tr('unlocksExperimentalAdvancedTheming')),
+              secondary: const Icon(Icons.refresh_rounded),
+              title: Text(tr('plusUseWavyLoadingSpinner')),
+              subtitle: Text(tr('plusUseWavyLoadingSpinnerDesc')),
               value: context
                   .watch<PlusSettingsProvider>()
-                  .plusEnableExperimentalCustomization,
+                  .plusDevUseThirdPartyLoadingIndicator,
               onChanged: (val) {
                 val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
                 context
                         .read<PlusSettingsProvider>()
-                        .plusEnableExperimentalCustomization =
+                        .plusDevUseThirdPartyLoadingIndicator =
                     val;
               },
             ),

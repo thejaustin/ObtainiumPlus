@@ -63,3 +63,23 @@ enum SettingsHeaderSize { large, compact }
 enum NavBarBlurStrength { off, soft, strong }
 
 enum PlusFeaturesEntry { sheet, jumpToSection }
+
+// ── Expressive settings kit (opt-in previews). Stored by index, so only ever
+// append members; the first member is the shipped look. ──
+
+/// How settings groups are drawn: today's bordered card, or M3E segmented
+/// rows (separate rows with 2 dp gaps and positional corners).
+enum SettingsGroupStyle { card, segmented }
+
+/// Which switch settings rows draw. [classic] is the SDK `Switch` (today).
+enum SettingsSwitchStyle { classic, expressive, shapeThumb, iconSwitch }
+
+/// Shape a toggle row's leading icon morphs into when switched on.
+/// [squircle] maps to `MaterialShapes.square` (rounded square).
+enum IconMorphShape { squircle, cookie, clover, sunny, softBurst }
+
+/// How the leading icon animates into its "on" shape.
+enum IconMorphStyle { morph, spin, pop }
+
+/// Haptic strength. [standard] is exactly the shipped haptics.
+enum HapticIntensity { standard, subtle, strong }
