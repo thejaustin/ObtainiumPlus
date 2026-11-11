@@ -102,6 +102,29 @@ jobs:
               if (searchRes.data.total_count > 0) {
                 const ghIssue = searchRes.data.items[0];
                 if (ghIssue.state === 'closed') {
+                  // An issue closed as fixed stays closed until Sentry sees a
+                  // new event after the close. Otherwise an issue that was fixed
+                  // but never resolved in Sentry reopens on every run.
+                  const closedAt = ghIssue.closed_at ? new Date(ghIssue.closed_at) : null;
+                  const lastSeen = issue.lastSeen ? new Date(issue.lastSeen) : null;
+                  if (closedAt && lastSeen && lastSeen <= closedAt) {
+                    if (ghIssue.state_reason === 'completed') {
+                      // Resolving needs a token with event:write. With a
+                      // read-only token this fails, and the issue still stays closed.
+                      try {
+                        const resolveRes = await fetch(`${SENTRY_API}/issues/${issue.id}/`, {
+                          method: 'PUT',
+                          headers: SENTRY_HEADERS,
+                          body: JSON.stringify({ status: 'resolved' }),
+                        });
+                        core.info(`Sentry #${issue.id} resolve after GitHub close: HTTP ${resolveRes.status}`);
+                      } catch (e) {
+                        core.warning(`Could not resolve Sentry #${issue.id}: ${e.message}`);
+                      }
+                    }
+                    core.info(`Keeping GitHub #${ghIssue.number} closed (no Sentry events since ${closedAt.toISOString()})`);
+                    continue;
+                  }
                   await github.rest.issues.update({
                     owner, repo,
                     issue_number: ghIssue.number,
@@ -110,7 +133,7 @@ jobs:
                   await github.rest.issues.createComment({
                     owner, repo,
                     issue_number: ghIssue.number,
-                    body: `🔄 This crash has reappeared in Sentry (status: **${issue.status}**). Re-opening issue for investigation.`,
+                    body: `🔄 This crash happened again after this issue was closed (last seen ${issue.lastSeen ?? 'unknown'}, ${issue.count} events total). Re-opening issue for investigation.`,
                   });
                   core.info(`Re-opened GitHub #${ghIssue.number} for Sentry #${issue.id}`);
                 }
