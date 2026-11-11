@@ -219,6 +219,55 @@ void main() {
     await pumpPage(tester, const VisualLabPage(), VisualLabPage);
     expect(find.byType(MotionControlsCard), findsOneWidget);
   });
+
+  testWidgets('kit options switched at runtime, then reset to today\'s look', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    await pumpPage(tester, const VisualLabPage(), VisualLabPage);
+    final plus = tester
+        .element(find.byType(VisualLabPage))
+        .read<PlusSettingsProvider>();
+    expect(find.byType(SegmentedSettingsGroup), findsNothing);
+
+    final base = FlutterError.onError;
+    final errors = <FlutterErrorDetails>[];
+    FlutterError.onError = (d) {
+      errors.add(d);
+      base?.call(d);
+    };
+    try {
+      plus.plusSettingsGroupStyle = SettingsGroupStyle.segmented;
+      plus.plusSwitchStyle = SettingsSwitchStyle.shapeThumb;
+      plus.plusIconMorphOnToggle = true;
+      plus.plusHapticIntensity = HapticIntensity.strong;
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byType(SegmentedSettingsGroup), findsWidgets);
+      expect(find.byType(MorphSwitch), findsWidgets);
+
+      plus.plusSwitchStyle = SettingsSwitchStyle.iconSwitch;
+      plus.plusSettingsGroupOuterRadius = 4;
+      await tester.pump(const Duration(milliseconds: 600));
+
+      plus.resetExpressiveKit();
+      await tester.pump(const Duration(milliseconds: 600));
+    } finally {
+      FlutterError.onError = base;
+    }
+    expect(errors, isEmpty);
+    expect(tester.takeException(), isNull);
+    // Back to today's look; only the Motion card's own preview remains.
+    expect(find.byType(SegmentedSettingsGroup), findsNothing);
+    expect(find.byType(Card), findsWidgets);
+    expect(
+      find.descendant(
+        of: find.byType(ExpressiveSettingsGroup),
+        matching: find.byType(MorphSwitch),
+      ),
+      findsNothing,
+    );
+    expect(find.byType(SwitchListTile), findsWidgets);
+  });
 }
 
 class _MemoryAssetLoader extends AssetLoader {
