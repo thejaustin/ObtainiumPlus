@@ -124,6 +124,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   /// tiles draw at most ~48 dp.
   static const int _iconSizePx = 96;
   static const int _nativeBatchSize = 50;
+  static const int _firstNativeBatchSize = 16;
   bool _nativeLabelIconsUnavailable = false;
   Timer? _refreshTimer;
 
@@ -161,6 +162,23 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         if (_apps[i].packageName != null) _apps[i].packageName!: i,
     };
 
+    // Load in display order (shown rows before hidden ones) so the first
+    // screenful fills in first instead of following install order.
+    final tracked = context.read<AppsProvider>().apps;
+    int displayRank(PackageInfo p) {
+      final idx = indexMap[p.packageName] ?? _apps.length;
+      final hidden =
+          idx < _apps.length &&
+          ((!_showSystemApps && _apps[idx].isSystemApp) ||
+              tracked.containsKey(p.packageName));
+      return hidden ? idx + _apps.length : idx;
+    }
+
+    final ranks = {for (final p in toLoad) p.packageName!: displayRank(p)};
+    toLoad.sort(
+      (a, b) => ranks[a.packageName]!.compareTo(ranks[b.packageName]!),
+    );
+
     var remaining = toLoad;
     if (!_nativeLabelIconsUnavailable) {
       remaining = await _loadIconsNative(toLoad);
@@ -179,12 +197,14 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
   /// small pre-scaled icon each. Returns the packages it could not handle
   /// (everything from the first failure on if the native method is missing).
   Future<List<PackageInfo>> _loadIconsNative(List<PackageInfo> toLoad) async {
-    for (int i = 0; i < toLoad.length; i += _nativeBatchSize) {
+    // A small first batch returns sooner, so the rows on screen fill in first.
+    for (
+      int i = 0, n = _firstNativeBatchSize;
+      i < toLoad.length;
+      i += n, n = _nativeBatchSize
+    ) {
       if (!mounted) return const [];
-      final batch = toLoad.sublist(
-        i,
-        (i + _nativeBatchSize).clamp(0, toLoad.length),
-      );
+      final batch = toLoad.sublist(i, (i + n).clamp(0, toLoad.length));
       Map<String, ({String? label, Uint8List? icon})> result;
       try {
         result = await AppInstallService.getLabelsAndIcons([
@@ -226,10 +246,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     const batchSize = 6;
     for (int i = 0; i < toLoad.length; i += batchSize) {
       if (!mounted) return;
-      final batch = toLoad.sublist(
-        i,
-        (i + batchSize).clamp(0, toLoad.length),
-      );
+      final batch = toLoad.sublist(i, (i + batchSize).clamp(0, toLoad.length));
       bool anyUpdated = false;
       await Future.wait(
         batch.map((pkg) async {
