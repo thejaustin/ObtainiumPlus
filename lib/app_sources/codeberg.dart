@@ -151,7 +151,7 @@ class Codeberg extends AppSource {
     return standardizeUrlWithRegex(
       url,
       subdomainPrefix: r'(www\.)?',
-      pathPattern: r'/[^/]+/[^/]+',
+      pathPattern: r'(?::[0-9]+)?/[^/]+/[^/]+',
     );
   }
 
