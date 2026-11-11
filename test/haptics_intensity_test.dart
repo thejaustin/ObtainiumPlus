@@ -89,20 +89,23 @@ void main() {
     ]);
   });
 
-  test('native path sends the Android constant and no Flutter haptic', () async {
-    AppHaptics.useNative = true;
-    AppHaptics.toggleOn();
-    AppHaptics.toggleOff();
-    AppHaptics.segmentTick();
-    await flush();
-    expect(nativeCalls.map((c) => c.method), everyElement('performHaptic'));
-    expect(nativeCalls.map((c) => (c.arguments as Map)['constant']), [
-      'TOGGLE_ON',
-      'TOGGLE_OFF',
-      'SEGMENT_TICK',
-    ]);
-    expect(flutterCalls, isEmpty);
-  });
+  test(
+    'native path sends the Android constant and no Flutter haptic',
+    () async {
+      AppHaptics.useNative = true;
+      AppHaptics.toggleOn();
+      AppHaptics.toggleOff();
+      AppHaptics.segmentTick();
+      await flush();
+      expect(nativeCalls.map((c) => c.method), everyElement('performHaptic'));
+      expect(nativeCalls.map((c) => (c.arguments as Map)['constant']), [
+        'TOGGLE_ON',
+        'TOGGLE_OFF',
+        'SEGMENT_TICK',
+      ]);
+      expect(flutterCalls, isEmpty);
+    },
+  );
 
   test('native failure falls back to the Flutter haptic', () async {
     AppHaptics.useNative = true;

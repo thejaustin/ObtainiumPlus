@@ -53,12 +53,15 @@ void main() {
     });
   }
 
-  test('tapDown then selectionClick inside the dedupe window: one tick', () async {
-    AppHaptics.tapDown();
-    AppHaptics.selectionClick();
-    await Future<void>.delayed(Duration.zero);
-    expect(calls, [selection]);
-  });
+  test(
+    'tapDown then selectionClick inside the dedupe window: one tick',
+    () async {
+      AppHaptics.tapDown();
+      AppHaptics.selectionClick();
+      await Future<void>.delayed(Duration.zero);
+      expect(calls, [selection]);
+    },
+  );
 
   test('disabled haptics send nothing', () async {
     AppHaptics.enabled = false;
