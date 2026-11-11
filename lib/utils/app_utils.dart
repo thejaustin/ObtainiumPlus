@@ -4,10 +4,12 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:hsluv/hsluv.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:obtainium/pages/settings_subpage.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/motion.dart';
+import 'package:obtainium/utils/settings_route.dart';
 import 'package:provider/provider.dart';
 
 /// Push a route respecting the user's transition preferences:
@@ -15,6 +17,10 @@ import 'package:provider/provider.dart';
 ///   - reversePageTransitions → right-to-left (slide back)
 ///   - animationSpeedMultiplier → scales duration
 ///   - plusEnableMaterialExpressive → scaled spatial transition with emphasized curves
+///
+/// A [SettingsSubpage] page: with the "Predictive back" preview on
+/// it gets [SettingsPageRoute] (predictive gesture pops, shared-axis button
+/// pops). Off, it is the same route as any other page.
 Future<T?> pushRoute<T>(BuildContext context, Widget page) {
   final settings = context.read<SettingsProvider>();
   if (settings.disablePageTransitions || !AppMotion.enabledNow(context)) {
@@ -28,6 +34,15 @@ Future<T?> pushRoute<T>(BuildContext context, Widget page) {
   }
 
   final plusSettings = context.read<PlusSettingsProvider>();
+  if (page is SettingsSubpage && plusSettings.plusSettingsPredictiveBack) {
+    return Navigator.of(context).push<T>(
+      SettingsPageRoute<T>(
+        builder: (_) => page,
+        fillColor: Theme.of(context).colorScheme.surface,
+        speed: settings.animationSpeedMultiplier,
+      ),
+    );
+  }
   final isExpressive = plusSettings.plusEnableMaterialExpressive;
   final speed = settings.animationSpeedMultiplier;
 
