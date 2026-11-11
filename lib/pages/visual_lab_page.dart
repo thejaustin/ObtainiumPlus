@@ -1,8 +1,14 @@
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
+import 'package:obtainium/components/settings/connected_choice_group.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
+import 'package:obtainium/components/settings/motion_controls_card.dart';
+import 'package:obtainium/components/settings/settings_feature_toggle.dart';
+import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -168,6 +174,12 @@ class VisualLabPage extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  // Expressive kit previews (temporary home until the
+                  // settings reorganisation places them). All off by default.
+                  const MotionControlsCard(),
+                  const SizedBox(height: 12),
+                  ..._expressiveKit(context, plus),
                   const SizedBox(height: 16),
                   Center(
                     child: FilledButton.tonalIcon(
@@ -184,6 +196,134 @@ class VisualLabPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  List<Widget> _expressiveKit(BuildContext context, PlusSettingsProvider plus) {
+    String preview(String key) => tr('previewSuffix', args: [tr(key)]);
+    final outer = plus.plusSettingsGroupOuterRadius;
+    return [
+      ExpressiveSettingsGroup(
+        title: preview('expressiveKitGroup'),
+        description: tr('expressiveKitGroupDesc'),
+        persistKey: 'visualLab:expressiveKit',
+        icon: Icons.auto_awesome_rounded,
+        children: [
+          _KitChoice<SettingsGroupStyle>(
+            title: preview('settingsGroupStyle'),
+            description: tr('settingsGroupStyleDesc'),
+            value: plus.plusSettingsGroupStyle,
+            options: {
+              SettingsGroupStyle.card: tr('settingsGroupStyleCard'),
+              SettingsGroupStyle.segmented: tr('settingsGroupStyleSegmented'),
+            },
+            onChanged: (v) => plus.plusSettingsGroupStyle = v,
+          ),
+          SettingsSliderTile(
+            icon: Icons.rounded_corner_rounded,
+            title: preview('settingsGroupOuterRadius'),
+            subtitle: tr('settingsGroupRadiusDesc'),
+            value: outer,
+            min: 0,
+            max: PlusSettingsProvider.groupOuterRadiusMax,
+            divisions: PlusSettingsProvider.groupOuterRadiusMax.round(),
+            defaultValue: PlusSettingsProvider.groupOuterRadiusDefault,
+            labelBuilder: (v) => '${v.round()} dp',
+            onChanged: (v) =>
+                plus.plusSettingsGroupOuterRadius = v.roundToDouble(),
+          ),
+          SettingsSliderTile(
+            icon: Icons.border_inner_rounded,
+            title: preview('settingsGroupInnerRadius'),
+            subtitle: tr('settingsGroupRadiusDesc'),
+            value: plus.plusSettingsGroupInnerRadius.clamp(
+              0.0,
+              math.max(outer, 1.0),
+            ),
+            min: 0,
+            max: math.max(outer, 1.0),
+            divisions: math.max(outer.round(), 1),
+            defaultValue: math.min(
+              PlusSettingsProvider.groupInnerRadiusDefault,
+              math.max(outer, 1.0),
+            ),
+            labelBuilder: (v) => '${v.round()} dp',
+            onChanged: (v) =>
+                plus.plusSettingsGroupInnerRadius = v.roundToDouble(),
+          ),
+          _KitChoice<SettingsSwitchStyle>(
+            title: preview('switchStyle'),
+            description: tr('switchStyleDesc'),
+            value: plus.plusSwitchStyle,
+            options: {
+              SettingsSwitchStyle.classic: tr('switchStyleClassic'),
+              SettingsSwitchStyle.expressive: tr('switchStyleExpressive'),
+              SettingsSwitchStyle.shapeThumb: tr('switchStyleShapeThumb'),
+              SettingsSwitchStyle.iconSwitch: tr('switchStyleIconSwitch'),
+            },
+            onChanged: (v) => plus.plusSwitchStyle = v,
+          ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            icon: Icons.interests_rounded,
+            title: preview('iconMorphOnToggle'),
+            subtitle: tr('iconMorphOnToggleDesc'),
+            value: (s) => s.plusIconMorphOnToggle,
+            onChanged: (s, v) => s.plusIconMorphOnToggle = v,
+          ),
+          if (plus.plusIconMorphOnToggle) ...[
+            _KitChoice<IconMorphShape>(
+              title: preview('iconMorphShape'),
+              value: plus.plusIconMorphShape,
+              options: {
+                IconMorphShape.squircle: tr('iconShapeSquircle'),
+                IconMorphShape.cookie: tr('iconShapeCookie'),
+                IconMorphShape.clover: tr('iconShapeClover'),
+                IconMorphShape.sunny: tr('iconShapeSunny'),
+                IconMorphShape.softBurst: tr('iconShapeSoftBurst'),
+              },
+              onChanged: (v) => plus.plusIconMorphShape = v,
+            ),
+            _KitChoice<IconMorphStyle>(
+              title: preview('iconMorphStyle'),
+              value: plus.plusIconMorphStyle,
+              options: {
+                IconMorphStyle.morph: tr('iconMorphStyleMorph'),
+                IconMorphStyle.spin: tr('iconMorphStyleSpin'),
+                IconMorphStyle.pop: tr('iconMorphStylePop'),
+              },
+              onChanged: (v) => plus.plusIconMorphStyle = v,
+            ),
+          ],
+          _KitChoice<HapticIntensity>(
+            title: preview('hapticIntensity'),
+            description: tr('hapticIntensityDesc'),
+            value: plus.plusHapticIntensity,
+            options: {
+              HapticIntensity.subtle: tr('hapticIntensitySubtle'),
+              HapticIntensity.standard: tr('hapticIntensityStandard'),
+              HapticIntensity.strong: tr('hapticIntensityStrong'),
+            },
+            onChanged: (v) => plus.plusHapticIntensity = v,
+          ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            icon: Icons.settings_suggest_rounded,
+            title: preview('hapticFollowSystem'),
+            subtitle: tr('hapticFollowSystemDesc'),
+            value: (s) => s.plusHapticFollowSystem,
+            onChanged: (s, v) => s.plusHapticFollowSystem = v,
+          ),
+          buildFeatureToggle<PlusSettingsProvider>(
+            context,
+            icon: Icons.vibration_rounded,
+            title: preview('nativeHaptics'),
+            subtitle: tr('nativeHapticsDesc'),
+            value: (s) => s.plusNativeHaptics,
+            onChanged: (s, v) => s.plusNativeHaptics = v,
+          ),
+        ],
+      ),
+    ];
   }
 
   void _resetAll(BuildContext context, PlusSettingsProvider plus) {
@@ -275,6 +415,59 @@ class _ChoiceOption<T> extends StatelessWidget {
                 },
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One expressive-kit choice: title, optional description and a connected
+/// choice group (a radio sheet for 5+ options).
+class _KitChoice<T> extends StatelessWidget {
+  final String title;
+  final String? description;
+  final T value;
+  final Map<T, String> options;
+  final ValueChanged<T> onChanged;
+
+  const _KitChoice({
+    required this.title,
+    this.description,
+    required this.value,
+    required this.options,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            title,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          if (description != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              description!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          ConnectedChoiceGroup<T>(
+            options: options,
+            value: value,
+            sheetTitle: title,
+            onChanged: onChanged,
           ),
         ],
       ),
