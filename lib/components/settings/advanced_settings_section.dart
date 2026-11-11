@@ -11,6 +11,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/github_device_flow.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -648,7 +649,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
               expansionAnimationStyle: AnimationStyle(
                 curve: Easing.emphasizedDecelerate,
                 reverseCurve: Easing.emphasizedAccelerate,
-                duration: const Duration(milliseconds: 280),
+                duration: AppMotion.duration(
+                  context,
+                  const Duration(milliseconds: 280),
+                ),
               ),
               tilePadding: EdgeInsets.zero,
               leading: const Icon(Icons.login_rounded, size: 20),

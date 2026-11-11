@@ -7,6 +7,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// Representation of a sibling subpage in a group (e.g. Appearance hub sections).
 class SettingsSubpageSibling {
@@ -90,7 +91,9 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
       Scrollable.ensureVisible(
         targetContext,
         alignment: 0.5,
-        duration: const Duration(milliseconds: 240),
+        duration: AppMotion.enabledNow(context)
+            ? const Duration(milliseconds: 240)
+            : Duration.zero,
         curve: Curves.easeOutCubic,
       );
     }

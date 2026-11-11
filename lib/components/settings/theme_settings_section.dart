@@ -21,6 +21,7 @@ import 'package:obtainium/components/settings/settings_layout_selector.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// Theme & Colors settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -157,7 +158,10 @@ class ThemeSettingsSection extends StatelessWidget {
             expansionAnimationStyle: AnimationStyle(
               curve: Easing.emphasizedDecelerate,
               reverseCurve: Easing.emphasizedAccelerate,
-              duration: const Duration(milliseconds: 280),
+              duration: AppMotion.duration(
+                context,
+                const Duration(milliseconds: 280),
+              ),
             ),
             leading: buildSettingsIconBadge(context, Icons.science_outlined),
             title: Text(tr('advancedTheming')),

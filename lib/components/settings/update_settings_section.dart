@@ -21,6 +21,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/services/background_update_service.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/utils/nav_helper.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 
@@ -1264,7 +1265,10 @@ class _RunBgUpdateCheckNowButtonState
           ),
           // Cross-fade so the label and spinner swap without a size jump.
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
+            duration: AppMotion.duration(
+              context,
+              const Duration(milliseconds: 200),
+            ),
             child: _isRunning
                 ? const SizedBox(
                     key: ValueKey('running'),

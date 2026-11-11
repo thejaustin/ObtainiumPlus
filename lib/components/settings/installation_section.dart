@@ -21,6 +21,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/services/shizuku_status_service.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// App installation and update settings
 class InstallationSection extends StatefulWidget {
@@ -606,7 +607,10 @@ class _InstallationSectionState extends State<InstallationSection>
                         if (chip != null) ...[
                           const SizedBox(width: 6),
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppMotion.duration(
+                              context,
+                              const Duration(milliseconds: 200),
+                            ),
                             child: KeyedSubtree(
                               key: ValueKey(chip.hashCode),
                               child: chip,

@@ -13,6 +13,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// Apps, Categories, and View settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -583,6 +584,10 @@ class AppsViewSettingsSection extends StatelessWidget {
 
   Widget _buildAppTileStylePreview(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
+    final tileAnimDuration = AppMotion.duration(
+      context,
+      const Duration(milliseconds: 220),
+    );
     final viewSettings = context.watch<ViewSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -625,7 +630,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       return AspectRatio(
         aspectRatio: isSquare ? 1.0 : 0.85,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
+          duration: tileAnimDuration,
           curve: AppConstants.expressiveStandard,
           decoration: ShapeDecoration(
             color: tileCardless

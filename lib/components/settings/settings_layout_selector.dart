@@ -6,6 +6,7 @@ import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/motion.dart';
 
 /// Segmented style switch and granular legacy UI toggles
 class SettingsLayoutSelector extends StatelessWidget {
@@ -149,7 +150,10 @@ class SettingsLayoutSelector extends StatelessWidget {
                 expansionAnimationStyle: AnimationStyle(
                   curve: Easing.emphasizedDecelerate,
                   reverseCurve: Easing.emphasizedAccelerate,
-                  duration: const Duration(milliseconds: 280),
+                  duration: AppMotion.duration(
+                    context,
+                    const Duration(milliseconds: 280),
+                  ),
                 ),
                 tilePadding: EdgeInsets.symmetric(
                   horizontal: isCompact ? 14 : 16,

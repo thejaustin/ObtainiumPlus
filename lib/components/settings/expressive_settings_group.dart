@@ -5,6 +5,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 
@@ -39,6 +40,9 @@ class ExpressiveSettingsGroup extends StatefulWidget {
 
 class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     with SingleTickerProviderStateMixin {
+  static const _expandDuration = Duration(milliseconds: 300);
+  static const _collapseDuration = Duration(milliseconds: 220);
+
   late AnimationController _expandController;
   late Animation<double> _iconTurnAnimation;
 
@@ -47,8 +51,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     super.initState();
     _expandController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
-      reverseDuration: const Duration(milliseconds: 220),
+      duration: _expandDuration,
+      reverseDuration: _collapseDuration,
       value: widget.initiallyExpanded ? 1.0 : 0.0,
     );
     _iconTurnAnimation = Tween<double>(begin: 0.0, end: 0.5).animate(
@@ -66,12 +70,11 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     super.dispose();
   }
 
+  // Motion off jumps the controller (see below), so its durations only apply
+  // when motion is on; no listening dependency needed here.
   void _handleExpansionChange(bool expanded) {
     AppHaptics.selectionClick();
-    final animsEnabled = context
-        .read<PlusSettingsProvider>()
-        .plusEnableEnhancedAnimations;
-    if (animsEnabled) {
+    if (AppMotion.enabledNow(context)) {
       if (expanded) {
         _expandController.forward();
       } else {
@@ -84,11 +87,24 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
 
   @override
   Widget build(BuildContext context) {
-    final plusSettings = Provider.of<PlusSettingsProvider>(context);
-    final isCompact = plusSettings.plusUseCompactSettings;
-    // Visual Lab description-lines knob (default 2 = shipped). Compact
-    // density still hides group descriptions entirely.
-    final descriptionLines = plusSettings.plusLabCompactDescriptionLines;
+    final (isCompact, isM3E, useGlass, baseRadius, descriptionLines) = context
+        .select<PlusSettingsProvider, (bool, bool, bool, double, int)>(
+          (p) => (
+            p.plusUseCompactSettings,
+            p.plusEnableMaterialExpressive,
+            p.plusEnableGlassmorphism,
+            p.plusOverrideIndividualCornerRadius
+                ? p.plusSettingsCornerRadius
+                : p.plusGlobalCornerRadius,
+            // Visual Lab description-lines knob (default 2 = shipped). Compact
+            // density still hides group descriptions entirely.
+            p.plusLabCompactDescriptionLines,
+          ),
+        );
+    final cardAnimDuration = AppMotion.duration(
+      context,
+      const Duration(milliseconds: 200),
+    );
     final colorScheme = Theme.of(context).colorScheme;
 
     final visibleChildren = widget.children.where((child) {
@@ -123,9 +139,6 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
       }),
     );
 
-    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusSettingsCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
     final radius = CardMetrics.card(baseRadius);
     final innerRadius = CardMetrics.inner(radius);
     final badgeSize = isCompact ? 30.0 : 36.0;
@@ -137,10 +150,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             height: badgeSize,
             decoration: ShapeDecoration(
               color: colorScheme.primary.withValues(alpha: 0.12),
-              shape: CardMetrics.shape(
-                innerRadius,
-                expressive: plusSettings.plusEnableMaterialExpressive,
-              ),
+              shape: CardMetrics.shape(innerRadius, expressive: isM3E),
             ),
             child: Icon(
               widget.icon,
@@ -208,8 +218,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                             color: colorScheme.primary.withValues(alpha: 0.12),
                             shape: CardMetrics.shape(
                               innerRadius,
-                              expressive:
-                                  plusSettings.plusEnableMaterialExpressive,
+                              expressive: isM3E,
                             ),
                           ),
                           child: Icon(
@@ -263,19 +272,17 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
           ),
         RepaintBoundary(
           child: AnimatedContainer(
-            duration: Duration(
-              milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
-            ),
+            duration: cardAnimDuration,
             curve: Easing.emphasizedDecelerate,
             child: Card(
               elevation: 0,
               margin: EdgeInsets.symmetric(vertical: isCompact ? 2 : 6),
               color: colorScheme.surfaceContainerLow.withValues(
-                alpha: plusSettings.plusEnableGlassmorphism ? 0.7 : 1.0,
+                alpha: useGlass ? 0.7 : 1.0,
               ),
               shape: CardMetrics.shape(
                 radius,
-                expressive: plusSettings.plusEnableMaterialExpressive,
+                expressive: isM3E,
                 side: BorderSide(
                   color: colorScheme.outlineVariant.withValues(
                     alpha: Theme.of(context).brightness == Brightness.dark
@@ -286,13 +293,10 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
               ),
               child: ClipPath(
                 clipper: ShapeBorderClipper(
-                  shape: CardMetrics.shape(
-                    radius,
-                    expressive: plusSettings.plusEnableMaterialExpressive,
-                  ),
+                  shape: CardMetrics.shape(radius, expressive: isM3E),
                 ),
                 child: ConditionalBlur(
-                  enabled: plusSettings.plusEnableGlassmorphism,
+                  enabled: useGlass,
                   sigma: AppConstants.glassBlurSigmaSoft,
                   child: _buildCardContent(
                     context,
@@ -346,7 +350,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
     Widget? leadingWidget,
   }) {
     if (!widget.isExpandable) return content;
-    final plusSettings = context.watch<PlusSettingsProvider>();
+    final animate = AppMotion.enabled(context);
 
     return Theme(
       // Remove the default ExpansionTile dividers
@@ -360,12 +364,8 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         expansionAnimationStyle: AnimationStyle(
           curve: Easing.emphasizedDecelerate,
           reverseCurve: Easing.emphasizedAccelerate,
-          duration: Duration(
-            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 300 : 0,
-          ),
-          reverseDuration: Duration(
-            milliseconds: plusSettings.plusEnableEnhancedAnimations ? 220 : 0,
-          ),
+          duration: animate ? _expandDuration : Duration.zero,
+          reverseDuration: animate ? _collapseDuration : Duration.zero,
         ),
         initiallyExpanded: widget.initiallyExpanded,
         onExpansionChanged: _handleExpansionChange,
@@ -377,13 +377,15 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
         leading: leadingWidget,
         trailing: trailing,
         title: Text(
-          widget.title ?? 'Settings',
+          widget.title ?? tr('settings'),
           style: _headerTitleStyle(context, colorScheme),
         ),
         subtitle: (!isCompact && widget.description != null)
             ? Text(
                 widget.description!,
-                maxLines: plusSettings.plusLabCompactDescriptionLines,
+                maxLines: context.select<PlusSettingsProvider, int>(
+                  (p) => p.plusLabCompactDescriptionLines,
+                ),
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,

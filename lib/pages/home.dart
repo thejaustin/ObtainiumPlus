@@ -382,7 +382,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         expansionAnimationStyle: AnimationStyle(
                           curve: Easing.emphasizedDecelerate,
                           reverseCurve: Easing.emphasizedAccelerate,
-                          duration: const Duration(milliseconds: 260),
+                          duration: AppMotion.enabledNow(ctx)
+                              ? const Duration(milliseconds: 260)
+                              : Duration.zero,
                         ),
                         title: Text(tr('rawJson')),
                         children: [
@@ -532,8 +534,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     // With transitions disabled, render the page directly:
     // PageTransitionSwitcher with Duration.zero can leave the incoming
-    // page at opacity 0 — a blank tab with no exception thrown.
-    final pageBody = behaviorSettings.disablePageTransitions
+    // page at opacity 0 — a blank tab with no exception thrown. The same
+    // applies when motion is off (in-app toggle or OS "remove animations").
+    final pageBody =
+        behaviorSettings.disablePageTransitions || !AppMotion.enabled(context)
         ? pages.elementAt(currentIndex).widget
         : PageTransitionSwitcher(
             duration: const Duration(milliseconds: 300),
