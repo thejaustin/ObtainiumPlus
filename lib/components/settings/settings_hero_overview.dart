@@ -82,7 +82,7 @@ class SettingsHeroOverview extends StatelessWidget {
                         : colorScheme.secondary,
                     onTap: () {
                       AppHaptics.selectionClick();
-                      onSelectTab(1); // Jump to Updates & Install tab
+                      onSelectTab(3); // Install & safety
                     },
                   ),
                 ),
@@ -103,7 +103,7 @@ class SettingsHeroOverview extends StatelessWidget {
                         : colorScheme.outline,
                     onTap: () {
                       AppHaptics.selectionClick();
-                      onSelectTab(1); // Jump to Updates & Install tab
+                      onSelectTab(2); // Updates & notifications
                     },
                   ),
                 ),
@@ -159,7 +159,7 @@ class SettingsHeroOverview extends StatelessWidget {
                       label: tr('swipeGestures'),
                       cornerRadius: cornerRadius,
                       isM3E: isM3E,
-                      onTap: () => onSelectTab(3),
+                      onTap: () => onSelectTab(1),
                     ),
                     const SizedBox(width: 6),
                     _buildQuickSearchChip(
@@ -168,7 +168,7 @@ class SettingsHeroOverview extends StatelessWidget {
                       label: tr('usageAccessSettings'),
                       cornerRadius: cornerRadius,
                       isM3E: isM3E,
-                      onTap: () => onSelectTab(3),
+                      onTap: () => onSelectTab(1),
                     ),
                     const SizedBox(width: 6),
                     _buildQuickSearchChip(

@@ -66,9 +66,9 @@ void main() {
                     child: AppearanceHub(
                       androidInfoFuture: null,
                       themeContent: SizedBox.shrink(),
-                      appTileContent: SizedBox.shrink(),
-                      layoutNavContent: SizedBox.shrink(),
-                      motionPhysicsContent: SizedBox.shrink(),
+                      shapesContent: SizedBox.shrink(),
+                      motionContent: SizedBox.shrink(),
+                      settingsPageContent: SizedBox.shrink(),
                     ),
                   ),
                 ),
@@ -89,7 +89,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(Wrap), findsWidgets);
       expect(find.text('Theme & Dynamic Color'), findsOneWidget);
-      expect(find.text('Layout & Navigation'), findsOneWidget);
+      expect(find.text('Motion & haptics'), findsOneWidget);
     },
   );
 

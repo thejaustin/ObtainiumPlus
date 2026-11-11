@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
-import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -11,25 +10,40 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/modal_utils.dart';
 import 'package:obtainium/services/shizuku_status_service.dart';
+import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:provider/provider.dart';
 
 /// Shows the Obtainium+ Features Overview & Live Diagnostics Sheet.
-Future<void> showPlusFeaturesSheet({required BuildContext context}) {
+///
+/// Its rows are links: each setting has one home in the settings tabs, and
+/// [onOpenSection] (when given) closes the sheet and opens that tab.
+Future<void> showPlusFeaturesSheet({
+  required BuildContext context,
+  ValueChanged<int>? onOpenSection,
+}) {
   return showDraggableModalBottomSheet<void>(
     context: context,
     initialChildSize: 0.85,
     minChildSize: 0.5,
     maxChildSize: 0.95,
     builder: (sheetContext, scrollController) {
-      return PlusFeaturesSheetContent(scrollController: scrollController);
+      return PlusFeaturesSheetContent(
+        scrollController: scrollController,
+        onOpenSection: onOpenSection,
+      );
     },
   );
 }
 
 class PlusFeaturesSheetContent extends StatefulWidget {
   final ScrollController scrollController;
+  final ValueChanged<int>? onOpenSection;
 
-  const PlusFeaturesSheetContent({super.key, required this.scrollController});
+  const PlusFeaturesSheetContent({
+    super.key,
+    required this.scrollController,
+    this.onOpenSection,
+  });
 
   @override
   State<PlusFeaturesSheetContent> createState() =>
@@ -68,8 +82,9 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     if (_isBenchmarking) return;
     AppHaptics.selectionClick();
     setState(() => _isBenchmarking = true);
-    final latency =
-        (await ShizukuStatusService.instance.refreshFrom(context)).latencyMs;
+    final latency = (await ShizukuStatusService.instance.refreshFrom(
+      context,
+    )).latencyMs;
     if (mounted) {
       setState(() {
         _binderLatencyMs = latency;
@@ -81,12 +96,33 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
     }
   }
 
+  /// A row naming a setting that lives in a settings tab; tapping closes
+  /// the sheet and opens that tab.
+  Widget _buildSettingLink(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required int section,
+  }) {
+    return ListTile(
+      dense: true,
+      leading: Icon(icon),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
+      subtitle: Text(tr(kSettingsSections[section].labelKey)),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () {
+        AppHaptics.selectionClick();
+        Navigator.of(context).pop();
+        widget.onOpenSection?.call(section);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final behaviorSettings = context.watch<BehaviorSettingsProvider>();
     final isM3E = plusSettings.plusEnableMaterialExpressive;
     final radius = CardMetrics.card(plusSettings.plusGlobalCornerRadius);
     final innerRadius = CardMetrics.inner(radius);
@@ -260,22 +296,11 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                 ),
 
                 // Fallback to system installer switch
-                SwitchListTile.adaptive(
-                  dense: true,
-                  secondary: const Icon(Icons.swap_horiz_rounded),
-                  title: Text(
-                    tr('shizukuFallbackToSystem'),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    tr('shizukuFallbackToSystemDescription'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  value: behaviorSettings.shizukuFallbackToSystem,
-                  onChanged: (v) {
-                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    behaviorSettings.shizukuFallbackToSystem = v;
-                  },
+                _buildSettingLink(
+                  context,
+                  icon: Icons.swap_horiz_rounded,
+                  title: tr('shizukuFallbackToSystem'),
+                  section: SettingsSectionIndex.installAndSafety,
                 ),
               ],
             ),
@@ -295,58 +320,25 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
             radius: radius,
             child: Column(
               children: [
-                SwitchListTile.adaptive(
-                  dense: true,
-                  secondary: const Icon(Icons.auto_awesome_motion_rounded),
-                  title: Text(
-                    tr('plusEnhancedAnimations'),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    tr('plusEnhancedAnimationsDescription'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  value: plusSettings.plusEnableEnhancedAnimations,
-                  onChanged: (v) {
-                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    plusSettings.plusEnableEnhancedAnimations = v;
-                  },
+                _buildSettingLink(
+                  context,
+                  icon: Icons.auto_awesome_motion_rounded,
+                  title: tr('plusEnhancedAnimations'),
+                  section: SettingsSectionIndex.lookAndMotion,
                 ),
                 const Divider(height: 1),
-                SwitchListTile.adaptive(
-                  dense: true,
-                  secondary: const Icon(Icons.palette_outlined),
-                  title: Text(
-                    tr('plusMaterialExpressive'),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    tr('plusMaterialExpressiveDescription'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  value: plusSettings.plusEnableMaterialExpressive,
-                  onChanged: (v) {
-                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    plusSettings.plusEnableMaterialExpressive = v;
-                  },
+                _buildSettingLink(
+                  context,
+                  icon: Icons.brush_rounded,
+                  title: tr('plusMaterialExpressive'),
+                  section: SettingsSectionIndex.lookAndMotion,
                 ),
                 const Divider(height: 1),
-                SwitchListTile.adaptive(
-                  dense: true,
-                  secondary: const Icon(Icons.blur_on_rounded),
-                  title: Text(
-                    tr('plusGlassmorphism'),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    tr('plusGlassmorphismDescription'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  value: plusSettings.plusEnableGlassmorphism,
-                  onChanged: (v) {
-                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    plusSettings.plusEnableGlassmorphism = v;
-                  },
+                _buildSettingLink(
+                  context,
+                  icon: Icons.blur_on_rounded,
+                  title: tr('plusGlassmorphism'),
+                  section: SettingsSectionIndex.lookAndMotion,
                 ),
               ],
             ),
@@ -411,40 +403,18 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
             radius: radius,
             child: Column(
               children: [
-                SwitchListTile.adaptive(
-                  dense: true,
-                  secondary: const Icon(Icons.bolt_rounded),
-                  title: Text(
-                    tr('plusSmartRetries'),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    tr('plusSmartRetriesDescription'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  value: plusSettings.plusEnableSmartRetries,
-                  onChanged: (v) {
-                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    plusSettings.plusEnableSmartRetries = v;
-                  },
+                _buildSettingLink(
+                  context,
+                  icon: Icons.bolt_outlined,
+                  title: tr('plusSmartRetries'),
+                  section: SettingsSectionIndex.installAndSafety,
                 ),
                 const Divider(height: 1),
-                SwitchListTile.adaptive(
-                  dense: true,
-                  secondary: const Icon(Icons.shield_outlined),
-                  title: Text(
-                    tr('plusUpdateOwnership'),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  subtitle: Text(
-                    tr('plusUpdateOwnershipDescription'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  value: plusSettings.plusEnableUpdateOwnership,
-                  onChanged: (v) {
-                    v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                    plusSettings.plusEnableUpdateOwnership = v;
-                  },
+                _buildSettingLink(
+                  context,
+                  icon: Icons.security_update_good_rounded,
+                  title: tr('plusUpdateOwnership'),
+                  section: SettingsSectionIndex.installAndSafety,
                 ),
               ],
             ),

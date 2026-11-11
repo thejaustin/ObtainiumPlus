@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
-import 'package:obtainium/components/settings/generic_boolean_control_grid.dart';
+import 'package:obtainium/components/settings/notification_settings_section.dart';
+import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -25,7 +26,8 @@ import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/utils/nav_helper.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 
-/// Update settings section widget
+/// Updates & notifications tab: checking, "only when" guards, what to
+/// update, notifications and a More… page.
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
 class UpdateSettingsSection extends StatelessWidget {
   final bool showIntervalLabel;
@@ -54,14 +56,13 @@ class UpdateSettingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    String? label(String key) => isSearching ? null : tr(key);
+    bool present(List<Widget> ws) =>
+        ws.any((w) => !(w is SizedBox && w.child == null));
 
-    final List<Widget> scheduleChildren = [
-      if (_matches(tr('runBgCheckNow')))
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: _RunBgUpdateCheckNowButton(),
-        ),
-      if (_matches(tr('updateHealth')))
+    // Update Health status row; the related-links bar no longer repeats it.
+    final healthChildren = <Widget>[
+      if (_matches(tr('updateHealth'), desc: tr('updateHealthSubtitle')))
         ListTile(
           title: Text(tr('updateHealth')),
           subtitle: Text(tr('updateHealthSubtitle')),
@@ -73,12 +74,14 @@ class UpdateSettingsSection extends StatelessWidget {
           trailing: const Icon(Icons.chevron_right_rounded),
           onTap: () => NavHelper.pushUpdateHealthPage(context),
         ),
-      if (_matches(
-        tr('excludedCategoriesFromChecks'),
-        desc: tr('excludedCategoriesFromChecksDescription'),
-      ))
-        const _ExcludedCategoriesTile(),
-      if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
+    ];
+
+    final checkingChildren = <Widget>[
+      if (_matches(tr('runBgCheckNow')))
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+          child: _RunBgUpdateCheckNowButton(),
+        ),
       if (_matches(tr('checkOnStart'), desc: tr('checkOnStartDescription')))
         Consumer<UpdateSettingsProvider>(
           builder: (context, updateSettings, _) => SwitchListTile.adaptive(
@@ -96,15 +99,18 @@ class UpdateSettingsSection extends StatelessWidget {
             },
           ),
         ),
+      if (_matches(tr('bgUpdateCheckInterval'))) _buildIntervalSlider(context),
       _buildScheduleOptions(context),
     ];
 
+    // Only when: the three-way background guards, then what gets checked
+    // and how the check runs.
     final wifiGuardMatches =
         _matches(tr('whenNotOnWiFi')) || _matches(tr('bgUpdateRequiresWifi'));
     final chargingGuardMatches =
         _matches(tr('whenNotCharging')) ||
         _matches(tr('bgUpdateRequiresCharging'));
-    final List<Widget> constraintsChildren = [
+    final onlyWhenChildren = <Widget>[
       if (wifiGuardMatches)
         _buildBgGuardTile(
           context,
@@ -125,88 +131,118 @@ class UpdateSettingsSection extends StatelessWidget {
         tr('onlyCheckInstalledOrTrackOnlyApps'),
         desc: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
       ))
-        GenericBooleanControlGrid<UpdateSettingsProvider>(
-          // The surrounding group already shows this title, except in search.
-          title: isSearching ? tr('sectionDeviceOptions') : '',
-          embedded: true,
-          settings: [
-            if (_matches(
-              tr('onlyCheckInstalledOrTrackOnlyApps'),
-              desc: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
-            ))
-              (
-                icon: Icons.check_circle_outline,
-                label: tr('onlyCheckInstalledOrTrackOnlyApps'),
-                description: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
-                getValue: (s) => s.onlyCheckInstalledOrTrackOnlyApps,
-                setValue: (s, v) => s.onlyCheckInstalledOrTrackOnlyApps = v,
-              ),
-          ],
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, s, _) => SwitchListTile.adaptive(
+            secondary: buildSettingsIconBadge(
+              context,
+              Icons.check_circle_outline,
+              active: s.onlyCheckInstalledOrTrackOnlyApps,
+            ),
+            title: Text(tr('onlyCheckInstalledOrTrackOnlyApps')),
+            subtitle: Text(tr('onlyCheckInstalledOrTrackOnlyAppsDescription')),
+            value: s.onlyCheckInstalledOrTrackOnlyApps,
+            onChanged: (v) {
+              v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              s.onlyCheckInstalledOrTrackOnlyApps = v;
+            },
+          ),
         ),
       _buildForegroundServiceSection(context),
+    ];
+
+    final whatChildren = <Widget>[
+      _buildPerformanceAndSources(context, more: false),
+      if (_matches(tr('allowAddingAppsWithoutCheck')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, updateSettings, _) => SwitchListTile.adaptive(
+            secondary: buildSettingsIconBadge(
+              context,
+              Icons.add_circle_outline,
+              active: updateSettings.allowAddingAppsWithoutCheck,
+            ),
+            title: Text(tr('allowAddingAppsWithoutCheck')),
+            subtitle: Text(tr('allowAddingAppsWithoutCheckHelp')),
+            value: updateSettings.allowAddingAppsWithoutCheck,
+            onChanged: (value) {
+              value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              updateSettings.allowAddingAppsWithoutCheck = value;
+            },
+          ),
+        ),
+      if (_matches(
+        tr('excludedCategoriesFromChecks'),
+        desc: tr('excludedCategoriesFromChecksDescription'),
+      ))
+        const _ExcludedCategoriesTile(),
+    ];
+
+    final moreChildren = <Widget>[
+      _buildConcurrencyLimitTile(context),
+      _buildPerformanceAndSources(context, more: true),
       if (_matches(
         tr('xiaomiBatteryTroubleshooting'),
         desc: tr('xiaomiBatteryTroubleshootingDescription'),
       ))
         _buildXiaomiTroubleshooting(context),
     ];
-
-    final List<Widget> performanceChildren = [
-      _buildConcurrencyLimitTile(context),
-      _buildDownloadConcurrencyTile(context),
-      _buildPerformanceAndSources(context),
-    ];
-
-    final hasSchedule = scheduleChildren.any(
-      (w) => !(w is SizedBox && w.child == null),
-    );
-    final hasConstraints = constraintsChildren.any(
-      (w) => !(w is SizedBox && w.child == null),
-    );
-    final hasPerformance = performanceChildren.any(
-      (w) => !(w is SizedBox && w.child == null),
-    );
-
-    if (!hasSchedule && !hasConstraints && !hasPerformance) {
-      return const SizedBox.shrink();
-    }
+    final moreBody = present(moreChildren)
+        ? ExpressiveSettingsGroup(
+            title: label('settingsMore'),
+            persistKey: 'updates.more',
+            icon: Icons.more_horiz_rounded,
+            children: moreChildren,
+          )
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (hasSchedule)
+        if (present(healthChildren))
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('updateSchedule'),
+            persistKey: 'updates.health',
+            children: healthChildren,
+          ),
+        if (present(checkingChildren))
+          ExpressiveSettingsGroup(
+            title: label('settingsGroupChecking'),
             description: isSearching ? null : tr('updatesGroupDesc'),
             persistKey: 'updates_schedule',
             icon: Icons.schedule_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
-            children: scheduleChildren,
+            children: checkingChildren,
           ),
-        if (hasSchedule && (hasConstraints || hasPerformance))
-          const SizedBox(height: 12),
-        if (hasConstraints)
+        if (present(onlyWhenChildren))
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('sectionDeviceOptions'),
+            title: label('settingsGroupOnlyWhen'),
             description: isSearching ? null : tr('deviceOptionsGroupDesc'),
             persistKey: 'updates_constraints',
             icon: Icons.battery_charging_full_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
-            children: constraintsChildren,
+            children: onlyWhenChildren,
           ),
-        if (hasConstraints && hasPerformance) const SizedBox(height: 12),
-        if (hasPerformance)
+        if (present(whatChildren))
           ExpressiveSettingsGroup(
-            title: isSearching ? null : tr('sectionUpdateOptions'),
+            title: label('settingsGroupWhatToUpdate'),
             description: isSearching ? null : tr('updateOptionsGroupDesc'),
             persistKey: 'updates_performance',
-            icon: Icons.speed_rounded,
-            isExpandable: !isSearching,
-            initiallyExpanded: true,
-            children: performanceChildren,
+            icon: Icons.rule_rounded,
+            children: whatChildren,
           ),
+        NotificationSettingsSection(
+          searchQuery: searchQuery,
+          showAdvancedSettings: showAdvancedSettings,
+        ),
+        if (moreBody != null)
+          isSearching
+              ? moreBody
+              : ExpressiveSettingsGroup(
+                  persistKey: 'updates.moreLink',
+                  children: [
+                    SettingsSubpageLink.more(
+                      subtitle: tr('settingsMoreUpdatesDesc'),
+                      searching: false,
+                      child: moreBody,
+                    ),
+                  ],
+                ),
       ],
     );
   }
@@ -245,39 +281,6 @@ class UpdateSettingsSection extends StatelessWidget {
           ],
         );
       },
-    );
-  }
-
-  Widget _buildDownloadConcurrencyTile(BuildContext context) {
-    if (!_matches(
-      tr('plusDownloadConcurrency'),
-      desc: tr('plusDownloadConcurrencyDescription'),
-      isAdvanced: true,
-    )) {
-      return const SizedBox.shrink();
-    }
-    return Consumer<SettingsProvider>(
-      builder: (context, settings, _) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SettingsSliderTile(
-            icon: Icons.download_for_offline_outlined,
-            title: tr('plusDownloadConcurrency'),
-            subtitle: tr('plusDownloadConcurrencyDescription'),
-            value: (settings.updateDownloadConcurrencyLimit - 1)
-                .toDouble()
-                .clamp(0, 4),
-            defaultValue: 0.0,
-            min: 0,
-            max: 4,
-            divisions: 4,
-            labelBuilder: (v) => (v.round() + 1).toString(),
-            onChanged: (val) {
-              settings.updateDownloadConcurrencyLimit = val.round() + 1;
-            },
-          ),
-        ],
-      ),
     );
   }
 
@@ -498,21 +501,6 @@ class UpdateSettingsSection extends StatelessWidget {
                   updateSettings.checkUpdateOnDetailPage = value;
                 },
               ),
-            if (_matches(tr('allowAddingAppsWithoutCheck')))
-              SwitchListTile.adaptive(
-                secondary: buildSettingsIconBadge(
-                  context,
-                  Icons.add_circle_outline,
-                  active: updateSettings.allowAddingAppsWithoutCheck,
-                ),
-                title: Text(tr('allowAddingAppsWithoutCheck')),
-                subtitle: Text(tr('allowAddingAppsWithoutCheckHelp')),
-                value: updateSettings.allowAddingAppsWithoutCheck,
-                onChanged: (value) {
-                  value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                  updateSettings.allowAddingAppsWithoutCheck = value;
-                },
-              ),
             if (plusSettings.enableAllPlusFeatures &&
                 (_matches(
                       tr('plusEnableUpdateSchedule'),
@@ -559,7 +547,12 @@ class UpdateSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildPerformanceAndSources(BuildContext context) {
+  /// [more] false: release channel, source and auto-update rules ("What to
+  /// update"); true: the beta system update scanner (Updates → More…).
+  Widget _buildPerformanceAndSources(
+    BuildContext context, {
+    required bool more,
+  }) {
     return Consumer3<
       UpdateSettingsProvider,
       ViewSettingsProvider,
@@ -568,7 +561,7 @@ class UpdateSettingsSection extends StatelessWidget {
       builder: (context, updateSettings, viewSettings, plusSettings, child) {
         return Column(
           children: [
-            if (_matches(tr('releaseChannel'), isAdvanced: true))
+            if (!more && _matches(tr('releaseChannel'), isAdvanced: true))
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -644,9 +637,10 @@ class UpdateSettingsSection extends StatelessWidget {
             Consumer<BehaviorSettingsProvider>(
               builder: (context, behaviorSettings, _) => Column(
                 children: [
-                  if (_matches(tr('preferredUpdateSource')))
+                  if (!more && _matches(tr('preferredUpdateSource')))
                     _buildSourceChipGrid(context, behaviorSettings),
-                  if (plusSettings.enableAllPlusFeatures &&
+                  if (more &&
+                      plusSettings.enableAllPlusFeatures &&
                       _matches(
                         tr('plusSystemUpdateScanner'),
                         desc: tr('plusSystemUpdateScannerDescription'),
@@ -706,7 +700,8 @@ class UpdateSettingsSection extends StatelessWidget {
                         plusSettings.plusEnableSystemUpdateScanner = v;
                       },
                     ),
-                  if (plusSettings.enableAllPlusFeatures &&
+                  if (!more &&
+                      plusSettings.enableAllPlusFeatures &&
                       _matches(
                         tr('plusEnableAutoUpdateRules'),
                         desc: tr('plusEnableAutoUpdateRulesDescription'),
@@ -727,7 +722,8 @@ class UpdateSettingsSection extends StatelessWidget {
                         plusSettings.plusEnableAutoUpdateRules = v;
                       },
                     ),
-                  if (plusSettings.enableAllPlusFeatures &&
+                  if (!more &&
+                      plusSettings.enableAllPlusFeatures &&
                       plusSettings.plusEnableAutoUpdateRules &&
                       _matches(
                         tr('autoUpdateRules'),

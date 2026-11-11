@@ -3,21 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
-import 'package:obtainium/components/settings/advanced_settings_section.dart';
-import 'package:obtainium/components/settings/appearance_hub.dart';
-import 'package:obtainium/components/settings/app_behavior_section.dart';
-import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/components/settings/connected_settings_bar.dart';
-import 'package:obtainium/components/settings/installation_section.dart';
-import 'package:obtainium/components/settings/notification_settings_section.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/plus_features_sheet.dart';
 import 'package:obtainium/components/settings/settings_hero_overview.dart';
-import 'package:obtainium/components/settings/settings_tab_masthead.dart';
-import 'package:obtainium/components/settings/theme_settings_section.dart';
-import 'package:obtainium/components/settings/visual_theme_selector.dart';
-import 'package:obtainium/components/settings/troubleshooting_section.dart';
-import 'package:obtainium/components/settings/update_settings_section.dart';
+import 'package:obtainium/components/settings/settings_sections.dart';
+import 'package:obtainium/components/settings/settings_tab_content.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/pages/import_export.dart';
@@ -25,13 +16,11 @@ import 'package:obtainium/pages/logs.dart';
 import 'package:obtainium/pages/microg_hub.dart';
 import 'package:obtainium/pages/system_app_selector.dart';
 import 'package:obtainium/pages/system_updates.dart';
-import 'package:obtainium/pages/update_health.dart';
 import 'package:obtainium/providers/apps_provider.dart' show getInstalledInfo;
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/services/settings_section_controller.dart';
 import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
-import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -84,7 +73,10 @@ class SettingsPageState extends State<SettingsPage> {
     return _resultsKey;
   }
 
-  final List<GlobalKey> _chipKeys = List.generate(5, (_) => GlobalKey());
+  final List<GlobalKey> _chipKeys = List.generate(
+    kSettingsSections.length,
+    (_) => GlobalKey(),
+  );
   bool _noResults = false;
 
   /// Floating section dock slides away while scrolling down through a
@@ -116,8 +108,8 @@ class SettingsPageState extends State<SettingsPage> {
   /// tab and scrolls its Obtainium+ group (master switch + layout) into view.
   void jumpToPlusFeatures() {
     if (_searchQuery.isNotEmpty) _searchController.clear();
-    if (_selectedSectionIndex != 4) {
-      _selectSection(4);
+    if (_selectedSectionIndex != SettingsSectionIndex.advanced) {
+      _selectSection(SettingsSectionIndex.advanced);
     } else {
       AppHaptics.selectionClick();
     }
@@ -230,7 +222,7 @@ class SettingsPageState extends State<SettingsPage> {
     // category the hosted bar still shows.
     _selectedSectionIndex = widget.initialTab != null || controller == null
         ? _mapInitialTab(widget.initialTab ?? 0)
-        : controller.section.value.clamp(0, 4);
+        : controller.section.value.clamp(0, kSettingsSections.length - 1);
     _previousSectionIndex = _selectedSectionIndex;
     if (controller != null) {
       controller.onSelect = _selectSection;
@@ -336,31 +328,12 @@ class SettingsPageState extends State<SettingsPage> {
                   selectedIndex: _selectedSectionIndex,
                   onDestinationSelected: _selectSection,
                   destinations: [
-                    NavigationDestination(
-                      icon: const Icon(Icons.palette_outlined),
-                      selectedIcon: const Icon(Icons.palette_rounded),
-                      label: tr('appearance'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.system_update_outlined),
-                      selectedIcon: const Icon(Icons.system_update_rounded),
-                      label: tr('updates'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.notifications_outlined),
-                      selectedIcon: const Icon(Icons.notifications_rounded),
-                      label: tr('notifications'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.tune_outlined),
-                      selectedIcon: const Icon(Icons.tune_rounded),
-                      label: tr('settingsTabBehavior'),
-                    ),
-                    NavigationDestination(
-                      icon: const Icon(Icons.code_rounded),
-                      selectedIcon: const Icon(Icons.code_rounded),
-                      label: tr('advanced'),
-                    ),
+                    for (final info in kSettingsSections)
+                      NavigationDestination(
+                        icon: Icon(info.icon),
+                        selectedIcon: Icon(info.selectedIcon),
+                        label: tr(info.shortKey),
+                      ),
                   ],
                 ),
               ),
@@ -477,20 +450,6 @@ class SettingsPageState extends State<SettingsPage> {
                     ),
                   ),
                 ),
-                if (_searchQuery.isNotEmpty)
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: adaptiveMargin,
-                      vertical: 2,
-                    ),
-                    sliver: SliverToBoxAdapter(
-                      child: PlusFeaturesSection(
-                        searchQuery: _searchQuery,
-                        showAdvancedSettings:
-                            plusSettings.plusShowAdvancedSettings,
-                      ),
-                    ),
-                  ),
                 if (showTopPinnedCategoryBar)
                   SliverPersistentHeader(
                     pinned: true,
@@ -596,275 +555,17 @@ class SettingsPageState extends State<SettingsPage> {
                                 },
                                 onSelectTab: _selectSection,
                               ),
-                            Column(
+                            KeyedSubtree(
                               key: _resultsKeyFor(switcherId),
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 0) ...[
-                                  if (_searchQuery.isEmpty) ...[
-                                    SettingsTabMasthead(
-                                      icon: Icons.palette_rounded,
-                                      title: tr('settingsTabAppearance'),
-                                      description: tr(
-                                        'settingsTabAppearanceDesc',
-                                      ),
-                                      accentColor: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                    if (plusSettings
-                                        .plusSettingsUseVisualThemePicker)
-                                      const VisualThemeSelector(),
-                                    AppearanceHub(
-                                      androidInfoFuture: _androidInfoFuture,
-                                      themeContent: ThemeSettingsSection(
-                                        searchQuery: _searchQuery,
-                                        androidInfoFuture: _androidInfoFuture,
-                                        colorsNameMap:
-                                            const <
-                                              ColorSwatch<Object>,
-                                              String
-                                            >{},
-                                        showAdvancedSettings: plusSettings
-                                            .plusShowAdvancedSettings,
-                                        subCategory: 'theme',
-                                      ),
-                                      appTileContent: AppsViewSettingsSection(
-                                        searchQuery: _searchQuery,
-                                        onSetState: (fn) => setState(fn),
-                                        showAdvancedSettings: plusSettings
-                                            .plusShowAdvancedSettings,
-                                        subCategory: 'tiles',
-                                      ),
-                                      layoutNavContent: AppsViewSettingsSection(
-                                        searchQuery: _searchQuery,
-                                        onSetState: (fn) => setState(fn),
-                                        showAdvancedSettings: plusSettings
-                                            .plusShowAdvancedSettings,
-                                        subCategory: 'layout',
-                                      ),
-                                      motionPhysicsContent:
-                                          ThemeSettingsSection(
-                                            searchQuery: _searchQuery,
-                                            androidInfoFuture:
-                                                _androidInfoFuture,
-                                            colorsNameMap:
-                                                const <
-                                                  ColorSwatch<Object>,
-                                                  String
-                                                >{},
-                                            showAdvancedSettings: plusSettings
-                                                .plusShowAdvancedSettings,
-                                            subCategory: 'motion',
-                                          ),
-                                    ),
-                                  ] else ...[
-                                    LayoutBuilder(
-                                      builder: (context, constraints) {
-                                        final isWide =
-                                            constraints.maxWidth >= 720 &&
-                                            _searchQuery.isEmpty;
-                                        final themeSection =
-                                            ThemeSettingsSection(
-                                              searchQuery: _searchQuery,
-                                              androidInfoFuture:
-                                                  _androidInfoFuture,
-                                              colorsNameMap:
-                                                  const <
-                                                    ColorSwatch<Object>,
-                                                    String
-                                                  >{},
-                                              showAdvancedSettings: plusSettings
-                                                  .plusShowAdvancedSettings,
-                                            );
-                                        final appsViewSection =
-                                            AppsViewSettingsSection(
-                                              searchQuery: _searchQuery,
-                                              onSetState: (fn) => setState(fn),
-                                              showAdvancedSettings: plusSettings
-                                                  .plusShowAdvancedSettings,
-                                            );
-                                        if (isWide) {
-                                          return Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(child: themeSection),
-                                              const SizedBox(width: 14),
-                                              Expanded(child: appsViewSection),
-                                            ],
-                                          );
-                                        }
-                                        return Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
-                                          children: [
-                                            themeSection,
-                                            const SizedBox(height: 12),
-                                            appsViewSection,
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ],
-                                if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 1) ...[
-                                  if (_searchQuery.isEmpty)
-                                    SettingsTabMasthead(
-                                      icon: Icons.system_update_alt_rounded,
-                                      title: tr('settingsTabUpdatesInstall'),
-                                      description: tr(
-                                        'settingsTabUpdatesInstallDesc',
-                                      ),
-                                      accentColor: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final isWide =
-                                          constraints.maxWidth >= 720 &&
-                                          _searchQuery.isEmpty;
-                                      final updateSection =
-                                          UpdateSettingsSection(
-                                            searchQuery: _searchQuery,
-                                            showIntervalLabel:
-                                                _showIntervalLabel,
-                                            onIntervalLabelChange: (val) =>
-                                                setState(
-                                                  () =>
-                                                      _showIntervalLabel = val,
-                                                ),
-                                            androidInfoFuture:
-                                                _androidInfoFuture,
-                                            showAdvancedSettings: plusSettings
-                                                .plusShowAdvancedSettings,
-                                          );
-                                      final installSection =
-                                          InstallationSection(
-                                            searchQuery: _searchQuery,
-                                            showAdvancedSettings: plusSettings
-                                                .plusShowAdvancedSettings,
-                                          );
-                                      if (isWide) {
-                                        return Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(child: updateSection),
-                                            const SizedBox(width: 14),
-                                            Expanded(child: installSection),
-                                          ],
-                                        );
-                                      }
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          updateSection,
-                                          const SizedBox(height: 12),
-                                          installSection,
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                                if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 2) ...[
-                                  if (_searchQuery.isEmpty)
-                                    SettingsTabMasthead(
-                                      icon: Icons.notifications_active_rounded,
-                                      title: tr('settingsTabNotifications'),
-                                      description: tr(
-                                        'settingsTabNotificationsDesc',
-                                      ),
-                                      accentColor: Theme.of(
-                                        context,
-                                      ).colorScheme.tertiary,
-                                    ),
-                                  NotificationSettingsSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                ],
-                                if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 3) ...[
-                                  if (_searchQuery.isEmpty)
-                                    SettingsTabMasthead(
-                                      icon: Icons.tune_rounded,
-                                      title: tr('settingsTabBehavior'),
-                                      description: tr(
-                                        'settingsTabBehaviorDesc',
-                                      ),
-                                      accentColor: Theme.of(
-                                        context,
-                                      ).colorScheme.secondary,
-                                    ),
-                                  AppBehaviorSection(
-                                    searchQuery: _searchQuery,
-                                    showAdvancedSettings:
-                                        plusSettings.plusShowAdvancedSettings,
-                                  ),
-                                ],
-                                if (_searchQuery.isNotEmpty ||
-                                    _selectedSectionIndex == 4) ...[
-                                  if (_searchQuery.isEmpty)
-                                    SettingsTabMasthead(
-                                      icon: Icons.code_rounded,
-                                      title: tr('settingsTabAdvancedDebug'),
-                                      description: tr(
-                                        'settingsTabAdvancedDebugDesc',
-                                      ),
-                                      accentColor: Theme.of(
-                                        context,
-                                      ).colorScheme.primary,
-                                    ),
-                                  LayoutBuilder(
-                                    builder: (context, constraints) {
-                                      final isWide =
-                                          constraints.maxWidth >= 720 &&
-                                          _searchQuery.isEmpty;
-                                      final advancedSection =
-                                          AdvancedSettingsSection(
-                                            searchQuery: _searchQuery,
-                                            showAdvancedSettings: plusSettings
-                                                .plusShowAdvancedSettings,
-                                          );
-                                      final troubleshootingSection =
-                                          TroubleshootingSection(
-                                            searchQuery: _searchQuery,
-                                            showAdvancedSettings: plusSettings
-                                                .plusShowAdvancedSettings,
-                                          );
-                                      if (isWide) {
-                                        return Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Expanded(child: advancedSection),
-                                            const SizedBox(width: 14),
-                                            Expanded(
-                                              child: troubleshootingSection,
-                                            ),
-                                          ],
-                                        );
-                                      }
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.stretch,
-                                        children: [
-                                          advancedSection,
-                                          const SizedBox(height: 12),
-                                          troubleshootingSection,
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ],
+                              child: SettingsTabContent(
+                                section: _selectedSectionIndex,
+                                searchQuery: _searchQuery,
+                                androidInfoFuture: _androidInfoFuture,
+                                showIntervalLabel: _showIntervalLabel,
+                                onIntervalLabelChange: (val) =>
+                                    setState(() => _showIntervalLabel = val),
+                                onSetState: (fn) => setState(fn),
+                              ),
                             ),
                             if (_searchQuery.isEmpty)
                               _buildConnectedSettingsForSection(
@@ -946,7 +647,7 @@ class SettingsPageState extends State<SettingsPage> {
     if (entry == PlusFeaturesEntry.jumpToSection) {
       jumpToPlusFeatures();
     } else {
-      showPlusFeaturesSheet(context: context);
+      showPlusFeaturesSheet(context: context, onOpenSection: _selectSection);
     }
   }
 
@@ -1179,14 +880,16 @@ class SettingsPageState extends State<SettingsPage> {
   Widget _buildConnectedSearchResults(BuildContext context, bool isCompact) {
     final q = _searchQuery.toLowerCase();
     final seen = <String>{};
-    final matches = [
-      for (var i = 0; i <= 4; i++) ..._connectedItemsForSection(context, i),
-    ].where((item) {
-      final hit =
-          item.title.toLowerCase().contains(q) ||
-          (item.subtitle?.toLowerCase().contains(q) ?? false);
-      return hit && seen.add(item.title);
-    }).toList();
+    final matches =
+        [
+          for (var i = 0; i < kSettingsSections.length; i++)
+            ..._connectedItemsForSection(context, i),
+        ].where((item) {
+          final hit =
+              item.title.toLowerCase().contains(q) ||
+              (item.subtitle?.toLowerCase().contains(q) ?? false);
+          return hit && seen.add(item.title);
+        }).toList();
     _connectedSearchMatches = matches.length;
     if (matches.isEmpty) return const SizedBox.shrink();
     return ConnectedSettingsBar(items: matches, isCompact: isCompact);
@@ -1201,126 +904,75 @@ class SettingsPageState extends State<SettingsPage> {
 
     List<ConnectedSettingItem> items = [];
 
+    final importExport = ConnectedSettingItem(
+      icon: Icons.import_export_rounded,
+      title: tr('importExport'),
+      subtitle: tr('relatedImportExportDesc'),
+      accentColor: colorScheme.tertiary,
+      onTap: () => pushRoute(context, const ImportExportPage()),
+    );
+    final battery = ConnectedSettingItem(
+      icon: Icons.battery_charging_full_rounded,
+      title: tr('disableBatteryOptimisation'),
+      subtitle: tr('relatedBatteryDesc'),
+      accentColor: colorScheme.secondary,
+      onTap: () => showDeviceOptimizationSheet(context: context),
+    );
+    ConnectedSettingItem section(int index, Color accent) =>
+        ConnectedSettingItem(
+          icon: kSettingsSections[index].icon,
+          title: tr(kSettingsSections[index].labelKey),
+          subtitle: tr(kSettingsSections[index].descKey),
+          accentColor: accent,
+          onTap: () => _selectSection(index),
+        );
+
     switch (sectionIndex) {
-      case 0: // Appearance
+      case SettingsSectionIndex.lookAndMotion:
         items = [
-          ConnectedSettingItem(
-            icon: Icons.notifications_active_outlined,
-            title: tr('settingsTabNotifications'),
-            subtitle: tr('settingsTabNotificationsDesc'),
-            accentColor: colorScheme.primary,
-            onTap: () => _selectSection(2),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.import_export_rounded,
-            title: tr('importExport'),
-            subtitle: tr('relatedImportExportDesc'),
-            accentColor: colorScheme.tertiary,
-            onTap: () => pushRoute(context, const ImportExportPage()),
-          ),
+          section(SettingsSectionIndex.homeAndLibrary, colorScheme.primary),
+          importExport,
         ];
         break;
 
-      case 1: // Updates & Install
+      case SettingsSectionIndex.homeAndLibrary:
         items = [
-          ConnectedSettingItem(
-            icon: Icons.notifications_active_outlined,
-            title: tr('settingsTabNotifications'),
-            subtitle: tr('settingsTabNotificationsDesc'),
-            accentColor: colorScheme.tertiary,
-            onTap: () => _selectSection(2),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.battery_charging_full_rounded,
-            title: tr('disableBatteryOptimisation'),
-            subtitle: tr('relatedBatteryDesc'),
-            accentColor: colorScheme.secondary,
-            onTap: () => showDeviceOptimizationSheet(context: context),
-          ),
+          section(SettingsSectionIndex.lookAndMotion, colorScheme.primary),
           ConnectedSettingItem(
             icon: Icons.apps_rounded,
             title: tr('showSystemApps'),
             subtitle: tr('relatedSystemAppsDesc'),
-            accentColor: colorScheme.primary,
+            accentColor: colorScheme.secondary,
             onTap: () => pushRoute(context, const SystemAppSelector()),
           ),
         ];
         break;
 
-      case 2: // Notifications
+      case SettingsSectionIndex.updatesAndNotifications:
+        // Update Health has its own row at the top of this section.
+        items = [
+          battery,
+          section(SettingsSectionIndex.installAndSafety, colorScheme.tertiary),
+        ];
+        break;
+
+      case SettingsSectionIndex.installAndSafety:
         items = [
           ConnectedSettingItem(
-            icon: Icons.schedule_rounded,
-            title: tr('settingsTabUpdatesInstall'),
-            subtitle: tr('settingsTabUpdatesInstallDesc'),
-            accentColor: colorScheme.primary,
-            onTap: () => _selectSection(1),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.tune_rounded,
-            title: tr('settingsTabBehavior'),
-            subtitle: tr('settingsTabBehaviorDesc'),
+            icon: Icons.extension_rounded,
+            title: tr('microGHub'),
+            subtitle: tr('microGHubDescription'),
             accentColor: colorScheme.secondary,
-            onTap: () => _selectSection(3),
+            onTap: () => pushRoute(context, const MicroGHubPage()),
           ),
-          ConnectedSettingItem(
-            icon: Icons.healing_outlined,
-            title: tr('updateHealth'),
-            subtitle: tr('updateHealthSubtitle'),
-            accentColor: colorScheme.tertiary,
-            onTap: () => pushRoute(context, const UpdateHealthPage()),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.apps_rounded,
-            title: tr('showSystemApps'),
-            subtitle: tr('relatedSystemAppsDesc'),
-            accentColor: colorScheme.primary,
-            onTap: () => pushRoute(context, const SystemAppSelector()),
+          section(
+            SettingsSectionIndex.updatesAndNotifications,
+            colorScheme.primary,
           ),
         ];
         break;
 
-      case 3: // Behavior
-        items = [
-          ConnectedSettingItem(
-            icon: Icons.battery_charging_full_rounded,
-            title: tr('disableBatteryOptimisation'),
-            subtitle: tr('relatedBatteryDesc'),
-            accentColor: colorScheme.secondary,
-            onTap: () => showDeviceOptimizationSheet(context: context),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.palette_outlined,
-            title: tr('settingsTabAppearance'),
-            subtitle: tr('settingsTabAppearanceDesc'),
-            accentColor: colorScheme.primary,
-            onTap: () => _selectSection(0),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.shield_outlined,
-            title: tr('updateHealth'),
-            subtitle: tr('updateHealthSubtitle'),
-            accentColor: colorScheme.tertiary,
-            onTap: () => pushRoute(context, const UpdateHealthPage()),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.import_export_rounded,
-            title: tr('importExport'),
-            subtitle: tr('relatedImportExportDesc'),
-            accentColor: colorScheme.secondary,
-            onTap: () => pushRoute(context, const ImportExportPage()),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.code_rounded,
-            title: tr('settingsTabAdvancedDebug'),
-            subtitle: tr('settingsTabAdvancedDebugDesc'),
-            accentColor: colorScheme.primary,
-            onTap: () => _selectSection(4),
-          ),
-        ];
-        break;
-
-      case 4: // Advanced & Debug
+      case SettingsSectionIndex.advanced:
         items = [
           ConnectedSettingItem(
             icon: Icons.receipt_long_rounded,
@@ -1328,13 +980,6 @@ class SettingsPageState extends State<SettingsPage> {
             subtitle: tr('relatedLogsDesc'),
             accentColor: colorScheme.primary,
             onTap: () => pushRoute(context, const LogsPage()),
-          ),
-          ConnectedSettingItem(
-            icon: Icons.extension_rounded,
-            title: tr('microGHub'),
-            subtitle: tr('microGHubDescription'),
-            accentColor: colorScheme.secondary,
-            onTap: () => pushRoute(context, const MicroGHubPage()),
           ),
           ConnectedSettingItem(
             icon: Icons.developer_mode_rounded,
@@ -1454,36 +1099,13 @@ class _SettingsEmptyState extends StatelessWidget {
               runSpacing: 8,
               alignment: WrapAlignment.center,
               children: [
-                _buildQuickCategoryChip(
-                  context,
-                  0,
-                  Icons.palette_outlined,
-                  tr('settingsTabAppearance'),
-                ),
-                _buildQuickCategoryChip(
-                  context,
-                  1,
-                  Icons.system_update_outlined,
-                  tr('settingsTabUpdatesInstall'),
-                ),
-                _buildQuickCategoryChip(
-                  context,
-                  2,
-                  Icons.notifications_outlined,
-                  tr('settingsTabNotifications'),
-                ),
-                _buildQuickCategoryChip(
-                  context,
-                  3,
-                  Icons.tune_outlined,
-                  tr('settingsTabBehavior'),
-                ),
-                _buildQuickCategoryChip(
-                  context,
-                  4,
-                  Icons.code_rounded,
-                  tr('settingsTabAdvancedDebug'),
-                ),
+                for (var i = 0; i < kSettingsSections.length; i++)
+                  _buildQuickCategoryChip(
+                    context,
+                    i,
+                    kSettingsSections[i].icon,
+                    tr(kSettingsSections[i].labelKey),
+                  ),
               ],
             ),
           ],
@@ -1543,33 +1165,7 @@ class _SettingsCategoryBarDelegate extends SliverPersistentHeaderDelegate {
     required this.onSelect,
   });
 
-  static const _tabs = [
-    (
-      key: 'settingsTabAppearance',
-      icon: Icons.palette_outlined,
-      selectedIcon: Icons.palette_rounded,
-    ),
-    (
-      key: 'settingsTabUpdatesInstall',
-      icon: Icons.system_update_outlined,
-      selectedIcon: Icons.system_update_rounded,
-    ),
-    (
-      key: 'settingsTabNotifications',
-      icon: Icons.notifications_outlined,
-      selectedIcon: Icons.notifications_rounded,
-    ),
-    (
-      key: 'settingsTabBehavior',
-      icon: Icons.tune_outlined,
-      selectedIcon: Icons.tune_rounded,
-    ),
-    (
-      key: 'settingsTabAdvancedDebug',
-      icon: Icons.code_rounded,
-      selectedIcon: Icons.code_rounded,
-    ),
-  ];
+  static const _tabs = kSettingsSections;
 
   @override
   double get minExtent => height;
@@ -1626,7 +1222,7 @@ class _SettingsCategoryBarDelegate extends SliverPersistentHeaderDelegate {
                       ? colorScheme.onPrimaryContainer
                       : colorScheme.onSurfaceVariant,
                 ),
-                label: Text(tr(tab.key)),
+                label: Text(tr(tab.labelKey)),
                 selected: isSelected,
                 onSelected: (_) => onSelect(index),
                 shape: CardMetrics.shape(
@@ -1691,33 +1287,7 @@ class SettingsSectionDock extends StatelessWidget {
     this.surface = true,
   });
 
-  static const _items = [
-    (
-      icon: Icons.palette_outlined,
-      selectedIcon: Icons.palette_rounded,
-      key: 'appearance',
-    ),
-    (
-      icon: Icons.system_update_outlined,
-      selectedIcon: Icons.system_update_rounded,
-      key: 'updates',
-    ),
-    (
-      icon: Icons.notifications_outlined,
-      selectedIcon: Icons.notifications_rounded,
-      key: 'notifications',
-    ),
-    (
-      icon: Icons.tune_outlined,
-      selectedIcon: Icons.tune_rounded,
-      key: 'settingsTabBehavior',
-    ),
-    (
-      icon: Icons.code_rounded,
-      selectedIcon: Icons.code_rounded,
-      key: 'advanced',
-    ),
-  ];
+  static const _items = kSettingsSections;
 
   @override
   Widget build(BuildContext context) {
@@ -1737,10 +1307,10 @@ class SettingsSectionDock extends StatelessWidget {
             child: Semantics(
               button: true,
               selected: sel,
-              label: tr(item.key),
+              label: tr(item.shortKey),
               excludeSemantics: true,
               child: Tooltip(
-                message: tr(item.key),
+                message: tr(item.shortKey),
                 child: ScaleTouchWrapper(
                   hapticOnPressDown: false,
                   scaleDownFactor: 0.92,
@@ -1773,7 +1343,7 @@ class SettingsSectionDock extends StatelessWidget {
                             const SizedBox(width: 5),
                             Flexible(
                               child: Text(
-                                tr(item.key),
+                                tr(item.shortKey),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelSmall

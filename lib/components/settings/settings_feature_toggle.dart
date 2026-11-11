@@ -76,6 +76,8 @@ Widget buildSettingsIconBadge(
 /// Any T that is a PlusSettingsProvider is still automatically hidden when
 /// `enableAllPlusFeatures` is off, since that's runtime provider state the
 /// caller can't cheaply check without watching the provider itself.
+/// [hideWhenPlusOff] false keeps a non-Plus-branded row (stored in the Plus
+/// provider for history) visible regardless.
 Widget buildFeatureToggle<T extends ChangeNotifier>(
   BuildContext context, {
   required IconData icon,
@@ -83,6 +85,7 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
   required String? subtitle,
   required bool Function(T) value,
   required void Function(T, bool) onChanged,
+  bool hideWhenPlusOff = true,
 }) {
   return Consumer<T>(
     builder: (context, settings, child) {
@@ -90,7 +93,9 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
         (p) => p.plusUseCompactSettings,
       );
       final plusGatedOff =
-          settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
+          hideWhenPlusOff &&
+          settings is PlusSettingsProvider &&
+          !settings.enableAllPlusFeatures;
       if (plusGatedOff) {
         return const SizedBox.shrink();
       }

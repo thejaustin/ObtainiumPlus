@@ -9,12 +9,13 @@ import 'package:obtainium/components/common/morph_switch.dart';
 import 'package:obtainium/components/settings/connected_choice_group.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/motion_controls_card.dart';
+import 'package:obtainium/components/settings/motion_haptics_section.dart';
+import 'package:obtainium/components/settings/settings_page_section.dart';
 import 'package:obtainium/components/settings/settings_row.dart';
 import 'package:obtainium/components/settings/settings_section.dart';
 import 'package:obtainium/components/settings/spring_expandable.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/settings.dart';
-import 'package:obtainium/pages/visual_lab_page.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -130,6 +131,14 @@ void main() {
     expect(find.byType(mounted), findsOneWidget);
   }
 
+  // The kit options' home: Look & motion → Motion & haptics and Settings
+  // page (both subpages, so not on the tab bodies checked below).
+  const kitPages = Scaffold(
+    body: SingleChildScrollView(
+      child: Column(children: [MotionHapticsSection(), SettingsPageSection()]),
+    ),
+  );
+
   const kitTypes = <Type>[
     MorphSwitch,
     ToggleIconBadge,
@@ -205,18 +214,18 @@ void main() {
       expect(seenKit, containsAll(const [SegmentedSettingsGroup, MorphSwitch]));
     });
 
-    testWidgets('Visual Lab shows the kit options', (tester) async {
-      await pumpPage(tester, const VisualLabPage(), VisualLabPage);
+    testWidgets('Motion & haptics shows the kit options', (tester) async {
+      await pumpPage(tester, kitPages, MotionHapticsSection);
       expect(find.byType(MotionControlsCard), findsOneWidget);
       expect(find.byType(MorphSwitch), findsWidgets);
     });
   });
 
-  testWidgets('Visual Lab at defaults builds with the kit entries', (
+  testWidgets('Motion & haptics at defaults builds with the kit entries', (
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    await pumpPage(tester, const VisualLabPage(), VisualLabPage);
+    await pumpPage(tester, kitPages, MotionHapticsSection);
     expect(find.byType(MotionControlsCard), findsOneWidget);
   });
 
@@ -224,9 +233,9 @@ void main() {
     tester,
   ) async {
     SharedPreferences.setMockInitialValues({});
-    await pumpPage(tester, const VisualLabPage(), VisualLabPage);
+    await pumpPage(tester, kitPages, MotionHapticsSection);
     final plus = tester
-        .element(find.byType(VisualLabPage))
+        .element(find.byType(MotionHapticsSection))
         .read<PlusSettingsProvider>();
     expect(find.byType(SegmentedSettingsGroup), findsNothing);
 
@@ -260,11 +269,20 @@ void main() {
     expect(find.byType(SegmentedSettingsGroup), findsNothing);
     expect(find.byType(Card), findsWidgets);
     expect(
-      find.descendant(
-        of: find.byType(ExpressiveSettingsGroup),
-        matching: find.byType(MorphSwitch),
-      ),
-      findsNothing,
+      find
+          .descendant(
+            of: find.byType(ExpressiveSettingsGroup),
+            matching: find.byType(MorphSwitch),
+          )
+          .evaluate()
+          .length,
+      find
+          .descendant(
+            of: find.byType(MotionControlsCard),
+            matching: find.byType(MorphSwitch),
+          )
+          .evaluate()
+          .length,
     );
     expect(find.byType(SwitchListTile), findsWidgets);
   });

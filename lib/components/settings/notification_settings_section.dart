@@ -72,7 +72,10 @@ class NotificationSettingsSection extends StatelessWidget {
               ),
             ),
           if (settings.enableAllPlusFeatures) ...[
-            if (_matches(tr('plusEnableNotificationEnhancements'), desc: tr('plusEnableNotificationEnhancementsDescription')))
+            if (_matches(
+              tr('plusEnableNotificationEnhancements'),
+              desc: tr('plusEnableNotificationEnhancementsDescription'),
+            ))
               SwitchListTile.adaptive(
                 secondary: buildSettingsIconBadge(
                   context,
@@ -91,102 +94,108 @@ class NotificationSettingsSection extends StatelessWidget {
                   settings.plusEnableNotificationEnhancements = val;
                 },
               ),
-            AnimatedSize(
-              duration: Duration(
-                milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0,
-              ),
-              curve: Curves.easeInOutCubic,
-              child: !settings.plusEnableNotificationEnhancements
-                  ? Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        tr('noAdvancedNotifications'),
-                        style: TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+            // While searching, only when a child row matches.
+            if (!isSearching ||
+                _matches(tr('enableNotificationDigest')) ||
+                _matches(tr('enableQuietHours')) ||
+                _matches(tr('quietHoursSchedule')))
+              AnimatedSize(
+                duration: Duration(
+                  milliseconds: settings.plusEnableEnhancedAnimations ? 250 : 0,
+                ),
+                curve: Curves.easeInOutCubic,
+                child: !settings.plusEnableNotificationEnhancements
+                    ? Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          tr('noAdvancedNotifications'),
+                          style: TextStyle(
+                            fontStyle: FontStyle.italic,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      )
+                    : ConnectedSettingContainer(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_matches(tr('enableNotificationDigest')) ||
+                                _matches(tr('enableQuietHours')))
+                              GenericBooleanControlGrid<PlusSettingsProvider>(
+                                title: isSearching ? tr('notifications') : '',
+                                embedded: true,
+                                settings: [
+                                  if (_matches(tr('enableNotificationDigest')))
+                                    (
+                                      icon: Icons.mark_email_unread_outlined,
+                                      label: tr('enableNotificationDigest'),
+                                      description: tr(
+                                        'notificationDigestDescription',
+                                      ),
+                                      getValue: (s) =>
+                                          s.plusEnableNotificationDigest,
+                                      setValue: (s, v) =>
+                                          s.plusEnableNotificationDigest = v,
+                                    ),
+                                  if (_matches(tr('enableQuietHours')))
+                                    (
+                                      icon: Icons.do_not_disturb_on_outlined,
+                                      label: tr('enableQuietHours'),
+                                      description: tr('quietHoursDescription'),
+                                      getValue: (s) =>
+                                          s.plusEnableNotificationQuietHours,
+                                      setValue: (s, v) =>
+                                          s.plusEnableNotificationQuietHours =
+                                              v,
+                                    ),
+                                ],
+                              ),
+                            AnimatedSize(
+                              duration: Duration(
+                                milliseconds:
+                                    settings.plusEnableEnhancedAnimations
+                                    ? 200
+                                    : 0,
+                              ),
+                              curve: Curves.easeInOutCubic,
+                              child:
+                                  settings.plusEnableNotificationQuietHours &&
+                                      _matches(tr('quietHoursSchedule'))
+                                  ? ScaleTouchWrapper(
+                                      hapticOnPressDown: true,
+                                      onTap: () => _showQuietHoursDialog(
+                                        context,
+                                        settings,
+                                      ),
+                                      child: ListTile(
+                                        leading: buildSettingsIconBadge(
+                                          context,
+                                          Icons.schedule_outlined,
+                                          active: true,
+                                        ),
+                                        title: Text(
+                                          tr('quietHoursSchedule'),
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyLarge,
+                                        ),
+                                        subtitle: Text(
+                                          '${_formatHour(settings.plusNotificationQuietHoursStart)} — ${_formatHour(settings.plusNotificationQuietHoursEnd)}',
+                                        ),
+                                        trailing: const Icon(
+                                          Icons.chevron_right_rounded,
+                                          size: 20,
+                                        ),
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
+                          ],
                         ),
                       ),
-                    )
-                  : ConnectedSettingContainer(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_matches(tr('enableNotificationDigest')) ||
-                              _matches(tr('enableQuietHours')))
-                            GenericBooleanControlGrid<PlusSettingsProvider>(
-                              title: isSearching
-                                  ? tr('settingsTabNotifications')
-                                  : '',
-                              embedded: true,
-                              settings: [
-                                if (_matches(tr('enableNotificationDigest')))
-                                  (
-                                    icon: Icons.mark_email_unread_outlined,
-                                    label: tr('enableNotificationDigest'),
-                                    description: tr(
-                                      'notificationDigestDescription',
-                                    ),
-                                    getValue: (s) =>
-                                        s.plusEnableNotificationDigest,
-                                    setValue: (s, v) =>
-                                        s.plusEnableNotificationDigest = v,
-                                  ),
-                                if (_matches(tr('enableQuietHours')))
-                                  (
-                                    icon: Icons.do_not_disturb_on_outlined,
-                                    label: tr('enableQuietHours'),
-                                    description: tr('quietHoursDescription'),
-                                    getValue: (s) =>
-                                        s.plusEnableNotificationQuietHours,
-                                    setValue: (s, v) =>
-                                        s.plusEnableNotificationQuietHours = v,
-                                  ),
-                              ],
-                            ),
-                          AnimatedSize(
-                            duration: Duration(
-                              milliseconds:
-                                  settings.plusEnableEnhancedAnimations
-                                  ? 200
-                                  : 0,
-                            ),
-                            curve: Curves.easeInOutCubic,
-                            child:
-                                settings.plusEnableNotificationQuietHours &&
-                                    _matches(tr('quietHoursSchedule'))
-                                ? ScaleTouchWrapper(
-                                    hapticOnPressDown: true,
-                                    onTap: () => _showQuietHoursDialog(
-                                      context,
-                                      settings,
-                                    ),
-                                    child: ListTile(
-                                      leading: buildSettingsIconBadge(
-                                        context,
-                                        Icons.schedule_outlined,
-                                        active: true,
-                                      ),
-                                      title: Text(
-                                        tr('quietHoursSchedule'),
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodyLarge,
-                                      ),
-                                      subtitle: Text(
-                                        '${_formatHour(settings.plusNotificationQuietHoursStart)} — ${_formatHour(settings.plusNotificationQuietHoursEnd)}',
-                                      ),
-                                      trailing: const Icon(
-                                        Icons.chevron_right_rounded,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  )
-                                : const SizedBox.shrink(),
-                          ),
-                        ],
-                      ),
-                    ),
-            ),
+              ),
           ],
         ];
 

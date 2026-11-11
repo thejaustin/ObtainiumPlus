@@ -20,10 +20,15 @@ class TroubleshootingSection extends StatefulWidget {
   final String? searchQuery;
   final bool? showAdvancedSettings;
 
+  /// Rows from other sections that belong under Troubleshooting (deep
+  /// logging, touch-target highlight); listed before the cache tiles.
+  final List<Widget> extraRows;
+
   const TroubleshootingSection({
     super.key,
     this.searchQuery,
     this.showAdvancedSettings,
+    this.extraRows = const [],
   });
 
   @override
@@ -111,7 +116,10 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      if (_matches(tr('plusShowChangelogAfterUpdate'), desc: tr('plusShowChangelogAfterUpdateDescription')))
+      if (_matches(
+        tr('plusShowChangelogAfterUpdate'),
+        desc: tr('plusShowChangelogAfterUpdateDescription'),
+      ))
         SwitchListTile.adaptive(
           secondary: buildSettingsIconBadge(
             context,
@@ -126,7 +134,28 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             plusSettings.plusShowChangelogAfterUpdate = v;
           },
         ),
-      if (!plusSettings.plusDeveloperMode)
+      ...widget.extraRows,
+      if (_matches(tr('clearAPKCache'), desc: tr('clearAPKCacheDescription')))
+        _buildCleanupTile(
+          context,
+          icon: Icons.cleaning_services_rounded,
+          title: tr('clearAPKCache'),
+          subtitle: tr('clearAPKCacheDescription'),
+          onTap: () => _clearAPKCache(context),
+        ),
+      if (_matches(tr('clearIconCache'), desc: tr('clearIconCacheDescription')))
+        _buildCleanupTile(
+          context,
+          icon: Icons.image_not_supported_rounded,
+          title: tr('clearIconCache'),
+          subtitle: tr('clearIconCacheDescription'),
+          onTap: () => _clearIconCache(context),
+        ),
+    ];
+
+    final developer = [
+      if (!plusSettings.plusDeveloperMode &&
+          _matches(tr('lookingForDevOptions'), desc: tr('devOptionsHint')))
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
@@ -145,15 +174,16 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
               if (_devModeTapCount >= 7) {
                 plusSettings.plusDeveloperMode = true;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(tr('devOptionsEnabled')),
-                  ),
+                  SnackBar(content: Text(tr('devOptionsEnabled'))),
                 );
               } else if (_devModeTapCount > 2) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      tr('devOptionsStepsAway', args: ['${7 - _devModeTapCount}']),
+                      tr(
+                        'devOptionsStepsAway',
+                        args: ['${7 - _devModeTapCount}'],
+                      ),
                     ),
                     duration: const Duration(milliseconds: 500),
                   ),
@@ -162,7 +192,8 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      if (plusSettings.plusDeveloperMode)
+      if (plusSettings.plusDeveloperMode &&
+          _matches(tr('developerAndDiagnostics')))
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
@@ -172,9 +203,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
               active: true,
             ),
             title: Text(tr('developerAndDiagnostics')),
-            subtitle: const Text(
-              'Configure advanced diagnostic tools and Play Store plugins',
-            ),
+            subtitle: Text(tr('relatedDeveloperDesc')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               AppHaptics.selectionClick();
@@ -182,32 +211,29 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      _buildCleanupTile(
-        context,
-        icon: Icons.cleaning_services_rounded,
-        title: tr('clearAPKCache'),
-        subtitle: tr('clearAPKCacheDescription'),
-        onTap: () => _clearAPKCache(context),
-      ),
-      _buildCleanupTile(
-        context,
-        icon: Icons.image_not_supported_rounded,
-        title: tr('clearIconCache'),
-        subtitle: tr('clearIconCacheDescription'),
-        onTap: () => _clearIconCache(context),
-      ),
     ];
 
-    if (items.isEmpty) return const SizedBox.shrink();
+    if (items.isEmpty && developer.isEmpty) return const SizedBox.shrink();
 
-    return ExpressiveSettingsGroup(
-      title: isSearching ? null : tr('troubleshootingAndSystem'),
-      description: isSearching ? null : tr('troubleshootingGroupDesc'),
-      persistKey: 'troubleshootingAndSystem',
-      icon: Icons.bug_report_rounded,
-      isExpandable: !isSearching,
-      initiallyExpanded: true,
-      children: items,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (items.isNotEmpty)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('troubleshootingAndSystem'),
+            description: isSearching ? null : tr('troubleshootingGroupDesc'),
+            persistKey: 'troubleshootingAndSystem',
+            icon: Icons.bug_report_rounded,
+            children: items,
+          ),
+        if (developer.isNotEmpty)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : tr('settingsGroupDeveloper'),
+            persistKey: 'advanced.developer',
+            icon: Icons.developer_mode_rounded,
+            children: developer,
+          ),
+      ],
     );
   }
 
