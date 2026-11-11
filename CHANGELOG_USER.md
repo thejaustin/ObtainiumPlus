@@ -3,6 +3,8 @@
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ### Fixed
+- Some app icons stayed as placeholders until the app was restarted, when the icon was requested before installed apps had been scanned.
+- Links like "CHANGELOG.md" in GitHub release notes open the file at that release instead of a broken github.com page, and line breaks in release notes are kept (from Obtainium).
 - Settings tabs no longer show red "Something went wrong" cards after scrolling another tab.
 - Service Doctor is now a regular page and no longer opens copies of itself.
 - Settings header buttons, diagnostic rows and the usage-access buttons no longer run off narrow screens. Compact mode shows two lines of each setting's description instead of one.
