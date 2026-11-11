@@ -33,6 +33,7 @@ dependencies:
   file_picker: ^12.3.0
   animations: ^3.0.0
   loading_indicator_m3e: ^0.1.1
+  material_new_shapes: 1.0.0
   android_package_installer: # TODO: Upstream PR pending; if not accepted, keep fork maintained
     git:
       url: https://github.com/ImranR98/android_package_installer
