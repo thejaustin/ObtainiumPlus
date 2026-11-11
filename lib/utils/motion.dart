@@ -84,6 +84,7 @@ abstract final class AppMotion {
   static final SpringCurve spatial = SpringCurve(M3Springs.spatialDefault);
   static final SpringCurve spatialSlow = SpringCurve(M3Springs.spatialSlow);
   static final SpringCurve effects = SpringCurve(M3Springs.effectsDefault);
+  static final SpringCurve effectsSlow = SpringCurve(M3Springs.effectsSlow);
   static final SpringCurve effectsFast = SpringCurve(M3Springs.effectsFast);
 
   /// Settle time of [curve] when motion is on, otherwise zero.

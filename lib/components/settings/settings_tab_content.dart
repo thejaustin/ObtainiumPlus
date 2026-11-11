@@ -8,6 +8,7 @@ import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/installation_section.dart';
 import 'package:obtainium/components/settings/motion_haptics_section.dart';
 import 'package:obtainium/components/settings/settings_page_section.dart';
+import 'package:obtainium/components/settings/settings_search_jump.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_tab_masthead.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
@@ -61,7 +62,13 @@ class SettingsTabContent extends StatelessWidget {
               description: tr(kSettingsSections[i].descKey),
               accentColor: Theme.of(context).colorScheme.primary,
             ),
-          _body(context, i, showAdvanced),
+          if (_searching)
+            SettingsJumpSection(
+              index: i,
+              child: _body(context, i, showAdvanced),
+            )
+          else
+            _body(context, i, showAdvanced),
         ],
       ],
     );

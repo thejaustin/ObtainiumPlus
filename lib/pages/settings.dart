@@ -7,6 +7,7 @@ import 'package:obtainium/components/settings/connected_settings_bar.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/plus_features_sheet.dart';
 import 'package:obtainium/components/settings/settings_hero_overview.dart';
+import 'package:obtainium/components/settings/settings_search_jump.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_tab_content.dart';
 import 'package:obtainium/pages/changelog.dart';
@@ -140,6 +141,29 @@ class SettingsPageState extends State<SettingsPage> {
         curve: Curves.easeOutCubic,
       );
     });
+  }
+
+  /// Search jump (preview): leave the search, open [section], then scroll
+  /// the row titled [title] into view and pulse a highlight over it. If the
+  /// row sits on a subpage (Look & motion cards, "More…"), the section opens
+  /// and that is as far as it goes.
+  void _jumpToRow(int section, String title) {
+    AppHaptics.selectionClick();
+    _searchController.clear();
+    if (_selectedSectionIndex != section) _selectSection(section);
+    var tries = 0;
+    void attempt() {
+      if (!mounted) return;
+      final root = _resultsKey.currentContext;
+      final row = root == null ? null : findRowByTitle(root, title);
+      if (row != null) {
+        revealAndHighlightRow(context, row);
+      } else if (++tries < 6) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => attempt());
+      }
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => attempt());
   }
 
   void scrollToTop() {
@@ -557,14 +581,20 @@ class SettingsPageState extends State<SettingsPage> {
                               ),
                             KeyedSubtree(
                               key: _resultsKeyFor(switcherId),
-                              child: SettingsTabContent(
-                                section: _selectedSectionIndex,
-                                searchQuery: _searchQuery,
-                                androidInfoFuture: _androidInfoFuture,
-                                showIntervalLabel: _showIntervalLabel,
-                                onIntervalLabelChange: (val) =>
-                                    setState(() => _showIntervalLabel = val),
-                                onSetState: (fn) => setState(fn),
+                              child: SettingsSearchJumpLayer(
+                                enabled:
+                                    plusSettings.plusSettingsSearchJump &&
+                                    _searchQuery.isNotEmpty,
+                                onJump: _jumpToRow,
+                                child: SettingsTabContent(
+                                  section: _selectedSectionIndex,
+                                  searchQuery: _searchQuery,
+                                  androidInfoFuture: _androidInfoFuture,
+                                  showIntervalLabel: _showIntervalLabel,
+                                  onIntervalLabelChange: (val) =>
+                                      setState(() => _showIntervalLabel = val),
+                                  onSetState: (fn) => setState(fn),
+                                ),
                               ),
                             ),
                             if (_searchQuery.isEmpty)
