@@ -45,7 +45,16 @@ Earlier sessions ported these upstream fixes into the shadowed `AppsProvider` ex
 | d51ab11dd, b300f7933 | 1.7.2 | Recreate the icon cache dir; survive icon load failures (#3433, #3428) | `apps_provider_lifecycle.dart` | **equivalent live**: `AppsProvider.updateAppIcon` recreates the dir and catches load and write errors. Lead for the placeholder-icon bug: a failed load adds the app to `_failedIconAppIds` for the whole session, even if `installedInfo` just wasn't loaded yet |
 
 
-## Ported on 2026-11-10
+## Done on 2026-11-10/11
+
+- **#3215** (096af9324 + b1c0047f6): moved into the live `loadApps` / `getCorrectedInstallStatusAppIfPossible` (f2b78a420, 85b0f57e4).
+- **#3370** (fa71542aa): three-way guards in the live `background_update_service.dart`, with a Settings UI (b649c755d).
+- **#3369**: no change needed; Shizuku (90 s), root (60 s) and stock already time out, and external reports natively.
+- **897b112c5** Codeberg port (c7c5e3d51).
+- **#3473** plus the duplicate `ApkFilterService` deleted from `source_provider.dart` (2e20cc2cd).
+- **#3470/#3471/#2101** changelog links at the release tag, plus soft line breaks (b06b4f696).
+- **7d89128ac APKCombo removal: deliberately not ported.** In the fork, an app whose source no longer resolves is quarantined at load with an "apps removed" notification, so removing the source would pull users' tracked APKCombo apps out of their library. The source stays; its checks just fail.
+
 
 - 44f014778 Fix signing certificate checks on Android 9 and 10 (#3475)
 - ef0eed86a DCL fallback (#3442): core only. The detector and the Cronet gate are ported. The **"Use Android certificate store" setting and the one-time warning dialog are not**.
