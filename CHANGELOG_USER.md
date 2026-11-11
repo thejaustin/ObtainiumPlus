@@ -20,6 +20,7 @@
 - Back with the settings search keyboard open now just closes the keyboard instead of also switching tabs, and matching pages such as Developer & Diagnostics show at the top of search results.
 - Shizuku shows "permission needed" instead of "not running" while its permission prompt is still open, and no longer stacks repeated prompts.
 - README links and images that start with "/" open inside the repo instead of the site root.
+- Apps could be marked as uninstalled, or removed, when Android returned an incomplete list of installed apps. Each one is now double-checked first (from Obtainium).
 - On Android 9 and 10, installs no longer fail the signing-certificate check every time (from Obtainium).
 - No more crash at launch on GrapheneOS when "Dynamic code loading via memory" is restricted; Obtainium+ uses its built-in network client there instead (from Obtainium).
 
@@ -28,6 +29,7 @@
 - GitLab and Google Play (native) apps now show release notes.
 - Version History now loads the latest 20 releases with their notes from GitHub, GitLab, Codeberg, Gitea and F-Droid (from the app's changelog) when you expand it, instead of only the versions this device happened to see. It follows each app's release-title filter and version extraction settings.
 - Service Doctor, Play Store diagnostics and inspector, and the multi-user diagnostic are full pages that match the rest of settings.
+- Background updates: "When not on Wi-Fi" and "When not charging" can now be set to Nothing, Check only (notify, don't install) or Check and update, instead of only on or off (from Obtainium). Your previous switches carry over.
 - The installed-apps picker loads small icons and names in batches and sorts by app name. The rows on screen fill in first.
 - With Shizuku, the profiles page also names users whose apps Android hides from other apps, such as Secure Folder.
 - The settings category bar no longer sits on top of the main navigation bar.

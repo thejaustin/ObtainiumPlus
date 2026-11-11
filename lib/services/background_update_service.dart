@@ -14,6 +14,7 @@ import 'package:obtainium/providers/notifications_provider.dart';
 import 'package:obtainium/services/app_download_service.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/services/offline_service.dart';
+import 'package:obtainium/utils/bg_update_guards.dart';
 import 'package:obtainium/utils/logger.dart';
 
 class BackgroundUpdateService {
@@ -167,14 +168,17 @@ class BackgroundUpdateService {
             (<List<MapEntry<String, int>>>[])),
       ];
 
-      var networkRestricted =
-          appsProvider.updateSettings.bgUpdateRequiresWifi &&
-          !netResult.contains(ConnectivityResult.wifi) &&
-          !netResult.contains(ConnectivityResult.ethernet);
-
-      var chargingRestricted =
-          appsProvider.updateSettings.bgUpdateRequiresCharging &&
-          (await Battery().batteryState) != BatteryState.charging;
+      final guard = evaluateBgGuards(
+        wifiMode: appsProvider.updateSettings.bgGuardOnWiFi,
+        chargingMode: appsProvider.updateSettings.bgGuardWhileCharging,
+        onUnmeteredNetwork:
+            netResult.contains(ConnectivityResult.wifi) ||
+            netResult.contains(ConnectivityResult.ethernet),
+        charging: (await Battery().batteryState) == BatteryState.charging,
+      );
+      // "Check only" guards let checks and notifications run but block
+      // silent installs; "nothing" skips the run.
+      final installsBlocked = !guard.allowInstalls;
 
       var scheduleRestricted =
           appsProvider.plusSettings.plusEnableUpdateSchedule &&
@@ -182,11 +186,10 @@ class BackgroundUpdateService {
           !appsProvider.updateSettings.isWithinUpdateSchedule();
 
       if (isFirstIteration) {
-        if (networkRestricted) {
-          logs.add('BG update task: Network restriction in effect.');
-        }
-        if (chargingRestricted) {
-          logs.add('BG update task: Charging restriction in effect.');
+        if (guard.skipChecks) {
+          logs.add('BG update task: Network/charging guard skips this run.');
+        } else if (installsBlocked) {
+          logs.add('BG update task: Checks only, no installs (guards).');
         }
         if (scheduleRestricted) {
           logs.add('BG update task: Outside scheduled update window.');
@@ -195,7 +198,7 @@ class BackgroundUpdateService {
 
       // Skip update if any restriction is active (except for forced retries)
       if (isFirstIteration &&
-          (networkRestricted || chargingRestricted || scheduleRestricted) &&
+          (guard.skipChecks || scheduleRestricted) &&
           currentParams['toCheck'] == null &&
           dueRetries.isEmpty) {
         logs.add('BG update task: Skipped due to restrictions.');
@@ -348,7 +351,7 @@ class BackgroundUpdateService {
         List<App> trackOnlyToNotify = [];
         List<App> exemptToNotify = [];
         for (var i = 0; i < updates.length; i++) {
-          if (networkRestricted || chargingRestricted || !silentFlags[i]) {
+          if (installsBlocked || !silentFlags[i]) {
             if (updates[i].additionalSettings['skipUpdateNotifications'] !=
                 true) {
               if (updates[i].additionalSettings['trackOnly'] == true) {
@@ -421,7 +424,7 @@ class BackgroundUpdateService {
       } else {
         // Installation Phase
         logs.add('BG install task: Started (${toInstall.length}).');
-        if (toInstall.isEmpty && !networkRestricted && !chargingRestricted) {
+        if (toInstall.isEmpty && !installsBlocked) {
           var temp = appsProvider.findExistingUpdates(
             installedOnly: true,
             includeAmbiguous: false,

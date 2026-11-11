@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:equations/equations.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/providers/settings_provider.dart' show BgGuardMode;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UpdateSettingsProvider with ChangeNotifier {
@@ -186,6 +187,39 @@ class UpdateSettingsProvider with ChangeNotifier {
   set bgUpdateRequiresCharging(bool val) {
     prefs?.setBool('bgUpdateRequiresCharging', val);
     notifyListeners();
+  }
+
+  /// What background tasks may do when not on Wi-Fi (upstream #3370).
+  /// Without a stored mode, the older "only on Wi-Fi" switch means
+  /// [BgGuardMode.nothing].
+  BgGuardMode get bgGuardOnWiFi =>
+      _bgGuardMode('bgGuardOnWiFi', bgUpdateRequiresWifi);
+
+  set bgGuardOnWiFi(BgGuardMode mode) {
+    _setBgGuardMode('bgGuardOnWiFi', mode);
+    // The scheduler only waits for an unmetered network in "nothing" mode.
+    bgUpdateRequiresWifi = mode == BgGuardMode.nothing;
+  }
+
+  /// What background tasks may do when not charging.
+  BgGuardMode get bgGuardWhileCharging =>
+      _bgGuardMode('bgGuardWhileCharging', bgUpdateRequiresCharging);
+
+  set bgGuardWhileCharging(BgGuardMode mode) {
+    _setBgGuardMode('bgGuardWhileCharging', mode);
+    bgUpdateRequiresCharging = mode == BgGuardMode.nothing;
+  }
+
+  BgGuardMode _bgGuardMode(String key, bool legacyRequired) {
+    final stored = prefs?.safeString(key);
+    for (final m in BgGuardMode.values) {
+      if (m.name == stored) return m;
+    }
+    return legacyRequired ? BgGuardMode.nothing : BgGuardMode.checksAndUpdates;
+  }
+
+  void _setBgGuardMode(String key, BgGuardMode mode) {
+    prefs?.setString(key, mode.name);
   }
 
   bool get useUpdateSchedule {

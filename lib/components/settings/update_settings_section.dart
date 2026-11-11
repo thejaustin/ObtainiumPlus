@@ -91,31 +91,34 @@ class UpdateSettingsSection extends StatelessWidget {
       _buildScheduleOptions(context),
     ];
 
+    final wifiGuardMatches =
+        _matches(tr('whenNotOnWiFi')) || _matches(tr('bgUpdateRequiresWifi'));
+    final chargingGuardMatches =
+        _matches(tr('whenNotCharging')) ||
+        _matches(tr('bgUpdateRequiresCharging'));
     final List<Widget> constraintsChildren = [
-      if (_matches(tr('bgUpdateRequiresWifi')) ||
-          _matches(tr('bgUpdateRequiresCharging')) ||
-          _matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+      if (wifiGuardMatches)
+        _buildBgGuardTile(
+          context,
+          icon: Icons.wifi_off_outlined,
+          title: tr('whenNotOnWiFi'),
+          getValue: (s) => s.bgGuardOnWiFi,
+          setValue: (s, v) => s.bgGuardOnWiFi = v,
+        ),
+      if (chargingGuardMatches)
+        _buildBgGuardTile(
+          context,
+          icon: Icons.battery_alert_outlined,
+          title: tr('whenNotCharging'),
+          getValue: (s) => s.bgGuardWhileCharging,
+          setValue: (s, v) => s.bgGuardWhileCharging = v,
+        ),
+      if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
         GenericBooleanControlGrid<UpdateSettingsProvider>(
           // The surrounding group already shows this title, except in search.
           title: isSearching ? tr('sectionDeviceOptions') : '',
           embedded: true,
           settings: [
-            if (_matches(tr('bgUpdateRequiresWifi')))
-              (
-                icon: Icons.wifi_outlined,
-                label: tr('bgUpdateRequiresWifi'),
-                description: tr('bgUpdateRequiresWifiDescription'),
-                getValue: (s) => s.bgUpdateRequiresWifi,
-                setValue: (s, v) => s.bgUpdateRequiresWifi = v,
-              ),
-            if (_matches(tr('bgUpdateRequiresCharging')))
-              (
-                icon: Icons.battery_charging_full_outlined,
-                label: tr('bgUpdateRequiresCharging'),
-                description: tr('bgUpdateRequiresChargingDescription'),
-                getValue: (s) => s.bgUpdateRequiresCharging,
-                setValue: (s, v) => s.bgUpdateRequiresCharging = v,
-              ),
             if (_matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
               (
                 icon: Icons.check_circle_outline,
@@ -399,6 +402,55 @@ class UpdateSettingsSection extends StatelessWidget {
           onChangeEnd: (_) => onIntervalLabelChange(true),
         );
       },
+    );
+  }
+
+  /// What background runs may do while a condition (Wi-Fi, charging) is
+  /// unmet: nothing, check only, or check and install (upstream #3370).
+  Widget _buildBgGuardTile(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required BgGuardMode Function(UpdateSettingsProvider) getValue,
+    required void Function(UpdateSettingsProvider, BgGuardMode) setValue,
+  }) {
+    final updateSettings = context.watch<UpdateSettingsProvider>();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          leading: buildSettingsIconBadge(context, icon),
+          title: Text(title),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+          child: SizedBox(
+            width: double.infinity,
+            child: SegmentedButton<BgGuardMode>(
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(
+                  value: BgGuardMode.nothing,
+                  label: Text(tr('bgGuardNothing')),
+                ),
+                ButtonSegment(
+                  value: BgGuardMode.checksOnly,
+                  label: Text(tr('bgGuardChecksOnly')),
+                ),
+                ButtonSegment(
+                  value: BgGuardMode.checksAndUpdates,
+                  label: Text(tr('bgGuardChecksAndUpdates')),
+                ),
+              ],
+              selected: {getValue(updateSettings)},
+              onSelectionChanged: (value) {
+                AppHaptics.selectionClick();
+                setValue(updateSettings, value.first);
+              },
+            ),
+          ),
+        ),
+      ],
     );
   }
 
