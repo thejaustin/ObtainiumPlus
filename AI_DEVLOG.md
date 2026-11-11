@@ -7,6 +7,32 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-10/11 — Claude: Upstream Audit Follow-Through, Settings M3E Plan, Phase 1
+
+- **Upstream audit** (`docs/upstream-sync-audit-2026-11.md`, `scripts/dev/upstream-audit.py`). The script only scores code that exists at upstream's tip and skips dead or shadowed fork files. Several upstream fixes had been ported into code that never runs. Fixed in the live code:
+  - #3215 bulk-list lookup in `_loadAppsPhase2` (f2b78a420)
+  - #3215 versionCode mode (85b0f57e4)
+  - #3370 three-way background guards wired into `background_update_service.dart` (b649c755d)
+  - #3473 plus a duplicate `ApkFilterService` deleted from `source_provider.dart`; the live arch filter lacked the ABI aliases and universal handling (2e20cc2cd)
+  - Codeberg port regex (c7c5e3d51)
+  - #3369 needs no change: every installer has its own timeout.
+- **Dead shadow copies still exist** (`apps_provider_lifecycle.dart`/`_install.dart` extension methods). Delete them in a dedicated pass; their top-level helpers are live.
+- **Settings redesign:** the multi-agent plan is `docs/settings-m3e-plan.md`; the comparison canvas with the user's open questions is https://claude.ai/artifact/MzREEZBwP4ajxvMRFCaH53. Phases 2–3 (IA moves, `MorphSwitch`, segmented groups) wait for the user's picks.
+- **Phase 1 merged** (no visual change): the `wt/m3e-p1-motion` merge (c66283ef4) and the `wt/m3e-p1-i18n` merge (ec6283797).
+  - AppMotion gates, `pushRoute` instant when motion is off, one haptic per toggle (now on change, not press-down), `select` instead of `watch`.
+  - Localised strings, and search matches `desc:`.
+  - Tests: `motion_gate_test`, `haptics_test`, and a localised search test in `settings_page_test`.
+  - Known minor: home's tab body switches widget type when motion is toggled, so the current tab rebuilds once.
+- **Workflow gotcha:** `isolation: 'worktree'` agents branched from **main** (the sdcard checkout), not the redo branch, so merges conflicted. Next time, tell agents to `git switch -c <branch> fix/review-2026-11` first.
+- **Still open:**
+  - changelog link fixes (#3470/#2101)
+  - APKCombo removal (check how already-tracked apps load first)
+  - DCL setting and dialog
+  - disable apps (#3375)
+  - per-app install method
+  - update-health gaps
+  - placeholder-icon lead: `_failedIconAppIds` is sticky for the session
+
 ## 2026-11-10 — Claude: Sentry Reopen Loop, Picker Order, Hidden Users
 
 - **Already on the branch, not logged before:**

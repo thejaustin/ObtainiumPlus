@@ -25,6 +25,12 @@
 - No more crash at launch on GrapheneOS when "Dynamic code loading via memory" is restricted; Obtainium+ uses its built-in network client there instead (from Obtainium).
 
 ### Improved
+- Settings toggles give one haptic per change instead of two.
+- Turning off animations (in Obtainium+ or Android's "remove animations") now also stops settings, page and tab transitions that ignored it before.
+- More of Settings is translatable, and settings search also matches descriptions and works in other languages.
+- Apps with "use versionCode" no longer have version detection switched off by themselves (from Obtainium).
+- Self-hosted Gitea/Forgejo URLs with a port number are accepted (from Obtainium).
+- With architecture filtering on, a saved universal APK choice moves to the APK built for your device, and APK names using alternative ABI spellings are recognised (from Obtainium).
 - About card: the README tab now loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links, and apps without a description show their README.
 - GitLab and Google Play (native) apps now show release notes.
 - Version History now loads the latest 20 releases with their notes from GitHub, GitLab, Codeberg, Gitea and F-Droid (from the app's changelog) when you expand it, instead of only the versions this device happened to see. It follows each app's release-title filter and version extraction settings.
