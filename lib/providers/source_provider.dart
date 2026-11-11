@@ -27,6 +27,8 @@ import 'package:obtainium/utils/min_update_age.dart';
 import 'package:obtainium/utils/source_utils.dart';
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/services/http_service.dart';
+import 'package:obtainium/services/apk_filter_service.dart'
+    show ApkFilterService;
 export 'package:obtainium/models/app.dart';
 export 'package:obtainium/models/typed_settings.dart';
 export 'package:obtainium/models/app_source.dart';
@@ -130,6 +132,19 @@ Future<List<MapEntry<String, String>>> filterApksByArch(
 ) async {
   final abis = (await DeviceInfoPlugin().androidInfo).supportedAbis;
   return ApkFilterService().filterApksByArch(apkUrls, abis);
+}
+
+/// Delegates to [ApkFilterService.preferredApkIndexForArchFilter].
+Future<int> resolvePreferredApkIndexForArchFilter(
+  List<MapEntry<String, String>> apkUrls,
+  int preferredIndex,
+) async {
+  final abis = (await DeviceInfoPlugin().androidInfo).supportedAbis;
+  return ApkFilterService().preferredApkIndexForArchFilter(
+    apkUrls,
+    preferredIndex,
+    abis,
+  );
 }
 
 /// Builds a regex alternation pattern from a list of hostname strings, escaping dots.
@@ -471,7 +486,10 @@ class SourceProvider {
     final rawNotes = apk.changeLog;
     if (rawNotes != null &&
         !rawNotes.contains('\n') &&
-        RegExp(r'<br\s*/?>|</p>|</li>', caseSensitive: false).hasMatch(rawNotes)) {
+        RegExp(
+          r'<br\s*/?>|</p>|</li>',
+          caseSensitive: false,
+        ).hasMatch(rawNotes)) {
       apk = apk.copyWith(changeLog: playNotesHtmlToText(rawNotes));
     }
 
@@ -534,6 +552,15 @@ class SourceProvider {
         throw NoAPKError()..url = standardUrl;
       }
     }
+    // Keep the fork's name-matching resolver; when the arch filter is on, a
+    // saved universal choice then moves to the device's ABI (upstream #3473).
+    var preferredApkIndex = _resolvePreferredApkIndex(currentApp, apk.apkUrls);
+    if (additionalSettings['autoApkFilterByArch'] == true) {
+      preferredApkIndex = await resolvePreferredApkIndexForArchFilter(
+        apk.apkUrls,
+        preferredApkIndex,
+      );
+    }
     var name = currentApp != null ? currentApp.name.trim() : '';
     name = name.isNotEmpty ? name : apk.names.name;
     final App finalApp = App(
@@ -552,7 +579,7 @@ class SourceProvider {
       currentApp?.installedVersion,
       apk.version,
       apk.apkUrls,
-      _resolvePreferredApkIndex(currentApp, apk.apkUrls),
+      preferredApkIndex,
       additionalSettings,
       DateTime.now(),
       currentApp?.pinned ?? false,
@@ -880,82 +907,6 @@ class VersionService {
         ? value1.substring(m1.start, m1.end) ==
               value2.substring(m2.start, m2.end)
         : false;
-  }
-}
-
-class ApkFilterService {
-  static const List<String> apkContainerExtensions = [
-    '.apk',
-    '.xapk',
-    '.apkm',
-    '.apks',
-  ];
-
-  static const List<String> archiveExtensions = ['.zip'];
-
-  static const List<String> tarballExtensions = [
-    '.tar.gz',
-    '.tgz',
-    '.tar.bz2',
-    '.tar.xz',
-  ];
-
-  static bool isApkOrContainerFile(
-    String name, {
-    bool includeArchives = false,
-    bool includeTarballs = false,
-  }) {
-    final lower = name.toLowerCase();
-    bool endsWithAny(List<String> exts) => exts.any(lower.endsWith);
-    return endsWithAny(apkContainerExtensions) ||
-        (includeArchives && endsWithAny(archiveExtensions)) ||
-        (includeTarballs && endsWithAny(tarballExtensions));
-  }
-
-  List<MapEntry<String, String>> getApkUrlsFromUrls(List<String> urls) =>
-      urls.map((e) {
-        final segments = e.split('/').where((el) => el.trim().isNotEmpty);
-        final apkSegs = segments.where((s) => isApkOrContainerFile(s));
-        return MapEntry(apkSegs.isNotEmpty ? apkSegs.last : segments.last, e);
-      }).toList();
-
-  List<MapEntry<String, String>> filterApks(
-    List<MapEntry<String, String>> apkUrls,
-    String? apkFilterRegEx,
-    bool? invert,
-  ) {
-    if (apkFilterRegEx?.isNotEmpty == true) {
-      final reg = RegExp(apkFilterRegEx!);
-      apkUrls = apkUrls.where((element) {
-        final hasMatch = reg.hasMatch(element.key);
-        return invert == true ? !hasMatch : hasMatch;
-      }).toList();
-    }
-    return apkUrls;
-  }
-
-  Future<List<MapEntry<String, String>>> filterApksByArch(
-    List<MapEntry<String, String>> apkUrls,
-    List<String> abis, {
-    bool preferSplits = true,
-  }) async {
-    if (apkUrls.length > 1) {
-      for (var abi in abis) {
-        final urls2 = apkUrls
-            .where(
-              (element) => RegExp(
-                '.*$abi.*',
-                caseSensitive: false,
-              ).hasMatch(element.key),
-            )
-            .toList();
-        if (urls2.isNotEmpty && urls2.length < apkUrls.length) {
-          apkUrls = urls2;
-          break;
-        }
-      }
-    }
-    return apkUrls;
   }
 }
 
