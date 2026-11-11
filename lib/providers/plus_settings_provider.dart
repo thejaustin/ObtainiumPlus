@@ -451,7 +451,7 @@ class PlusSettingsProvider with ChangeNotifier {
     AppHaptics.intensity = plusHapticIntensity;
     AppHaptics.useNative = plusNativeHaptics;
     AppHaptics.followSystem = plusHapticFollowSystem;
-    if (plusHapticFollowSystem) AppHaptics.refreshSystemSetting();
+    AppHaptics.watchSystemSetting(plusHapticFollowSystem);
   }
 
   /// Writes every expressive-kit option's default explicitly.

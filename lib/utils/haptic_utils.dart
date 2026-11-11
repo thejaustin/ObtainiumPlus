@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:obtainium/models/settings_enums.dart';
 
 /// Central haptic feedback utility. All haptic calls in the app go through
@@ -44,6 +44,7 @@ class AppHaptics {
     useNative = false;
     followSystem = false;
     _systemEnabled = true;
+    watchSystemSetting(false);
   }
 
   /// Re-reads Android's touch-feedback setting into a cache, so the hot path
@@ -60,6 +61,22 @@ class AppHaptics {
 
   @visibleForTesting
   static set systemEnabledForTesting(bool v) => _systemEnabled = v;
+
+  static AppLifecycleListener? _resumeListener;
+
+  /// While [on], re-reads the system setting now and on every app resume
+  /// (the user may change it in Android settings while the app is open).
+  static void watchSystemSetting(bool on) {
+    if (on) {
+      _resumeListener ??= AppLifecycleListener(
+        onResume: () => unawaited(refreshSystemSetting()),
+      );
+      unawaited(refreshSystemSetting());
+    } else {
+      _resumeListener?.dispose();
+      _resumeListener = null;
+    }
+  }
 
   static bool get _on => enabled && (!followSystem || _systemEnabled);
 

@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -152,5 +153,30 @@ void main() {
     AppHaptics.lightImpact();
     await flush();
     expect(flutterCalls, ['HapticFeedbackType.lightImpact']);
+  });
+
+  test('follow system re-reads the setting on app resume', () async {
+    nativeReply = true;
+    AppHaptics.followSystem = true;
+    AppHaptics.watchSystemSetting(true);
+    await flush();
+    expect(nativeCalls.map((c) => c.method), ['isSystemHapticsEnabled']);
+
+    // User turns touch feedback off in Android settings, then comes back.
+    nativeReply = false;
+    final binding = TestWidgetsFlutterBinding.instance;
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await flush();
+    expect(nativeCalls, hasLength(2));
+    AppHaptics.lightImpact();
+    await flush();
+    expect(flutterCalls, isEmpty);
+
+    AppHaptics.watchSystemSetting(false);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await flush();
+    expect(nativeCalls, hasLength(2));
   });
 }
