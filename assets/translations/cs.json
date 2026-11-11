@@ -1828,5 +1828,6 @@
     "appLaunchAndUsage": "App Launch & Usage Recency",
     "appLaunchAndUsageDesc": "Track foreground screen time and sort apps by last used",
   "excludedCategoriesFromChecks": "Skip update checks for categories",
-  "excludedCategoriesFromChecksDescription": "Apps in the chosen categories are not checked for updates"
+  "excludedCategoriesFromChecksDescription": "Apps in the chosen categories are not checked for updates",
+  "showUpdateHealthAppNote": "Show update health note on the app page (preview)"
 }

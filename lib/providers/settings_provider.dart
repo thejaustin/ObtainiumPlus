@@ -952,6 +952,17 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Opt-in (preview): show a link to the app's update-health options on the
+  /// app page when the app has update-health issues.
+  bool get showUpdateHealthAppNote {
+    return _getBool('showUpdateHealthAppNote') ?? false;
+  }
+
+  set showUpdateHealthAppNote(bool val) {
+    prefs?.setBool('showUpdateHealthAppNote', val);
+    notifyListeners();
+  }
+
   int get exportSettings {
     return _getInt('exportSettings') ?? 1;
   }

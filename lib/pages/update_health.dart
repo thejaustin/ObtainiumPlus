@@ -159,6 +159,12 @@ class UpdateHealthPage extends StatelessWidget {
           onChanged: (value) =>
               settingsProvider.showUpdateHealthIndicator = value,
         ),
+        ToggleTile(
+          label: tr('showUpdateHealthAppNote'),
+          value: settingsProvider.showUpdateHealthAppNote,
+          onChanged: (value) =>
+              settingsProvider.showUpdateHealthAppNote = value,
+        ),
       ]),
     );
   }
