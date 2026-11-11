@@ -199,13 +199,17 @@ class SettingsRow extends StatelessWidget {
       ),
     );
 
-    Widget row = Semantics(
-      toggled: toggled,
-      enabled: enabled,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        onLongPress: enabled ? onLongPress : null,
-        child: content,
+    // One merged node: TalkBack reads the row (title, summary, state) as a
+    // single switch / button with the row's tap action.
+    Widget row = MergeSemantics(
+      child: Semantics(
+        toggled: toggled,
+        enabled: enabled,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          onLongPress: enabled ? onLongPress : null,
+          child: content,
+        ),
       ),
     );
     row = AnimatedOpacity(

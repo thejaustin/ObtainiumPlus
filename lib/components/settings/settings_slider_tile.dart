@@ -1,6 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/theme/settings_tokens.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
@@ -74,6 +76,14 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
     final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
     final badgeSize = isCompact ? 30.0 : 36.0;
     final labelText = widget.labelBuilder(widget.value);
+    if (plusSettings.plusSettingsGroupStyle == SettingsGroupStyle.segmented) {
+      return _buildSegmented(
+        context,
+        labelText,
+        isCompact,
+        isModifiedFromDefault,
+      );
+    }
 
     return Padding(
       padding: EdgeInsets.fromLTRB(
@@ -219,46 +229,125 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
               ),
             ],
           ),
-          // The morphing badge above already shows the value; keep `label`
-          // for semantics but suppress the theme's drag bubble.
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              showValueIndicator: ShowValueIndicator.never,
-              trackHeight: isCompact ? 3.5 : 5.0,
+          _slider(context, labelText, isCompact),
+        ],
+      ),
+    );
+  }
+
+  // The morphing badge (or the header value) already shows the value; keep
+  // `label` for semantics but suppress the theme's drag bubble.
+  Widget _slider(BuildContext context, String labelText, bool isCompact) {
+    return SliderTheme(
+      data: SliderTheme.of(context).copyWith(
+        showValueIndicator: ShowValueIndicator.never,
+        trackHeight: isCompact ? 3.5 : 5.0,
+      ),
+      child: Slider(
+        value: widget.value,
+        min: widget.min,
+        max: widget.max,
+        divisions: widget.divisions,
+        label: labelText,
+        onChangeStart: (_) {
+          AppHaptics.gestureStart();
+          setState(() {
+            _isDragging = true;
+            _lastSnappedIndex = null;
+          });
+        },
+        onChanged: (v) {
+          if (widget.divisions != null) {
+            final step = (widget.max - widget.min) / widget.divisions!;
+            final idx = ((v - widget.min) / step).round().toDouble();
+            if (idx != _lastSnappedIndex) {
+              _lastSnappedIndex = idx;
+              AppHaptics.segmentTick();
+              if (v <= widget.min || v >= widget.max) {
+                AppHaptics.gestureLimit();
+              }
+            }
+          }
+          widget.onChanged(v);
+        },
+        onChangeEnd: (v) {
+          setState(() => _isDragging = false);
+          AppHaptics.gestureEnd();
+          widget.onChangeEnd?.call(v);
+        },
+      ),
+    );
+  }
+
+  /// Opt-in segmented-style header (only when plusSettingsGroupStyle is
+  /// segmented): label on the left, value on the right, slider below.
+  Widget _buildSegmented(
+    BuildContext context,
+    String labelText,
+    bool isCompact,
+    bool isModifiedFromDefault,
+  ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return Padding(
+      padding: SettingsTokens.sliderPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style:
+                      (isCompact
+                              ? theme.textTheme.bodyMedium
+                              : theme.textTheme.bodyLarge)
+                          ?.copyWith(color: cs.onSurface),
+                ),
+              ),
+              if (isModifiedFromDefault) _undoButton(),
+              const SizedBox(width: SettingsTokens.rowSlotGap),
+              ExcludeSemantics(
+                child: Text(
+                  labelText,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: cs.onSurfaceVariant,
+                    fontWeight: _isDragging ? FontWeight.w600 : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (widget.subtitle != null && !isCompact)
+            Text(
+              widget.subtitle!,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
             ),
-            child: Slider(
-              value: widget.value,
-              min: widget.min,
-              max: widget.max,
-              divisions: widget.divisions,
-              label: labelText,
-              onChangeStart: (_) {
-                AppHaptics.tapDown();
-                setState(() {
-                  _isDragging = true;
-                  _lastSnappedIndex = null;
-                });
-              },
-              onChanged: (v) {
-                if (widget.divisions != null) {
-                  final step = (widget.max - widget.min) / widget.divisions!;
-                  final idx = ((v - widget.min) / step).round().toDouble();
-                  if (idx != _lastSnappedIndex) {
-                    _lastSnappedIndex = idx;
-                    AppHaptics.segmentTick();
-                  }
-                }
-                widget.onChanged(v);
-              },
-              onChangeEnd: (v) {
-                setState(() => _isDragging = false);
-                AppHaptics.lightImpact();
-                widget.onChangeEnd?.call(v);
-              },
-            ),
+          Semantics(
+            value: labelText,
+            child: _slider(context, labelText, isCompact),
           ),
         ],
       ),
     );
   }
+
+  Widget _undoButton() => Tooltip(
+    message:
+        '${tr('resetToDefault')} (${widget.labelBuilder(widget.defaultValue!)})',
+    child: IconButton(
+      icon: const Icon(Icons.undo_rounded, size: 16),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(),
+      visualDensity: VisualDensity.compact,
+      onPressed: () {
+        AppHaptics.mediumImpact();
+        widget.onChanged(widget.defaultValue!);
+        widget.onChangeEnd?.call(widget.defaultValue!);
+      },
+    ),
+  );
 }
