@@ -2689,7 +2689,11 @@ class AppsProvider with ChangeNotifier {
           ),
         );
         _scheduleIconBatchNotification();
-      } else {
+      } else if (apps[appId]?.installedInfo != null) {
+        // Only a real attempt counts as a failure. A tile can ask before the
+        // phase-2 package scan has filled installedInfo; marking that as
+        // failed made phase 2's retry skip the app, leaving the placeholder
+        // icon for the whole session.
         _failedIconAppIds.add(appId);
       }
     } finally {
