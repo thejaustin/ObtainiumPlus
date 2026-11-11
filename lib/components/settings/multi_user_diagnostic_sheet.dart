@@ -21,6 +21,17 @@ class ProfileApp {
   const ProfileApp(this.packageName, this.label, this.versionName);
 }
 
+/// Parses `pm list users` lines like
+/// `UserInfo{150:Secure Folder:10001030} running` into id → name.
+Map<int, String> parsePmListUsers(String output) {
+  final out = <int, String>{};
+  for (final m in RegExp(r'UserInfo\{(\d+):([^:}]*)').allMatches(output)) {
+    final id = int.tryParse(m.group(1)!);
+    if (id != null) out[id] = m.group(2)!.trim();
+  }
+  return out;
+}
+
 /// Lists the user profiles this app can see and the launchable apps in each.
 ///
 /// Android only exposes the caller's own profile group (main user plus work
@@ -42,6 +53,9 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
   bool _isLoading = true;
   bool _failed = false;
   Map<int, List<ProfileApp>> _byUser = {};
+
+  /// User id → name from `pm list users` via Shizuku; empty without it.
+  Map<int, String> _shellUsers = {};
 
   @override
   void initState() {
@@ -87,14 +101,40 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
     } catch (_) {
       failed = true;
     }
+    var shellUsers = <int, String>{};
+    try {
+      final out = await _channel
+          .invokeMethod<String>('listUsersPrivileged')
+          .timeout(const Duration(seconds: 8));
+      if (out != null) shellUsers = parsePmListUsers(out);
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
+      _shellUsers = shellUsers;
       _byUser = Map.fromEntries(
         grouped.entries.toList()..sort((a, b) => a.key.compareTo(b.key)),
       );
       _failed = failed;
       _isLoading = false;
     });
+  }
+
+  /// Users Shizuku reports that aren't in the visible profile group.
+  Map<int, String> get _hiddenUsers => {
+    for (final e in _shellUsers.entries)
+      if (!_byUser.containsKey(e.key)) e.key: e.value,
+  };
+
+  String _labelFor(int userId) {
+    final known = profileLabel(userId);
+    final shellName = _shellUsers[userId];
+    // Prefer the device's own name for profiles we can only number.
+    if (shellName != null &&
+        shellName.isNotEmpty &&
+        known == tr('multiUserOtherProfile', args: ['$userId'])) {
+      return shellName;
+    }
+    return known;
   }
 
   static String profileLabel(int userId) {
@@ -111,7 +151,7 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
       ..writeln();
     for (final entry in _byUser.entries) {
       buffer.writeln(
-        '#### ${profileLabel(entry.key)} (user ${entry.key}) - '
+        '#### ${_labelFor(entry.key)} (user ${entry.key}) - '
         '${entry.value.length}',
       );
       for (final app in entry.value.take(30)) {
@@ -125,6 +165,13 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
       }
       buffer.writeln();
     }
+    for (final e in _hiddenUsers.entries) {
+      buffer.writeln(
+        '#### ${e.value.isEmpty ? profileLabel(e.key) : e.value} '
+        '- ${tr('multiUserHiddenProfileDesc', args: ['${e.key}'])}',
+      );
+    }
+    if (_hiddenUsers.isNotEmpty) buffer.writeln();
     buffer.writeln(tr('multiUserHiddenProfilesNote'));
     Clipboard.setData(ClipboardData(text: buffer.toString()));
     AppHaptics.lightImpact();
@@ -173,7 +220,7 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
                       : Icons.work_outline_rounded,
                 ),
                 title: Text(
-                  profileLabel(entry.key),
+                  _labelFor(entry.key),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -214,6 +261,20 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
           title: tr('multiUserAboutTitle'),
           icon: Icons.info_outline_rounded,
           children: [
+            for (final e in _hiddenUsers.entries)
+              ListTile(
+                leading: const Icon(Icons.lock_person_outlined),
+                title: Text(
+                  e.value.isEmpty ? profileLabel(e.key) : e.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(
+                  tr('multiUserHiddenProfileDesc', args: ['${e.key}']),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ListTile(
               leading: const Icon(Icons.lock_outline_rounded),
               title: Text(tr('multiUserHiddenProfilesTitle')),

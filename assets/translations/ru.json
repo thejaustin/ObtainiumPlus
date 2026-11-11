@@ -1580,6 +1580,7 @@
     "multiUserNoneVisible": "Only the main profile's apps could be listed",
     "multiUserLoadFailed": "Couldn't read profiles on this device",
     "multiUserAboutTitle": "Not shown here",
+    "multiUserHiddenProfileDesc": "User {} · exists, but Android doesn't let apps see what's installed in it",
     "multiUserHiddenProfilesTitle": "Other users may exist",
     "multiUserHiddenProfilesNote": "Android only lets an app see its own profile group: the main profile plus work or clone profiles. Separate users such as Secure Folder are hidden, and even Shizuku can't list their apps.",
     "multiUserCopyReport": "Copy report",

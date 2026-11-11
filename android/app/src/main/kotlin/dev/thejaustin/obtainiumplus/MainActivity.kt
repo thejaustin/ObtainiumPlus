@@ -727,6 +727,14 @@ class MainActivity : FlutterActivity() {
                             }
                         }
                     }
+                    "listUsersPrivileged" -> {
+                        Thread {
+                            val out = listUsersViaShizuku()
+                            runOnUiThread {
+                                try { result.success(out) } catch (_: Exception) {}
+                            }
+                        }.start()
+                    }
                     "getInstallerPackageName" -> {
                         val target = call.argument<String>("packageName")
                         if (target.isNullOrEmpty()) {
@@ -874,6 +882,47 @@ class MainActivity : FlutterActivity() {
             }
         }
         return out
+    }
+
+    /**
+     * Output of `pm list users` run through Shizuku, or null when Shizuku is
+     * not running or not granted. Read-only; it names users (such as Secure
+     * Folder) whose apps the app can't list.
+     */
+    private fun listUsersViaShizuku(): String? {
+        val alive = try { Shizuku.pingBinder() } catch (_: Throwable) { false }
+        if (!alive) return null
+        val granted = try {
+            Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+        } catch (_: Throwable) { false }
+        if (!granted) return null
+        var p: Process? = null
+        return try {
+            val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+                "newProcess",
+                Array<String>::class.java,
+                Array<String>::class.java,
+                String::class.java
+            ).apply { isAccessible = true }
+            p = newProcessMethod.invoke(
+                null,
+                arrayOf("pm", "list", "users"),
+                null,
+                null
+            ) as? Process
+            val proc = p ?: return null
+            proc.outputStream.close()
+            val text = proc.inputStream.bufferedReader().use { it.readText() }
+            if (!proc.waitFor(5, java.util.concurrent.TimeUnit.SECONDS)) null else text
+        } catch (_: Throwable) {
+            null
+        } finally {
+            try {
+                p?.inputStream?.close()
+                p?.errorStream?.close()
+            } catch (_: Throwable) {}
+            try { p?.destroy() } catch (_: Throwable) {}
+        }
     }
 
     private fun grantUsageAccessPrivileged(result: MethodChannel.Result) {
