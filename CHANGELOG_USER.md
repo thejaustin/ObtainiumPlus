@@ -20,6 +20,8 @@
 - Back with the settings search keyboard open now just closes the keyboard instead of also switching tabs, and matching pages such as Developer & Diagnostics show at the top of search results.
 - Shizuku shows "permission needed" instead of "not running" while its permission prompt is still open, and no longer stacks repeated prompts.
 - README links and images that start with "/" open inside the repo instead of the site root.
+- On Android 9 and 10, installs no longer fail the signing-certificate check every time (from Obtainium).
+- No more crash at launch on GrapheneOS when "Dynamic code loading via memory" is restricted; Obtainium+ uses its built-in network client there instead (from Obtainium).
 
 ### Improved
 - About card: the README tab now loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links, and apps without a description show their README.
