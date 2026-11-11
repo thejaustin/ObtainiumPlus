@@ -1,4 +1,4 @@
-import 'package:obtainium/utils/deep_link_utils.dart';
+import 'package:obtainium/utils/deep_link_parser.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -295,10 +295,11 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     }
 
     interpretLink(Uri uri) async {
-      var action = uri.host;
-      // Also accept a `?url=` query param as an alternative to the path
-      // segment, for deep links that prefer explicit query encoding.
-      var data = deepLinkData(uri);
+      // Decodes the percent-encoded payload catalog sites send; also
+      // accepts a `?url=` query param in place of the path.
+      final link = parseObtainiumDeepLink(uri);
+      final action = link.action;
+      final data = link.data;
       try {
         if (action == 'add') {
           // Ensure apps are loaded
