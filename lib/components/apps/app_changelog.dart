@@ -58,10 +58,15 @@ void showChangeLogDialog(
                       ),
                     ),
                     data: changeLog,
+                    softLineBreak: true,
                     onTapLink: (text, href, title) {
                       if (href != null) {
                         launchUrlString(
-                          resolveChangeLogLink(app.url, href),
+                          resolveChangeLogLink(
+                            app.url,
+                            href,
+                            releaseUrl: app.releaseUrl,
+                          ),
                           mode: LaunchMode.externalApplication,
                         );
                       }
@@ -86,10 +91,24 @@ void showChangeLogDialog(
   );
 }
 
-/// Resolves a (possibly relative) link from release notes against the
-/// origin of the app's source URL.
-String resolveChangeLogLink(String appUrl, String href) {
+/// Resolves a (possibly relative) link from release notes. With a GitHub
+/// release URL, repo-relative links open the file at that release's tag
+/// (`CHANGELOG.md` -> `/blob/<tag>/CHANGELOG.md`, upstream #3470/#3471);
+/// otherwise they resolve against the origin of the app's source URL.
+String resolveChangeLogLink(String appUrl, String href, {String? releaseUrl}) {
   if (href.startsWith('http://') || href.startsWith('https://')) return href;
+  final release = Uri.tryParse(releaseUrl ?? '');
+  final link = Uri.tryParse(href);
+  if (release != null &&
+      release.path.contains('/releases/tag/') &&
+      link != null &&
+      !link.hasScheme) {
+    if (link.hasAuthority || link.path.isEmpty || link.path.startsWith('/')) {
+      return release.resolveUri(link).toString();
+    }
+    return '${release.toString().replaceFirst('/releases/tag/', '/blob/')}'
+        '${Uri(path: '/').resolveUri(link)}';
+  }
   try {
     final uri = Uri.parse(appUrl);
     if (uri.hasScheme && uri.host.isNotEmpty) return '${uri.origin}/$href';
