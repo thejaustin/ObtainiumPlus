@@ -1707,6 +1707,16 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       Navigator.of(context).pop();
     }
 
+    toggleSelectedAppsDisabled() {
+      final disable =
+          selectedApps.where((e) => e.disabled).length != selectedApps.length;
+      AppHaptics.selectionClick();
+      unawaited(
+        appsProvider.setAppsDisabled(selectedApps.map((e) => e.id), disable),
+      );
+      Navigator.of(context).pop();
+    }
+
     showMoreOptionsDialog() {
       return showDialog(
         context: context,
@@ -1726,6 +1736,20 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                       selectedApps.where((element) => element.pinned).isEmpty
                           ? tr('pinToTop')
                           : tr('unpinFromTop'),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+                const Divider(),
+                ScaleTouchWrapper(
+                  hapticOnPressDown: true,
+                  scaleDownFactor: 0.96,
+                  child: TextButton(
+                    onPressed: toggleSelectedAppsDisabled,
+                    child: Text(
+                      selectedApps.every((e) => e.disabled)
+                          ? tr('enableApp')
+                          : tr('disableApp'),
                       textAlign: TextAlign.center,
                     ),
                   ),

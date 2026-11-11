@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -289,6 +291,31 @@ class AppActionsContextMenu {
                             final appsProvider = context.read<AppsProvider>();
                             appInMemory.app.pinned = !appInMemory.app.pinned;
                             appsProvider.saveApps([appInMemory.app]);
+                          },
+                        ),
+                      ),
+                      ScaleTouchWrapper(
+                        hapticOnPressDown: true,
+                        scaleDownFactor: 0.97,
+                        child: ListTile(
+                          leading: Icon(
+                            appInMemory.app.disabled
+                                ? Icons.play_arrow_rounded
+                                : Icons.block_outlined,
+                          ),
+                          title: Text(
+                            appInMemory.app.disabled
+                                ? tr('enableApp')
+                                : tr('disableApp'),
+                          ),
+                          onTap: () {
+                            AppHaptics.selectionClick();
+                            Navigator.pop(context);
+                            unawaited(
+                              context.read<AppsProvider>().toggleAppDisabled(
+                                appInMemory.app.id,
+                              ),
+                            );
                           },
                         ),
                       ),
