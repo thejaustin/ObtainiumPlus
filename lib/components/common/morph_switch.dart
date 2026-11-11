@@ -163,6 +163,9 @@ class _PaintedSwitchState extends State<_PaintedSwitch>
   @override
   void didUpdateWidget(covariant _PaintedSwitch oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.shapeThumb != oldWidget.shapeThumb) {
+      _morph.value = _target ? 1 : 0;
+    }
     if (widget.value != _target) _animateTo(widget.value);
   }
 
@@ -204,13 +207,14 @@ class _PaintedSwitchState extends State<_PaintedSwitch>
       animate: animate,
     );
     _spring(_color, M3Springs.effectsFast, t, animate: animate);
-    if (widget.shapeThumb) {
-      if (_reduceMorphs) {
-        _morph.value = 0; // keep the circle
-      } else {
-        _spring(_morph, M3Springs.spatialFast, t, animate: animate);
-      }
-    }
+    // Always track the target so switching style / reduce-morphs at
+    // runtime never shows a stale shape; only spring it when it is drawn.
+    _spring(
+      _morph,
+      M3Springs.spatialFast,
+      t,
+      animate: animate && widget.shapeThumb && !_reduceMorphs,
+    );
   }
 
   void _setPressed(bool pressed) {
@@ -240,12 +244,15 @@ class _PaintedSwitchState extends State<_PaintedSwitch>
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final enabled = widget.onChanged != null;
+    final reduce = context.select<PlusSettingsProvider, bool>(
+      (p) => p.plusReduceShapeMorphs,
+    );
     final painter = _SwitchPainter(
       pos: _pos,
       press: _press,
       color: _color,
       morph: _morph,
-      shapeThumb: widget.shapeThumb,
+      shapeThumb: widget.shapeThumb && !reduce,
       rtl: _dir < 0,
       trackOff: cs.surfaceContainerHighest,
       trackOn: cs.primary,

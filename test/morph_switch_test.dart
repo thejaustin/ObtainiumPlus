@@ -187,6 +187,65 @@ void main() {
     expect(identical(first, MorphSwitch.thumbMorph), isTrue);
   });
 
+  testWidgets('switching style at runtime never shows a stale thumb shape', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'plusSwitchStyle': SettingsSwitchStyle.expressive.index,
+    });
+    final p = PlusSettingsProvider();
+    await p.initializeSettings(await SharedPreferences.getInstance());
+    var value = false;
+    await tester.pumpWidget(
+      ChangeNotifierProvider<PlusSettingsProvider>.value(
+        value: p,
+        child: MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: StatefulBuilder(
+                builder: (context, setState) => MorphSwitch(
+                  value: value,
+                  onChanged: (v) => setState(() => value = v),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    dynamic painter() => tester
+        .widget<CustomPaint>(
+          find.descendant(
+            of: find.byType(MorphSwitch),
+            matching: find.byType(CustomPaint),
+          ),
+        )
+        .painter;
+
+    // On, then off, in the expressive style.
+    await tester.tap(find.byType(MorphSwitch));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(MorphSwitch));
+    await tester.pumpAndSettle();
+    expect(value, isFalse);
+
+    p.plusSwitchStyle = SettingsSwitchStyle.shapeThumb;
+    await tester.pumpAndSettle();
+    expect(painter().shapeThumb, isTrue);
+    expect((painter().morph as Animation<double>).value, 0.0);
+
+    // Reduce morphs while on, then lift it: the thumb is the "on" shape.
+    p.plusReduceShapeMorphs = true;
+    await tester.pumpAndSettle();
+    expect(painter().shapeThumb, isFalse);
+    await tester.tap(find.byType(MorphSwitch));
+    await tester.pumpAndSettle();
+    p.plusReduceShapeMorphs = false;
+    await tester.pumpAndSettle();
+    expect(painter().shapeThumb, isTrue);
+    expect((painter().morph as Animation<double>).value, 1.0);
+  });
+
   testWidgets('icon badge morphs are cached per shape, not per build', (
     tester,
   ) async {
