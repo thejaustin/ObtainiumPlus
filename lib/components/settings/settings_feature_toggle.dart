@@ -3,6 +3,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:provider/provider.dart';
 
 /// Shared M3E / Obtainium+ icon badge for settings rows (`SwitchListTile` and `ListTile`).
@@ -15,27 +16,31 @@ Widget buildSettingsIconBadge(
   bool active = false,
   Color? accentColor,
 }) {
-  final plusSettings = context.watch<PlusSettingsProvider>();
+  final (isM3E, isCompact, baseRadius) = context
+      .select<PlusSettingsProvider, (bool, bool, double)>(
+        (p) => (
+          p.plusEnableMaterialExpressive,
+          p.plusUseCompactSettings,
+          p.plusOverrideIndividualCornerRadius
+              ? p.plusSettingsCornerRadius
+              : p.plusGlobalCornerRadius,
+        ),
+      );
+  final animDuration = AppMotion.duration(
+    context,
+    const Duration(milliseconds: 200),
+  );
   final colorScheme = Theme.of(context).colorScheme;
-  final isM3E = plusSettings.plusEnableMaterialExpressive;
-  final isCompact = plusSettings.plusUseCompactSettings;
-  final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-      ? plusSettings.plusSettingsCornerRadius
-      : plusSettings.plusGlobalCornerRadius;
   final innerRadius = CardMetrics.inner(CardMetrics.card(baseRadius));
   final badgeSize = isCompact ? 30.0 : 36.0;
   final resolvedAccent = accentColor ?? colorScheme.primary;
 
   return AnimatedScale(
     scale: active ? 1.05 : 1.0,
-    duration: Duration(
-      milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
-    ),
+    duration: animDuration,
     curve: Curves.easeOutCubic,
     child: AnimatedContainer(
-      duration: Duration(
-        milliseconds: plusSettings.plusEnableEnhancedAnimations ? 200 : 0,
-      ),
+      duration: animDuration,
       curve: Curves.easeOutCubic,
       width: badgeSize,
       height: badgeSize,
@@ -78,18 +83,21 @@ Widget buildFeatureToggle<T extends ChangeNotifier>(
 }) {
   return Consumer<T>(
     builder: (context, settings, child) {
-      final plusSettings = context.watch<PlusSettingsProvider>();
+      final isCompact = context.select<PlusSettingsProvider, bool>(
+        (p) => p.plusUseCompactSettings,
+      );
       final plusGatedOff =
           settings is PlusSettingsProvider && !settings.enableAllPlusFeatures;
       if (plusGatedOff) {
         return const SizedBox.shrink();
       }
       final isEnabled = value(settings);
-      final isCompact = plusSettings.plusUseCompactSettings;
 
+      // The switch's onChanged fires toggleOn/toggleOff; a press-down haptic
+      // here as well would buzz twice for one change.
       return ScaleTouchWrapper(
         scaleDownFactor: 0.985,
-        hapticOnPressDown: true,
+        hapticOnPressDown: false,
         child: SwitchListTile.adaptive(
           secondary: buildSettingsIconBadge(context, icon, active: isEnabled),
           title: Text(
