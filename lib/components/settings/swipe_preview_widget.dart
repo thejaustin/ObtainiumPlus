@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:obtainium/models/settings_enums.dart';
@@ -23,42 +24,42 @@ class SwipeActionSpec {
     switch (action) {
       case AppSwipeAction.launch:
         return SwipeActionSpec(
-          label: 'Launch',
+          label: tr('launch'),
           icon: Icons.launch_rounded,
           containerColor: (c) => c.primaryContainer,
           onContainerColor: (c) => c.onPrimaryContainer,
         );
       case AppSwipeAction.update:
         return SwipeActionSpec(
-          label: 'Update',
+          label: tr('update'),
           icon: Icons.system_update_rounded,
           containerColor: (c) => c.tertiaryContainer,
           onContainerColor: (c) => c.onTertiaryContainer,
         );
       case AppSwipeAction.togglePin:
         return SwipeActionSpec(
-          label: 'Pin / Unpin',
+          label: tr('swipeActionPinUnpin'),
           icon: Icons.push_pin_rounded,
           containerColor: (c) => c.secondaryContainer,
           onContainerColor: (c) => c.onSecondaryContainer,
         );
       case AppSwipeAction.share:
         return SwipeActionSpec(
-          label: 'Share',
+          label: tr('share'),
           icon: Icons.share_rounded,
           containerColor: (c) => c.secondaryContainer,
           onContainerColor: (c) => c.onSecondaryContainer,
         );
       case AppSwipeAction.delete:
         return SwipeActionSpec(
-          label: 'Remove',
+          label: tr('remove'),
           icon: Icons.delete_outline_rounded,
           containerColor: (c) => c.errorContainer,
           onContainerColor: (c) => c.onErrorContainer,
         );
       case AppSwipeAction.none:
         return SwipeActionSpec(
-          label: 'None',
+          label: tr('none'),
           icon: Icons.close_rounded,
           containerColor: (c) => c.surfaceContainerHighest,
           onContainerColor: (c) => c.onSurfaceVariant,
@@ -252,22 +253,22 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
             runSpacing: 6,
             children: [
               Text(
-                'Interactive Preview',
+                tr('swipeInteractivePreview'),
                 style: theme.textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
               SegmentedButton<bool>(
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: false,
-                    label: Text('Auto'),
+                    label: Text(tr('auto')),
                     icon: Icon(Icons.play_circle_outline, size: 16),
                   ),
                   ButtonSegment(
                     value: true,
-                    label: Text('Sandbox'),
+                    label: Text(tr('swipeSandboxModeSandbox')),
                     icon: Icon(Icons.touch_app_outlined, size: 16),
                   ),
                 ],

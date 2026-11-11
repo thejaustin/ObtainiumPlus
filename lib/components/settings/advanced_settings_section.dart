@@ -35,10 +35,12 @@ class AdvancedSettingsSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -60,7 +62,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     ];
 
     final List<Widget> dataGroup = [
-      if (_matches(tr('importExport')))
+      if (_matches(tr('importExport'), desc: tr('importExportDesc')))
         ListTile(
           leading: buildSettingsIconBadge(
             context,
@@ -68,16 +70,14 @@ class AdvancedSettingsSection extends StatelessWidget {
             active: true,
           ),
           title: Text(tr('importExport')),
-          subtitle: const Text(
-            'Backup, restore, import, or export settings and apps',
-          ),
+          subtitle: Text(tr('importExportDesc')),
           trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
           onTap: () {
             AppHaptics.selectionClick();
             pushRoute(context, const ImportExportPage());
           },
         ),
-      if (_matches(tr('autoExportOnChanges'), isAdvanced: true))
+      if (_matches(tr('autoExportOnChanges'), desc: tr('autoExportOnChangesDescription'), isAdvanced: true))
         _buildSettingsToggle(
           context,
           icon: Icons.backup_outlined,
@@ -87,7 +87,7 @@ class AdvancedSettingsSection extends StatelessWidget {
           onChanged: (s, v) => s.autoExportOnChanges = v,
         ),
       if (plusFeaturesEnabled &&
-          _matches(tr('backupEncryption'), isAdvanced: true))
+          _matches(tr('backupEncryption'), desc: tr('backupEncryptionDescription'), isAdvanced: true))
         Consumer<PlusSettingsProvider>(
           builder: (context, plusSettings, child) {
             return SwitchListTile.adaptive(
@@ -119,7 +119,7 @@ class AdvancedSettingsSection extends StatelessWidget {
     ];
 
     final List<Widget> devGroup = [
-      if (_matches(tr('showAdvancedSettings')))
+      if (_matches(tr('showAdvancedSettings'), desc: tr('showAdvancedSettingsDescription')))
         Consumer<PlusSettingsProvider>(
           builder: (context, plusSettings, child) {
             return SwitchListTile.adaptive(
@@ -138,7 +138,7 @@ class AdvancedSettingsSection extends StatelessWidget {
             );
           },
         ),
-      if (_matches(tr('enableDeepLogging')))
+      if (_matches(tr('enableDeepLogging'), desc: tr('enableDeepLoggingDescription')))
         _buildSettingsToggle(
           context,
           icon: Icons.bug_report_outlined,
@@ -155,7 +155,7 @@ class AdvancedSettingsSection extends StatelessWidget {
         settingId: 'github-creds',
         helpUrl:
             'https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token',
-        visible: _matches(tr('plusGithubToken')),
+        visible: _matches(tr('plusGithubToken'), desc: tr('plusGithubTokenDescription')),
       ),
       _buildTokenConfigTile(
         context,
@@ -165,9 +165,9 @@ class AdvancedSettingsSection extends StatelessWidget {
         settingId: 'gitlab-creds',
         helpUrl:
             'https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html',
-        visible: _matches(tr('plusGitlabToken')),
+        visible: _matches(tr('plusGitlabToken'), desc: tr('plusGitlabTokenDescription')),
       ),
-      if (_matches(tr('dontShowTrackOnlyWarnings')))
+      if (_matches(tr('dontShowTrackOnlyWarnings'), desc: tr('dontShowTrackOnlyWarningsDescription')))
         _buildSettingsToggle(
           context,
           icon: Icons.report_off_outlined,
@@ -176,7 +176,7 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: (s) => s.hideTrackOnlyWarning,
           onChanged: (s, v) => s.hideTrackOnlyWarning = v,
         ),
-      if (_matches(tr('dontShowAPKOriginWarnings')))
+      if (_matches(tr('dontShowAPKOriginWarnings'), desc: tr('dontShowAPKOriginWarningsDescription')))
         _buildSettingsToggle(
           context,
           icon: Icons.security_outlined,
@@ -185,7 +185,7 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: (s) => s.hideAPKOriginWarning,
           onChanged: (s, v) => s.hideAPKOriginWarning = v,
         ),
-      if (_matches(tr('enableContextualTips')))
+      if (_matches(tr('enableContextualTips'), desc: tr('enableContextualTipsDescription')))
         _buildSettingsToggle(
           context,
           icon: Icons.lightbulb_outline,
@@ -197,7 +197,7 @@ class AdvancedSettingsSection extends StatelessWidget {
             if (v) s.resetTips();
           },
         ),
-      if (_matches(tr('highlightTouchTargets'), isAdvanced: true))
+      if (_matches(tr('highlightTouchTargets'), desc: tr('highlightTouchTargetsDescription'), isAdvanced: true))
         _buildSettingsToggle(
           context,
           icon: Icons.touch_app_outlined,
@@ -206,7 +206,7 @@ class AdvancedSettingsSection extends StatelessWidget {
           value: (s) => s.highlightTouchTargets,
           onChanged: (s, v) => s.highlightTouchTargets = v,
         ),
-      if (_matches(tr('factoryReset')))
+      if (_matches(tr('factoryReset'), desc: tr('factoryResetDescription')))
         ListTile(
           leading: buildSettingsIconBadge(
             context,
@@ -238,10 +238,10 @@ class AdvancedSettingsSection extends StatelessWidget {
       children: [
         if (hasPlus)
           ExpressiveSettingsGroup(
-            title: isSearching ? null : 'Obtainium+ & Interface',
+            title: isSearching ? null : tr('advancedPlusGroupTitle'),
             description: isSearching
                 ? null
-                : 'Configure Obtainium+ enhancements and settings layout',
+                : tr('advancedPlusGroupDesc'),
             persistKey: 'advanced_plus',
             icon: Icons.stars_rounded,
             isExpandable: !isSearching,
@@ -254,7 +254,7 @@ class AdvancedSettingsSection extends StatelessWidget {
             title: isSearching ? null : tr('importExport'),
             description: isSearching
                 ? null
-                : 'Backup, restore, and data management',
+                : tr('advancedDataGroupDesc'),
             persistKey: 'advanced_data',
             icon: Icons.backup_rounded,
             isExpandable: !isSearching,
@@ -461,7 +461,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
       if (!mounted) return;
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final login = data['login']?.toString() ?? 'Authenticated';
+        final login = data['login']?.toString() ?? tr('githubAuthenticated');
         final remaining = response.headers['x-ratelimit-remaining'] ?? '5000';
         final limit = response.headers['x-ratelimit-limit'] ?? '5000';
         setState(() {
@@ -505,7 +505,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
   Future<void> _startOAuthFlow() async {
     setState(() {
       _isPolling = true;
-      _statusMessage = 'Requesting device code from GitHub...';
+      _statusMessage = tr('githubOAuthRequestingCode');
       _userCode = null;
       _verificationUri = null;
     });
@@ -532,7 +532,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           _userCode = userCode;
           _verificationUri = verificationUri;
           _statusMessage =
-              'Open the verification link, enter the code, and approve access.';
+              tr('githubOAuthEnterCode');
         });
 
         _pollTimer?.cancel();
@@ -544,14 +544,14 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
         setState(() {
           _isPolling = false;
           _statusMessage =
-              'OAuth Device Flow unavailable (${response.statusCode}). Please use the "Generate Token on GitHub" button above.';
+              tr('githubOAuthUnavailable', args: ['${response.statusCode}']);
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _isPolling = false;
-        _statusMessage = 'Connection error: $e. Please use manual PAT above.';
+        _statusMessage = tr('githubOAuthConnectionError', args: ['$e']);
       });
     }
   }
@@ -592,7 +592,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
             _controller.text = token;
             _isPolling = false;
             _userCode = null;
-            _statusMessage = 'Signed in successfully! Click Save below.';
+            _statusMessage = tr('githubOAuthSignedIn');
           });
           AppHaptics.selectionClick();
         } else if (data['error'] == 'authorization_pending') {
@@ -603,7 +603,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
           setState(() {
             _isPolling = false;
             _statusMessage =
-                'OAuth session ended: ${data['error_description'] ?? data['error'] ?? 'Unknown'}';
+                tr('githubOAuthSessionEnded', args: ['${data['error_description'] ?? data['error'] ?? tr('unknown')}']);
           });
         }
       }
@@ -637,7 +637,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                     );
                   },
                   icon: const Icon(Icons.public_rounded, size: 18),
-                  label: const Text('Public Repos (No Scope / Safest)'),
+                  label: Text(tr('githubTokenPublicRepos')),
                 ),
               ),
               ScaleTouchWrapper(
@@ -652,7 +652,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                     );
                   },
                   icon: const Icon(Icons.lock_outline_rounded, size: 18),
-                  label: const Text('Private Repos ("repo" Scope)'),
+                  label: Text(tr('githubTokenPrivateRepos')),
                 ),
               ),
             ],
@@ -696,7 +696,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                       child: OutlinedButton.icon(
                         onPressed: _startOAuthFlow,
                         icon: const Icon(Icons.devices_rounded),
-                        label: const Text('Connect via Device Flow'),
+                        label: Text(tr('githubConnectDeviceFlow')),
                       ),
                     ),
                   ),
@@ -744,7 +744,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                           );
                         },
                         icon: const Icon(Icons.open_in_browser),
-                        label: const Text('Open Verification Page'),
+                        label: Text(tr('githubOpenVerificationPage')),
                       ),
                     ),
                   if (_isPolling) ...[

@@ -33,10 +33,12 @@ class TroubleshootingSection extends StatefulWidget {
 class _TroubleshootingSectionState extends State<TroubleshootingSection> {
   int _devModeTapCount = 0;
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(widget.showAdvancedSettings ?? false)) return false;
     if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(widget.searchQuery!.toLowerCase());
+    final q = widget.searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -70,7 +72,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           title: tr('usageAccessSettings'),
           onTap: () => AppInstallService.openUsageAccessSettings(),
         ),
-      if (_matches(tr('appLogs')))
+      if (_matches(tr('appLogs'), desc: tr('appLogsDescription')))
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
@@ -83,7 +85,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      if (_matches(tr('statistics')))
+      if (_matches(tr('statistics'), desc: tr('statisticsDescription')))
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
@@ -96,7 +98,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      if (_matches(tr('viewChangelog')))
+      if (_matches(tr('viewChangelog'), desc: tr('viewChangelogDescription')))
         ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: ListTile(
@@ -109,7 +111,7 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
             },
           ),
         ),
-      if (_matches(tr('plusShowChangelogAfterUpdate')))
+      if (_matches(tr('plusShowChangelogAfterUpdate'), desc: tr('plusShowChangelogAfterUpdateDescription')))
         SwitchListTile.adaptive(
           secondary: buildSettingsIconBadge(
             context,
@@ -143,15 +145,15 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
               if (_devModeTapCount >= 7) {
                 plusSettings.plusDeveloperMode = true;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Developer & Diagnostics options enabled!'),
+                  SnackBar(
+                    content: Text(tr('devOptionsEnabled')),
                   ),
                 );
               } else if (_devModeTapCount > 2) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      'You are ${7 - _devModeTapCount} steps away from being a developer.',
+                      tr('devOptionsStepsAway', args: ['${7 - _devModeTapCount}']),
                     ),
                     duration: const Duration(milliseconds: 500),
                   ),

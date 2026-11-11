@@ -30,10 +30,12 @@ class AppsViewSettingsSection extends StatelessWidget {
     this.subCategory,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -43,9 +45,9 @@ class AppsViewSettingsSection extends StatelessWidget {
     final plusFeaturesEnabled = plusSettings.enableAllPlusFeatures;
 
     List<Widget> categoryWidgets = [
-      if (!isSearching || _matches('category'))
+      if (!isSearching || (_matches('category') || _matches(tr('category'))))
         CategoryEditorSelector(showLabelWhenNotEmpty: false),
-      if (_matches(tr('groupByCategory')))
+      if (_matches(tr('groupByCategory'), desc: tr('groupByCategoryDescription')))
         buildFeatureToggle<ViewSettingsProvider>(
           context,
           icon: Icons.category_outlined,
@@ -54,7 +56,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.groupByCategory,
           onChanged: (s, v) => onSetState(() => s.groupByCategory = v),
         ),
-      if (_matches(tr('collapseCategoriesByDefault')))
+      if (_matches(tr('collapseCategoriesByDefault'), desc: tr('collapseCategoriesByDefaultDescription')))
         buildFeatureToggle<ViewSettingsProvider>(
           context,
           icon: Icons.unfold_less_outlined,
@@ -64,22 +66,22 @@ class AppsViewSettingsSection extends StatelessWidget {
           onChanged: (s, v) =>
               onSetState(() => s.categoriesCollapsedByDefault = v),
         ),
-      if (_matches(tr('iconPosition')))
+      if (_matches(tr('iconPosition'), desc: tr('iconPositionDescription')))
         _buildCategoryIconPositionDropdown(context),
-      if (_matches(tr('iconCount'))) _buildCategoryIconCountSlider(context),
+      if (_matches(tr('iconCount'), desc: tr('iconCountDescription'))) _buildCategoryIconCountSlider(context),
     ];
 
     List<Widget> viewWidgets = [
-      if (_matches(tr('showWebInAppView')) ||
-          _matches('default app details tab') ||
-          _matches('description style') ||
-          _matches('webpage'))
+      if (_matches(tr('showWebInAppView'), desc: tr('showWebInAppViewDescription')) ||
+          (_matches('default app details tab') || _matches(tr('searchKeywordDefaultAppDetailsTab'))) ||
+          (_matches('description style') || _matches(tr('searchKeywordDescriptionStyle'))) ||
+          (_matches('webpage') || _matches(tr('descriptionStyleWebpage'))))
         _buildAppDescriptionStyleSelector(context),
-      if (_matches(tr('updatesPlacement')) ||
-          _matches(tr('pinUpdates')) ||
+      if (_matches(tr('updatesPlacement'), desc: tr('updatesPlacementDescription')) ||
+          _matches(tr('pinUpdates'), desc: tr('pinUpdatesDescription')) ||
           _matches(tr('recentUpdates')))
         _buildUpdatesPlacement(context),
-      if (_matches(tr('buryNonInstalled')))
+      if (_matches(tr('buryNonInstalled'), desc: tr('buryNonInstalledDescription')))
         buildFeatureToggle<ViewSettingsProvider>(
           context,
           icon: Icons.archive_outlined,
@@ -89,20 +91,20 @@ class AppsViewSettingsSection extends StatelessWidget {
           onChanged: (s, v) => onSetState(() => s.buryNonInstalled = v),
         ),
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
-      if (_matches(tr('listDensity'))) _buildDensityDropdown(context),
-      if (_matches(tr('appBarStyle'))) _buildAppBarStyleDropdown(context),
+      if (_matches(tr('listDensity'), desc: tr('listDensityDescription'))) _buildDensityDropdown(context),
+      if (_matches(tr('appBarStyle'), desc: tr('appBarStyleDescription'))) _buildAppBarStyleDropdown(context),
       _buildGridSettings(context),
     ];
 
     final bool showFabMenuGrid =
         plusFeaturesEnabled &&
-        (_matches(tr('fabShowAddByUrl')) ||
-            _matches(tr('fabShowGithubStarred')) ||
-            _matches(tr('fabShowGithubPersonalRepos')) ||
-            _matches(tr('fabShowImportInstalled')));
+        (_matches(tr('fabShowAddByUrl'), desc: tr('fabShowAddByUrlDescription')) ||
+            _matches(tr('fabShowGithubStarred'), desc: tr('fabShowGithubStarredDescription')) ||
+            _matches(tr('fabShowGithubPersonalRepos'), desc: tr('fabShowGithubPersonalReposDescription')) ||
+            _matches(tr('fabShowImportInstalled'), desc: tr('fabShowImportInstalledDescription')));
 
     List<Widget> sortingWidgets = [
-      if (_matches(tr('plusQuickFilters')))
+      if (_matches(tr('plusQuickFilters'), desc: tr('plusQuickFiltersDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.filter_list_rounded,
@@ -111,7 +113,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableQuickFilters,
           onChanged: (s, v) => onSetState(() => s.plusEnableQuickFilters = v),
         ),
-      if (_matches(tr('plusEnableTags')))
+      if (_matches(tr('plusEnableTags'), desc: tr('plusEnableTagsDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.label_important_outline,
@@ -120,7 +122,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableTags,
           onChanged: (s, v) => onSetState(() => s.plusEnableTags = v),
         ),
-      if (plusSettings.plusEnableTags && _matches(tr('plusShowTagsInList')))
+      if (plusSettings.plusEnableTags && _matches(tr('plusShowTagsInList'), desc: tr('plusShowTagsInListDescription')))
         Padding(
           padding: const EdgeInsets.only(left: 16.0),
           child: buildFeatureToggle<PlusSettingsProvider>(
@@ -132,7 +134,7 @@ class AppsViewSettingsSection extends StatelessWidget {
             onChanged: (s, v) => onSetState(() => s.plusShowTagsInList = v),
           ),
         ),
-      if (_matches(tr('plusAdvancedSorting'), isAdvanced: true))
+      if (_matches(tr('plusAdvancedSorting'), desc: tr('plusAdvancedSortingDescription'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.sort_rounded,
@@ -145,15 +147,15 @@ class AppsViewSettingsSection extends StatelessWidget {
     ];
 
     final bool showDisplayGrid =
-        _matches(tr('showAuthor')) ||
-        _matches(tr('showVersion')) ||
-        _matches(tr('showDate')) ||
-        _matches(tr('plusEnableSwipeActions'));
+        _matches(tr('showAuthor'), desc: tr('showAuthorDescription')) ||
+        _matches(tr('showVersion'), desc: tr('showVersionDescription')) ||
+        _matches(tr('showDate'), desc: tr('showDateDescription')) ||
+        _matches(tr('plusEnableSwipeActions'), desc: tr('plusEnableSwipeActionsDescription'));
 
     final bool showSearchGrid =
-        _matches(tr('showAppBarSearch')) ||
-        _matches(tr('showDashboardSearch')) ||
-        _matches(tr('showFloatingSearch'));
+        _matches(tr('showAppBarSearch'), desc: tr('showAppBarSearchDescription')) ||
+        _matches(tr('showDashboardSearch'), desc: tr('showDashboardSearchDescription')) ||
+        _matches(tr('showFloatingSearch'), desc: tr('showFloatingSearchDescription'));
 
     final showLayout = subCategory == null || subCategory == 'layout';
     final showTiles = subCategory == null || subCategory == 'tiles';
@@ -179,18 +181,18 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
       if (showLayout &&
           plusFeaturesEnabled &&
-          (_matches(tr('plusEnableBottomNavBar')) ||
-              _matches(tr('plusFloatingNavBar')) ||
-              _matches(tr('plusHideBottomBarOnScroll')) ||
-              _matches(tr('plusSettingsBottomNavBar')) ||
-              _matches(tr('plusEnableFAB')) ||
-              _matches(tr('plusFloatingActionBar')) ||
-              _matches(tr('plusShowStatusHub'))))
+          (_matches(tr('plusEnableBottomNavBar'), desc: tr('plusEnableBottomNavBarDescription')) ||
+              _matches(tr('plusFloatingNavBar'), desc: tr('plusFloatingNavBarDescription')) ||
+              _matches(tr('plusHideBottomBarOnScroll'), desc: tr('plusHideBottomBarOnScrollDescription')) ||
+              _matches(tr('plusSettingsBottomNavBar'), desc: tr('plusSettingsBottomNavBarDescription')) ||
+              _matches(tr('plusEnableFAB'), desc: tr('plusEnableFABDescription')) ||
+              _matches(tr('plusFloatingActionBar'), desc: tr('plusFloatingActionBarDescription')) ||
+              _matches(tr('plusShowStatusHub'), desc: tr('plusShowStatusHubDescription'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('settingsAppearanceLayoutNav'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('plusEnableBottomNavBar')))
+            if (_matches(tr('plusEnableBottomNavBar'), desc: tr('plusEnableBottomNavBarDescription')))
               (
                 icon: Icons.navigation_rounded,
                 label: tr('plusEnableBottomNavBar'),
@@ -199,7 +201,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusEnableBottomNavBar = v),
               ),
-            if (_matches(tr('plusFloatingNavBar')))
+            if (_matches(tr('plusFloatingNavBar'), desc: tr('plusFloatingNavBarDescription')))
               (
                 icon: Icons.dock_rounded,
                 label: tr('plusFloatingNavBar'),
@@ -207,7 +209,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.plusFloatingNavBar,
                 setValue: (s, v) => onSetState(() => s.plusFloatingNavBar = v),
               ),
-            if (_matches(tr('plusHideBottomBarOnScroll')))
+            if (_matches(tr('plusHideBottomBarOnScroll'), desc: tr('plusHideBottomBarOnScrollDescription')))
               (
                 icon: Icons.unfold_more_rounded,
                 label: tr('plusHideBottomBarOnScroll'),
@@ -216,7 +218,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusHideBottomBarOnScroll = v),
               ),
-            if (_matches(tr('plusEnableFAB')))
+            if (_matches(tr('plusEnableFAB'), desc: tr('plusEnableFABDescription')))
               (
                 icon: Icons.add_circle_outline_rounded,
                 label: tr('plusEnableFAB'),
@@ -224,7 +226,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.plusEnableFAB,
                 setValue: (s, v) => onSetState(() => s.plusEnableFAB = v),
               ),
-            if (_matches(tr('plusFloatingActionBar')))
+            if (_matches(tr('plusFloatingActionBar'), desc: tr('plusFloatingActionBarDescription')))
               (
                 icon: Icons.smart_button_rounded,
                 label: tr('plusFloatingActionBar'),
@@ -233,7 +235,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusFloatingActionBar = v),
               ),
-            if (_matches(tr('plusShowStatusHub')))
+            if (_matches(tr('plusShowStatusHub'), desc: tr('plusShowStatusHubDescription')))
               (
                 icon: Icons.info_outline_rounded,
                 label: tr('plusShowStatusHub'),
@@ -245,17 +247,17 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
       if (showLayout &&
           plusFeaturesEnabled &&
-          (_matches(tr('plusModernAddAppPage')) ||
-              _matches(tr('plusHomeDashboard')) ||
-              _matches(tr('plusHeaderContextSubtitle')) ||
-              _matches(tr('plusExpressiveFilterChips')) ||
-              _matches(tr('plusResponsiveLayout'), isAdvanced: true) ||
-              _matches(tr('plusCategoryReorder'), isAdvanced: true)))
+          (_matches(tr('plusModernAddAppPage'), desc: tr('plusModernAddAppPageDescription')) ||
+              _matches(tr('plusHomeDashboard'), desc: tr('plusHomeDashboardDescription')) ||
+              _matches(tr('plusHeaderContextSubtitle'), desc: tr('plusHeaderContextSubtitleDescription')) ||
+              _matches(tr('plusExpressiveFilterChips'), desc: tr('plusExpressiveFilterChipsDescription')) ||
+              _matches(tr('plusResponsiveLayout'), desc: tr('plusResponsiveLayoutDescription'), isAdvanced: true) ||
+              _matches(tr('plusCategoryReorder'), desc: tr('plusCategoryReorderDescription'), isAdvanced: true)))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('settingsLayoutMode'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('plusModernAddAppPage')))
+            if (_matches(tr('plusModernAddAppPage'), desc: tr('plusModernAddAppPageDescription')))
               (
                 icon: Icons.add_box_outlined,
                 label: tr('plusModernAddAppPage'),
@@ -264,7 +266,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusEnableModernAddAppPage = v),
               ),
-            if (_matches(tr('plusHomeDashboard')))
+            if (_matches(tr('plusHomeDashboard'), desc: tr('plusHomeDashboardDescription')))
               (
                 icon: Icons.dashboard_customize_outlined,
                 label: tr('plusHomeDashboard'),
@@ -273,7 +275,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusEnableHomeDashboard = v),
               ),
-            if (_matches(tr('plusHeaderContextSubtitle')))
+            if (_matches(tr('plusHeaderContextSubtitle'), desc: tr('plusHeaderContextSubtitleDescription')))
               (
                 icon: Icons.subtitles_rounded,
                 label: tr('plusHeaderContextSubtitle'),
@@ -282,7 +284,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusHeaderContextSubtitle = v),
               ),
-            if (_matches(tr('plusExpressiveFilterChips')))
+            if (_matches(tr('plusExpressiveFilterChips'), desc: tr('plusExpressiveFilterChipsDescription')))
               (
                 icon: Icons.filter_alt_rounded,
                 label: tr('plusExpressiveFilterChips'),
@@ -291,7 +293,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusExpressiveFilterChips = v),
               ),
-            if (_matches(tr('plusResponsiveLayout'), isAdvanced: true))
+            if (_matches(tr('plusResponsiveLayout'), desc: tr('plusResponsiveLayoutDescription'), isAdvanced: true))
               (
                 icon: Icons.tablet_android_rounded,
                 label: tr('plusResponsiveLayout'),
@@ -300,7 +302,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusEnableResponsiveAppLayout = v),
               ),
-            if (_matches(tr('plusCategoryReorder'), isAdvanced: true))
+            if (_matches(tr('plusCategoryReorder'), desc: tr('plusCategoryReorderDescription'), isAdvanced: true))
               (
                 icon: Icons.drag_indicator_rounded,
                 label: tr('plusCategoryReorder'),
@@ -312,12 +314,12 @@ class AppsViewSettingsSection extends StatelessWidget {
           ],
         ),
       if (showLayout &&
-          (_matches(tr('showFilterChips')) || _matches(tr('showAppCount'))))
+          (_matches(tr('showFilterChips'), desc: tr('showFilterChipsDescription')) || _matches(tr('showAppCount'), desc: tr('showAppCountDescription'))))
         GenericBooleanControlGrid<ViewSettingsProvider>(
           title: tr('filterChips'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('showFilterChips')))
+            if (_matches(tr('showFilterChips'), desc: tr('showFilterChipsDescription')))
               (
                 icon: Icons.filter_list_outlined,
                 label: tr('showFilterChips'),
@@ -326,7 +328,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.displayShowFilterChips = v),
               ),
-            if (_matches(tr('showAppCount')))
+            if (_matches(tr('showAppCount'), desc: tr('showAppCountDescription')))
               (
                 icon: Icons.summarize_outlined,
                 label: tr('showAppCount'),
@@ -341,7 +343,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           title: tr('fabMenuItems'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('fabShowAddByUrl')))
+            if (_matches(tr('fabShowAddByUrl'), desc: tr('fabShowAddByUrlDescription')))
               (
                 icon: Icons.link_outlined,
                 label: tr('fabShowAddByUrl'),
@@ -349,7 +351,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.plusFabShowAddByUrl,
                 setValue: (s, v) => onSetState(() => s.plusFabShowAddByUrl = v),
               ),
-            if (_matches(tr('fabShowGithubStarred')))
+            if (_matches(tr('fabShowGithubStarred'), desc: tr('fabShowGithubStarredDescription')))
               (
                 icon: Icons.star_border_rounded,
                 label: tr('fabShowGithubStarred'),
@@ -358,7 +360,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusFabShowGithubStarred = v),
               ),
-            if (_matches(tr('fabShowGithubPersonalRepos')))
+            if (_matches(tr('fabShowGithubPersonalRepos'), desc: tr('fabShowGithubPersonalReposDescription')))
               (
                 icon: Icons.person_outline_rounded,
                 label: tr('fabShowGithubPersonalRepos'),
@@ -367,7 +369,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusFabShowGithubPersonalRepos = v),
               ),
-            if (_matches(tr('fabShowImportInstalled')))
+            if (_matches(tr('fabShowImportInstalled'), desc: tr('fabShowImportInstalledDescription')))
               (
                 icon: Icons.install_mobile_outlined,
                 label: tr('fabShowImportInstalled'),
@@ -391,15 +393,15 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (showTiles && !isSearching) _buildAppTileStylePreview(context),
       if (showTiles &&
           plusFeaturesEnabled &&
-          (_matches(tr('plusGridSquareTiles')) ||
-              _matches(tr('plusGridCardlessStyle')) ||
-              _matches(tr('plusGridAmbientIconHalo')) ||
-              _matches(tr('plusGridShowSourceBadge'))))
+          (_matches(tr('plusGridSquareTiles'), desc: tr('plusGridSquareTilesDescription')) ||
+              _matches(tr('plusGridCardlessStyle'), desc: tr('plusGridCardlessStyleDescription')) ||
+              _matches(tr('plusGridAmbientIconHalo'), desc: tr('plusGridAmbientIconHaloDescription')) ||
+              _matches(tr('plusGridShowSourceBadge'), desc: tr('plusGridShowSourceBadgeDescription'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('plusLauncherGridStyle'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('plusGridSquareTiles')))
+            if (_matches(tr('plusGridSquareTiles'), desc: tr('plusGridSquareTilesDescription')))
               (
                 icon: Icons.crop_square_rounded,
                 label: tr('plusGridSquareTiles'),
@@ -407,7 +409,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.plusGridSquareTiles,
                 setValue: (s, v) => onSetState(() => s.plusGridSquareTiles = v),
               ),
-            if (_matches(tr('plusGridCardlessStyle')))
+            if (_matches(tr('plusGridCardlessStyle'), desc: tr('plusGridCardlessStyleDescription')))
               (
                 icon: Icons.border_clear_rounded,
                 label: tr('plusGridCardlessStyle'),
@@ -416,7 +418,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusGridCardlessStyle = v),
               ),
-            if (_matches(tr('plusGridAmbientIconHalo')))
+            if (_matches(tr('plusGridAmbientIconHalo'), desc: tr('plusGridAmbientIconHaloDescription')))
               (
                 icon: Icons.flare_rounded,
                 label: tr('plusGridAmbientIconHalo'),
@@ -425,7 +427,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusGridAmbientIconHalo = v),
               ),
-            if (_matches(tr('plusGridShowSourceBadge')))
+            if (_matches(tr('plusGridShowSourceBadge'), desc: tr('plusGridShowSourceBadgeDescription')))
               (
                 icon: Icons.badge_outlined,
                 label: tr('plusGridShowSourceBadge'),
@@ -441,7 +443,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           title: tr('appTileDisplay'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('showAuthor')))
+            if (_matches(tr('showAuthor'), desc: tr('showAuthorDescription')))
               (
                 icon: Icons.person_outline,
                 label: tr('showAuthor'),
@@ -449,7 +451,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.displayShowAuthor,
                 setValue: (s, v) => onSetState(() => s.displayShowAuthor = v),
               ),
-            if (_matches(tr('showVersion')))
+            if (_matches(tr('showVersion'), desc: tr('showVersionDescription')))
               (
                 icon: Icons.code,
                 label: tr('showVersion'),
@@ -457,7 +459,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 getValue: (s) => s.displayShowVersion,
                 setValue: (s, v) => onSetState(() => s.displayShowVersion = v),
               ),
-            if (_matches(tr('showDate')))
+            if (_matches(tr('showDate'), desc: tr('showDateDescription')))
               (
                 icon: Icons.calendar_today_outlined,
                 label: tr('showDate'),
@@ -469,15 +471,15 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
       if (showTiles &&
           plusFeaturesEnabled &&
-          (_matches(tr('plusPinnedBorderAccent')) ||
-              _matches(tr('plusCategoryAccentRibbon')) ||
-              _matches(tr('plusUpdateExpressiveBadge')) ||
-              _matches(tr('plusIconRimBorder'))))
+          (_matches(tr('plusPinnedBorderAccent'), desc: tr('plusPinnedBorderAccentDescription')) ||
+              _matches(tr('plusCategoryAccentRibbon'), desc: tr('plusCategoryAccentRibbonDescription')) ||
+              _matches(tr('plusUpdateExpressiveBadge'), desc: tr('plusUpdateExpressiveBadgeDescription')) ||
+              _matches(tr('plusIconRimBorder'), desc: tr('plusIconRimBorderDescription'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('plusAppTileStyling'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('plusPinnedBorderAccent')))
+            if (_matches(tr('plusPinnedBorderAccent'), desc: tr('plusPinnedBorderAccentDescription')))
               (
                 icon: Icons.push_pin_outlined,
                 label: tr('plusPinnedBorderAccent'),
@@ -486,7 +488,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusPinnedBorderAccent = v),
               ),
-            if (_matches(tr('plusCategoryAccentRibbon')))
+            if (_matches(tr('plusCategoryAccentRibbon'), desc: tr('plusCategoryAccentRibbonDescription')))
               (
                 icon: Icons.color_lens_outlined,
                 label: tr('plusCategoryAccentRibbon'),
@@ -495,7 +497,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusCategoryAccentRibbon = v),
               ),
-            if (_matches(tr('plusUpdateExpressiveBadge')))
+            if (_matches(tr('plusUpdateExpressiveBadge'), desc: tr('plusUpdateExpressiveBadgeDescription')))
               (
                 icon: Icons.downloading_rounded,
                 label: tr('plusUpdateExpressiveBadge'),
@@ -504,7 +506,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusUpdateExpressiveBadge = v),
               ),
-            if (_matches(tr('plusIconRimBorder')))
+            if (_matches(tr('plusIconRimBorder'), desc: tr('plusIconRimBorderDescription')))
               (
                 icon: Icons.crop_square_rounded,
                 label: tr('plusIconRimBorder'),
@@ -516,8 +518,8 @@ class AppsViewSettingsSection extends StatelessWidget {
         ),
       if (showLayout &&
           plusFeaturesEnabled &&
-          (_matches(tr('plusEnableSwipeActions')) ||
-              _matches(tr('plusEnableModernAppListTile'))))
+          (_matches(tr('plusEnableSwipeActions'), desc: tr('plusEnableSwipeActionsDescription')) ||
+              _matches(tr('plusEnableModernAppListTile'), desc: tr('plusEnableModernAppListTileDescription'))))
         GenericBooleanControlGrid<PlusSettingsProvider>(
           title: tr('plusEnableSwipeActions'),
           embedded: subCategory == null,
@@ -545,7 +547,7 @@ class AppsViewSettingsSection extends StatelessWidget {
           title: tr('searchSettings'),
           embedded: subCategory == null,
           settings: [
-            if (_matches(tr('showAppBarSearch')))
+            if (_matches(tr('showAppBarSearch'), desc: tr('showAppBarSearchDescription')))
               (
                 icon: Icons.vertical_align_top_rounded,
                 label: tr('showAppBarSearch'),
@@ -554,7 +556,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                 setValue: (s, v) =>
                     onSetState(() => s.plusShowAppBarSearch = v),
               ),
-            if (_matches(tr('showDashboardSearch')))
+            if (_matches(tr('showDashboardSearch'), desc: tr('showDashboardSearchDescription')))
               (
                 icon: Icons.dashboard_outlined,
                 label: tr('showDashboardSearch'),
@@ -933,8 +935,8 @@ class AppsViewSettingsSection extends StatelessWidget {
         final isCompact = context.select<PlusSettingsProvider, bool>(
           (s) => s.plusUseCompactSettings,
         );
-        bool showDisplay = _matches(tr('gridCategoryDisplay'));
-        bool showCols = _matches(tr('gridColumns'));
+        bool showDisplay = _matches(tr('gridCategoryDisplay'), desc: tr('gridCategoryDisplayDescription'));
+        bool showCols = _matches(tr('gridColumns'), desc: tr('gridColumnsDescription'));
 
         return Column(
           children: [
@@ -1164,7 +1166,7 @@ class AppsViewSettingsSection extends StatelessWidget {
                         ? VisualDensity.compact
                         : VisualDensity.standard,
                   ),
-                  segments: const [
+                  segments: [
                     ButtonSegment(
                       value: AppDescriptionStyle.obtainiumPlus,
                       label: Text('Obtainium+'),
@@ -1172,22 +1174,22 @@ class AppsViewSettingsSection extends StatelessWidget {
                     ),
                     ButtonSegment(
                       value: AppDescriptionStyle.githubReadme,
-                      label: Text('README'),
+                      label: Text(tr('descriptionStyleReadme')),
                       icon: Icon(Icons.code_rounded),
                     ),
                     ButtonSegment(
                       value: AppDescriptionStyle.playStore,
-                      label: Text('Play Store'),
+                      label: Text(tr('playStore')),
                       icon: Icon(Icons.shop_two_outlined),
                     ),
                     ButtonSegment(
                       value: AppDescriptionStyle.liveWebpage,
-                      label: Text('Webpage'),
+                      label: Text(tr('descriptionStyleWebpage')),
                       icon: Icon(Icons.language_rounded),
                     ),
                     ButtonSegment(
                       value: AppDescriptionStyle.rawMarkdown,
-                      label: Text('Raw'),
+                      label: Text(tr('descriptionStyleRaw')),
                       icon: Icon(Icons.text_snippet_outlined),
                     ),
                   ],

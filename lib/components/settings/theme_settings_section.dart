@@ -40,10 +40,12 @@ class ThemeSettingsSection extends StatelessWidget {
     this.subCategory,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -54,7 +56,7 @@ class ThemeSettingsSection extends StatelessWidget {
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
 
     List<Widget> advancedWidgets = [
-      if (_matches(tr('glassmorphismUI')))
+      if (_matches(tr('glassmorphismUI'), desc: tr('glassmorphismUIDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.blur_on_rounded,
@@ -63,8 +65,8 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableGlassmorphism,
           onChanged: (s, v) => s.plusEnableGlassmorphism = v,
         ),
-      if (_matches(tr('plusCollapsibleAbout')) ||
-          _matches(tr('plusPopupSlider'), isAdvanced: true))
+      if (_matches(tr('plusCollapsibleAbout'), desc: tr('plusCollapsibleAboutDescription')) ||
+          _matches(tr('plusPopupSlider'), desc: tr('plusPopupSliderDescription'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.unfold_less_rounded,
@@ -73,7 +75,7 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnablePopupSlider,
           onChanged: (s, v) => s.plusEnablePopupSlider = v,
         ),
-      if (_matches(tr('plusExpressiveProgress')))
+      if (_matches(tr('plusExpressiveProgress'), desc: tr('plusExpressiveProgressDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.auto_mode_rounded,
@@ -82,7 +84,7 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableExpressiveProgress,
           onChanged: (s, v) => s.plusEnableExpressiveProgress = v,
         ),
-      if (_matches(tr('plusBouncyPhysics')))
+      if (_matches(tr('plusBouncyPhysics'), desc: tr('plusBouncyPhysicsDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.unfold_more_rounded,
@@ -91,7 +93,7 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableBouncyPhysics,
           onChanged: (s, v) => s.plusEnableBouncyPhysics = v,
         ),
-      if (_matches(tr('plusOneHandedMode')))
+      if (_matches(tr('plusOneHandedMode'), desc: tr('plusOneHandedModeDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.swipe_down_rounded,
@@ -100,7 +102,7 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableOneHandedMode,
           onChanged: (s, v) => s.plusEnableOneHandedMode = v,
         ),
-      if (_matches(tr('plusTopUILayout'), isAdvanced: true))
+      if (_matches(tr('plusTopUILayout'), desc: tr('plusTopUILayoutDescription'), isAdvanced: true))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.vertical_align_top_rounded,
@@ -114,18 +116,18 @@ class ThemeSettingsSection extends StatelessWidget {
     List<Widget> themeWidgets = [
       if ((subCategory != 'theme' || isSearching) &&
           (_matches(tr('designSystemThemeStyle')) ||
-              _matches(tr('obtainiumPlusTheme')) ||
-              _matches(tr('materialExpressiveTheme')) ||
-              _matches(tr('plusMaterialExpressive'))))
+              _matches(tr('obtainiumPlusTheme'), desc: tr('obtainiumPlusThemeDescription')) ||
+              _matches(tr('materialExpressiveTheme'), desc: tr('materialExpressiveThemeDescription')) ||
+              _matches(tr('plusMaterialExpressive'), desc: tr('plusMaterialExpressiveDescription'))))
         _buildDesignSystemSelector(context),
-      if (_matches(tr('theme')))
+      if (_matches(tr('theme'), desc: tr('themeDescription')))
         plusSettings.plusSettingsUseVisualThemePicker
             ? const VisualThemeSelector(embedded: true)
             : _buildThemeSegmented(context),
       if (_matches(tr('followSystemThemeExplanation')))
         _buildFollowSystemExplanation(context),
-      if (_matches(tr('themePresets'))) _buildThemePresets(context),
-      if (_matches(tr('useBlackTheme')) &&
+      if (_matches(tr('themePresets'), desc: tr('themePresetsDescription'))) _buildThemePresets(context),
+      if (_matches(tr('useBlackTheme'), desc: tr('useBlackThemeDescription')) &&
           !plusSettings.plusSettingsUseVisualThemePicker &&
           themeSettings.theme != ThemeSettings.light)
         buildFeatureToggle<ThemeSettingsProvider>(
@@ -139,8 +141,8 @@ class ThemeSettingsSection extends StatelessWidget {
       _buildMaterialYouToggle(context),
       _buildMatchSystemMaterialStyleToggle(context),
       if (_matches(tr('themeStyle'))) _buildThemeStyleDropdown(context),
-      if (_matches(tr('navigationLabels')) ||
-          _matches(tr('plusNavBarAlwaysShowLabels')))
+      if (_matches(tr('navigationLabels'), desc: tr('navigationLabelsDescription')) ||
+          _matches(tr('plusNavBarAlwaysShowLabels'), desc: tr('plusNavBarAlwaysShowLabelsDescription')))
         _buildNavigationLabelSegmented(context),
       if (_matches(tr('colour')) || _matches(tr('selectColourShade')))
         _buildColorPicker(context),
@@ -207,7 +209,7 @@ class ThemeSettingsSection extends StatelessWidget {
     ];
 
     List<Widget> animationWidgets = [
-      if (_matches(tr('plusEnhancedAnimations')))
+      if (_matches(tr('plusEnhancedAnimations'), desc: tr('plusEnhancedAnimationsDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.auto_awesome_motion_rounded,
@@ -216,7 +218,7 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableEnhancedAnimations,
           onChanged: (s, v) => s.plusEnableEnhancedAnimations = v,
         ),
-      if (_matches(tr('disablePageTransitions'), isAdvanced: true))
+      if (_matches(tr('disablePageTransitions'), desc: tr('disablePageTransitionsDescription'), isAdvanced: true))
         buildFeatureToggle<BehaviorSettingsProvider>(
           context,
           icon: Icons.animation_outlined,
@@ -225,7 +227,7 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.disablePageTransitions,
           onChanged: (s, v) => s.disablePageTransitions = v,
         ),
-      if (_matches(tr('reversePageTransitions')) &&
+      if (_matches(tr('reversePageTransitions'), desc: tr('reversePageTransitionsDescription')) &&
           !behaviorSettings.disablePageTransitions)
         buildFeatureToggle<BehaviorSettingsProvider>(
           context,
@@ -257,17 +259,15 @@ class ThemeSettingsSection extends StatelessWidget {
         ),
       if (plusSettings.enableAllPlusFeatures &&
           plusSettings.plusDeveloperMode &&
-          _matches('third party loading indicator'))
+          (_matches('third party loading indicator') || _matches(tr('searchKeywordLoadingIndicator'))))
         SwitchListTile.adaptive(
           secondary: buildSettingsIconBadge(
             context,
             Icons.refresh_rounded,
             active: plusSettings.plusDevUseThirdPartyLoadingIndicator,
           ),
-          title: Text('Use Wavy Loading Spinner'),
-          subtitle: const Text(
-            'Replaces the M3E morphing loading indicator with the wavy ring for comparison.',
-          ),
+          title: Text(tr('plusUseWavyLoadingSpinner')),
+          subtitle: Text(tr('plusUseWavyLoadingSpinnerDesc')),
           value: plusSettings.plusDevUseThirdPartyLoadingIndicator,
           onChanged: (val) {
             val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
@@ -290,7 +290,7 @@ class ThemeSettingsSection extends StatelessWidget {
           labelBuilder: (v) => '${v.toInt()}px',
           onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
         ),
-      if (_matches(tr('plusOverrideIndividualCornerRadius')))
+      if (_matches(tr('plusOverrideIndividualCornerRadius'), desc: tr('plusOverrideIndividualCornerRadiusDescription')))
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.tune_rounded,

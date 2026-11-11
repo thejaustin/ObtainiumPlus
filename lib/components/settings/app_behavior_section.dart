@@ -27,10 +27,12 @@ class AppBehaviorSection extends StatelessWidget {
     this.showAdvancedSettings,
   });
 
-  bool _matches(String text, {bool isAdvanced = false}) {
+  bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(showAdvancedSettings ?? false)) return false;
     if (searchQuery == null || searchQuery!.isEmpty) return true;
-    return text.toLowerCase().contains(searchQuery!.toLowerCase());
+    final q = searchQuery!.toLowerCase();
+    return text.toLowerCase().contains(q) ||
+        (desc != null && desc.toLowerCase().contains(q));
   }
 
   @override
@@ -39,12 +41,12 @@ class AppBehaviorSection extends StatelessWidget {
     final plusSettings = context.watch<PlusSettingsProvider>();
 
     final hasHaptics =
-        _matches(tr('enableHapticFeedback')) ||
-        _matches(tr('enableUndoForAppRemoval'));
+        _matches(tr('enableHapticFeedback'), desc: tr('enableHapticFeedbackDescription')) ||
+        _matches(tr('enableUndoForAppRemoval'), desc: tr('enableUndoForAppRemovalDescription'));
     final hasSwipe =
-        _matches(tr('enableSwipeGestures')) ||
-        _matches(tr('swipeRightAction')) ||
-        _matches(tr('swipeLeftAction'));
+        _matches(tr('enableSwipeGestures'), desc: tr('enableSwipeGesturesDescription')) ||
+        _matches(tr('swipeRightAction'), desc: tr('swipeRightActionDescription')) ||
+        _matches(tr('swipeLeftAction'), desc: tr('swipeLeftActionDescription'));
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -54,7 +56,7 @@ class AppBehaviorSection extends StatelessWidget {
             ? GenericBooleanControlGrid<BehaviorSettingsProvider>(
                 title: tr('interactionAndHaptics'),
                 settings: [
-                  if (_matches(tr('enableHapticFeedback')))
+                  if (_matches(tr('enableHapticFeedback'), desc: tr('enableHapticFeedbackDescription')))
                     (
                       icon: Icons.vibration_outlined,
                       label: tr('enableHapticFeedback'),
@@ -62,7 +64,7 @@ class AppBehaviorSection extends StatelessWidget {
                       getValue: (s) => s.enableHapticFeedback,
                       setValue: (s, v) => s.enableHapticFeedback = v,
                     ),
-                  if (_matches(tr('enableUndoForAppRemoval')))
+                  if (_matches(tr('enableUndoForAppRemoval'), desc: tr('enableUndoForAppRemovalDescription')))
                     (
                       icon: Icons.undo_outlined,
                       label: tr('enableUndoForAppRemoval'),
@@ -83,7 +85,7 @@ class AppBehaviorSection extends StatelessWidget {
                 isExpandable: !isSearching,
                 initiallyExpanded: true,
                 children: [
-                  if (_matches(tr('enableSwipeGestures')))
+                  if (_matches(tr('enableSwipeGestures'), desc: tr('enableSwipeGesturesDescription')))
                     _buildFeatureToggle(
                       context,
                       icon: Icons.swipe_outlined,
@@ -92,8 +94,8 @@ class AppBehaviorSection extends StatelessWidget {
                       value: (s) => s.enableSwipeGestures,
                       onChanged: (s, v) => s.enableSwipeGestures = v,
                     ),
-                  if (_matches(tr('swipeRightAction')) ||
-                      _matches(tr('swipeLeftAction')))
+                  if (_matches(tr('swipeRightAction'), desc: tr('swipeRightActionDescription')) ||
+                      _matches(tr('swipeLeftAction'), desc: tr('swipeLeftActionDescription')))
                     Consumer<BehaviorSettingsProvider>(
                       builder: (context, settings, child) {
                         return AnimatedSize(
@@ -110,12 +112,12 @@ class AppBehaviorSection extends StatelessWidget {
                                     children: [
                                       const SwipePreviewWidget(),
                                       const Divider(height: 1),
-                                      if (_matches(tr('swipeRightAction')))
+                                      if (_matches(tr('swipeRightAction'), desc: tr('swipeRightActionDescription')))
                                         _buildSwipeActionDropdown(
                                           context,
                                           isRight: true,
                                         ),
-                                      if (_matches(tr('swipeLeftAction')))
+                                      if (_matches(tr('swipeLeftAction'), desc: tr('swipeLeftActionDescription')))
                                         _buildSwipeActionDropdown(
                                           context,
                                           isRight: false,
@@ -399,10 +401,10 @@ class AppBehaviorSection extends StatelessWidget {
 
   Widget? _buildUsageAccessGroup(BuildContext context, bool isSearching) {
     if (isSearching &&
-        !_matches(tr('appLaunchAndUsage')) &&
+        !_matches(tr('appLaunchAndUsage'), desc: tr('appLaunchAndUsageDesc')) &&
         !_matches(tr('usageAccessSettings')) &&
-        !_matches('usage') &&
-        !_matches('screen time')) {
+        !(_matches('usage') || _matches(tr('searchKeywordUsage'))) &&
+        !(_matches('screen time') || _matches(tr('searchKeywordScreenTime')))) {
       return null;
     }
     return Column(
@@ -426,7 +428,7 @@ class AppBehaviorSection extends StatelessWidget {
   }
 
   Widget? _buildLibraryStorageGroup(BuildContext context, bool isSearching) {
-    final hasRemove = _matches(tr('removeOnExternalUninstall'));
+    final hasRemove = _matches(tr('removeOnExternalUninstall'), desc: tr('removeOnExternalUninstallDescription'));
     if (!hasRemove) return null;
 
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
@@ -462,8 +464,8 @@ class AppBehaviorSection extends StatelessWidget {
         if (!settings.enableAllPlusFeatures) return const SizedBox.shrink();
 
         final hasDiscover =
-            _matches(tr('plusDiscover')) ||
-            _matches(tr('plusDiscoverSuggestions'));
+            _matches(tr('plusDiscover'), desc: tr('plusDiscoverDescription')) ||
+            _matches(tr('plusDiscoverSuggestions'), desc: tr('plusDiscoverSuggestionsDescription'));
         final hasBanWarnings = _matches(
           tr('plusEnableBanWarnings'),
           isAdvanced: true,
@@ -478,7 +480,7 @@ class AppBehaviorSection extends StatelessWidget {
               GenericBooleanControlGrid<PlusSettingsProvider>(
                 title: tr('plusDiscover'),
                 settings: [
-                  if (_matches(tr('plusDiscover')))
+                  if (_matches(tr('plusDiscover'), desc: tr('plusDiscoverDescription')))
                     (
                       icon: Icons.explore_outlined,
                       label: tr('plusDiscover'),
@@ -486,7 +488,7 @@ class AppBehaviorSection extends StatelessWidget {
                       getValue: (s) => s.plusEnableDiscover,
                       setValue: (s, v) => s.plusEnableDiscover = v,
                     ),
-                  if (_matches(tr('plusDiscoverSuggestions')))
+                  if (_matches(tr('plusDiscoverSuggestions'), desc: tr('plusDiscoverSuggestionsDescription')))
                     (
                       icon: Icons.auto_awesome_outlined,
                       label: tr('plusDiscoverSuggestions'),
