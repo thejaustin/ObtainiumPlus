@@ -2083,11 +2083,19 @@ class AppsProvider with ChangeNotifier {
       }
     }
     // FOURTH, DISABLE VERSION DETECTION IF ENABLED AND THE REPORTED/REAL INSTALLED VERSIONS ARE NOT STANDARDIZED
-    if (installedInfo != null &&
-        versionDetectionIsStandard &&
-        !isVersionDetectionPossible(
-          AppInMemory(app, null, installedInfo, null),
-        )) {
+    // Not in versionCode mode, where the formats differ on purpose
+    // (upstream #3215).
+    if (shouldDisableVersionDetection(
+      installed: installedInfo != null,
+      versionDetectionIsStandard: versionDetectionIsStandard,
+      useVersionCodeAsOSVersion:
+          app.additionalSettings['useVersionCodeAsOSVersion'] == true,
+      versionDetectionPossible:
+          installedInfo != null &&
+          isVersionDetectionPossible(
+            AppInMemory(app, null, installedInfo, null),
+          ),
+    )) {
       app.additionalSettings['versionDetection'] = false;
       app.installedVersion = app.latestVersion;
       logs.add('Could not reconcile version formats for: ${app.id}');

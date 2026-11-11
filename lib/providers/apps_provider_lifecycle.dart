@@ -83,6 +83,23 @@ Future<void> writeCachedAppIconSafely(File file, Uint8List bytes) async {
   }
 }
 
+/// Whether install-status reconciliation should turn version detection off.
+///
+/// When the user opts into using the app's versionCode as the OS-detected
+/// version, the tracked version and the OS value are intentionally different
+/// formats; disabling version detection in that mode makes the per-app toggle
+/// appear to reset. Leave the user's choice intact in that case.
+bool shouldDisableVersionDetection({
+  required bool installed,
+  required bool versionDetectionIsStandard,
+  required bool useVersionCodeAsOSVersion,
+  required bool versionDetectionPossible,
+}) =>
+    installed &&
+    versionDetectionIsStandard &&
+    !useVersionCodeAsOSVersion &&
+    !versionDetectionPossible;
+
 /// Uses [bulk] when it contains [key], otherwise confirms with [lookup].
 ///
 /// The bulk package list can be incomplete (for example when the platform
