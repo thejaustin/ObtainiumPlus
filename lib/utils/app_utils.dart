@@ -7,16 +7,17 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/settings_provider.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:provider/provider.dart';
 
 /// Push a route respecting the user's transition preferences:
-///   - disablePageTransitions → instant jump
+///   - disablePageTransitions or motion off (AppMotion) → instant jump
 ///   - reversePageTransitions → right-to-left (slide back)
 ///   - animationSpeedMultiplier → scales duration
 ///   - plusEnableMaterialExpressive → scaled spatial transition with emphasized curves
 Future<T?> pushRoute<T>(BuildContext context, Widget page) {
   final settings = context.read<SettingsProvider>();
-  if (settings.disablePageTransitions) {
+  if (settings.disablePageTransitions || !AppMotion.enabledNow(context)) {
     return Navigator.of(context).push<T>(
       PageRouteBuilder<T>(
         pageBuilder: (context, _, _) => page,

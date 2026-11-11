@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/motion.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -149,7 +150,10 @@ class SettingsLayoutSelector extends StatelessWidget {
                 expansionAnimationStyle: AnimationStyle(
                   curve: Easing.emphasizedDecelerate,
                   reverseCurve: Easing.emphasizedAccelerate,
-                  duration: const Duration(milliseconds: 280),
+                  duration: AppMotion.duration(
+                    context,
+                    const Duration(milliseconds: 280),
+                  ),
                 ),
                 tilePadding: EdgeInsets.symmetric(
                   horizontal: isCompact ? 14 : 16,

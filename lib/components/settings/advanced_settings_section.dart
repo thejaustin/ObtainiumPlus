@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/motion.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:easy_localization/easy_localization.dart';
@@ -675,7 +676,10 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
               expansionAnimationStyle: AnimationStyle(
                 curve: Easing.emphasizedDecelerate,
                 reverseCurve: Easing.emphasizedAccelerate,
-                duration: const Duration(milliseconds: 280),
+                duration: AppMotion.duration(
+                  context,
+                  const Duration(milliseconds: 280),
+                ),
               ),
               tilePadding: EdgeInsets.zero,
               leading: const Icon(Icons.login_rounded, size: 20),

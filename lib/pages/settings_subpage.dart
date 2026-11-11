@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/motion.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -90,7 +91,9 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
       Scrollable.ensureVisible(
         targetContext,
         alignment: 0.5,
-        duration: const Duration(milliseconds: 240),
+        duration: AppMotion.enabledNow(context)
+            ? const Duration(milliseconds: 240)
+            : Duration.zero,
         curve: Curves.easeOutCubic,
       );
     }

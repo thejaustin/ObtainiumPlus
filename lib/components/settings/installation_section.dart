@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/motion.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
@@ -607,7 +608,10 @@ class _InstallationSectionState extends State<InstallationSection>
                         if (chip != null) ...[
                           const SizedBox(width: 6),
                           AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 200),
+                            duration: AppMotion.duration(
+                              context,
+                              const Duration(milliseconds: 200),
+                            ),
                             child: KeyedSubtree(
                               key: ValueKey(chip.hashCode),
                               child: chip,

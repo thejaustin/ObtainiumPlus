@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
@@ -157,7 +158,10 @@ class ThemeSettingsSection extends StatelessWidget {
             expansionAnimationStyle: AnimationStyle(
               curve: Easing.emphasizedDecelerate,
               reverseCurve: Easing.emphasizedAccelerate,
-              duration: const Duration(milliseconds: 280),
+              duration: AppMotion.duration(
+                context,
+                const Duration(milliseconds: 280),
+              ),
             ),
             leading: buildSettingsIconBadge(context, Icons.science_outlined),
             title: Text(tr('advancedTheming')),

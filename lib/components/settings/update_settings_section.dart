@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -1212,7 +1213,10 @@ class _RunBgUpdateCheckNowButtonState
           ),
           // Cross-fade so the label and spinner swap without a size jump.
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 200),
+            duration: AppMotion.duration(
+              context,
+              const Duration(milliseconds: 200),
+            ),
             child: _isRunning
                 ? const SizedBox(
                     key: ValueKey('running'),
