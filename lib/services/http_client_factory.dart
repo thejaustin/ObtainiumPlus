@@ -6,7 +6,10 @@
 // reuses connections across an update check instead of opening a new
 // TCP+TLS connection per request. dart:io stays for the cases Cronet can't
 // handle: hosts pinned by fingerprint, "allow insecure" (Cronet cannot skip
-// TLS verification), and as a fallback when Cronet fails to start.
+// TLS verification), as a fallback when Cronet fails to start, and when
+// Android blocks executable memory (GrapheneOS "Dynamic code loading via
+// memory"): cronet_http's FFI trampolines need it and crash at launch
+// without it, which no try/catch can recover from (upstream #3442).
 
 import 'dart:io';
 
@@ -15,6 +18,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/services/dcl_support.dart';
 import 'package:obtainium/utils/source_utils.dart' show createHttpClient;
 
 typedef HttpClientResolver =
@@ -33,6 +37,7 @@ class HttpClientFactory {
 
   static http.Client? _cronet;
   static bool _cronetUnavailable = false;
+  static bool _loggedDclRestricted = false;
   static final Map<String, Future<http.Client>> _ioClients = {};
 
   /// Google Play endpoints keep the dart:io client from [createHttpClient],
@@ -100,6 +105,13 @@ class HttpClientFactory {
   static http.Client? _tryCronet() {
     if (!Platform.isAndroid || _cronetUnavailable) return null;
     if (_cronet != null) return _cronet;
+    if (DclSupport.isExecmemRestricted) {
+      if (!_loggedDclRestricted) {
+        _loggedDclRestricted = true;
+        AppLogger.info('HTTP: Android memory DCL restricted; using dart:io');
+      }
+      return null;
+    }
     try {
       final engine = CronetEngine.build(
         // Sources fronted by Cloudflare fingerprint the user agent; keep the
