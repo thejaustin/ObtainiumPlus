@@ -7,6 +7,18 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-11 — Claude: Settings M3E Build Merged (phases 2–4), Deep Links
+
+- **Merge 097f1388e** brings in four stacked branches built by the wf_15c6d4f0-e5b workflow (110 files, +12.9k/−5.2k; suite 887 tests green; analyze 0):
+  - `wt/m3e-kit`: SettingsTokens/SettingsSection/SettingsRow/SpringExpandable/ConnectedChoiceGroup/MorphSwitch, M3Springs, AppHaptics intensity + native channel (`performHaptic`/`isSystemHapticsEnabled` in MainActivity). New plus keys all default-off/preserving: plusSettingsGroupStyle=card, Outer/InnerRadius 16/4, plusSwitchStyle=classic, plusIconMorph*, plusReduceShapeMorphs, plusHapticIntensity=standard, plusHapticFollowSystem, plusNativeHaptics. material_new_shapes 1.0.0 added.
+  - `wt/upstream-rest`: disable apps (#3375), per-app install method, category exclusion from checks, GitHub archived/hidden-release health signals, DCL cert-store setting + one-time dialog, shadowed AppsProvider extension methods deleted.
+  - `wt/m3e-ia` (Phase 2): five sections defined once in `settings_sections.dart` (chips/dock/NavigationBar/hosted bar/search all read it); `settings_tab_content.dart` builds tab bodies and lists subpage rows inline during search; new `motion_haptics_section.dart` and Settings page subpage; notifications live beside update checks; `settings_tree_test` asserts every rendered key appears exactly once and is searchable.
+  - `wt/m3e-extras` (Phase 4 previews, off by default): plusSettingsPredictiveBack (SettingsPageRoute; `enableOnBackInvokedCallback` deliberately NOT added to the manifest — on Android 13–15 it would change app-wide back handling; preview works on 16+), plusSettingsSearchJump (jump + secondaryContainer pulse; new AppMotion.effectsSlow), plusSettingsLiveSummaries.
+  - User decisions honoured: everything new is opt-in + "(preview)"; segmented corners default 16/4 dp (M3E list spec) with sliders.
+- **Deep links (user report: ShizuStore/ObtainX buttons broken):** `parseObtainiumDeepLink` (lib/utils/deep_link_parser.dart) decodes percent-encoded app/apps/add payloads, keeps unencoded ?/# inside payloads, tolerates literal %, case-insensitive action. Wired in home.dart; 11 tests. (First pass 79c48eb7f, replaced by the parser in 25f8cb454.)
+- **Workflow lesson:** a resumed workflow relays the user's newest message to agents as the overriding request — one reorganise agent pivoted to deep links because of that. Resume only after the user's latest message matches the workflow's task (or expect the pivot).
+- **Pending:** two review agents (correctness + UX lenses) on merge 097f1388e; fix findings, then push. Device pass of the new settings still needed.
+
 ## 2026-11-10/11 — Claude: Upstream Audit Follow-Through, Settings M3E Plan, Phase 1
 
 - **Upstream audit** (`docs/upstream-sync-audit-2026-11.md`, `scripts/dev/upstream-audit.py`). The script only scores code that exists at upstream's tip and skips dead or shadowed fork files. Several upstream fixes had been ported into code that never runs. Fixed in the live code:
