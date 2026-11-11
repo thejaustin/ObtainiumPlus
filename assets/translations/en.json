@@ -1813,5 +1813,7 @@
   "libraryAndStorage": "Library & Storage Management",
   "libraryAndStorageDesc": "Manage tracked apps lifecycle and automatic cleanup",
   "appLaunchAndUsage": "App Launch & Usage Recency",
-  "appLaunchAndUsageDesc": "Track foreground screen time and sort apps by last used"
+  "appLaunchAndUsageDesc": "Track foreground screen time and sort apps by last used",
+  "excludedCategoriesFromChecks": "Skip update checks for categories",
+  "excludedCategoriesFromChecksDescription": "Apps in the chosen categories are not checked for updates"
 }
