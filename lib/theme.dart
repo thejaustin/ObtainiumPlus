@@ -9,17 +9,20 @@ const double connectedTileBigRadius = 24;
 /// Corner radius for the inner (joined) corners of a connected tile run.
 const double connectedTileSmallRadius = 6;
 
+/// Corners for one tile in a connected run: [outer] on the run's ends,
+/// [inner] (capped at [outer]) where tiles join. The defaults are the
+/// classic 24/6 look; the segmented settings style passes its own radii.
 BorderRadius positionalTileRadius({
   required bool isFirst,
   required bool isLast,
+  double outer = connectedTileBigRadius,
+  double inner = connectedTileSmallRadius,
 }) {
+  final o = outer < 0 ? 0.0 : outer;
+  final i = inner.clamp(0.0, o);
   return BorderRadius.vertical(
-    top: Radius.circular(
-      isFirst ? connectedTileBigRadius : connectedTileSmallRadius,
-    ),
-    bottom: Radius.circular(
-      isLast ? connectedTileBigRadius : connectedTileSmallRadius,
-    ),
+    top: Radius.circular(isFirst ? o : i),
+    bottom: Radius.circular(isLast ? o : i),
   );
 }
 
