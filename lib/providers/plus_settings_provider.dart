@@ -454,8 +454,30 @@ class PlusSettingsProvider with ChangeNotifier {
     AppHaptics.watchSystemSetting(plusHapticFollowSystem);
   }
 
+  /// Settings-page extras (previews, all off by default).
+  /// Predictive back (gesture pops) on settings subpages.
+  bool get plusSettingsPredictiveBack =>
+      _getBool('plusSettingsPredictiveBack', defaultValue: false);
+  set plusSettingsPredictiveBack(bool val) =>
+      _setBool('plusSettingsPredictiveBack', val);
+
+  /// Tapping a search result jumps to its row and highlights it.
+  bool get plusSettingsSearchJump =>
+      _getBool('plusSettingsSearchJump', defaultValue: false);
+  set plusSettingsSearchJump(bool val) =>
+      _setBool('plusSettingsSearchJump', val);
+
+  /// Look & motion hub cards show the current values.
+  bool get plusSettingsLiveSummaries =>
+      _getBool('plusSettingsLiveSummaries', defaultValue: false);
+  set plusSettingsLiveSummaries(bool val) =>
+      _setBool('plusSettingsLiveSummaries', val);
+
   /// Writes every expressive-kit option's default explicitly.
   void resetExpressiveKit() {
+    plusSettingsPredictiveBack = false;
+    plusSettingsSearchJump = false;
+    plusSettingsLiveSummaries = false;
     plusSettingsGroupStyle = SettingsGroupStyle.card;
     plusSettingsGroupOuterRadius = groupOuterRadiusDefault;
     plusSettingsGroupInnerRadius = groupInnerRadiusDefault;

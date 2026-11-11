@@ -205,6 +205,53 @@ class SettingsPageSection extends StatelessWidget {
         ),
     ];
 
+    Widget extra(
+      IconData icon,
+      String key,
+      bool Function(PlusSettingsProvider) value,
+      void Function(PlusSettingsProvider, bool) onChanged,
+    ) => buildFeatureToggle<PlusSettingsProvider>(
+      context,
+      icon: icon,
+      title: _preview(key),
+      subtitle: tr('${key}Desc'),
+      value: value,
+      onChanged: onChanged,
+      hideWhenPlusOff: false,
+    );
+    final extraWidgets = <Widget>[
+      if (_matches(
+        _preview('settingsPredictiveBack'),
+        desc: tr('settingsPredictiveBackDesc'),
+      ))
+        extra(
+          Icons.swipe_left_alt_rounded,
+          'settingsPredictiveBack',
+          (s) => s.plusSettingsPredictiveBack,
+          (s, v) => s.plusSettingsPredictiveBack = v,
+        ),
+      if (_matches(
+        _preview('settingsSearchJump'),
+        desc: tr('settingsSearchJumpDesc'),
+      ))
+        extra(
+          Icons.manage_search_rounded,
+          'settingsSearchJump',
+          (s) => s.plusSettingsSearchJump,
+          (s, v) => s.plusSettingsSearchJump = v,
+        ),
+      if (_matches(
+        _preview('settingsLiveSummaries'),
+        desc: tr('settingsLiveSummariesDesc'),
+      ))
+        extra(
+          Icons.notes_rounded,
+          'settingsLiveSummaries',
+          (s) => s.plusSettingsLiveSummaries,
+          (s, v) => s.plusSettingsLiveSummaries = v,
+        ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -222,6 +269,14 @@ class SettingsPageSection extends StatelessWidget {
             persistKey: 'look.settingsGroups',
             icon: Icons.view_list_rounded,
             children: groupWidgets,
+          ),
+        if (plus.enableAllPlusFeatures && extraWidgets.isNotEmpty)
+          ExpressiveSettingsGroup(
+            title: isSearching ? null : _preview('settingsExtrasGroup'),
+            description: isSearching ? null : tr('expressiveKitGroupDesc'),
+            persistKey: 'look.settingsExtras',
+            icon: Icons.science_outlined,
+            children: extraWidgets,
           ),
       ],
     );

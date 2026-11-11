@@ -1939,5 +1939,19 @@
   "settingsAccountsTokensDesc": "Access tokens for higher API rate limits and private repositories",
   "settingsGroupWarningsTips": "Warnings & tips",
   "settingsGroupDeveloper": "Developer",
-  "settingsGroupReset": "Reset"
+  "settingsGroupReset": "Reset",
+  "settingsPredictiveBack": "Predictive back",
+  "settingsPredictiveBackDesc": "Gesture back on settings pages previews the page underneath. The back button keeps the usual slide.",
+  "settingsSearchJump": "Search jumps to the setting",
+  "settingsSearchJumpDesc": "Tapping a search result opens its section, scrolls to the row and highlights it. Switches in results do not toggle while this is on.",
+  "settingsLiveSummaries": "Live summaries",
+  "settingsLiveSummariesDesc": "Look & motion cards show the current values, such as corner size and animation speed.",
+  "settingsExtrasGroup": "Settings page extras",
+  "hubSummaryHaptics": "Haptics: {}",
+  "hubSummarySpeed": "Speed {}x",
+  "hubSummaryGroupsSegmented": "Segmented {}/{} dp",
+  "hubSummaryCards": "Cards",
+  "hubSummaryHomeDp": "Home {}dp",
+  "hubSummarySettingsDp": "Settings {}dp",
+  "hubSummaryAnimOff": "Animations off"
 }
