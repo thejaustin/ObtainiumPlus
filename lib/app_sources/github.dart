@@ -901,6 +901,41 @@ class GitHub extends AppSource {
         );
         if (targetRelease != null) break;
       }
+      // The list holds at most 100 releases. A repo that ships many pre-releases can push its
+      // latest stable release off that page, so with pre-releases excluded nothing qualified
+      // and the app couldn't be added ("Could not find a suitable release"). Ask GitHub for the
+      // latest stable release directly and run it through the same filters.
+      if (targetRelease == null &&
+          !includePrereleases &&
+          latestRelease == null &&
+          Uri.parse(requestUrl).path.endsWith('/releases')) {
+        final uri = Uri.parse(requestUrl);
+        final Response latestRes = await _sourceRequestWithAuthFallback(
+          uri.replace(query: null, path: '${uri.path}/latest').toString(),
+          additionalSettings,
+        );
+        if (latestRes.statusCode == 200) {
+          final latest = jsonDecode(latestRes.body);
+          if (latest is Map<String, dynamic>) {
+            for (final int age in minAgeDays > 0 ? [minAgeDays, 0] : [0]) {
+              targetRelease = _selectGitHubTargetRelease(
+                releases: [latest],
+                fallbackToOlderReleases: fallbackToOlderReleases,
+                includePrereleases: includePrereleases,
+                regexFilter: regexFilter,
+                regexNotesFilter: regexNotesFilter,
+                includeZips: includeZips,
+                includeTarballs: includeTarballs,
+                useLatestAssetDateAsReleaseDate: useLatestAssetDateAsReleaseDate,
+                minAgeDays: age,
+                additionalSettings: additionalSettings,
+                sourceConfigSettingValues: sourceConfigSettingValues,
+              );
+              if (targetRelease != null) break;
+            }
+          }
+        }
+      }
       if (targetRelease == null) {
         throw NoReleasesError();
       }
