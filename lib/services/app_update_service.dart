@@ -411,7 +411,8 @@ class AppUpdateService {
     List<String> appIds = apps.keys.toList();
     for (int i = 0; i < appIds.length; i++) {
       App? app = apps[appIds[i]]?.app;
-      if (app == null) continue;
+      // Disabled apps stay in the library but are never offered or installed.
+      if (app == null || app.disabled) continue;
       bool isCandidate = false;
       if (app.installedVersion == null) {
         if (!installedOnly &&
@@ -447,6 +448,7 @@ class AppUpdateService {
     final newInstalls = <String>[];
     for (final entry in apps.values) {
       final app = entry.app;
+      if (app.disabled) continue;
       if (app.installedVersion == null) {
         if (app.additionalSettings['trackOnly'] != true &&
             app.latestVersion.isNotEmpty) {

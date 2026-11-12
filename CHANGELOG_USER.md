@@ -30,7 +30,7 @@
 ### Improved
 - Settings are reorganised into five clear sections — Look & motion, Home & library, Updates & notifications, Install & safety, Advanced — with every setting in exactly one place and rarely used options on a "More…" page per section. Searching still finds everything, including rows on subpages.
 - New preview options (all off by default, under Look & motion and the Settings page options): a segmented grouped-rows style with adjustable corner rounding, three new switch styles (Expressive, Shape thumb, Icon is the switch), icon shape morphing on toggles, haptic intensity with an option to follow the system's haptics or use Android's native ticks, predictive back on settings pages, search results that jump to their row, and live current-value summaries on the Look & motion cards.
-- Apps can be disabled without removing them: a disabled app stays in your library but is skipped by update checks and shown dimmed (from Obtainium).
+- Apps can be disabled without removing them: a disabled app stays in your library, is marked "Disabled", and is skipped by update checks, "Update all" and background installs (from Obtainium).
 - Each app can use its own install method, overriding the global one (from Obtainium).
 - Categories can be excluded from update checks (from Obtainium).
 - Update health also flags archived repositories and releases hidden by your filters (from Obtainium).
