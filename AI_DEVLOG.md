@@ -17,7 +17,11 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - User decisions honoured: everything new is opt-in + "(preview)"; segmented corners default 16/4 dp (M3E list spec) with sliders.
 - **Deep links (user report: ShizuStore/ObtainX buttons broken):** `parseObtainiumDeepLink` (lib/utils/deep_link_parser.dart) decodes percent-encoded app/apps/add payloads, keeps unencoded ?/# inside payloads, tolerates literal %, case-insensitive action. Wired in home.dart; 11 tests. (First pass 79c48eb7f, replaced by the parser in 25f8cb454.)
 - **Workflow lesson:** a resumed workflow relays the user's newest message to agents as the overriding request — one reorganise agent pivoted to deep links because of that. Resume only after the user's latest message matches the workflow's task (or expect the pivot).
-- **Pending:** two review agents (correctness + UX lenses) on merge 097f1388e; fix findings, then push. Device pass of the new settings still needed.
+- **Review (done inline; the review agents died with the session three times):**
+  - Defaults verified: every new key preserves today's behaviour; `resetExpressiveKit()` only runs from the Visual Lab reset; standard haptic intensity sends exactly the old haptics; native haptics only when opted in, falling back on failure; Kotlin constants are API-guarded (minSdk 26).
+  - Fixed: a shared `obtainium://` link could set an app's `installerMode` (silent root/Shizuku install) → added to `_linkUnsafeSettings` (a7596deac).
+  - Fixed: disabled apps still appeared in "Update all" and the background install list — the live `AppUpdateService.findExistingUpdates/findAllPendingUpdates` had no disabled filter (1ece1d2cc). The port's filter in the root `lib/components/app_list_tile.dart` is dead code; live tiles show a "Disabled" label instead of dimming.
+- **Pending:** CI compile of the new Kotlin + material_new_shapes; device pass of the new settings.
 
 ## 2026-11-10/11 — Claude: Upstream Audit Follow-Through, Settings M3E Plan, Phase 1
 
