@@ -32,4 +32,15 @@ void main() {
       'fallbackToOlderReleases': true,
     });
   });
+
+  test('a link cannot pick an app\'s install method', () {
+    final apps = <dynamic>[
+      {
+        'id': 'c',
+        'additionalSettings': {'installerMode': 'root', 'trackOnly': false},
+      },
+    ];
+    expect(stripLinkUnsafeSettings(apps), 1);
+    expect((apps[0] as Map)['additionalSettings'], {'trackOnly': false});
+  });
 }

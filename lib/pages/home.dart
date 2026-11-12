@@ -1054,12 +1054,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 }
 
-/// Per-app settings a shared link must never set: they only weaken security.
+/// Per-app settings a shared link must never set: they weaken security, or
+/// (installerMode) would let a link pick a silent root/Shizuku install path.
 const _linkUnsafeSettings = {
   'allowInsecure',
   'allowInsecureRedirects',
   'allowedSigningCertHashes',
   'enableCertificatePinning',
+  'installerMode',
 };
 
 /// Removes [_linkUnsafeSettings] from each app's additionalSettings (stored
