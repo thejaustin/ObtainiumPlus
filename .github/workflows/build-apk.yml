@@ -32,6 +32,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Pinned: Flutter 3.50 requires Android Gradle Plugin 9.1.1+ (project is on
+          # AGP 8.11). Raise together with the AGP 9 migration.
+          flutter-version: 3.47.9
           cache: true
 
       - name: Cache pub packages
@@ -185,6 +188,9 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Pinned: Flutter 3.50 requires Android Gradle Plugin 9.1.1+ (project is on
+          # AGP 8.11). Raise together with the AGP 9 migration.
+          flutter-version: 3.47.9
           cache: true
 
       - name: Setup Java
