@@ -7,6 +7,21 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-14 — Claude: First Device Pass (rish install), Polish
+
+- **Install path:** downloaded the CI artifact for the exact commit (`gh run download <id> -R thejaustin/ObtainiumPlus -n obtainium-plus-apk`), checked sha256 and that the apksigner SHA-256 matched the installed app (623b5e5c…), then `cat apk | rish -c "pm install -r -S <size>"`, an in-place update that keeps data. The rollback APK (the previous install, pulled via `rish cat <pm path>`) is at `~/downloads/ObtainiumPlus/rollback-1.7.3-p15-installed.apk`. The script is in the session scratchpad (`ci-install.sh`): it watches CI, downloads, verifies and installs.
+- **Device QA via rish:** `screencap` plus `input tap`/`swipe` (1440×3120 physical, so screenshot coordinates ×1.56). `svc power stayon true` while testing and `false` after; a dozing screen gives black screencaps. Stop when the user switches apps.
+- **Worked on device:**
+  - cold start 0.6 s with no crashes (the first launch after the update showed an empty list for about 3–6 s while the index rebuilt)
+  - encoded `obtainium://app/` import dialog (installerMode stripped, notice shown)
+  - encoded `obtainium://add/` opening the already-tracked app
+  - the placeholder-icon fix: previously blank tiles got their icons after phase 2
+  - all four switch styles
+  - dependent rows dimming
+  - the settings reorganisation and section dock
+- **Fixed (0e39aa87d):** mismatched row typography (links, choice rows and kit rows ignored compact mode), the duplicate masthead card on subpages, "(preview)" repeated inside preview groups, truncated switch-style labels, the demo row label, and the link notice now localised and mentioning the install method.
+- **Not yet checked on device:** Updates tab guards, Install tab per-app method, disable apps, segmented group style + corner sliders, predictive back/search jump/live summaries, native haptics.
+
 ## 2026-11-11 — Claude: Settings M3E Build Merged (phases 2–4), Deep Links
 
 - **Merge 097f1388e** brings in four stacked branches built by the wf_15c6d4f0-e5b workflow (110 files, +12.9k/−5.2k; suite 887 tests green; analyze 0):
