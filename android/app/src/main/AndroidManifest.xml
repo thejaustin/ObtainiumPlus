@@ -92,6 +92,15 @@
         <meta-data
             android:name="dev.thejaustin.obtainiumplus.service.NOTIFICATION_ICON"
             android:resource="@drawable/ic_notification" />
+        <!-- home_widget pulls in Glance, but our widget is plain RemoteViews.
+             Glance's trampolines crash when started without their extras
+             (ABausG/home_widget#415), and nothing here ever targets them. -->
+        <activity
+            android:name="androidx.glance.appwidget.action.ActionTrampolineActivity"
+            tools:node="remove" />
+        <activity
+            android:name="androidx.glance.appwidget.action.InvisibleActionTrampolineActivity"
+            tools:node="remove" />
         <receiver android:name=".HomeWidgetProvider" android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
