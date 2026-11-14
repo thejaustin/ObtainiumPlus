@@ -7,6 +7,14 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-14 (later) — Claude: Sentry Sweep After the Device Pass
+
+Sentry is readable with the token already in `~/.claude/settings.json` (org `af-developments`; `/issues/<id>/events/latest/` gives full frames, which the GH issue bodies cut off). Every branch build reports the release `1.7.3-p15+25283`, so match crashes to builds by event time against the install time (the device is UTC−6).
+- **OBTAINIUMPLUS-39/3A/3R, PageStorage (ec9e0bfac):** the earlier ValueKey→PageStorageKey fix left one case open. A TextField's own Scrollable (frame: `SlottedRenderObjectElement` = InputDecorator) inside a keyed ExpansionTile body shares the tile's key chain, so a bool and a scroll offset overwrite each other. Added `List<Widget>.withOwnPageStorage()` and applied it at 10 tile sites. Skipped `category_sections` because those tiles are keyed by app id for reordering and have nothing scrollable inside. Regression test: `test/page_storage_body_test.dart`, whose no-isolation case reproduces the TypeError.
+- **OBTAINIUMPLUS-3B, `_onUnknownRoute` (ec9e0bfac):** `flutter_deeplinking_enabled=false` was under `<application>`. Flutter reads it from the activity, so obtainium:// links were also pushed as named routes. It's now on MainActivity, and links still arrive through `app_links` (home.dart). The earlier "fix" for #243/#244 never took effect for this reason.
+- **OBTAINIUMPLUS-3C, Glance trampoline (d1ea10330):** removed `ActionTrampolineActivity` and `InvisibleActionTrampolineActivity` with `tools:node="remove"`. The widget is RemoteViews and nothing in the app uses Glance.
+- **OBTAINIUMPLUS-2A/2B, NaN, still open:** not an app `jsonEncode`. The stack is `TextInputConnection.setEditableSizeAndTransform` from `EditableTextState._compositeCallback`, so a focused TextField has a NaN somewhere in its 16-value paint transform. The 13 events arrived in about 1 s, 70 s after the app came to the foreground, with no navigation breadcrumbs. Ruled out predictive back, because the engine maps NaN touch coordinates to null. Next step: reproduce on the device by focusing each text field (omnibar, settings search, add-app URL, command center) during animations or app switches and watching logcat.
+
 ## 2026-11-14 — Claude: First Device Pass (rish install), Polish
 
 - **Install path:** downloaded the CI artifact for the exact commit (`gh run download <id> -R thejaustin/ObtainiumPlus -n obtainium-plus-apk`), checked sha256 and that the apksigner SHA-256 matched the installed app (623b5e5c…), then `cat apk | rish -c "pm install -r -S <size>"`, an in-place update that keeps data. The rollback APK (the previous install, pulled via `rish cat <pm path>`) is at `~/downloads/ObtainiumPlus/rollback-1.7.3-p15-installed.apk`. The script is in the session scratchpad (`ci-install.sh`): it watches CI, downloads, verifies and installs.
