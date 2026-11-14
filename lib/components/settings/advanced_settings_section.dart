@@ -26,6 +26,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/settings/plus_features_section.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/troubleshooting_section.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 /// Advanced tab: advanced-settings switch, Obtainium+, backup, accounts,
 /// warnings & tips, troubleshooting, developer and reset.
@@ -837,7 +838,7 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                         ),
                       ),
                     ),
-                ],
+                ].withOwnPageStorage(),
               ),
             ),
           const SizedBox(height: 8),

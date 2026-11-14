@@ -10,6 +10,7 @@ import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/play_store_mirror_service.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:provider/provider.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 class SystemUpdatesPage extends StatefulWidget {
   const SystemUpdatesPage({super.key});
@@ -341,7 +342,7 @@ class _SystemUpdatesPageState extends State<SystemUpdatesPage> {
               );
             },
           ),
-        ],
+        ].withOwnPageStorage(),
       ),
     );
   }

@@ -15,6 +15,7 @@ import 'package:obtainium/providers/view_settings_provider.dart';
 import 'package:obtainium/providers/source_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 class SortFilterPanel extends StatefulWidget {
   final AppsFilter filter;
@@ -842,7 +843,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             },
           ),
           const SizedBox(height: 12),
-        ],
+        ].withOwnPageStorage(),
       ),
     );
   }

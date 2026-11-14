@@ -5,6 +5,7 @@ import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/settings/diagnostic_page_scaffold.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 /// Opens the multi-user report. Kept under its old name so callers work.
 Future<void> showMultiUserDiagnosticSheet(BuildContext context) {
@@ -253,7 +254,7 @@ class _MultiUserDiagnosticPageState extends State<MultiUserDiagnosticPage> {
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                ],
+                ].withOwnPageStorage(),
               ),
           ],
         ),

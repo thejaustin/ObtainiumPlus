@@ -10,6 +10,7 @@ import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/motion.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 class ExpressiveSettingsGroup extends StatefulWidget {
   final String? title;
@@ -412,7 +413,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           ),
           PageStorage(bucket: PageStorageBucket(), child: content),
-        ],
+        ].withOwnPageStorage(),
       ),
     );
   }

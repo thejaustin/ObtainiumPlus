@@ -46,6 +46,7 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/components/ui_widgets.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/nav/plus_floating_nav_bar.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -407,7 +408,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             data,
                             style: const TextStyle(fontFamily: 'monospace'),
                           ),
-                        ],
+                        ].withOwnPageStorage(),
                       ),
                     ],
                   );

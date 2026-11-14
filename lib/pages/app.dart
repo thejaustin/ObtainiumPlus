@@ -41,6 +41,7 @@ import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/apps/app_variants_sheet.dart';
 import 'package:obtainium/components/apps/app_description_card.dart';
 import 'package:obtainium/services/app_variant_service.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 /// Whether opening the detail page should resolve the selected APK's size.
 ///
@@ -1159,7 +1160,7 @@ class _AppPageState extends State<AppPage> {
                           ),
                         );
                       }),
-                    ],
+                    ].withOwnPageStorage(),
                   ),
                 ),
               ),

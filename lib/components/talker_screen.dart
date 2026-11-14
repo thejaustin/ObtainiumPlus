@@ -4,6 +4,7 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/logger.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 class TalkerScreen extends StatefulWidget {
   final Talker talker;
@@ -274,7 +275,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                                 ),
                               ),
                             ),
-                          ],
+                          ].withOwnPageStorage(),
                         ),
                       );
                     },

@@ -13,6 +13,7 @@ import 'package:obtainium/components/apps/app_changelog.dart'
     show resolveChangeLogLink;
 import 'package:obtainium/services/release_notes_service.dart';
 import 'package:url_launcher/url_launcher_string.dart';
+import 'package:obtainium/utils/page_storage_utils.dart';
 
 class AppVersionHistoryWidget extends StatelessWidget {
   final App app;
@@ -117,7 +118,7 @@ class AppVersionHistoryWidget extends StatelessWidget {
                   isMarkdown: appSource?.changeLogIfAnyIsMarkDown ?? true,
                   canFetch: canFetch,
                 ),
-              ],
+              ].withOwnPageStorage(),
             ),
           ),
         ),
