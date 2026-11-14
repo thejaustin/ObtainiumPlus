@@ -38,6 +38,9 @@ class SettingsPageSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isSearching = searchQuery != null && searchQuery!.isNotEmpty;
+    // Rows sit in groups whose header already says preview; the suffix
+    // only shows in search results, where the header isn't drawn.
+    String inGroup(String key) => isSearching ? _preview(key) : tr(key);
     final plus = context.watch<PlusSettingsProvider>();
     final outer = plus.plusSettingsGroupOuterRadius;
     final segmented =
@@ -151,7 +154,7 @@ class SettingsPageSection extends StatelessWidget {
       ))
         SettingsChoiceRow<SettingsGroupStyle>(
           icon: Icons.view_list_rounded,
-          title: _preview('settingsGroupStyle'),
+          title: inGroup('settingsGroupStyle'),
           description: tr('settingsGroupStyleDesc'),
           value: plus.plusSettingsGroupStyle,
           connected: true,
@@ -170,7 +173,7 @@ class SettingsPageSection extends StatelessWidget {
             if (_matches(_preview('settingsGroupOuterRadius')))
               SettingsSliderTile(
                 icon: Icons.rounded_corner_rounded,
-                title: _preview('settingsGroupOuterRadius'),
+                title: inGroup('settingsGroupOuterRadius'),
                 subtitle: tr('settingsGroupRadiusDesc'),
                 value: outer,
                 min: 0,
@@ -184,7 +187,7 @@ class SettingsPageSection extends StatelessWidget {
             if (_matches(_preview('settingsGroupInnerRadius')))
               SettingsSliderTile(
                 icon: Icons.border_inner_rounded,
-                title: _preview('settingsGroupInnerRadius'),
+                title: inGroup('settingsGroupInnerRadius'),
                 subtitle: tr('settingsGroupRadiusDesc'),
                 value: plus.plusSettingsGroupInnerRadius.clamp(
                   0.0,
@@ -213,7 +216,7 @@ class SettingsPageSection extends StatelessWidget {
     ) => buildFeatureToggle<PlusSettingsProvider>(
       context,
       icon: icon,
-      title: _preview(key),
+      title: inGroup(key),
       subtitle: tr('${key}Desc'),
       value: value,
       onChanged: onChanged,

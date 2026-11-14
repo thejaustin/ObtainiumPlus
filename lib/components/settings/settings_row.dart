@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/settings/settings_text_styles.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/theme/settings_tokens.dart';
 import 'package:obtainium/utils/motion.dart';
@@ -128,6 +130,9 @@ class SettingsRow extends StatelessWidget {
     final isCompact = context.select<PlusSettingsProvider, bool>(
       (p) => p.plusUseCompactSettings,
     );
+    final segmented = context.select<PlusSettingsProvider, bool>(
+      (p) => p.plusSettingsGroupStyle == SettingsGroupStyle.segmented,
+    );
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final fade = AppMotion.duration(context, AppMotion.effects.duration);
@@ -161,21 +166,30 @@ class SettingsRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // The M3E list typography belongs to the segmented group
+                  // style; in today's card groups the row matches the other
+                  // settings rows, so picking a switch style alone doesn't
+                  // change the text.
                   DefaultTextStyle.merge(
-                    style:
-                        (isCompact
-                                ? theme.textTheme.bodyMedium
-                                : theme.textTheme.bodyLarge)
-                            ?.copyWith(color: cs.onSurface),
+                    style: segmented
+                        ? (isCompact
+                                  ? theme.textTheme.bodyMedium
+                                  : theme.textTheme.bodyLarge)
+                              ?.copyWith(color: cs.onSurface)
+                        : settingsRowTitleStyle(context, compact: isCompact),
                     child: title,
                   ),
                   if (summary != null)
                     DefaultTextStyle.merge(
-                      style:
-                          (isCompact
-                                  ? theme.textTheme.bodySmall
-                                  : theme.textTheme.bodyMedium)
-                              ?.copyWith(color: cs.onSurfaceVariant),
+                      style: segmented
+                          ? (isCompact
+                                    ? theme.textTheme.bodySmall
+                                    : theme.textTheme.bodyMedium)
+                                ?.copyWith(color: cs.onSurfaceVariant)
+                          : settingsRowSubtitleStyle(
+                              context,
+                              compact: isCompact,
+                            ),
                       child: summary!,
                     ),
                 ],

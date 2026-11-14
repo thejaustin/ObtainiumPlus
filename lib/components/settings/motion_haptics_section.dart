@@ -38,6 +38,9 @@ class MotionHapticsSection extends StatelessWidget {
     final plus = context.watch<PlusSettingsProvider>();
     final behavior = context.watch<BehaviorSettingsProvider>();
     String? label(String key) => isSearching ? null : tr(key);
+    // Rows inside the "Controls (preview)" group: the group header already
+    // says preview, so the suffix only shows in search results.
+    String inPreviewGroup(String key) => isSearching ? preview(key) : tr(key);
 
     // ── Motion ──────────────────────────────────────────────────────────
     final motionChildren = <Widget>[
@@ -196,7 +199,7 @@ class MotionHapticsSection extends StatelessWidget {
       if (_matches(preview('iconMorphShape')))
         SettingsChoiceRow<IconMorphShape>(
           icon: Icons.category_rounded,
-          title: preview('iconMorphShape'),
+          title: inPreviewGroup('iconMorphShape'),
           value: plus.plusIconMorphShape,
           connected: true,
           options: {
@@ -211,7 +214,7 @@ class MotionHapticsSection extends StatelessWidget {
       if (_matches(preview('iconMorphStyle')))
         SettingsChoiceRow<IconMorphStyle>(
           icon: Icons.motion_photos_on_rounded,
-          title: preview('iconMorphStyle'),
+          title: inPreviewGroup('iconMorphStyle'),
           value: plus.plusIconMorphStyle,
           connected: true,
           options: {
@@ -230,7 +233,7 @@ class MotionHapticsSection extends StatelessWidget {
       if (showSwitchStyle) ...[
         SettingsChoiceRow<SettingsSwitchStyle>(
           icon: Icons.toggle_on_outlined,
-          title: preview('switchStyle'),
+          title: inPreviewGroup('switchStyle'),
           description: tr('switchStyleDesc'),
           value: plus.plusSwitchStyle,
           connected: true,
@@ -252,7 +255,7 @@ class MotionHapticsSection extends StatelessWidget {
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.interests_rounded,
-          title: preview('iconMorphOnToggle'),
+          title: inPreviewGroup('iconMorphOnToggle'),
           subtitle: tr('iconMorphOnToggleDesc'),
           value: (s) => s.plusIconMorphOnToggle,
           onChanged: (s, v) => s.plusIconMorphOnToggle = v,
@@ -269,7 +272,7 @@ class MotionHapticsSection extends StatelessWidget {
         buildFeatureToggle<PlusSettingsProvider>(
           context,
           icon: Icons.speed_rounded,
-          title: preview('reduceShapeMorphs'),
+          title: inPreviewGroup('reduceShapeMorphs'),
           subtitle: tr('reduceShapeMorphsDesc'),
           value: (s) => s.plusReduceShapeMorphs,
           onChanged: (s, v) => s.plusReduceShapeMorphs = v,

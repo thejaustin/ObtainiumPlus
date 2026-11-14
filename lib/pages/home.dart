@@ -385,8 +385,7 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Text(
-                            'Security overrides in this link (insecure connections, '
-                            'certificate pinning, signer allow-lists) were ignored.',
+                            tr('linkUnsafeSettingsIgnored'),
                             style: Theme.of(ctx).textTheme.bodySmall,
                           ),
                         ),

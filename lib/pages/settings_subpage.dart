@@ -116,7 +116,6 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
     final cardRadius = CardMetrics.card(baseRadius);
-    final innerRadius = CardMetrics.inner(cardRadius);
 
     final hasSiblings = widget.siblings != null && widget.siblings!.isNotEmpty;
     final currentSibling =
@@ -125,7 +124,6 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
         : null;
     final activeTitle = currentSibling?.title ?? widget.title;
     final activeSubtitle = currentSibling?.subtitle ?? widget.subtitle;
-    final activeIcon = currentSibling?.icon ?? widget.icon;
     final resolvedAccent =
         currentSibling?.accentColor ??
         widget.accentColor ??
@@ -162,108 +160,8 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // M3 Expressive Masthead Card
-                  if (activeIcon != null) ...[
-                    Card(
-                      elevation: 0,
-                      margin: EdgeInsets.only(bottom: isCompact ? 8 : 12),
-                      color: plusSettings.plusEnableGlassmorphism
-                          ? colorScheme.surfaceContainerLow.withValues(
-                              alpha: 0.75,
-                            )
-                          : colorScheme.surfaceContainerLow,
-                      shape: CardMetrics.shape(
-                        cardRadius,
-                        expressive: isM3E,
-                        side: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: theme.brightness == Brightness.dark
-                                ? 0.35
-                                : 0.65,
-                          ),
-                        ),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: -16,
-                            right: -16,
-                            child: IgnorePointer(
-                              child: Container(
-                                width: 90,
-                                height: 90,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [
-                                      resolvedAccent.withValues(alpha: 0.18),
-                                      resolvedAccent.withValues(alpha: 0.0),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(isCompact ? 12 : 16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: isCompact ? 38 : 46,
-                                  height: isCompact ? 38 : 46,
-                                  decoration: ShapeDecoration(
-                                    color: resolvedAccent.withValues(
-                                      alpha: 0.16,
-                                    ),
-                                    shape: CardMetrics.shape(
-                                      innerRadius,
-                                      expressive: isM3E,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    activeIcon,
-                                    size: isCompact ? 20 : 24,
-                                    color: resolvedAccent,
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        activeTitle,
-                                        style: theme.textTheme.titleMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w700,
-                                              letterSpacing: -0.3,
-                                              color: colorScheme.onSurface,
-                                            ),
-                                      ),
-                                      if (activeSubtitle != null &&
-                                          activeSubtitle.isNotEmpty) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          activeSubtitle,
-                                          style: theme.textTheme.bodySmall
-                                              ?.copyWith(
-                                                color: colorScheme
-                                                    .onSurfaceVariant,
-                                                height: 1.25,
-                                              ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  // The app bar already shows the title and subtitle; a
+                  // masthead card repeating them was removed (clutter).
                   // Lateral Sibling Navigation Bar
                   if (widget.siblings != null &&
                       widget.siblings!.length > 1) ...[

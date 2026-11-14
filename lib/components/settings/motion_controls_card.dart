@@ -69,7 +69,7 @@ class _MotionControlsCardState extends State<MotionControlsCard> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        tr('previewSuffix', args: [tr('switchStyle')]),
+                        tr('switchStyleTryIt'),
                         style: text.bodyLarge,
                       ),
                     ),

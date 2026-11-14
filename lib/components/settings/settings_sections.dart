@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/settings/settings_text_styles.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/settings/connected_choice_group.dart';
 import 'package:obtainium/components/settings/connected_setting_container.dart';
@@ -120,13 +121,17 @@ class SettingsSubpageLink extends StatelessWidget {
       hapticOnPressDown: false,
       child: ListTile(
         leading: buildSettingsIconBadge(context, icon),
-        title: Text(_title),
+        title: Text(
+          _title,
+          style: settingsRowTitleStyle(context, compact: isCompact),
+        ),
         subtitle: subtitle == null
             ? null
             : Text(
                 subtitle!,
                 maxLines: isCompact ? 1 : 2,
                 overflow: TextOverflow.ellipsis,
+                style: settingsRowSubtitleStyle(context, compact: isCompact),
               ),
         trailing: const Icon(Icons.chevron_right_rounded),
         onTap: () {
@@ -207,13 +212,24 @@ class SettingsChoiceRow<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isCompact = context.select<PlusSettingsProvider, bool>(
+      (p) => p.plusUseCompactSettings,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         ListTile(
           leading: buildSettingsIconBadge(context, icon),
-          title: Text(title),
-          subtitle: description == null ? null : Text(description!),
+          title: Text(
+            title,
+            style: settingsRowTitleStyle(context, compact: isCompact),
+          ),
+          subtitle: description == null
+              ? null
+              : Text(
+                  description!,
+                  style: settingsRowSubtitleStyle(context, compact: isCompact),
+                ),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),

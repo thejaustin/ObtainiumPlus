@@ -87,8 +87,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // CustomAppBar + Masthead + sibling chip = 3 widgets
-      expect(find.text('Themes & Colors'), findsNWidgets(3));
+      // CustomAppBar + sibling chip (the duplicate masthead card is gone)
+      expect(find.text('Themes & Colors'), findsNWidgets(2));
       expect(find.text('Themes Body Content'), findsOneWidget);
 
       // Sibling chips are rendered
@@ -99,9 +99,9 @@ void main() {
       await tester.tap(find.text('App Tile Styling'));
       await tester.pumpAndSettle();
 
-      // Should now show App Tile Styling content and title in CustomAppBar, Masthead, & Chip
+      // App Tile Styling content, with its title in the CustomAppBar and chip
       expect(find.text('Tile Styling Body Content'), findsOneWidget);
-      expect(find.text('App Tile Styling'), findsNWidgets(3));
+      expect(find.text('App Tile Styling'), findsNWidgets(2));
       expect(find.text('Themes Body Content'), findsNothing);
     },
   );
@@ -109,7 +109,10 @@ void main() {
   testWidgets(
     'SettingsSubpage renders connectedItems and respects wide display padding',
     (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1400, 900); // Wide screen (> 1040dp)
+      tester.view.physicalSize = const Size(
+        1400,
+        900,
+      ); // Wide screen (> 1040dp)
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -145,8 +148,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // CustomAppBar + Masthead = 2 widgets
-      expect(find.text('Motion & Physics'), findsNWidgets(2));
+      // CustomAppBar only (the duplicate masthead card is gone)
+      expect(find.text('Motion & Physics'), findsOneWidget);
       expect(find.text('Motion Content'), findsOneWidget);
       expect(find.text('Notifications'), findsOneWidget);
       expect(find.text('Jump to notifications'), findsOneWidget);
@@ -165,55 +168,54 @@ void main() {
     },
   );
 
-  testWidgets(
-    'SettingsSubpage renders actions and triggers onReset',
-    (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('SettingsSubpage renders actions and triggers onReset', (
+    WidgetTester tester,
+  ) async {
+    tester.view.physicalSize = const Size(1080, 1920);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-      final plusSettings = PlusSettingsProvider();
-      bool resetCalled = false;
-      bool actionCalled = false;
+    final plusSettings = PlusSettingsProvider();
+    bool resetCalled = false;
+    bool actionCalled = false;
 
-      await tester.pumpWidget(
-        MultiProvider(
-          providers: [
-            ChangeNotifierProvider<PlusSettingsProvider>.value(
-              value: plusSettings,
-            ),
-          ],
-          child: MaterialApp(
-            home: SettingsSubpage(
-              title: 'App Tile Styling',
-              subtitle: 'Custom tile geometry',
-              icon: Icons.style_rounded,
-              onReset: () => resetCalled = true,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () => actionCalled = true,
-                ),
-              ],
-              child: const Text('Tile Settings Body'),
-            ),
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<PlusSettingsProvider>.value(
+            value: plusSettings,
+          ),
+        ],
+        child: MaterialApp(
+          home: SettingsSubpage(
+            title: 'App Tile Styling',
+            subtitle: 'Custom tile geometry',
+            icon: Icons.style_rounded,
+            onReset: () => resetCalled = true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () => actionCalled = true,
+              ),
+            ],
+            child: const Text('Tile Settings Body'),
           ),
         ),
-      );
+      ),
+    );
 
-      await tester.pumpAndSettle();
+    await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.restore_rounded), findsOneWidget);
-      expect(find.byIcon(Icons.info_outline), findsOneWidget);
+    expect(find.byIcon(Icons.restore_rounded), findsOneWidget);
+    expect(find.byIcon(Icons.info_outline), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.restore_rounded));
-      expect(resetCalled, isTrue);
+    await tester.tap(find.byIcon(Icons.restore_rounded));
+    expect(resetCalled, isTrue);
 
-      await tester.tap(find.byIcon(Icons.info_outline));
-      expect(actionCalled, isTrue);
-    },
-  );
+    await tester.tap(find.byIcon(Icons.info_outline));
+    expect(actionCalled, isTrue);
+  });
 
   testWidgets(
     'SettingsSubpage prevents foldable margin collapse between 840dp and 1072dp',

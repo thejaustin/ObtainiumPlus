@@ -425,7 +425,8 @@ void main() {
       'settingsSearchJump',
       'settingsLiveSummaries',
     ]) {
-      final title = tr('previewSuffix', args: [tr(k)]);
+      // Inside the preview group the rows drop the "(preview)" suffix.
+      final title = tr(k);
       await tester.scrollUntilVisible(find.text(title), 200);
       expect(find.text(title), findsOneWidget, reason: k);
     }

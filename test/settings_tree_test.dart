@@ -66,11 +66,11 @@ void main() {
     'plusHapticIntensity': preview('hapticIntensity'),
     'plusHapticFollowSystem': preview('hapticFollowSystem'),
     'plusNativeHaptics': preview('nativeHaptics'),
-    'plusSwitchStyle': preview('switchStyle'),
-    'plusIconMorphOnToggle': preview('iconMorphOnToggle'),
-    'plusIconMorphShape': preview('iconMorphShape'),
-    'plusIconMorphStyle': preview('iconMorphStyle'),
-    'plusReduceShapeMorphs': preview('reduceShapeMorphs'),
+    'plusSwitchStyle': tr('switchStyle'),
+    'plusIconMorphOnToggle': tr('iconMorphOnToggle'),
+    'plusIconMorphShape': tr('iconMorphShape'),
+    'plusIconMorphStyle': tr('iconMorphStyle'),
+    'plusReduceShapeMorphs': tr('reduceShapeMorphs'),
     // Settings page
     'plusSettingsNavPlacement': tr('visualLabNavPlacement'),
     'plusUseCompactSettings': tr('plusUseCompactSettings'),
@@ -78,9 +78,9 @@ void main() {
     'plusSettingsUseGridToggles': tr('settingsUseGridToggles'),
     'plusSettingsUseVisualThemePicker': tr('settingsUseVisualThemePicker'),
     'plusSettingsUseHeroCards': tr('settingsUseHeroCards'),
-    'plusSettingsGroupStyle': preview('settingsGroupStyle'),
-    'plusSettingsGroupOuterRadius': preview('settingsGroupOuterRadius'),
-    'plusSettingsGroupInnerRadius': preview('settingsGroupInnerRadius'),
+    'plusSettingsGroupStyle': tr('settingsGroupStyle'),
+    'plusSettingsGroupOuterRadius': tr('settingsGroupOuterRadius'),
+    'plusSettingsGroupInnerRadius': tr('settingsGroupInnerRadius'),
     // Look & motion → More…
     'plusEnableOneHandedMode': tr('plusOneHandedMode'),
     'plusTopUILayout': tr('plusTopUILayout'),
@@ -371,6 +371,20 @@ void main() {
     timeout: const Timeout(Duration(minutes: 3)),
   );
 
+  // Rows inside a preview group drop the "(preview)" suffix while browsing
+  // (the group header says it); search results, which have no group header,
+  // keep it.
+  final searchTitles = <String, String>{
+    'plusSwitchStyle': preview('switchStyle'),
+    'plusIconMorphOnToggle': preview('iconMorphOnToggle'),
+    'plusIconMorphShape': preview('iconMorphShape'),
+    'plusIconMorphStyle': preview('iconMorphStyle'),
+    'plusReduceShapeMorphs': preview('reduceShapeMorphs'),
+    'plusSettingsGroupStyle': preview('settingsGroupStyle'),
+    'plusSettingsGroupOuterRadius': preview('settingsGroupOuterRadius'),
+    'plusSettingsGroupInnerRadius': preview('settingsGroupInnerRadius'),
+  };
+
   testWidgets('searching a setting\'s title finds it', (tester) async {
     tester.view.physicalSize = const Size(400, 900);
     tester.view.devicePixelRatio = 1.0;
@@ -381,7 +395,7 @@ void main() {
     for (final e in manifest.entries) {
       // Every section is searched at once, as on the page.
       await show(tester, tab(0, query: e.value));
-      if (countIn(e.value) == 0) missing.add(e.key);
+      if (countIn(searchTitles[e.key] ?? e.value) == 0) missing.add(e.key);
     }
     expect(missing, isEmpty, reason: 'not found by searching their title');
   }, timeout: const Timeout(Duration(minutes: 5)));
