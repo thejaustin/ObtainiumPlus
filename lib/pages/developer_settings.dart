@@ -13,6 +13,7 @@ import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/services/auth_service.dart';
+import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/providers/behavior_settings_provider.dart';
 import 'package:obtainium/providers/update_settings_provider.dart';
@@ -284,6 +285,160 @@ class DeveloperSettingsPage extends StatelessWidget {
               onChanged: (val) =>
                   context.read<PlusSettingsProvider>().playStoreMinDownloads =
                       val.toInt(),
+            ),
+          ]),
+          _buildSection(context, tr('hardwareAccelerationAndPerformance'), [
+            Container(
+              margin: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.memory_rounded,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        tr('hardwareTelemetry'),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Adreno / Vulkan',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Display: ${MediaQuery.sizeOf(context).width.toInt()}×${MediaQuery.sizeOf(context).height.toInt()} @ ${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(1)}x DPR',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Rasterizer: ${tr('gpuPipelineVulkan')}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tr(
+                      'l1IconMemoryUsage',
+                      args: [
+                        AppsProvider.iconMemoryCacheCount.toString(),
+                        plusSettings.plusMaxIconMemoryEntries.toString(),
+                      ],
+                    ),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.speed_rounded),
+              title: Text(tr('plusHardwareAcceleration')),
+              subtitle: Text(
+                tr('plusHardwareAccelerationDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              value: plusSettings.plusHardwareAcceleration,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                plusSettings.plusHardwareAcceleration = val;
+              },
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.bolt_rounded),
+              title: Text(tr('plusFastLaunchPhase1')),
+              subtitle: Text(
+                tr('plusFastLaunchPhase1Desc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              value: plusSettings.plusFastLaunchPhase1,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                plusSettings.plusFastLaunchPhase1 = val;
+              },
+            ),
+            SwitchListTile.adaptive(
+              secondary: const Icon(Icons.layers_outlined),
+              title: Text(tr('plusGridRepaintBoundaries')),
+              subtitle: Text(
+                tr('plusGridRepaintBoundariesDesc'),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              value: plusSettings.plusGridRepaintBoundaries,
+              onChanged: (val) {
+                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                plusSettings.plusGridRepaintBoundaries = val;
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.image_outlined),
+              title: Text(tr('plusMaxIconMemoryEntries')),
+              subtitle: Text(
+                tr(
+                  'plusMaxIconMemoryEntriesDesc',
+                  args: [plusSettings.plusMaxIconMemoryEntries.toString()],
+                ),
+              ),
+            ),
+            Slider(
+              value: plusSettings.plusMaxIconMemoryEntries.toDouble(),
+              min: 100,
+              max: 1000,
+              divisions: 9,
+              label: '${plusSettings.plusMaxIconMemoryEntries}',
+              onChanged: (val) {
+                plusSettings.plusMaxIconMemoryEntries = val.toInt();
+              },
             ),
           ]),
           _buildSection(context, tr('diagnostics'), [

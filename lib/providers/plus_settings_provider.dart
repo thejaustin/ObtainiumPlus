@@ -901,6 +901,29 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusGridShowSourceBadge(bool val) =>
       _setBool('plusGridShowSourceBadge', val);
 
+  /// High-performance GPU rasterization and pipeline optimization for flagship devices.
+  bool get plusHardwareAcceleration =>
+      _getBool('plusHardwareAcceleration', defaultValue: true);
+  set plusHardwareAcceleration(bool val) =>
+      _setBool('plusHardwareAcceleration', val);
+
+  /// Parallelize disk cache warm-up and mount the app grid on frame 1 without skeleton tile shimmer.
+  bool get plusFastLaunchPhase1 =>
+      _getBool('plusFastLaunchPhase1', defaultValue: true);
+  set plusFastLaunchPhase1(bool val) => _setBool('plusFastLaunchPhase1', val);
+
+  /// Isolate tile repaints into GPU hardware layers to prevent cross-tile rasterization invalidation.
+  bool get plusGridRepaintBoundaries =>
+      _getBool('plusGridRepaintBoundaries', defaultValue: true);
+  set plusGridRepaintBoundaries(bool val) =>
+      _setBool('plusGridRepaintBoundaries', val);
+
+  /// Maximum in-memory icon texture cache entries for zero-latency scrolling.
+  int get plusMaxIconMemoryEntries =>
+      _getInt('plusMaxIconMemoryEntries', defaultValue: 500).clamp(100, 2000);
+  set plusMaxIconMemoryEntries(int val) =>
+      _setInt('plusMaxIconMemoryEntries', val);
+
   ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
       ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())
       : const AlwaysScrollableScrollPhysics();

@@ -425,9 +425,14 @@ Future<void> _startObtainium() async {
     updateSettingsProvider: updateSettings,
   );
 
+  // Overlap Phase 1 disk scanning with provider initialization so the
+  // first frame renders the real app grid directly with zero skeleton flicker.
+  final appsInitFuture = appsProvider.initializationDone.catchError((_) {});
+
   await Future.wait([
     easyLocalizationFuture,
     dynamicColorWarmup,
+    appsInitFuture,
     sp.initializeSettings(prefs, true),
     plusSettings.initializeSettings(prefs),
     themeSettings.initializeSettings(prefs),

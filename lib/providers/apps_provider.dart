@@ -2370,13 +2370,17 @@ class AppsProvider with ChangeNotifier {
         }
       }
       Uint8List? iconBytes = apps[app.id]?.icon ?? _iconMemoryCache[app.id];
-      if (iconBytes == null && (singleId != null || preloadedIcons < 12)) {
+      if (iconBytes == null && (singleId != null || preloadedIcons < 48)) {
         final iconFile = File('${iconsDir.path}/${app.id}.png');
         if (iconFile.existsSync()) {
           preloadedIcons++;
           try {
-            iconBytes = await iconFile.readAsBytes();
-            _putIconMemory(app.id, iconBytes);
+            iconBytes = iconFile.readAsBytesSync();
+            _putIconMemory(
+              app.id,
+              iconBytes,
+              maxEntries: plusSettings.plusMaxIconMemoryEntries,
+            );
           } catch (_) {}
         }
       }
@@ -2574,8 +2578,15 @@ class AppsProvider with ChangeNotifier {
   static final Map<String, Uint8List> _iconMemoryCache = {};
   static const int _maxIconMemoryEntries = 300;
 
-  static void _putIconMemory(String appId, Uint8List bytes) {
-    if (_iconMemoryCache.length >= _maxIconMemoryEntries) {
+  /// Number of active icon textures cached in RAM.
+  static int get iconMemoryCacheCount => _iconMemoryCache.length;
+
+  static void _putIconMemory(
+    String appId,
+    Uint8List bytes, {
+    int maxEntries = 500,
+  }) {
+    if (_iconMemoryCache.length >= maxEntries) {
       _iconMemoryCache.remove(_iconMemoryCache.keys.first);
     }
     _iconMemoryCache[appId] = bytes;

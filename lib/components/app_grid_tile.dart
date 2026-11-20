@@ -566,9 +566,12 @@ class _AppGridTileState extends State<AppGridTile>
               curve: _isPressed ? Curves.easeIn : AppConstants.expressiveSpring,
               child: tileBody,
             );
-            return widget.appInMemory.app.disabled
+            final Widget wrappedTile = widget.appInMemory.app.disabled
                 ? Opacity(opacity: 0.5, child: tile)
                 : tile;
+            return plusSettings.plusGridRepaintBoundaries
+                ? RepaintBoundary(child: wrappedTile)
+                : wrappedTile;
           },
         ),
       ),

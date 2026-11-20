@@ -86,6 +86,10 @@ void main() {
       expect(provider.plusGridCardlessStyle, true);
       expect(provider.plusGridAmbientIconHalo, true);
       expect(provider.plusGridShowSourceBadge, true);
+      expect(provider.plusHardwareAcceleration, true);
+      expect(provider.plusFastLaunchPhase1, true);
+      expect(provider.plusGridRepaintBoundaries, true);
+      expect(provider.plusMaxIconMemoryEntries, 500);
 
       expect(
         GridMetrics.childAspectRatio(
