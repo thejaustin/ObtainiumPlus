@@ -132,18 +132,11 @@ class _CustomAppBarState extends State<CustomAppBar> {
           // Smooth OneUI cubic easing curve for organic motion
           final curvedT = Curves.easeInOutCubic.transform(t);
 
-          // Title interpolation: shifts from top-left (curvedT = 0) to center (curvedT = 1)
-          final titleAlignment = Alignment.lerp(
-            Alignment.centerLeft,
-            Alignment.center,
-            curvedT,
-          )!;
-
           final fontSize = lerpDouble(20.0, 32.0, curvedT)!;
           final hasLeading = effectiveLeading != null;
           final leftPadding = lerpDouble(
             hasLeading ? 56.0 : 20.0,
-            24.0,
+            hasLeading ? 56.0 : 24.0,
             curvedT,
           )!;
           final rightPadding = lerpDouble(
@@ -152,11 +145,14 @@ class _CustomAppBarState extends State<CustomAppBar> {
             curvedT,
           )!;
 
-          // Vertical alignment within viewing area
+          // Vertical alignment within viewing area (supports overscroll stretch)
+          final currentHeight = settings != null
+              ? settings.currentExtent
+              : effectiveExpandedHeight;
           final verticalCenterOffset = lerpDouble(
             (topPadding + kToolbarHeight / 2) - 10,
             topPadding +
-                ((effectiveExpandedHeight - bottomHeight - topPadding) / 2) -
+                ((currentHeight - bottomHeight - topPadding) / 2) -
                 14,
             curvedT,
           )!;
@@ -204,24 +200,20 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   ),
                 ),
 
-              // Title and Subtitle Container
+              // Title and Subtitle Container (authentic OneUI start-aligned typography)
               Positioned(
                 top: verticalCenterOffset,
                 left: leftPadding,
                 right: rightPadding,
                 child: Align(
-                  alignment: titleAlignment,
+                  alignment: Alignment.centerLeft,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: curvedT > 0.5
-                        ? CrossAxisAlignment.center
-                        : CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         widget.title,
-                        textAlign: curvedT > 0.5
-                            ? TextAlign.center
-                            : TextAlign.start,
+                        textAlign: TextAlign.start,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -233,20 +225,18 @@ class _CustomAppBarState extends State<CustomAppBar> {
                           color: colorScheme.onSurface,
                         ),
                       ),
-                      if (widget.subtitle != null && curvedT > 0.3) ...[
+                      if (widget.subtitle != null && curvedT > 0.25) ...[
                         const SizedBox(height: 4),
                         Opacity(
-                          opacity: ((curvedT - 0.3) / 0.7).clamp(0.0, 1.0),
+                          opacity: ((curvedT - 0.25) / 0.75).clamp(0.0, 1.0),
                           child: Text(
                             widget.subtitle!,
-                            textAlign: curvedT > 0.5
-                                ? TextAlign.center
-                                : TextAlign.start,
+                            textAlign: TextAlign.start,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurfaceVariant.withValues(
-                                alpha: 0.75,
+                                alpha: 0.85,
                               ),
                             ),
                           ),
