@@ -130,15 +130,15 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
               : Icons.info_outline_rounded,
           content: GestureDetector(
             onLongPress: () {
-              unawaited(copyToClipboard(context, e.toString()));
+              unawaited(copyToClipboard(ctx, e.toString()));
             },
             child: Text(e.toString()),
           ),
           actions: [
             FilledButton.tonal(
-              autofocus: context.read<SettingsProvider>().isTV,
+              autofocus: ctx.read<SettingsProvider>().isTV,
               onPressed: () {
-                Navigator.of(context).pop(null);
+                Navigator.of(ctx).pop(null);
               },
               child: Text(tr('ok')),
             ),

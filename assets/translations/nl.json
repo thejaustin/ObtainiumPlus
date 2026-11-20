@@ -195,7 +195,7 @@
     "dontSortReleasesList": "Volgorde van publicaties behouden vanuit de API",
     "dontInstall": "Niet downloaden",
     "downloadNotifDescription": "Stelt de gebruiker op de hoogte van de voortgang bij het downloaden van een app",
-    "downloadX": "Downloaden",
+    "downloadX": "Downloaden {}",
     "downloadFailed": "Downloaden mislukt",
     "downloadSize": "Downloadgrootte",
     "downloadedX": "{} gedownload",

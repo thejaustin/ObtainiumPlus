@@ -143,8 +143,8 @@
     "clearLogs": "Clear logs",
     "clearLogsWarning": "This will delete all stored logs. Continue?",
     "clearedNLogsBeforeXAfterY": {
-        "one": "Đã xóa {n} nhật ký (trước = {trước}, sau = {sau})",
-        "other": "Đã xóa {n} nhật ký (trước = {trước}, sau = {sau})"
+        "one": "Đã xóa {n} nhật ký (trước = {before}, sau = {after})",
+        "other": "Đã xóa {n} nhật ký (trước = {before}, sau = {after})"
     },
     "codebergTokenLabel": "Codeberg access token",
     "close": "Đóng",

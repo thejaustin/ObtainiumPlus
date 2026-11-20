@@ -2647,6 +2647,12 @@ class AppsProvider with ChangeNotifier {
           LogsProvider().add('Failed to read cached icon for $appId: $e');
         }
       }
+      if (icon == null) {
+        try {
+          final batch = await AppInstallService.getLabelsAndIcons([appId]);
+          icon = batch[appId]?.icon;
+        } catch (_) {}
+      }
       try {
         icon ??= await apps[appId]?.installedInfo?.applicationInfo
             ?.getAppIcon();

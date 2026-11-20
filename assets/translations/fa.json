@@ -143,8 +143,8 @@
     "clearLogs": "Clear logs",
     "clearLogsWarning": "This will delete all stored logs. Continue?",
     "clearedNLogsBeforeXAfterY": {
-        "one": "گزارش {n} پاک شد (قبل از = {پیش از}، بعد = {بعد})",
-        "other": "{n} گزارش پاک شد (قبل از = {پیش از}، بعد = {بعد})"
+        "one": "گزارش {n} پاک شد (قبل از = {before}، بعد = {after})",
+        "other": "{n} گزارش پاک شد (قبل از = {before}، بعد = {after})"
     },
     "codebergTokenLabel": "Codeberg access token",
     "close": "بستن",

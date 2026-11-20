@@ -143,8 +143,8 @@
     "clearLogs": "Clear logs",
     "clearLogsWarning": "This will delete all stored logs. Continue?",
     "clearedNLogsBeforeXAfterY": {
-        "one": "Foi limpo {n} log (antes = {antes}, depois = {depois})",
-        "other": "Foram limpos {n} logs (antes = {antes}, depois = {depois})"
+        "one": "Foi limpo {n} log (antes = {before}, depois = {after})",
+        "other": "Foram limpos {n} logs (antes = {before}, depois = {after})"
     },
     "codebergTokenLabel": "Codeberg access token",
     "close": "Fechar",

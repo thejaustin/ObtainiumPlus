@@ -244,12 +244,8 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                                 ),
                                 decoration: BoxDecoration(
                                   color: isPlus
-                                      ? colorScheme.primary.withValues(
-                                          alpha: 0.15,
-                                        )
-                                      : colorScheme.secondary.withValues(
-                                          alpha: 0.15,
-                                        ),
+                                      ? colorScheme.primaryContainer
+                                      : colorScheme.secondaryContainer,
                                   borderRadius: BorderRadius.circular(CardMetrics.inner(cardRadius)),
                                 ),
                                 child: Text(
@@ -257,8 +253,8 @@ class _ShizukuStatusCardState extends State<ShizukuStatusCard>
                                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: isPlus
-                                        ? colorScheme.primary
-                                        : colorScheme.secondary,
+                                        ? colorScheme.onPrimaryContainer
+                                        : colorScheme.onSecondaryContainer,
                                   ),
                                 ),
                               ),

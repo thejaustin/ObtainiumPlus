@@ -7,6 +7,21 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
 
 ---
 
+## 2026-11-20 — Antigravity: Workflow Review, ShizukuPlus Insights & Crash Sweep
+
+- **Workflow & Branch Analysis**:
+  - The working branch `fix/review-2026-11` (synced to origin as `feature/review-2026-11`) is 91 commits ahead of `origin/main`.
+  - The deployed release remains `v1.7.3-p15` (Nov 4), which explains why Sentry issues for PageStorage collisions (#399-#406, #408, #412-#426) continued arriving: the fixes in `ec9e0bfac` have not yet been merged to `main` or published.
+- **Sentry Crash Fixes**:
+  - **OBTAINIUMPLUS-5A / GH #427 (`showMessage` dialog BuildContext unmounted null check)**: In `lib/components/ui_widgets.dart`, the dialog's `onPressed` closed over the caller's outer `context` rather than the dialog builder's `ctx`. When the calling screen unmounted or popped, `Navigator.of(context).pop(null)` threw `TypeError: Null check operator used on a null value`. Fixed by switching to dialog context `ctx` and `Navigator.maybeOf(ctx)?.pop()`.
+  - **OBTAINIUMPLUS-5B / GH #428 (Main-thread PNG compression ANR)**: During phase 2 / cold launch icon resolution, `AppsProvider.updateAppIcon` called `applicationInfo.getAppIcon()` via method channel on the main thread, resulting in blocking libpng `deflate_slow` / `png_compress_IDAT` ANRs. Fixed by offloading icon fetching to `AppInstallService.getLabelsAndIcons([appId])` which renders and compresses asynchronously on Kotlin `labelIconExecutor` off the Android main thread.
+- **UI Contrast & Token Hardening (ShizukuPlus Parity)**:
+  - In `lib/components/settings/shizuku_status_card.dart`, status chip backgrounds used `colorScheme.primary.withValues(alpha: 0.15)` with `colorScheme.primary` text on top of an already tinted container, causing poor contrast on light/accented themes (analogous to ShizukuPlus #687). Upgraded to semantic paired tokens (`colorScheme.primaryContainer` with `colorScheme.onPrimaryContainer` / `secondaryContainer` with `onSecondaryContainer`).
+- **Translation Hardening & Dev Flow (ShizukuPlus Parity)**:
+  - Created `scripts/dev/check-translations.py` modeled after ShizukuPlus's `check_translations.py`. It audits all 34 translation JSON files against `en.json` for invalid JSON, placeholder argument counts, named argument mismatches, and foreign placeholders.
+  - Caught and fixed 28 genuine translation defects across `he.json`, `nl.json`, `fa.json`, `pt.json`, and `vi.json` (e.g. translated named variables like `{پیش از}` and `{antes}` instead of `{before}`, Dutch missing `{}` in `downloadX`, and Hebrew inventing `{app}`/`{error}` in positional formats).
+  - Integrated `check-translations.py` into `.github/workflows/translation-validate.yaml`.
+
 ## 2026-11-14 (later) — Claude: Sentry Sweep After the Device Pass
 
 Sentry is readable with the token already in `~/.claude/settings.json` (org `af-developments`; `/issues/<id>/events/latest/` gives full frames, which the GH issue bodies cut off). Every branch build reports the release `1.7.3-p15+25283`, so match crashes to builds by event time against the install time (the device is UTC−6).

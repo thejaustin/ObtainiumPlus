@@ -31,3 +31,4 @@ jobs:
         run: |
           echo "Validating files: ${{ steps.changed.outputs.files }}"
           jq empty ${{ steps.changed.outputs.files }}
+          python3 scripts/dev/check-translations.py ${{ steps.changed.outputs.files }}
