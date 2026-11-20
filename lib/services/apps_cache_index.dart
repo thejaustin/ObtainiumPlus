@@ -173,20 +173,14 @@ class AppsCacheIndex {
 
     final appFiles = <File>[];
     final names = <String>[];
-    var maxMtime = 0;
     for (final e in dir.listSync(followLinks: false)) {
       if (e is! File) continue;
       final name = _baseName(e.path);
       if (!isAppFileName(name)) continue;
       appFiles.add(e);
       names.add(name);
-      try {
-        final m = e.statSync().modified.millisecondsSinceEpoch;
-        if (m > maxMtime) maxMtime = m;
-      } catch (_) {}
     }
     names.sort();
-    final signature = '${names.length}:$maxMtime:${_fnv1a(names.join('\n'))}';
 
     final cacheFile = File('$dirPath/$fileName');
     if (dirty) {
@@ -203,18 +197,35 @@ class AppsCacheIndex {
               .whereType<String>()
               .toList();
           final snapshotAt = decoded['timestamp'] as int;
-          // Margin below the writer's debounce: a per-app write landing just
-          // before the snapshot may not be in it yet, so don't trust that.
-          if (listEquals(cachedNames, names) &&
-              maxMtime <= snapshotAt - snapshotMarginMs) {
-            return AppsDirScan(
-              (decoded['apps'] as List)
-                  .whereType<Map<String, dynamic>>()
-                  .toList(),
-              fromCache: true,
-              logs: logs,
-              signature: signature,
-            );
+          final threshold = snapshotAt - snapshotMarginMs;
+          if (listEquals(cachedNames, names)) {
+            var maxMtime = 0;
+            var isStale = false;
+            for (final f in appFiles) {
+              try {
+                final m = f.statSync().modified.millisecondsSinceEpoch;
+                if (m > maxMtime) maxMtime = m;
+                if (m > threshold) {
+                  isStale = true;
+                  break;
+                }
+              } catch (_) {
+                isStale = true;
+                break;
+              }
+            }
+            if (!isStale) {
+              final signature =
+                  '${names.length}:$maxMtime:${_fnv1a(names.join('\n'))}';
+              return AppsDirScan(
+                (decoded['apps'] as List)
+                    .whereType<Map<String, dynamic>>()
+                    .toList(),
+                fromCache: true,
+                logs: logs,
+                signature: signature,
+              );
+            }
           }
           logs.add('apps_cache.json is out of date; rescanning app files');
         }
@@ -222,6 +233,15 @@ class AppsCacheIndex {
         logs.add('Could not load apps_cache.json index: $e');
       }
     }
+
+    var maxMtime = 0;
+    for (final f in appFiles) {
+      try {
+        final m = f.statSync().modified.millisecondsSinceEpoch;
+        if (m > maxMtime) maxMtime = m;
+      } catch (_) {}
+    }
+    final signature = '${names.length}:$maxMtime:${_fnv1a(names.join('\n'))}';
 
     final apps = <Map<String, dynamic>>[];
     for (final f in appFiles) {

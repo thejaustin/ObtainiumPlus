@@ -83,7 +83,7 @@ void main() {
       await provider.initializeSettings(prefs);
 
       expect(provider.plusGridSquareTiles, true);
-      expect(provider.plusGridCardlessStyle, false);
+      expect(provider.plusGridCardlessStyle, true);
       expect(provider.plusGridAmbientIconHalo, true);
       expect(provider.plusGridShowSourceBadge, true);
 
@@ -97,12 +97,12 @@ void main() {
       );
 
       provider.plusGridSquareTiles = false;
-      provider.plusGridCardlessStyle = true;
+      provider.plusGridCardlessStyle = false;
       provider.plusGridAmbientIconHalo = false;
       provider.plusGridShowSourceBadge = false;
 
       expect(provider.plusGridSquareTiles, false);
-      expect(provider.plusGridCardlessStyle, true);
+      expect(provider.plusGridCardlessStyle, false);
       expect(provider.plusGridAmbientIconHalo, false);
       expect(provider.plusGridShowSourceBadge, false);
       expect(

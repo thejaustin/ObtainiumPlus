@@ -179,9 +179,7 @@ class _AppGridTileState extends State<AppGridTile>
                 : Curves.easeInOut;
 
             final bool isCardless =
-                plusSettings.plusGridCardlessStyle &&
-                !widget.isSelected &&
-                !widget.hasUpdate;
+                plusSettings.plusGridCardlessStyle && !widget.isSelected;
 
             // Surface color tokens aligned with Material 3 Expressive
             Color cardColor;
@@ -273,302 +271,300 @@ class _AppGridTileState extends State<AppGridTile>
               ];
             }
 
+            final stackContent = Stack(
+              children: [
+                // 1. Glass sheen gradient (no per-tile BackdropFilter over flat
+                // Scaffold surface — eliminates 12-24 offscreen GPU saveLayer
+                // passes per frame while preserving the translucent surface tint,
+                // diagonal specular sheen, and top-edge highlight)
+                if (plusSettings.plusEnableGlassmorphism && !isCardless)
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors:
+                              Theme.of(context).brightness == Brightness.dark
+                              ? [
+                                  Colors.white.withValues(alpha: 0.08),
+                                  Colors.white.withValues(alpha: 0.02),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.04),
+                                ]
+                              : [
+                                  Colors.white.withValues(alpha: 0.38),
+                                  Colors.white.withValues(alpha: 0.12),
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.02),
+                                ],
+                          stops: const [0.0, 0.2, 0.6, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // 3. Top specular highlight streak
+                if (plusSettings.plusEnableGlassmorphism && !isCardless)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 1.0,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.white.withValues(
+                              alpha:
+                                  Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? 0.18
+                                  : 0.50,
+                            ),
+                            Colors.white.withValues(alpha: 0.0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // 3.5 Smart Launcher 6-inspired ambient radial icon halo
+                if (plusSettings.plusGridAmbientIconHalo)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: isHorizontal
+                                ? const Alignment(-0.65, 0.0)
+                                : const Alignment(0.0, -0.35),
+                            radius: isHorizontal ? 0.65 : 0.72,
+                            colors: [
+                              (resolvedCategoryColor ??
+                                      (widget.hasUpdate
+                                          ? colorScheme.primary
+                                          : colorScheme.primary))
+                                  .withValues(alpha: isDark ? 0.16 : 0.10),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // 4. Category Accent Ribbon (M3E)
+                if (plusSettings.plusCategoryAccentRibbon &&
+                    resolvedCategoryColor != null)
+                  isHorizontal
+                      ? Positioned(
+                          top: cardBorderRadius * 0.45,
+                          bottom: cardBorderRadius * 0.45,
+                          left: 0,
+                          child: Container(
+                            width: 3.5,
+                            decoration: BoxDecoration(
+                              color: resolvedCategoryColor,
+                              borderRadius: const BorderRadius.horizontal(
+                                right: Radius.circular(3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: resolvedCategoryColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 4,
+                                  offset: const Offset(1, 0),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      : Positioned(
+                          top: 0,
+                          left: cardBorderRadius * 0.45,
+                          right: cardBorderRadius * 0.45,
+                          child: Container(
+                            height: 3.5,
+                            decoration: BoxDecoration(
+                              color: resolvedCategoryColor,
+                              borderRadius: const BorderRadius.vertical(
+                                bottom: Radius.circular(3),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: resolvedCategoryColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                // 5. Main Card Tap Target & Interactive Surface (InkWell)
+                Positioned.fill(
+                  child: Semantics(
+                    label: _buildSemanticLabel(),
+                    button: true,
+                    selected: widget.isSelected,
+                    child: Listener(
+                      onPointerDown: (_) => AppHaptics.tapDown(),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: widget.onTap,
+                          onLongPress: () {
+                            AppHaptics.mediumImpact();
+                            widget.onLongPress();
+                          },
+                          onHighlightChanged: (highlighted) {
+                            setState(() => _isPressed = highlighted);
+                          },
+                          customBorder: CardMetrics.shape(
+                            cardBorderRadius,
+                            expressive:
+                                plusSettings.plusEnableMaterialExpressive,
+                          ),
+                          splashColor: colorScheme.primary.withValues(
+                            alpha: 0.12,
+                          ),
+                          highlightColor: colorScheme.primary.withValues(
+                            alpha: 0.06,
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: padding,
+                              vertical: isCompactTile ? 5.0 : (padding + 1),
+                            ),
+                            child: isHorizontal
+                                ? _buildHorizontalContent(
+                                    iconSize,
+                                    iconBorderRadius,
+                                    badgeSize,
+                                    plusSettings,
+                                    viewSettings,
+                                    cardColor,
+                                    isCardless,
+                                  )
+                                : _buildVerticalContent(
+                                    iconSize,
+                                    iconBorderRadius,
+                                    badgeSize,
+                                    plusSettings,
+                                    viewSettings,
+                                    cardColor,
+                                    constraints.maxHeight,
+                                    isCardless,
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // 6. Pinned Indicator (Top-Left)
+                if (widget.appInMemory.app.pinned && !widget.isSelected)
+                  Positioned(
+                    top: 6,
+                    left: 6,
+                    child: _buildOverlayBadge(
+                      icon: Icons.push_pin_rounded,
+                      backgroundColor: colorScheme.primaryContainer.withValues(
+                        alpha: 0.9,
+                      ),
+                      iconColor: colorScheme.primary,
+                      borderColor: colorScheme.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+
+                // 7. Repo Renamed Indicator
+                if (widget.appInMemory.app.hasPendingRepoRename)
+                  Positioned(
+                    top: 6,
+                    left: (widget.appInMemory.app.pinned && !widget.isSelected)
+                        ? 30
+                        : 6,
+                    child: _buildOverlayBadge(
+                      icon: Icons.info_outline_rounded,
+                      backgroundColor: colorScheme.errorContainer.withValues(
+                        alpha: 0.9,
+                      ),
+                      iconColor: colorScheme.onErrorContainer,
+                      borderColor: colorScheme.error.withValues(alpha: 0.4),
+                      tooltip: tr('repoRenamed'),
+                    ),
+                  ),
+
+                // 8. Update badge (Top-Right) — mirrors the pinned badge;
+                // tap updates, shows progress while downloading.
+                if (widget.hasUpdate &&
+                    !widget.isSelected &&
+                    !plusSettings.plusUpdateExpressiveBadge)
+                  Positioned(
+                    top: -3,
+                    right: -3,
+                    child: _TileUpdateBadge(
+                      appInMemory: widget.appInMemory,
+                      isAmbiguous: widget.isAmbiguous,
+                      animsEnabled: plusSettings.plusEnableEnhancedAnimations,
+                    ),
+                  ),
+
+                // 9. Multi-Select Checkmark (Top-Right)
+                if (widget.isSelected)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: _buildOverlayBadge(
+                      icon: Icons.check_rounded,
+                      backgroundColor: colorScheme.primary,
+                      iconColor: colorScheme.onPrimary,
+                      circle: true,
+                      shadow: true,
+                    ),
+                  ),
+              ],
+            );
+
+            final Widget tileBody = isCardless
+                ? stackContent
+                : AnimatedContainer(
+                    duration: Duration(
+                      milliseconds: plusSettings.plusEnableEnhancedAnimations
+                          ? AppConstants.shortAnimationMs
+                          : 200,
+                    ),
+                    curve: curve,
+                    decoration: ShapeDecoration(
+                      shape: CardMetrics.shape(
+                        cardBorderRadius,
+                        expressive: plusSettings.plusEnableMaterialExpressive,
+                        side: cardBorderSide,
+                      ),
+                      color: cardColor,
+                      shadows: cardShadow,
+                    ),
+                    child: ClipPath(
+                      clipper: ShapeBorderClipper(
+                        shape: CardMetrics.shape(
+                          cardBorderRadius,
+                          expressive: plusSettings.plusEnableMaterialExpressive,
+                        ),
+                      ),
+                      child: stackContent,
+                    ),
+                  );
+
             final tile = AnimatedScale(
               scale: _isPressed ? 0.96 : 1.0,
               duration: Duration(milliseconds: _isPressed ? 80 : 320),
               curve: _isPressed ? Curves.easeIn : AppConstants.expressiveSpring,
-              child: AnimatedContainer(
-                duration: Duration(
-                  milliseconds: plusSettings.plusEnableEnhancedAnimations
-                      ? AppConstants.shortAnimationMs
-                      : 200,
-                ),
-                curve: curve,
-                decoration: ShapeDecoration(
-                  shape: CardMetrics.shape(
-                    cardBorderRadius,
-                    expressive: plusSettings.plusEnableMaterialExpressive,
-                    side: cardBorderSide,
-                  ),
-                  color: cardColor,
-                  shadows: cardShadow,
-                ),
-                child: ClipPath(
-                  clipper: ShapeBorderClipper(
-                    shape: CardMetrics.shape(
-                      cardBorderRadius,
-                      expressive: plusSettings.plusEnableMaterialExpressive,
-                    ),
-                  ),
-                  child: Stack(
-                    children: [
-                      // 1. Glass sheen gradient (no per-tile BackdropFilter over flat
-                      // Scaffold surface — eliminates 12-24 offscreen GPU saveLayer
-                      // passes per frame while preserving the translucent surface tint,
-                      // diagonal specular sheen, and top-edge highlight)
-                      if (plusSettings.plusEnableGlassmorphism && !isCardless)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors:
-                                    Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? [
-                                        Colors.white.withValues(alpha: 0.08),
-                                        Colors.white.withValues(alpha: 0.02),
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.04),
-                                      ]
-                                    : [
-                                        Colors.white.withValues(alpha: 0.38),
-                                        Colors.white.withValues(alpha: 0.12),
-                                        Colors.transparent,
-                                        Colors.black.withValues(alpha: 0.02),
-                                      ],
-                                stops: const [0.0, 0.2, 0.6, 1.0],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      // 3. Top specular highlight streak
-                      if (plusSettings.plusEnableGlassmorphism && !isCardless)
-                        Positioned(
-                          top: 0,
-                          left: 0,
-                          right: 0,
-                          child: Container(
-                            height: 1.0,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.white.withValues(
-                                    alpha:
-                                        Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? 0.18
-                                        : 0.50,
-                                  ),
-                                  Colors.white.withValues(alpha: 0.0),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      // 3.5 Smart Launcher 6-inspired ambient radial icon halo
-                      if (plusSettings.plusGridAmbientIconHalo)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: RadialGradient(
-                                  center: isHorizontal
-                                      ? const Alignment(-0.65, 0.0)
-                                      : const Alignment(0.0, -0.35),
-                                  radius: isHorizontal ? 0.65 : 0.72,
-                                  colors: [
-                                    (resolvedCategoryColor ??
-                                            (widget.hasUpdate
-                                                ? colorScheme.primary
-                                                : colorScheme.primary))
-                                        .withValues(
-                                          alpha: isDark ? 0.16 : 0.10,
-                                        ),
-                                    Colors.transparent,
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      // 4. Category Accent Ribbon (M3E)
-                      if (plusSettings.plusCategoryAccentRibbon &&
-                          resolvedCategoryColor != null)
-                        isHorizontal
-                            ? Positioned(
-                                top: cardBorderRadius * 0.45,
-                                bottom: cardBorderRadius * 0.45,
-                                left: 0,
-                                child: Container(
-                                  width: 3.5,
-                                  decoration: BoxDecoration(
-                                    color: resolvedCategoryColor,
-                                    borderRadius: const BorderRadius.horizontal(
-                                      right: Radius.circular(3),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: resolvedCategoryColor.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                        blurRadius: 4,
-                                        offset: const Offset(1, 0),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              )
-                            : Positioned(
-                                top: 0,
-                                left: cardBorderRadius * 0.45,
-                                right: cardBorderRadius * 0.45,
-                                child: Container(
-                                  height: 3.5,
-                                  decoration: BoxDecoration(
-                                    color: resolvedCategoryColor,
-                                    borderRadius: const BorderRadius.vertical(
-                                      bottom: Radius.circular(3),
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: resolvedCategoryColor.withValues(
-                                          alpha: 0.4,
-                                        ),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 1),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                      // 5. Main Card Tap Target & Interactive Surface (InkWell)
-                      Positioned.fill(
-                        child: Semantics(
-                          label: _buildSemanticLabel(),
-                          button: true,
-                          selected: widget.isSelected,
-                          child: Listener(
-                            onPointerDown: (_) => AppHaptics.tapDown(),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: widget.onTap,
-                                onLongPress: () {
-                                  AppHaptics.mediumImpact();
-                                  widget.onLongPress();
-                                },
-                                onHighlightChanged: (highlighted) {
-                                  setState(() => _isPressed = highlighted);
-                                },
-                                customBorder: CardMetrics.shape(
-                                  cardBorderRadius,
-                                  expressive:
-                                      plusSettings.plusEnableMaterialExpressive,
-                                ),
-                                splashColor: colorScheme.primary.withValues(
-                                  alpha: 0.12,
-                                ),
-                                highlightColor: colorScheme.primary.withValues(
-                                  alpha: 0.06,
-                                ),
-                                child: Padding(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: padding,
-                                    vertical: isCompactTile
-                                        ? 5.0
-                                        : (padding + 1),
-                                  ),
-                                  child: isHorizontal
-                                      ? _buildHorizontalContent(
-                                          iconSize,
-                                          iconBorderRadius,
-                                          badgeSize,
-                                          plusSettings,
-                                          viewSettings,
-                                          cardColor,
-                                        )
-                                      : _buildVerticalContent(
-                                          iconSize,
-                                          iconBorderRadius,
-                                          badgeSize,
-                                          plusSettings,
-                                          viewSettings,
-                                          cardColor,
-                                          constraints.maxHeight,
-                                        ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // 6. Pinned Indicator (Top-Left)
-                      if (widget.appInMemory.app.pinned && !widget.isSelected)
-                        Positioned(
-                          top: 6,
-                          left: 6,
-                          child: _buildOverlayBadge(
-                            icon: Icons.push_pin_rounded,
-                            backgroundColor: colorScheme.primaryContainer
-                                .withValues(alpha: 0.9),
-                            iconColor: colorScheme.primary,
-                            borderColor: colorScheme.primary.withValues(
-                              alpha: 0.3,
-                            ),
-                          ),
-                        ),
-
-                      // 7. Repo Renamed Indicator
-                      if (widget.appInMemory.app.hasPendingRepoRename)
-                        Positioned(
-                          top: 6,
-                          left:
-                              (widget.appInMemory.app.pinned &&
-                                  !widget.isSelected)
-                              ? 30
-                              : 6,
-                          child: _buildOverlayBadge(
-                            icon: Icons.info_outline_rounded,
-                            backgroundColor: colorScheme.errorContainer
-                                .withValues(alpha: 0.9),
-                            iconColor: colorScheme.onErrorContainer,
-                            borderColor: colorScheme.error.withValues(
-                              alpha: 0.4,
-                            ),
-                            tooltip: tr('repoRenamed'),
-                          ),
-                        ),
-
-                      // 8. Update badge (Top-Right) — mirrors the pinned badge;
-                      // tap updates, shows progress while downloading.
-                      if (widget.hasUpdate &&
-                          !widget.isSelected &&
-                          !plusSettings.plusUpdateExpressiveBadge)
-                        Positioned(
-                          top: -3,
-                          right: -3,
-                          child: _TileUpdateBadge(
-                            appInMemory: widget.appInMemory,
-                            isAmbiguous: widget.isAmbiguous,
-                            animsEnabled:
-                                plusSettings.plusEnableEnhancedAnimations,
-                          ),
-                        ),
-
-                      // 9. Multi-Select Checkmark (Top-Right)
-                      if (widget.isSelected)
-                        Positioned(
-                          top: 6,
-                          right: 6,
-                          child: _buildOverlayBadge(
-                            icon: Icons.check_rounded,
-                            backgroundColor: colorScheme.primary,
-                            iconColor: colorScheme.onPrimary,
-                            circle: true,
-                            shadow: true,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
+              child: tileBody,
             );
             return widget.appInMemory.app.disabled
                 ? Opacity(opacity: 0.5, child: tile)
@@ -587,6 +583,7 @@ class _AppGridTileState extends State<AppGridTile>
     ViewSettingsProvider viewSettings,
     Color cardColor,
     double maxHeight,
+    bool isCardless,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final bool isCompactTile = maxHeight < 128;
@@ -662,10 +659,11 @@ class _AppGridTileState extends State<AppGridTile>
             if (!isUltraCompactTile || widget.hasUpdate) ...[
               if (widget.hasUpdate) ...[
                 _buildUpdateVersionPill(colorScheme, plusSettings),
-              ] else if (viewSettings.displayShowVersion ||
-                  viewSettings.displayShowAuthor ||
-                  viewSettings.displayShowDate ||
-                  plusSettings.plusGridShowSourceBadge) ...[
+              ] else if (!isCardless &&
+                  (viewSettings.displayShowVersion ||
+                      viewSettings.displayShowAuthor ||
+                      viewSettings.displayShowDate ||
+                      plusSettings.plusGridShowSourceBadge)) ...[
                 _buildUpToDatePill(
                   colorScheme,
                   viewSettings,
@@ -698,6 +696,7 @@ class _AppGridTileState extends State<AppGridTile>
     PlusSettingsProvider plusSettings,
     ViewSettingsProvider viewSettings,
     Color cardColor,
+    bool isCardless,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
@@ -744,10 +743,11 @@ class _AppGridTileState extends State<AppGridTile>
               if (widget.hasUpdate) ...[
                 const SizedBox(height: 4),
                 _buildUpdateVersionPill(colorScheme, plusSettings),
-              ] else if (viewSettings.displayShowVersion ||
-                  viewSettings.displayShowAuthor ||
-                  viewSettings.displayShowDate ||
-                  plusSettings.plusGridShowSourceBadge) ...[
+              ] else if (!isCardless &&
+                  (viewSettings.displayShowVersion ||
+                      viewSettings.displayShowAuthor ||
+                      viewSettings.displayShowDate ||
+                      plusSettings.plusGridShowSourceBadge)) ...[
                 const SizedBox(height: 3),
                 _buildUpToDatePill(
                   colorScheme,

@@ -885,7 +885,7 @@ class PlusSettingsProvider with ChangeNotifier {
   /// Render app grid tiles in a clean, cardless launcher style where unselected
   /// and up-to-date apps float directly on the surface without outer card borders.
   bool get plusGridCardlessStyle =>
-      _getBool('plusGridCardlessStyle', defaultValue: false);
+      _getBool('plusGridCardlessStyle', defaultValue: true);
   set plusGridCardlessStyle(bool val) => _setBool('plusGridCardlessStyle', val);
 
   /// Project a soft Smart Launcher 6-style radial color glow behind app icons

@@ -693,7 +693,7 @@ class AppsViewSettingsSection extends StatelessWidget {
       required bool hasUpdate,
       required bool isPinned,
     }) {
-      final tileCardless = isCardless && !hasUpdate;
+      final tileCardless = isCardless;
       final itemRadius = CardMetrics.inner(radius);
       final borderSide = tileCardless
           ? BorderSide.none

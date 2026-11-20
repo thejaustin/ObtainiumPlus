@@ -413,6 +413,18 @@ Future<void> _startObtainium() async {
   final sourceConfigProvider = SourceConfigProvider();
   final authProvider = AuthProvider();
 
+  // Start loading tracked apps from disk immediately so Phase 1 overlaps with
+  // provider initialization and the initial widget tree mount instead of
+  // waiting for lazy provider lookup.
+  final appsProvider = AppsProvider(
+    settingsProvider: sp,
+    plusSettingsProvider: plusSettings,
+    themeSettingsProvider: themeSettings,
+    behaviorSettingsProvider: behaviorSettings,
+    viewSettingsProvider: viewSettings,
+    updateSettingsProvider: updateSettings,
+  );
+
   await Future.wait([
     easyLocalizationFuture,
     dynamicColorWarmup,
@@ -430,17 +442,6 @@ Future<void> _startObtainium() async {
   plusSettings.addListener(() {
     sp.notifyPlusSettingsChanged();
   });
-
-  // Start loading tracked apps from disk immediately so Phase 1 overlaps with
-  // the initial widget tree mount instead of waiting for lazy provider lookup.
-  final appsProvider = AppsProvider(
-    settingsProvider: sp,
-    plusSettingsProvider: plusSettings,
-    themeSettingsProvider: themeSettings,
-    behaviorSettingsProvider: behaviorSettings,
-    viewSettingsProvider: viewSettings,
-    updateSettingsProvider: updateSettings,
-  );
 
   FlutterForegroundTask.initCommunicationPort();
   runApp(
