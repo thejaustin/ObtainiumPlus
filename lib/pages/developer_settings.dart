@@ -1,3 +1,4 @@
+import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/pages/settings_subpage.dart';
 import 'dart:async';
@@ -51,603 +52,644 @@ class DeveloperSettingsPage extends StatelessWidget {
         ? ((screenWidth - 1040) / 2).clamp(0.0, double.infinity)
         : 0.0;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('developerAndDiagnostics'))),
-      body: ListView(
+      body: CustomScrollView(
         controller: scrollController,
         physics: plusSettings.scrollPhysics,
-        padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
-        children: [
-          _buildSection(context, tr('visualLab'), [
-            ListTile(
-              leading: const Icon(Icons.science_outlined),
-              title: Text(tr('visualLab')),
-              subtitle: Text(
-                tr('visualLabDescription'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right_rounded),
-              onTap: () => pushRoute(context, const VisualLabPage()),
-            ),
-          ]),
-          _buildSection(context, tr('playStoreAndPluginsExperimental'), [
-            ListTile(
-              leading: const Icon(Icons.security_outlined),
-              title: Text(tr('authenticationMode')),
-              subtitle: Text(
-                context.watch<AuthProvider>().authMode == AuthMode.anonymous
-                    ? tr('anonymousDispenser')
-                    : (context.watch<AuthProvider>().authMode == AuthMode.hybrid
-                          ? tr('hybridSafetyFirst')
-                          : tr('personalMicroG')),
-              ),
-              onTap: () => _showAuthModePicker(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.token_outlined),
-              title: Text(tr('manageTokenDispensers')),
-              subtitle: Text(tr('anonymousLoginTokensAAS')),
-              trailing: const Icon(Icons.chevron_right),
-              enabled:
-                  context.watch<AuthProvider>().authMode != AuthMode.microG,
-              onTap: () => _showDispenserManager(context),
-            ),
-            if (context.watch<AuthProvider>().authMode != AuthMode.anonymous)
-              ListTile(
-                leading: const Icon(Icons.account_circle_outlined),
-                title: Text(tr('microGAccount')),
-                subtitle: Text(
-                  context.watch<AuthProvider>().microGEmail ??
-                      tr('noneSelected'),
-                ),
-                trailing: context.watch<AuthProvider>().microGEmail != null
-                    ? ScaleTouchWrapper(
-                        hapticOnPressDown: true,
-                        scaleDownFactor: 0.88,
-                        child: IconButton(
-                          icon: const Icon(Icons.link_off),
-                          tooltip: tr('removeLinkedAccount'),
-                          onPressed: () async {
-                            await context.read<AuthProvider>().setMicroGEmail(
-                              null,
-                            );
-                          },
-                        ),
-                      )
-                    : const Icon(Icons.chevron_right),
-                onTap: () => _showMicroGAccountPicker(context),
-              ),
-            ListTile(
-              leading: const Icon(Icons.extension_outlined),
-              title: Text(tr('pluginManager')),
-              subtitle: Text(tr('jsRecipesPluginManager')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => pushRoute(context, const PluginManagerPage()),
-            ),
-            ListTile(
-              leading: const Icon(Icons.phonelink_setup_outlined),
-              title: Text(tr('deviceSpoofingMicroG')),
-              subtitle: Text(tr('spoofGsfIdDeviceProfile')),
-              onTap: () => _showSpoofingManager(context),
-            ),
-            if (plusSettings.plusEnableMicroGHub)
-              ListTile(
-                leading: const Icon(Icons.hub_outlined),
-                title: Text(tr('microGDeploymentHub')),
-                subtitle: Text(tr('directlyDownloadInstallMicroG')),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => pushRoute(context, const MicroGHubPage()),
-              ),
-            if (plusSettings.plusEnableStandaloneInstaller)
-              ListTile(
-                leading: const Icon(Icons.install_mobile_outlined),
-                title: Text(tr('standaloneApkInstaller')),
-                subtitle: Text(tr('installAnyApkStorage')),
-                trailing: const Icon(Icons.file_open_outlined),
-                onTap: () => _handleStandaloneInstall(context),
-              ),
-            ListTile(
-              leading: const Icon(Icons.network_check_rounded),
-              title: Text(tr('playDiagTitle')),
-              subtitle: Text(
-                tr('playDiagEntryDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => showPlayStoreDiagnosticSheet(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.developer_board_rounded),
-              title: Text(tr('playInspectorTitle')),
-              subtitle: Text(
-                tr('playInspectorEntryDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => showPlayStoreInspectorSheet(context),
-            ),
-          ]),
-          _buildSection(context, tr('playStoreSafetyAndFilters'), [
-            _buildSafetyScoreCard(context),
-            const SizedBox(height: 12),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.verified_user_outlined),
-              title: Text(tr('verifiedAppsOnly')),
-              subtitle: Text(tr('onlyShowAppsVerifiedByPlayProtect')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .playStoreVerifiedOnly,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context.read<PlusSettingsProvider>().playStoreVerifiedOnly =
-                    val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.block_outlined),
-              title: Text(tr('noAdsFilter')),
-              subtitle: Text(tr('excludeAppsContainAds')),
-              value: context.watch<PlusSettingsProvider>().playStoreNoAdsFilter,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context.read<PlusSettingsProvider>().playStoreNoAdsFilter = val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(
-                Icons.system_security_update_warning_outlined,
-              ),
-              title: Text(tr('excludeSystemApps')),
-              subtitle: Text(tr('preventsUpdatingCriticalSystemComponents')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .playStoreExcludeSystemApps,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context
-                        .read<PlusSettingsProvider>()
-                        .playStoreExcludeSystemApps =
-                    val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.vpn_lock_outlined),
-              title: Text(tr('requireVpnStrictIpPrivacy')),
-              subtitle: Text(tr('blockAllNativePlayStoreTraffic')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .requireVPNForPlayStore,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context.read<PlusSettingsProvider>().requireVPNForPlayStore =
-                    val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.auto_delete_outlined),
-              title: Text(tr('autoDiscardTokens')),
-              subtitle: Text(tr('immediatelyClearAuthTokens')),
-              value: context.watch<PlusSettingsProvider>().autoDiscardTokens,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context.read<PlusSettingsProvider>().autoDiscardTokens = val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.cloud_sync_outlined),
-              title: Text(tr('devPreferQuotaFreeRegistries')),
-              subtitle: Text(
-                tr('devPreferQuotaFreeRegistriesDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .plusPreferQuotaFreeRegistries,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context
-                        .read<PlusSettingsProvider>()
-                        .plusPreferQuotaFreeRegistries =
-                    val;
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.download_for_offline_outlined),
-              title: Text(tr('minimumDownloadsFilter')),
-              subtitle: Text(
-                tr(
-                  'excludeAppsFewerThanDownloads',
-                  args: [
-                    context
+        slivers: [
+          CustomAppBar(title: tr('developerAndDiagnostics')),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: adaptiveMargin),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildSection(context, tr('visualLab'), [
+                  ListTile(
+                    leading: const Icon(Icons.science_outlined),
+                    title: Text(tr('visualLab')),
+                    subtitle: Text(
+                      tr('visualLabDescription'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => pushRoute(context, const VisualLabPage()),
+                  ),
+                ]),
+                _buildSection(context, tr('playStoreAndPluginsExperimental'), [
+                  ListTile(
+                    leading: const Icon(Icons.security_outlined),
+                    title: Text(tr('authenticationMode')),
+                    subtitle: Text(
+                      context.watch<AuthProvider>().authMode ==
+                              AuthMode.anonymous
+                          ? tr('anonymousDispenser')
+                          : (context.watch<AuthProvider>().authMode ==
+                                    AuthMode.hybrid
+                                ? tr('hybridSafetyFirst')
+                                : tr('personalMicroG')),
+                    ),
+                    onTap: () => _showAuthModePicker(context),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.token_outlined),
+                    title: Text(tr('manageTokenDispensers')),
+                    subtitle: Text(tr('anonymousLoginTokensAAS')),
+                    trailing: const Icon(Icons.chevron_right),
+                    enabled:
+                        context.watch<AuthProvider>().authMode !=
+                        AuthMode.microG,
+                    onTap: () => _showDispenserManager(context),
+                  ),
+                  if (context.watch<AuthProvider>().authMode !=
+                      AuthMode.anonymous)
+                    ListTile(
+                      leading: const Icon(Icons.account_circle_outlined),
+                      title: Text(tr('microGAccount')),
+                      subtitle: Text(
+                        context.watch<AuthProvider>().microGEmail ??
+                            tr('noneSelected'),
+                      ),
+                      trailing:
+                          context.watch<AuthProvider>().microGEmail != null
+                          ? ScaleTouchWrapper(
+                              hapticOnPressDown: true,
+                              scaleDownFactor: 0.88,
+                              child: IconButton(
+                                icon: const Icon(Icons.link_off),
+                                tooltip: tr('removeLinkedAccount'),
+                                onPressed: () async {
+                                  await context
+                                      .read<AuthProvider>()
+                                      .setMicroGEmail(null);
+                                },
+                              ),
+                            )
+                          : const Icon(Icons.chevron_right),
+                      onTap: () => _showMicroGAccountPicker(context),
+                    ),
+                  ListTile(
+                    leading: const Icon(Icons.extension_outlined),
+                    title: Text(tr('pluginManager')),
+                    subtitle: Text(tr('jsRecipesPluginManager')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => pushRoute(context, const PluginManagerPage()),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.phonelink_setup_outlined),
+                    title: Text(tr('deviceSpoofingMicroG')),
+                    subtitle: Text(tr('spoofGsfIdDeviceProfile')),
+                    onTap: () => _showSpoofingManager(context),
+                  ),
+                  if (plusSettings.plusEnableMicroGHub)
+                    ListTile(
+                      leading: const Icon(Icons.hub_outlined),
+                      title: Text(tr('microGDeploymentHub')),
+                      subtitle: Text(tr('directlyDownloadInstallMicroG')),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => pushRoute(context, const MicroGHubPage()),
+                    ),
+                  if (plusSettings.plusEnableStandaloneInstaller)
+                    ListTile(
+                      leading: const Icon(Icons.install_mobile_outlined),
+                      title: Text(tr('standaloneApkInstaller')),
+                      subtitle: Text(tr('installAnyApkStorage')),
+                      trailing: const Icon(Icons.file_open_outlined),
+                      onTap: () => _handleStandaloneInstall(context),
+                    ),
+                  ListTile(
+                    leading: const Icon(Icons.network_check_rounded),
+                    title: Text(tr('playDiagTitle')),
+                    subtitle: Text(
+                      tr('playDiagEntryDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showPlayStoreDiagnosticSheet(context),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.developer_board_rounded),
+                    title: Text(tr('playInspectorTitle')),
+                    subtitle: Text(
+                      tr('playInspectorEntryDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showPlayStoreInspectorSheet(context),
+                  ),
+                ]),
+                _buildSection(context, tr('playStoreSafetyAndFilters'), [
+                  _buildSafetyScoreCard(context),
+                  const SizedBox(height: 12),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.verified_user_outlined),
+                    title: Text(tr('verifiedAppsOnly')),
+                    subtitle: Text(tr('onlyShowAppsVerifiedByPlayProtect')),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .playStoreVerifiedOnly,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context
+                              .read<PlusSettingsProvider>()
+                              .playStoreVerifiedOnly =
+                          val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.block_outlined),
+                    title: Text(tr('noAdsFilter')),
+                    subtitle: Text(tr('excludeAppsContainAds')),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .playStoreNoAdsFilter,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context
+                              .read<PlusSettingsProvider>()
+                              .playStoreNoAdsFilter =
+                          val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(
+                      Icons.system_security_update_warning_outlined,
+                    ),
+                    title: Text(tr('excludeSystemApps')),
+                    subtitle: Text(
+                      tr('preventsUpdatingCriticalSystemComponents'),
+                    ),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .playStoreExcludeSystemApps,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context
+                              .read<PlusSettingsProvider>()
+                              .playStoreExcludeSystemApps =
+                          val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.vpn_lock_outlined),
+                    title: Text(tr('requireVpnStrictIpPrivacy')),
+                    subtitle: Text(tr('blockAllNativePlayStoreTraffic')),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .requireVPNForPlayStore,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context
+                              .read<PlusSettingsProvider>()
+                              .requireVPNForPlayStore =
+                          val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.auto_delete_outlined),
+                    title: Text(tr('autoDiscardTokens')),
+                    subtitle: Text(tr('immediatelyClearAuthTokens')),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .autoDiscardTokens,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context.read<PlusSettingsProvider>().autoDiscardTokens =
+                          val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.cloud_sync_outlined),
+                    title: Text(tr('devPreferQuotaFreeRegistries')),
+                    subtitle: Text(
+                      tr('devPreferQuotaFreeRegistriesDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .plusPreferQuotaFreeRegistries,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context
+                              .read<PlusSettingsProvider>()
+                              .plusPreferQuotaFreeRegistries =
+                          val;
+                    },
+                  ),
+                  const Divider(),
+                  ListTile(
+                    leading: const Icon(Icons.download_for_offline_outlined),
+                    title: Text(tr('minimumDownloadsFilter')),
+                    subtitle: Text(
+                      tr(
+                        'excludeAppsFewerThanDownloads',
+                        args: [
+                          context
+                              .watch<PlusSettingsProvider>()
+                              .playStoreMinDownloads
+                              .toString(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Slider(
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .playStoreMinDownloads
+                        .toDouble(),
+                    min: 0,
+                    max: 1000000,
+                    divisions: 100,
+                    label: context
                         .watch<PlusSettingsProvider>()
                         .playStoreMinDownloads
                         .toString(),
-                  ],
-                ),
-              ),
-            ),
-            Slider(
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .playStoreMinDownloads
-                  .toDouble(),
-              min: 0,
-              max: 1000000,
-              divisions: 100,
-              label: context
-                  .watch<PlusSettingsProvider>()
-                  .playStoreMinDownloads
-                  .toString(),
-              onChanged: (val) =>
-                  context.read<PlusSettingsProvider>().playStoreMinDownloads =
-                      val.toInt(),
-            ),
-          ]),
-          _buildSection(context, tr('hardwareAccelerationAndPerformance'), [
-            Container(
-              margin: const EdgeInsets.all(12),
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.primary.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.memory_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 20,
+                    onChanged: (val) =>
+                        context
+                            .read<PlusSettingsProvider>()
+                            .playStoreMinDownloads = val
+                            .toInt(),
+                  ),
+                ]),
+                _buildSection(context, tr('hardwareAccelerationAndPerformance'), [
+                  Container(
+                    margin: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        tr('hardwareTelemetry'),
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Adreno / Vulkan',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onPrimaryContainer,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Display: ${MediaQuery.sizeOf(context).width.toInt()}×${MediaQuery.sizeOf(context).height.toInt()} @ ${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(1)}x DPR',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Rasterizer: ${tr('gpuPipelineVulkan')}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    tr(
-                      'l1IconMemoryUsage',
-                      args: [
-                        AppsProvider.iconMemoryCacheCount.toString(),
-                        plusSettings.plusMaxIconMemoryEntries.toString(),
-                      ],
-                    ),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.speed_rounded),
-              title: Text(tr('plusHardwareAcceleration')),
-              subtitle: Text(
-                tr('plusHardwareAccelerationDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              value: plusSettings.plusHardwareAcceleration,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                plusSettings.plusHardwareAcceleration = val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.bolt_rounded),
-              title: Text(tr('plusFastLaunchPhase1')),
-              subtitle: Text(
-                tr('plusFastLaunchPhase1Desc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              value: plusSettings.plusFastLaunchPhase1,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                plusSettings.plusFastLaunchPhase1 = val;
-              },
-            ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.layers_outlined),
-              title: Text(tr('plusGridRepaintBoundaries')),
-              subtitle: Text(
-                tr('plusGridRepaintBoundariesDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              value: plusSettings.plusGridRepaintBoundaries,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                plusSettings.plusGridRepaintBoundaries = val;
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.image_outlined),
-              title: Text(tr('plusMaxIconMemoryEntries')),
-              subtitle: Text(
-                tr(
-                  'plusMaxIconMemoryEntriesDesc',
-                  args: [plusSettings.plusMaxIconMemoryEntries.toString()],
-                ),
-              ),
-            ),
-            Slider(
-              value: plusSettings.plusMaxIconMemoryEntries.toDouble(),
-              min: 100,
-              max: 1000,
-              divisions: 9,
-              label: '${plusSettings.plusMaxIconMemoryEntries}',
-              onChanged: (val) {
-                plusSettings.plusMaxIconMemoryEntries = val.toInt();
-              },
-            ),
-          ]),
-          _buildSection(context, tr('diagnostics'), [
-            ListTile(
-              leading: const Icon(Icons.receipt_long_outlined),
-              title: Text(tr('viewTalkerLogs')),
-              subtitle: Text(tr('realtimeNetworkRequests')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => pushRoute(context, TalkerScreen(talker: talker)),
-            ),
-            ListTile(
-              leading: const Icon(Icons.analytics_outlined),
-              title: Text(tr('crashStatistics')),
-              subtitle: Text(tr('localCrashFrequency')),
-              onTap: () async {
-                final stats = await CrashAnalytics.getStats();
-                if (context.mounted) {
-                  showDialog(
-                    context: context,
-                    builder: (context) => GlassDialog(
-                      title: tr('localCrashStats'),
-                      icon: Icons.analytics_outlined,
-                      content: Text(
-                        tr(
-                          'localCrashStatsContent',
-                          args: [
-                            stats.totalCrashes.toString(),
-                            stats.lastCrashTime != null
-                                ? stats.lastCrashTime.toString()
-                                : tr('never'),
-                            stats.crashTypes.isEmpty
-                                ? tr('none')
-                                : stats.crashTypes.join(", "),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.memory_rounded,
+                              color: Theme.of(context).colorScheme.primary,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              tr('hardwareTelemetry'),
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                            ),
+                            const Spacer(),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Adreno / Vulkan',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onPrimaryContainer,
+                                ),
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                      actions: [
-                        ScaleTouchWrapper(
-                          hapticOnPressDown: true,
-                          scaleDownFactor: 0.94,
-                          child: FilledButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text(tr('close')),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Display: ${MediaQuery.sizeOf(context).width.toInt()}×${MediaQuery.sizeOf(context).height.toInt()} @ ${MediaQuery.devicePixelRatioOf(context).toStringAsFixed(1)}x DPR',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Rasterizer: ${tr('gpuPipelineVulkan')}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          tr(
+                            'l1IconMemoryUsage',
+                            args: [
+                              AppsProvider.iconMemoryCacheCount.toString(),
+                              plusSettings.plusMaxIconMemoryEntries.toString(),
+                            ],
+                          ),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
                     ),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.bug_report_outlined),
-              title: Text(tr('standardAppLogs')),
-              subtitle: Text(tr('legacyObtainiumLogs')),
-              onTap: () => context.read<LogsProvider>().get().then((logs) {
-                if (!context.mounted) return;
-                if (logs.isEmpty) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(tr('noLogsFound'))));
-                } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => TalkerScreen(talker: talker),
-                    ),
-                  );
-                }
-              }),
-            ),
-            ListTile(
-              leading: const Icon(Icons.upload_file_outlined),
-              title: Text(tr('uploadLogsNewIssue')),
-              subtitle: Text(tr('opensPrefilledGithubIssue')),
-              onTap: () async {
-                final history = talker.history.reversed
-                    .take(200)
-                    .toList()
-                    .reversed;
-                final logText = history
-                    .map((e) => '[${e.title}] ${e.message}')
-                    .join('\n');
-
-                final body = Uri.encodeComponent(
-                  "## Diagnostic Logs Report\n\n"
-                  "**Device info:** (Include manually or check Sentry)\n\n"
-                  "### Logs:\n```\n$logText\n```",
-                );
-
-                final url =
-                    'https://github.com/thejaustin/ObtainiumPlus/issues/new?title=[Bug]+Diagnostic+Report&body=$body';
-
-                if (await canLaunchUrlString(url)) {
-                  await launchUrlString(
-                    url,
-                    mode: LaunchMode.externalApplication,
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.supervised_user_circle_outlined),
-              title: Text(tr('multiUserTitle')),
-              subtitle: Text(
-                tr('multiUserEntryDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => showMultiUserDiagnosticSheet(context),
-            ),
-            // Usage access has its full card in Settings > Behavior; Service
-            // Doctor shows its status next to battery and Shizuku+.
-            ListTile(
-              leading: const Icon(Icons.health_and_safety_outlined),
-              title: Text(tr('serviceDoctor')),
-              subtitle: Text(
-                tr('serviceDoctorEntryDesc'),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => showDeviceOptimizationSheet(context: context),
-            ),
-          ]),
-          // Corner radius and the expressive progress bar each have one
-          // home in Look & motion; this links to the Shapes page.
-          _buildSection(context, tr('expressiveDesignShapes'), [
-            ListTile(
-              leading: const Icon(Icons.rounded_corner_rounded),
-              title: Text(tr('settingsAppearanceShapes')),
-              subtitle: Text(tr('settingsAppearanceShapesDesc')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => pushRoute(
-                context,
-                SettingsSubpage(
-                  title: tr('settingsAppearanceShapes'),
-                  icon: Icons.rounded_corner_rounded,
-                  child: const ThemeSettingsSection(
-                    androidInfoFuture: null,
-                    colorsNameMap: <ColorSwatch<Object>, String>{},
-                    subCategory: 'shapes',
                   ),
-                ),
-              ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.speed_rounded),
+                    title: Text(tr('plusHardwareAcceleration')),
+                    subtitle: Text(
+                      tr('plusHardwareAccelerationDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    value: plusSettings.plusHardwareAcceleration,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      plusSettings.plusHardwareAcceleration = val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.bolt_rounded),
+                    title: Text(tr('plusFastLaunchPhase1')),
+                    subtitle: Text(
+                      tr('plusFastLaunchPhase1Desc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    value: plusSettings.plusFastLaunchPhase1,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      plusSettings.plusFastLaunchPhase1 = val;
+                    },
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.layers_outlined),
+                    title: Text(tr('plusGridRepaintBoundaries')),
+                    subtitle: Text(
+                      tr('plusGridRepaintBoundariesDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    value: plusSettings.plusGridRepaintBoundaries,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      plusSettings.plusGridRepaintBoundaries = val;
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.image_outlined),
+                    title: Text(tr('plusMaxIconMemoryEntries')),
+                    subtitle: Text(
+                      tr(
+                        'plusMaxIconMemoryEntriesDesc',
+                        args: [
+                          plusSettings.plusMaxIconMemoryEntries.toString(),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Slider(
+                    value: plusSettings.plusMaxIconMemoryEntries.toDouble(),
+                    min: 100,
+                    max: 1000,
+                    divisions: 9,
+                    label: '${plusSettings.plusMaxIconMemoryEntries}',
+                    onChanged: (val) {
+                      plusSettings.plusMaxIconMemoryEntries = val.toInt();
+                    },
+                  ),
+                ]),
+                _buildSection(context, tr('diagnostics'), [
+                  ListTile(
+                    leading: const Icon(Icons.receipt_long_outlined),
+                    title: Text(tr('viewTalkerLogs')),
+                    subtitle: Text(tr('realtimeNetworkRequests')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        pushRoute(context, TalkerScreen(talker: talker)),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.analytics_outlined),
+                    title: Text(tr('crashStatistics')),
+                    subtitle: Text(tr('localCrashFrequency')),
+                    onTap: () async {
+                      final stats = await CrashAnalytics.getStats();
+                      if (context.mounted) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => GlassDialog(
+                            title: tr('localCrashStats'),
+                            icon: Icons.analytics_outlined,
+                            content: Text(
+                              tr(
+                                'localCrashStatsContent',
+                                args: [
+                                  stats.totalCrashes.toString(),
+                                  stats.lastCrashTime != null
+                                      ? stats.lastCrashTime.toString()
+                                      : tr('never'),
+                                  stats.crashTypes.isEmpty
+                                      ? tr('none')
+                                      : stats.crashTypes.join(", "),
+                                ],
+                              ),
+                            ),
+                            actions: [
+                              ScaleTouchWrapper(
+                                hapticOnPressDown: true,
+                                scaleDownFactor: 0.94,
+                                child: FilledButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(tr('close')),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.bug_report_outlined),
+                    title: Text(tr('standardAppLogs')),
+                    subtitle: Text(tr('legacyObtainiumLogs')),
+                    onTap: () =>
+                        context.read<LogsProvider>().get().then((logs) {
+                          if (!context.mounted) return;
+                          if (logs.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(tr('noLogsFound'))),
+                            );
+                          } else {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    TalkerScreen(talker: talker),
+                              ),
+                            );
+                          }
+                        }),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.upload_file_outlined),
+                    title: Text(tr('uploadLogsNewIssue')),
+                    subtitle: Text(tr('opensPrefilledGithubIssue')),
+                    onTap: () async {
+                      final history = talker.history.reversed
+                          .take(200)
+                          .toList()
+                          .reversed;
+                      final logText = history
+                          .map((e) => '[${e.title}] ${e.message}')
+                          .join('\n');
+
+                      final body = Uri.encodeComponent(
+                        "## Diagnostic Logs Report\n\n"
+                        "**Device info:** (Include manually or check Sentry)\n\n"
+                        "### Logs:\n```\n$logText\n```",
+                      );
+
+                      final url =
+                          'https://github.com/thejaustin/ObtainiumPlus/issues/new?title=[Bug]+Diagnostic+Report&body=$body';
+
+                      if (await canLaunchUrlString(url)) {
+                        await launchUrlString(
+                          url,
+                          mode: LaunchMode.externalApplication,
+                        );
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.supervised_user_circle_outlined),
+                    title: Text(tr('multiUserTitle')),
+                    subtitle: Text(
+                      tr('multiUserEntryDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showMultiUserDiagnosticSheet(context),
+                  ),
+                  // Usage access has its full card in Settings > Behavior; Service
+                  // Doctor shows its status next to battery and Shizuku+.
+                  ListTile(
+                    leading: const Icon(Icons.health_and_safety_outlined),
+                    title: Text(tr('serviceDoctor')),
+                    subtitle: Text(
+                      tr('serviceDoctorEntryDesc'),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => showDeviceOptimizationSheet(context: context),
+                  ),
+                ]),
+                // Corner radius and the expressive progress bar each have one
+                // home in Look & motion; this links to the Shapes page.
+                _buildSection(context, tr('expressiveDesignShapes'), [
+                  ListTile(
+                    leading: const Icon(Icons.rounded_corner_rounded),
+                    title: Text(tr('settingsAppearanceShapes')),
+                    subtitle: Text(tr('settingsAppearanceShapesDesc')),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => pushRoute(
+                      context,
+                      SettingsSubpage(
+                        title: tr('settingsAppearanceShapes'),
+                        icon: Icons.rounded_corner_rounded,
+                        child: const ThemeSettingsSection(
+                          androidInfoFuture: null,
+                          colorsNameMap: <ColorSwatch<Object>, String>{},
+                          subCategory: 'shapes',
+                        ),
+                      ),
+                    ),
+                  ),
+                  SwitchListTile.adaptive(
+                    secondary: const Icon(Icons.refresh_rounded),
+                    title: Text(tr('plusUseWavyLoadingSpinner')),
+                    subtitle: Text(tr('plusUseWavyLoadingSpinnerDesc')),
+                    value: context
+                        .watch<PlusSettingsProvider>()
+                        .plusDevUseThirdPartyLoadingIndicator,
+                    onChanged: (val) {
+                      val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+                      context
+                              .read<PlusSettingsProvider>()
+                              .plusDevUseThirdPartyLoadingIndicator =
+                          val;
+                    },
+                  ),
+                ]),
+                _buildSection(context, tr('testing'), [
+                  ListTile(
+                    leading: const Icon(Icons.flash_on_outlined),
+                    iconColor: Theme.of(context).colorScheme.error,
+                    title: Text(tr('triggerTestCrash')),
+                    subtitle: Text(tr('forcesCrashVerify')),
+                    onTap: () {
+                      talker.warning(tr('userTriggeredTestCrash'));
+                      throw Exception(tr('obtainiumTestCrash'));
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.network_check_outlined),
+                    title: Text(tr('testNetworkLogging')),
+                    subtitle: Text(tr('sendsDummyRequest')),
+                    onTap: () async {
+                      talker.info(tr('triggeringTestNetworkRequest'));
+                      try {
+                        // ignore: unused_local_variable
+                        final response = await SentryHttpClient().get(
+                          Uri.parse('https://api.github.com/zen'),
+                        );
+                        talker.info(tr('testNetworkRequestSuccessful'));
+                      } catch (e, st) {
+                        talker.handle(e, st, tr('testNetworkRequestFailed'));
+                      }
+                    },
+                  ),
+                ]),
+                _buildSection(context, tr('externalLinks'), [
+                  ListTile(
+                    leading: const Icon(Icons.cloud_outlined),
+                    title: Text(tr('viewSentryProject')),
+                    onTap: () => launchUrlString(
+                      'https://sentry.io/organizations/af-developments/projects/obtainiumplus/',
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.list_alt_outlined),
+                    title: Text(tr('githubIssueTracker')),
+                    onTap: () => launchUrlString(
+                      CrashTracker.issueTrackerUrl,
+                      mode: LaunchMode.externalApplication,
+                    ),
+                  ),
+                ]),
+              ]),
             ),
-            SwitchListTile.adaptive(
-              secondary: const Icon(Icons.refresh_rounded),
-              title: Text(tr('plusUseWavyLoadingSpinner')),
-              subtitle: Text(tr('plusUseWavyLoadingSpinnerDesc')),
-              value: context
-                  .watch<PlusSettingsProvider>()
-                  .plusDevUseThirdPartyLoadingIndicator,
-              onChanged: (val) {
-                val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
-                context
-                        .read<PlusSettingsProvider>()
-                        .plusDevUseThirdPartyLoadingIndicator =
-                    val;
-              },
-            ),
-          ]),
-          _buildSection(context, tr('testing'), [
-            ListTile(
-              leading: const Icon(Icons.flash_on_outlined),
-              iconColor: Theme.of(context).colorScheme.error,
-              title: Text(tr('triggerTestCrash')),
-              subtitle: Text(tr('forcesCrashVerify')),
-              onTap: () {
-                talker.warning(tr('userTriggeredTestCrash'));
-                throw Exception(tr('obtainiumTestCrash'));
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.network_check_outlined),
-              title: Text(tr('testNetworkLogging')),
-              subtitle: Text(tr('sendsDummyRequest')),
-              onTap: () async {
-                talker.info(tr('triggeringTestNetworkRequest'));
-                try {
-                  // ignore: unused_local_variable
-                  final response = await SentryHttpClient().get(
-                    Uri.parse('https://api.github.com/zen'),
-                  );
-                  talker.info(tr('testNetworkRequestSuccessful'));
-                } catch (e, st) {
-                  talker.handle(e, st, tr('testNetworkRequestFailed'));
-                }
-              },
-            ),
-          ]),
-          _buildSection(context, tr('externalLinks'), [
-            ListTile(
-              leading: const Icon(Icons.cloud_outlined),
-              title: Text(tr('viewSentryProject')),
-              onTap: () => launchUrlString(
-                'https://sentry.io/organizations/af-developments/projects/obtainiumplus/',
-                mode: LaunchMode.externalApplication,
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.list_alt_outlined),
-              title: Text(tr('githubIssueTracker')),
-              onTap: () => launchUrlString(
-                CrashTracker.issueTrackerUrl,
-                mode: LaunchMode.externalApplication,
-              ),
-            ),
-          ]),
+          ),
         ],
       ),
     );
@@ -696,7 +738,25 @@ class DeveloperSettingsPage extends StatelessWidget {
                 width: 1.0,
               ),
             ),
-            child: Column(children: children),
+            child: Column(
+              children: [
+                for (var i = 0; i < children.length; i++) ...[
+                  if (i > 0)
+                    Divider(
+                      height: 1,
+                      thickness: 0.8,
+                      indent: 56,
+                      endIndent: 16,
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: theme.brightness == Brightness.dark
+                            ? 0.25
+                            : 0.45,
+                      ),
+                    ),
+                  children[i],
+                ],
+              ],
+            ),
           ),
         ],
       ),

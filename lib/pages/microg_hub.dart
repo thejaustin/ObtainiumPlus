@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
@@ -182,49 +183,67 @@ class _MicroGHubPageState extends State<MicroGHubPage> {
         : 16.0;
 
     return Scaffold(
-      appBar: AppBar(title: Text(tr('microGHub'))),
-      body: ListView(
+      body: CustomScrollView(
         physics: plusSettings.scrollPhysics,
-        padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 16),
-        children: [
-          _buildInfoCard(cs, cardRadius, isM3E),
-          const SizedBox(height: 24),
-          _buildProviderSection(cs, context, animsEnabled, cardRadius, isM3E),
-          const SizedBox(height: 24),
-          _buildComponentsSection(cs, cardRadius, isM3E),
-          const SizedBox(height: 24),
-          _buildOptionsSection(cs, cardRadius, isM3E),
-          const SizedBox(height: 32),
-          if (_isDownloading)
-            _buildProgressSection(
-              cs,
-              overallProgress,
-              trackedCount,
-              cardRadius,
-              isM3E,
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: ScaleTouchWrapper(
-                hapticOnPressDown: true,
-                scaleDownFactor: 0.97,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    AppHaptics.selectionClick();
-                    _startDeployment();
-                  },
-                  icon: const Icon(Icons.download_for_offline_outlined),
-                  label: Text(tr('startDeployment')),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(60),
-                    shape: CardMetrics.shape(cardRadius, expressive: isM3E),
-                    elevation: 4,
-                  ),
-                ),
-              ),
+        slivers: [
+          CustomAppBar(title: tr('microGHub')),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 16,
             ),
-          const SizedBox(height: 40),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildInfoCard(cs, cardRadius, isM3E),
+                const SizedBox(height: 24),
+                _buildProviderSection(
+                  cs,
+                  context,
+                  animsEnabled,
+                  cardRadius,
+                  isM3E,
+                ),
+                const SizedBox(height: 24),
+                _buildComponentsSection(cs, cardRadius, isM3E),
+                const SizedBox(height: 24),
+                _buildOptionsSection(cs, cardRadius, isM3E),
+                const SizedBox(height: 32),
+                if (_isDownloading)
+                  _buildProgressSection(
+                    cs,
+                    overallProgress,
+                    trackedCount,
+                    cardRadius,
+                    isM3E,
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: ScaleTouchWrapper(
+                      hapticOnPressDown: true,
+                      scaleDownFactor: 0.97,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          AppHaptics.selectionClick();
+                          _startDeployment();
+                        },
+                        icon: const Icon(Icons.download_for_offline_outlined),
+                        label: Text(tr('startDeployment')),
+                        style: FilledButton.styleFrom(
+                          minimumSize: const Size.fromHeight(60),
+                          shape: CardMetrics.shape(
+                            cardRadius,
+                            expressive: isM3E,
+                          ),
+                          elevation: 4,
+                        ),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 40),
+              ]),
+            ),
+          ),
         ],
       ),
     );

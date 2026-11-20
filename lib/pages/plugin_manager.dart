@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/plugin_provider.dart';
@@ -40,37 +41,46 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
         : 16.0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Plugin Manager')),
-      body: ListView(
+      body: CustomScrollView(
         physics: plusSettings.scrollPhysics,
-        padding: EdgeInsets.symmetric(horizontal: adaptiveMargin, vertical: 16),
-        children: [
-          _buildInstallCard(cs, pluginProvider, plusSettings, cardRadius),
-          const SizedBox(height: 32),
-          Padding(
-            padding: const EdgeInsets.only(left: 8.0, bottom: 16),
-            child: Text(
-              'Installed Plugins',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: cs.onSurface,
-                letterSpacing: -0.5,
-              ),
+        slivers: [
+          const CustomAppBar(title: 'Plugin Manager'),
+          SliverPadding(
+            padding: EdgeInsets.symmetric(
+              horizontal: adaptiveMargin,
+              vertical: 16,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildInstallCard(cs, pluginProvider, plusSettings, cardRadius),
+                const SizedBox(height: 32),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8.0, bottom: 16),
+                  child: Text(
+                    'Installed Plugins',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: cs.onSurface,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                ),
+                if (pluginProvider.plugins.isEmpty)
+                  _buildEmptyState(cs)
+                else
+                  ...pluginProvider.plugins.map(
+                    (plugin) => _buildPluginTile(
+                      cs,
+                      plugin,
+                      pluginProvider,
+                      plusSettings,
+                      cardRadius,
+                    ),
+                  ),
+              ]),
             ),
           ),
-          if (pluginProvider.plugins.isEmpty)
-            _buildEmptyState(cs)
-          else
-            ...pluginProvider.plugins.map(
-              (plugin) => _buildPluginTile(
-                cs,
-                plugin,
-                pluginProvider,
-                plusSettings,
-                cardRadius,
-              ),
-            ),
         ],
       ),
     );
