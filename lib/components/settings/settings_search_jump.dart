@@ -136,7 +136,7 @@ Element? findRowByTitle(BuildContext root, String title) {
 }
 
 /// Scrolls [row] into view on the spatial-slow spring, then pulses a
-/// secondaryContainer highlight over it on effects-slow. With motion off it
+/// primary highlight wash over it on effects-slow. With motion off it
 /// still scrolls (instantly) but skips the pulse.
 Future<void> revealAndHighlightRow(BuildContext context, Element row) async {
   final colors = Theme.of(context).colorScheme;
@@ -161,7 +161,7 @@ Future<void> revealAndHighlightRow(BuildContext context, Element row) async {
       rect: rect,
       child: IgnorePointer(
         child: _RowPulse(
-          color: colors.secondaryContainer,
+          color: colors.primary,
           duration: AppMotion.effectsSlow.duration,
           onDone: () => entry.remove(),
         ),
@@ -213,11 +213,13 @@ class _RowPulseState extends State<_RowPulse>
       animation: _c,
       builder: (_, _) {
         // Triangle 0 → 1 → 0 shaped by the effects spring.
+        // Subtle 0.24 alpha primary wash (matches ShizukuPlus #687 parity)
+        // so the row's text and custom accent colors stay cleanly readable.
         final t = _c.value < 0.5 ? _c.value * 2 : (1 - _c.value) * 2;
         final a = AppMotion.effectsSlow.transform(t).clamp(0.0, 1.0);
         return DecoratedBox(
           decoration: BoxDecoration(
-            color: widget.color.withValues(alpha: 0.75 * a),
+            color: widget.color.withValues(alpha: 0.24 * a),
             borderRadius: BorderRadius.circular(16),
           ),
         );

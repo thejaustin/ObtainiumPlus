@@ -153,9 +153,11 @@ class _UsageAccessCardState extends State<UsageAccessCard>
     final shape = CardMetrics.shape(16, expressive: isM3E);
 
     final statusBg = _isGranted
-        ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-        : colorScheme.errorContainer.withValues(alpha: 0.25);
-    final statusColor = _isGranted ? colorScheme.primary : colorScheme.error;
+        ? colorScheme.primaryContainer
+        : colorScheme.errorContainer;
+    final statusColor = _isGranted
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onErrorContainer;
     final statusIcon = _isGranted
         ? Icons.check_circle_rounded
         : Icons.warning_amber_rounded;

@@ -273,7 +273,7 @@ class _AppGridTileState extends State<AppGridTile>
               ];
             }
 
-            return AnimatedScale(
+            final tile = AnimatedScale(
               scale: _isPressed ? 0.96 : 1.0,
               duration: Duration(milliseconds: _isPressed ? 80 : 320),
               curve: _isPressed ? Curves.easeIn : AppConstants.expressiveSpring,
@@ -570,6 +570,9 @@ class _AppGridTileState extends State<AppGridTile>
                 ),
               ),
             );
+            return widget.appInMemory.app.disabled
+                ? Opacity(opacity: 0.5, child: tile)
+                : tile;
           },
         ),
       ),

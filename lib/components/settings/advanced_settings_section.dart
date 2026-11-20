@@ -919,12 +919,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                   .read<PlusSettingsProvider>()
                   .plusEnableMaterialExpressive,
               color: _verificationSuccess
-                  ? Theme.of(
-                      context,
-                    ).colorScheme.primaryContainer.withValues(alpha: 0.5)
-                  : Theme.of(
-                      context,
-                    ).colorScheme.errorContainer.withValues(alpha: 0.5),
+                  ? Theme.of(context).colorScheme.primaryContainer
+                  : Theme.of(context).colorScheme.errorContainer,
               borderColor: _verificationSuccess
                   ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
                   : Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
@@ -935,8 +931,8 @@ class _TokenConfigDialogContentState extends State<_TokenConfigDialogContent> {
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: _verificationSuccess
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.error,
+                    ? Theme.of(context).colorScheme.onPrimaryContainer
+                    : Theme.of(context).colorScheme.onErrorContainer,
               ),
               textAlign: TextAlign.center,
             ),
