@@ -238,14 +238,14 @@ class _SegmentItem extends StatelessWidget {
     final Color badgeBgColor;
     final Color badgeFgColor;
     if (data.isUrgentBadge) {
-      badgeBgColor = isSelected ? colorScheme.primary : colorScheme.error;
-      badgeFgColor = isSelected ? colorScheme.onPrimary : colorScheme.onError;
+      badgeBgColor = isSelected ? colorScheme.errorContainer : colorScheme.error;
+      badgeFgColor = isSelected ? colorScheme.onErrorContainer : colorScheme.onError;
     } else {
       badgeBgColor = isSelected
-          ? colorScheme.primary.withValues(alpha: 0.16)
+          ? colorScheme.primary
           : colorScheme.surfaceContainerHighest.withValues(alpha: 0.7);
       badgeFgColor = isSelected
-          ? colorScheme.primary
+          ? colorScheme.onPrimary
           : colorScheme.onSurfaceVariant;
     }
 

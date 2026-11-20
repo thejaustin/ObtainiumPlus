@@ -177,12 +177,12 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
             width: badgeSize,
             height: badgeSize,
             decoration: ShapeDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
+              color: colorScheme.primaryContainer,
               shape: CardMetrics.shape(innerRadius, expressive: isM3E),
             ),
             child: Icon(
               widget.icon,
-              color: colorScheme.primary,
+              color: colorScheme.onPrimaryContainer,
               size: isCompact ? 16 : 20,
             ),
           )
@@ -243,7 +243,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                           width: badgeSize,
                           height: badgeSize,
                           decoration: ShapeDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            color: colorScheme.primaryContainer,
                             shape: CardMetrics.shape(
                               innerRadius,
                               expressive: isM3E,
@@ -251,7 +251,7 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                           ),
                           child: Icon(
                             widget.icon,
-                            color: colorScheme.primary,
+                            color: colorScheme.onPrimaryContainer,
                             size: isCompact ? 16 : 20,
                           ),
                         ),

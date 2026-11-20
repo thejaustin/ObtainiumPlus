@@ -104,7 +104,7 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                 height: badgeSize,
                 decoration: ShapeDecoration(
                   color: _isDragging
-                      ? colorScheme.primary.withValues(alpha: 0.18)
+                      ? colorScheme.primaryContainer
                       : colorScheme.surfaceContainerHighest.withValues(
                           alpha: isM3E ? 0.50 : 0.30,
                         ),
@@ -114,7 +114,7 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                   widget.icon,
                   size: isCompact ? 16 : 19,
                   color: _isDragging
-                      ? colorScheme.primary
+                      ? colorScheme.onPrimaryContainer
                       : colorScheme.onSurfaceVariant,
                 ),
               ),

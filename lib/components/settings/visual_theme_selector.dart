@@ -81,13 +81,13 @@ class VisualThemeSelector extends StatelessWidget {
                 width: badgeSize,
                 height: badgeSize,
                 decoration: ShapeDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.14),
+                  color: colorScheme.primaryContainer,
                   shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                 ),
                 child: Icon(
                   Icons.palette_outlined,
                   size: isCompact ? 16 : 18,
-                  color: colorScheme.primary,
+                  color: colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 14),

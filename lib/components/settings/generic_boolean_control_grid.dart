@@ -316,8 +316,8 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    colorScheme.primaryContainer.withValues(alpha: 0.72),
-                    colorScheme.primary.withValues(alpha: 0.16),
+                    colorScheme.primaryContainer,
+                    colorScheme.primaryContainer.withValues(alpha: 0.85),
                   ],
                 )
               : LinearGradient(
@@ -363,7 +363,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: value
-                                ? colorScheme.primary.withValues(alpha: 0.15)
+                                ? colorScheme.surface.withValues(alpha: 0.5)
                                 : colorScheme.onSurface.withValues(alpha: 0.06),
                             shape: BoxShape.circle,
                           ),
@@ -371,7 +371,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                             setting.icon,
                             size: 18,
                             color: value
-                                ? colorScheme.primary
+                                ? colorScheme.onPrimaryContainer
                                 : colorScheme.onSurfaceVariant,
                           ),
                         ),
@@ -416,7 +416,7 @@ class _GridToggleItem<T extends ChangeNotifier> extends StatelessWidget {
                         fontSize: isCompact ? 12.5 : 13.5,
                         fontWeight: FontWeight.w600,
                         color: value
-                            ? colorScheme.primary
+                            ? colorScheme.onPrimaryContainer
                             : colorScheme.onSurface,
                         letterSpacing: 0,
                         height: 1.25,

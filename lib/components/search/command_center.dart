@@ -731,7 +731,7 @@ class _CommandCenterState extends State<CommandCenter> {
                                 ? (p / 100.0).clamp(0.0, 1.0)
                                 : null,
                             minHeight: 4,
-                            backgroundColor: cs.primary.withValues(alpha: 0.15),
+                            backgroundColor: cs.surfaceContainerHighest,
                             valueColor: AlwaysStoppedAnimation<Color>(
                               cs.primary,
                             ),

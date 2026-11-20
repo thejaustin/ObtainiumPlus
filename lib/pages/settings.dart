@@ -1457,10 +1457,14 @@ class _FooterIcon extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: ShapeDecoration(
-                  color: color.withValues(alpha: 0.12),
+                  color: colorScheme.primaryContainer,
                   shape: CardMetrics.shape(14, expressive: isM3E),
                 ),
-                child: Icon(icon, color: color, size: 22),
+                child: Icon(
+                  icon,
+                  color: colorScheme.onPrimaryContainer,
+                  size: 22,
+                ),
               ),
               const SizedBox(height: 6),
               Text(

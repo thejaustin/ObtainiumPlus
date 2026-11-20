@@ -323,22 +323,26 @@ class ThemeSettingsSection extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       colorScheme.primaryContainer,
-                      colorScheme.primary.withValues(alpha: 0.15),
+                      colorScheme.primaryContainer.withValues(alpha: 0.7),
                     ],
                   ),
                   shape: CardMetrics.shape(
                     radius,
                     expressive: isM3E,
                     side: BorderSide(
-                      color: colorScheme.primary.withValues(alpha: 0.3),
-                      width: 1.5,
+                      color: colorScheme.outlineVariant.withValues(
+                        alpha: Theme.of(context).brightness == Brightness.dark
+                            ? 0.35
+                            : 0.65,
+                      ),
+                      width: 1.0,
                     ),
                   ),
                 ),
                 child: Center(
                   child: Icon(
                     Icons.apps_rounded,
-                    color: colorScheme.primary,
+                    color: colorScheme.onPrimaryContainer,
                     size: 28,
                   ),
                 ),

@@ -99,7 +99,7 @@ class PlusFeaturesSection extends StatelessWidget {
                       height: badgeSize,
                       decoration: ShapeDecoration(
                         color: isEnabled
-                            ? colorScheme.primary.withValues(alpha: 0.16)
+                            ? colorScheme.primaryContainer
                             : colorScheme.surfaceContainerHighest.withValues(
                                 alpha: 0.65,
                               ),
@@ -122,7 +122,7 @@ class PlusFeaturesSection extends StatelessWidget {
                               : Icons.auto_awesome_outlined,
                           key: ValueKey<bool>(isEnabled),
                           color: isEnabled
-                              ? colorScheme.primary
+                              ? colorScheme.onPrimaryContainer
                               : colorScheme.onSurfaceVariant,
                           size: isCompact ? 16 : 18,
                         ),

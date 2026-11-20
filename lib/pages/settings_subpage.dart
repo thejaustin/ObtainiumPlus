@@ -179,7 +179,7 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                             final isCurrent = index == _currentIndex;
                             final siblingAccent =
                                 sibling.accentColor ?? resolvedAccent;
-                            final chipRadius = CardMetrics.inner(cardRadius);
+                            final chipRadius = CardMetrics.pill(baseRadius);
                             final chipKey = index < _siblingKeys.length
                                 ? _siblingKeys[index]
                                 : null;
@@ -193,12 +193,10 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                               ),
                               child: ScaleTouchWrapper(
                                 hapticOnPressDown: true,
-                                scaleDownFactor: 0.94,
+                                scaleDownFactor: 0.96,
                                 child: Material(
                                   color: isCurrent
-                                      ? siblingAccent.withValues(
-                                          alpha: isM3E ? 0.22 : 0.16,
-                                        )
+                                      ? colorScheme.secondaryContainer
                                       : (plusSettings.plusEnableGlassmorphism
                                             ? colorScheme.surfaceContainerLow
                                                   .withValues(alpha: 0.72)
@@ -208,7 +206,7 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                     expressive: isM3E,
                                     side: BorderSide(
                                       color: isCurrent
-                                          ? siblingAccent.withValues(alpha: 0.6)
+                                          ? colorScheme.secondary.withValues(alpha: 0.5)
                                           : colorScheme.outlineVariant
                                                 .withValues(
                                                   alpha:
@@ -247,7 +245,7 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                             sibling.icon,
                                             size: isCompact ? 16 : 18,
                                             color: isCurrent
-                                                ? siblingAccent
+                                                ? colorScheme.onSecondaryContainer
                                                 : colorScheme.onSurfaceVariant,
                                           ),
                                           const SizedBox(width: 8),
@@ -256,13 +254,8 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                                             style: theme.textTheme.labelMedium
                                                 ?.copyWith(
                                                   color: isCurrent
-                                                      ? (theme.brightness ==
-                                                                Brightness.dark
-                                                            ? siblingAccent
-                                                            : colorScheme
-                                                                  .onSurface)
-                                                      : colorScheme
-                                                            .onSurfaceVariant,
+                                                      ? colorScheme.onSecondaryContainer
+                                                      : colorScheme.onSurfaceVariant,
                                                   fontWeight: isCurrent
                                                       ? FontWeight.w700
                                                       : FontWeight.w500,

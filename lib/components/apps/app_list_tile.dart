@@ -1390,12 +1390,16 @@ class _AppListTileState extends State<AppListTile>
       decoration: BoxDecoration(
         color: expressiveAction
             ? colorScheme.primary
-            : colorScheme.primary.withValues(alpha: 0.12),
+            : colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
         border: Border.all(
           color: expressiveAction
               ? colorScheme.primary
-              : colorScheme.primary.withValues(alpha: 0.30),
+              : colorScheme.outlineVariant.withValues(
+                  alpha: Theme.of(context).brightness == Brightness.dark
+                      ? 0.35
+                      : 0.65,
+                ),
           width: 0.6,
         ),
         boxShadow: expressiveAction
@@ -1418,7 +1422,7 @@ class _AppListTileState extends State<AppListTile>
             size: expressiveAction ? 11 : 9,
             color: expressiveAction
                 ? colorScheme.onPrimary
-                : colorScheme.primary,
+                : colorScheme.onPrimaryContainer,
           ),
           const SizedBox(width: 3),
           Flexible(
@@ -1431,7 +1435,7 @@ class _AppListTileState extends State<AppListTile>
                 fontWeight: FontWeight.w700,
                 color: expressiveAction
                     ? colorScheme.onPrimary
-                    : colorScheme.primary,
+                    : colorScheme.onPrimaryContainer,
                 fontFamily: 'monospace',
                 letterSpacing: 0.1,
               ),

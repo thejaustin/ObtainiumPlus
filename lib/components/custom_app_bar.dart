@@ -72,13 +72,30 @@ class _CustomAppBarState extends State<CustomAppBar> {
         backgroundColor: colorScheme.surface.withValues(
           alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
         ),
-        title: Text(
-          widget.title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            color: colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-            letterSpacing: -0.2,
-          ),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.titleLarge?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.2,
+              ),
+            ),
+            if (widget.subtitle != null)
+              Text(
+                widget.subtitle!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ),
         bottom: widget.bottom,
         actions: widget.actions,
