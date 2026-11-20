@@ -170,6 +170,7 @@ class SettingsChildRows extends StatelessWidget {
     return ConnectedSettingContainer(
       child: AnimatedOpacity(
         opacity: enabled ? 1 : 0.38,
+        curve: AppMotion.effectsFast,
         duration: AppMotion.duration(
           context,
           const Duration(milliseconds: 200),

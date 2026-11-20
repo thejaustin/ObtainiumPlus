@@ -172,7 +172,7 @@ class ThemeSettingsSection extends StatelessWidget {
                   icon: Icons.home_max_rounded,
                   title: tr('plusHomeCornerRadius'),
                   value: plusSettings.plusHomeCornerRadius,
-                  defaultValue: 20.0,
+                  defaultValue: 28.0,
                   min: 0,
                   max: 40,
                   divisions: 40,
@@ -184,7 +184,7 @@ class ThemeSettingsSection extends StatelessWidget {
                   icon: Icons.settings_suggest_rounded,
                   title: tr('plusSettingsCornerRadius'),
                   value: plusSettings.plusSettingsCornerRadius,
-                  defaultValue: 20.0,
+                  defaultValue: 24.0,
                   min: 0,
                   max: 40,
                   divisions: 40,
@@ -270,9 +270,9 @@ class ThemeSettingsSection extends StatelessWidget {
             helpText: tr('shapesHelp'),
             onReset: () {
               AppHaptics.heavyImpact();
-              plusSettings.plusGlobalCornerRadius = 20.0;
-              plusSettings.plusHomeCornerRadius = 20.0;
-              plusSettings.plusSettingsCornerRadius = 16.0;
+              plusSettings.plusGlobalCornerRadius = 28.0;
+              plusSettings.plusHomeCornerRadius = 28.0;
+              plusSettings.plusSettingsCornerRadius = 24.0;
               plusSettings.plusOverrideIndividualCornerRadius = false;
             },
             children: shapeWidgets,

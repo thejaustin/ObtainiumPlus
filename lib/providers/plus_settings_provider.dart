@@ -635,12 +635,12 @@ class PlusSettingsProvider with ChangeNotifier {
   // Range-bound prefs are clamped at the getter: imported/stale values can
   // be arbitrary, and out-of-range ones break the Sliders bound to them.
   double get plusGlobalCornerRadius =>
-      _getDouble('plusGlobalCornerRadius', defaultValue: 22.0).clamp(0.0, 40.0);
+      _getDouble('plusGlobalCornerRadius', defaultValue: 28.0).clamp(0.0, 40.0);
   set plusGlobalCornerRadius(double val) =>
       _setDouble('plusGlobalCornerRadius', val);
 
   double get plusHomeCornerRadius =>
-      _getDouble('plusHomeCornerRadius', defaultValue: 22.0).clamp(0.0, 40.0);
+      _getDouble('plusHomeCornerRadius', defaultValue: 28.0).clamp(0.0, 40.0);
   set plusHomeCornerRadius(double val) =>
       _setDouble('plusHomeCornerRadius', val);
 

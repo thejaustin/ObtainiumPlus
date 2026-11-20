@@ -164,6 +164,10 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
               AnimatedContainer(
                 duration: Duration(milliseconds: animsEnabled ? 220 : 0),
                 curve: Curves.easeOutCubic,
+                constraints: BoxConstraints(
+                  minWidth: isCompact ? 46.0 : 54.0,
+                ),
+                alignment: Alignment.center,
                 padding: EdgeInsets.symmetric(
                   horizontal: _isDragging
                       ? (isCompact ? 8 : 10)
@@ -193,9 +197,18 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                 ),
                 clipBehavior: Clip.hardEdge,
                 child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: animsEnabled ? 150 : 0),
+                  duration: Duration(
+                    milliseconds: (animsEnabled && !_isDragging) ? 150 : 0,
+                  ),
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
+                  layoutBuilder: (currentChild, previousChildren) => Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      ...previousChildren,
+                      if (currentChild != null) currentChild,
+                    ],
+                  ),
                   transitionBuilder: (child, animation) {
                     final isEntering = child.key == ValueKey<String>(labelText);
                     final dy = isEntering
@@ -215,6 +228,7 @@ class _SettingsSliderTileState extends State<SettingsSliderTile> {
                   child: Text(
                     labelText,
                     key: ValueKey<String>(labelText),
+                    textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.labelMedium!.copyWith(
                       fontSize: isCompact ? 11 : null,
                       fontWeight: _isDragging
