@@ -843,17 +843,18 @@ class _AppGridTileState extends State<AppGridTile>
                           expressive: plusSettings.plusEnableMaterialExpressive,
                         ),
                       ),
-                      child: Image.memory(
-                        widget.appInMemory.icon!,
+                      child: Image(
+                        image: ResizeImage.resizeIfNeeded(
+                          (iconSize * MediaQuery.devicePixelRatioOf(context))
+                              .round(),
+                          (iconSize * MediaQuery.devicePixelRatioOf(context))
+                              .round(),
+                          widget.appInMemory.memoryImage ??
+                              MemoryImage(widget.appInMemory.icon!),
+                        ),
                         fit: BoxFit.contain,
                         gaplessPlayback: true,
                         filterQuality: FilterQuality.medium,
-                        cacheWidth:
-                            (iconSize * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
-                        cacheHeight:
-                            (iconSize * MediaQuery.devicePixelRatioOf(context))
-                                .round(),
                       ),
                     )
                   : AppIconShimmer(

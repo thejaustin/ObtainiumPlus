@@ -214,6 +214,32 @@ class MainActivity : FlutterActivity() {
             setIntent(transformShareIntent(it))
         }
         super.onCreate(savedInstanceState)
+        enableHighRefreshRate()
+    }
+
+    private fun enableHighRefreshRate() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                val currentDisplay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    display
+                } else {
+                    @Suppress("DEPRECATION")
+                    window.windowManager.defaultDisplay
+                }
+                val modes = currentDisplay?.supportedModes ?: emptyArray()
+                var maxMode: android.view.Display.Mode? = null
+                for (m in modes) {
+                    if (maxMode == null || m.refreshRate > maxMode.refreshRate) {
+                        maxMode = m
+                    }
+                }
+                if (maxMode != null) {
+                    val params = window.attributes
+                    params.preferredDisplayModeId = maxMode.modeId
+                    window.attributes = params
+                }
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onNewIntent(intent: Intent) {

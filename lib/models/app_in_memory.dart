@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'dart:typed_data';
 import 'package:android_package_manager/android_package_manager.dart';
 import 'package:crypto/crypto.dart';
@@ -22,7 +23,15 @@ class AppInMemory {
   final DownloadState download;
   PackageInfo? installedInfo;
   Uint8List? icon;
+  MemoryImage? _memoryImage;
   String? sourceType;
+
+  /// Cached [MemoryImage] provider instance to avoid repeated byte hashing.
+  MemoryImage? get memoryImage {
+    final iconBytes = icon;
+    if (iconBytes == null) return null;
+    return _memoryImage ??= MemoryImage(iconBytes);
+  }
 
   ValueNotifier<double?> get downloadProgressNotifier => download.progress;
 
@@ -55,28 +64,38 @@ class AppInMemory {
     DownloadState? download,
   }) : download = download ?? (DownloadState()..progress.value = progress);
 
-  AppInMemory deepCopy() => AppInMemory(
-    app.deepCopy(),
-    downloadProgress,
-    installedInfo,
-    icon,
-    sourceType: sourceType,
-    download: download,
-  );
+  AppInMemory deepCopy() {
+    final copy = AppInMemory(
+      app.deepCopy(),
+      downloadProgress,
+      installedInfo,
+      icon,
+      sourceType: sourceType,
+      download: download,
+    );
+    copy._memoryImage = _memoryImage;
+    return copy;
+  }
 
   AppInMemory copyWith({
     App? app,
     PackageInfo? installedInfo,
     Uint8List? icon,
     String? sourceType,
-  }) => AppInMemory(
-    app ?? this.app,
-    downloadProgress,
-    installedInfo ?? this.installedInfo,
-    icon ?? this.icon,
-    sourceType: sourceType ?? this.sourceType,
-    download: download,
-  );
+  }) {
+    final copy = AppInMemory(
+      app ?? this.app,
+      downloadProgress,
+      installedInfo ?? this.installedInfo,
+      icon ?? this.icon,
+      sourceType: sourceType ?? this.sourceType,
+      download: download,
+    );
+    if (icon == null || icon == this.icon) {
+      copy._memoryImage = _memoryImage;
+    }
+    return copy;
+  }
 
   String get name => app.overrideName ?? app.finalName;
   String get author => app.overrideAuthor ?? app.finalAuthor;

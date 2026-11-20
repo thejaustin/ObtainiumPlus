@@ -448,6 +448,12 @@ Future<void> _startObtainium() async {
     sp.notifyPlusSettingsChanged();
   });
 
+  // Scale Flutter decoded image cache for high-resolution displays (e.g. 1440x3120).
+  // Default is 1000 images and 100MB, which can thrash on high-DPI grids with 100+ app icons.
+  // Expanding to 2500 entries and 256MB keeps all app icons decoded in GPU texture memory.
+  PaintingBinding.instance.imageCache.maximumSize = 2500;
+  PaintingBinding.instance.imageCache.maximumSizeBytes = 256 * 1024 * 1024;
+
   FlutterForegroundTask.initCommunicationPort();
   runApp(
     MultiProvider(

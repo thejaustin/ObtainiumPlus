@@ -325,11 +325,9 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     final viewSettings = context.watch<ViewSettingsProvider>();
     final updateSettings = context.watch<UpdateSettingsProvider>();
     final behaviorSettings = context.watch<BehaviorSettingsProvider>();
-    // deepCopy: false — build() is read-only; deep-cloning every app on every
-    // frame (download progress ticks, etc.) was the dominant rebuild cost.
-    // getAppValues().toList() already snapshots the map values into a new List,
-    // so no secondary List.from() copy is needed.
-    var listedApps = appsProvider.getAppValues(deepCopy: false).toList();
+    // Deferred to `else` branch of `canReuse` check to avoid allocating a
+    // 160+ element list on every frame when the memoized view can be reused.
+    late List<AppInMemory> listedApps;
 
     refresh() {
       AppHaptics.lightImpact();
@@ -397,6 +395,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       existingUpdates = _memoExistingUpdates!;
       newInstalls = _memoNewInstalls!;
     } else {
+      listedApps = appsProvider.getAppValues(deepCopy: false).toList();
       // Pre-compute lowercase filter tokens once (not per-app inside the loop).
       final lowerNameTokens = filter.nameFilter.isNotEmpty
           ? filter.nameFilter
@@ -2445,16 +2444,19 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                     SliverToBoxAdapter(
                       child: Builder(
                         builder: (ctx) {
-                          final hasNavBar = plusSettings.plusEnableBottomNavBar &&
+                          final hasNavBar =
+                              plusSettings.plusEnableBottomNavBar &&
                               !plusSettings.plusTopUILayout &&
                               !settingsProvider.isTV;
                           final navBarHeight = hasNavBar ? 88.0 : 0.0;
-                          final fabHeight = (plusSettings.plusEnableFAB &&
+                          final fabHeight =
+                              (plusSettings.plusEnableFAB &&
                                   !settingsProvider.isTV)
                               ? 72.0
                               : 24.0;
                           return SizedBox(
-                            height: navBarHeight +
+                            height:
+                                navBarHeight +
                                 MediaQuery.paddingOf(ctx).bottom +
                                 fabHeight,
                           );
