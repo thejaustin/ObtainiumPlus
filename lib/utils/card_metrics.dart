@@ -70,14 +70,24 @@ class CardMetrics {
 class GridMetrics {
   /// Calculates responsive column counts adapting to screen width breakpoints.
   ///
-  /// - Phones in portrait (< 500dp): 2 columns for optimal reading and comfort
-  /// - Large foldables / phablets (500–699dp): 3 columns
-  /// - Phone landscape / small tablets (700–899dp): 4 columns
-  /// - Medium tablets (900–1199dp): 5 columns
-  /// - Large tablets / desktops / TVs (>= 1200dp): 6 columns
-  static int adaptiveColumns(BuildContext context, {int preferred = 0}) {
+  /// In cardless launcher mode ([cardless] = true), provides dense launcher-style
+  /// grid columns (4 on portrait phones, matching Hail and One UI Home).
+  /// In carded mode ([cardless] = false), reserves wider columns (2 on portrait phones)
+  /// for roomy cards with detailed metadata and status badges.
+  static int adaptiveColumns(
+    BuildContext context, {
+    int preferred = 0,
+    bool cardless = false,
+  }) {
     if (preferred > 0) return preferred;
     final width = MediaQuery.of(context).size.width;
+    if (cardless) {
+      if (width >= 1200) return 8;
+      if (width >= 900) return 7;
+      if (width >= 700) return 6;
+      if (width >= 500) return 5;
+      return 4;
+    }
     if (width >= 1200) return 6;
     if (width >= 900) return 5;
     if (width >= 700) return 4;

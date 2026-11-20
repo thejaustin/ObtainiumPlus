@@ -53,6 +53,7 @@ class _AppGridViewState extends State<AppGridView> {
     final columnCount = GridMetrics.adaptiveColumns(
       context,
       preferred: viewSettings.gridColumnCount,
+      cardless: plusSettings.plusGridCardlessStyle,
     );
     final bool showDetails =
         viewSettings.displayShowVersion ||

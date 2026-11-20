@@ -240,15 +240,10 @@ class ThemeBuilder {
         color: colorScheme.onPrimary,
         opacity: 1.0,
       ),
-      pageTransitionsTheme: PageTransitionsTheme(
+      pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
-          // Expressive mode gets the modern M3 emphasized forward-fade
-          // transition; otherwise fall back to the system predictive-back
-          // transition
-          TargetPlatform.android: plusEnableMaterialExpressive
-              ? const FadeForwardsPageTransitionsBuilder()
-              : const PredictiveBackPageTransitionsBuilder(),
-          TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
+          TargetPlatform.android: PredictiveBackPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
         },
       ),
     );

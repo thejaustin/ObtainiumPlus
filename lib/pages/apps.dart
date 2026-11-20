@@ -842,6 +842,7 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
           final columnCount = GridMetrics.adaptiveColumns(
             context,
             preferred: viewSettings.gridColumnCount,
+            cardless: plusSettings.plusGridCardlessStyle,
           );
           return [
             SliverPadding(

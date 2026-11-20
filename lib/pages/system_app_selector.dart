@@ -599,6 +599,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     final gridColumns = GridMetrics.adaptiveColumns(
       context,
       preferred: _gridColumnCount,
+      cardless: plusSettings.plusGridCardlessStyle,
     );
     final gridRatio = GridMetrics.gridAspectRatio(
       gridColumns,

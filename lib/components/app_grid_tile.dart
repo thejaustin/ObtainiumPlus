@@ -120,27 +120,32 @@ class _AppGridTileState extends State<AppGridTile>
         position: _entranceSlide,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Adaptive horizontal layout detection (e.g. tablet landscape rows or 1-column grids)
-            final bool isHorizontal =
-                constraints.maxWidth / constraints.maxHeight > 1.5;
-
-            final double availableWidth = constraints.maxWidth - 16;
-            final bool isCompactTile = constraints.maxHeight < 128;
-
-            // Adaptive icon sizing proportional to a 1:1 square tile
-            final double maxIconFromHeight =
-                (constraints.maxHeight * (isCompactTile ? 0.35 : 0.38)).clamp(
-                  24.0,
-                  68.0,
-                );
-            final double iconSize = isHorizontal
-                ? (constraints.maxHeight * 0.65).clamp(36.0, 80.0)
-                : (availableWidth * 0.42).clamp(24.0, maxIconFromHeight);
-
             final plusSettings = context.watch<PlusSettingsProvider>();
             final viewSettings = context.watch<ViewSettingsProvider>();
             final colorScheme = Theme.of(context).colorScheme;
             final isDark = Theme.of(context).brightness == Brightness.dark;
+            final bool isCardless =
+                plusSettings.plusGridCardlessStyle && !widget.isSelected;
+
+            // Adaptive horizontal layout detection (e.g. tablet landscape rows or 1-column grids)
+            final bool isHorizontal =
+                constraints.maxWidth / constraints.maxHeight > 1.5;
+
+            final double availableWidth =
+                constraints.maxWidth - (isCardless ? 8.0 : 16.0);
+            final bool isCompactTile = constraints.maxHeight < 128;
+
+            // Adaptive icon sizing: launcher style (cardless) gives prominent icon presence
+            // similar to Hail and One UI Home; carded style reserves room for card padding & pills.
+            final double maxIconFromHeight =
+                (constraints.maxHeight *
+                        (isCardless ? 0.54 : (isCompactTile ? 0.35 : 0.38)))
+                    .clamp(24.0, 68.0);
+            final double iconSize = isHorizontal
+                ? (constraints.maxHeight * 0.65).clamp(36.0, 80.0)
+                : (isCardless
+                      ? (availableWidth * 0.60).clamp(32.0, maxIconFromHeight)
+                      : (availableWidth * 0.42).clamp(24.0, maxIconFromHeight));
 
             final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
                 ? plusSettings.plusHomeCornerRadius
@@ -150,7 +155,9 @@ class _AppGridTileState extends State<AppGridTile>
               constraints.maxWidth,
             );
             final double iconBorderRadius = CardMetrics.inner(baseRadius);
-            final double padding = (availableWidth * 0.065).clamp(5.0, 10.0);
+            final double padding = isCardless
+                ? 2.0
+                : (availableWidth * 0.065).clamp(5.0, 10.0);
             final double badgeSize = (iconSize * 0.28).clamp(13.0, 20.0);
 
             // Resolve category color for M3E accent ribbon
@@ -177,9 +184,6 @@ class _AppGridTileState extends State<AppGridTile>
                       ? AppConstants.expressiveStandard
                       : AppConstants.standardStandard)
                 : Curves.easeInOut;
-
-            final bool isCardless =
-                plusSettings.plusGridCardlessStyle && !widget.isSelected;
 
             // Surface color tokens aligned with Material 3 Expressive
             Color cardColor;
@@ -467,8 +471,11 @@ class _AppGridTileState extends State<AppGridTile>
                   ),
                 ),
 
-                // 6. Pinned Indicator (Top-Left)
-                if (widget.appInMemory.app.pinned && !widget.isSelected)
+                // 6. Pinned Indicator (Top-Left) — on carded tiles, attached to card corner;
+                // on cardless tiles, anchored directly on the app icon squircle.
+                if (!isCardless &&
+                    widget.appInMemory.app.pinned &&
+                    !widget.isSelected)
                   Positioned(
                     top: 6,
                     left: 6,
@@ -483,7 +490,7 @@ class _AppGridTileState extends State<AppGridTile>
                   ),
 
                 // 7. Repo Renamed Indicator
-                if (widget.appInMemory.app.hasPendingRepoRename)
+                if (!isCardless && widget.appInMemory.app.hasPendingRepoRename)
                   Positioned(
                     top: 6,
                     left: (widget.appInMemory.app.pinned && !widget.isSelected)
@@ -502,7 +509,8 @@ class _AppGridTileState extends State<AppGridTile>
 
                 // 8. Update badge (Top-Right) — mirrors the pinned badge;
                 // tap updates, shows progress while downloading.
-                if (widget.hasUpdate &&
+                if (!isCardless &&
+                    widget.hasUpdate &&
                     !widget.isSelected &&
                     !plusSettings.plusUpdateExpressiveBadge)
                   Positioned(
@@ -610,6 +618,7 @@ class _AppGridTileState extends State<AppGridTile>
                 badgeSize,
                 plusSettings,
                 cardColor,
+                isCardless: isCardless,
               ),
               SizedBox(height: isCompactTile ? 3 : 5),
               // App name: 1 line on compact square tiles, up to 2 lines on standard square tiles
@@ -710,6 +719,7 @@ class _AppGridTileState extends State<AppGridTile>
           badgeSize,
           plusSettings,
           cardColor,
+          isCardless: isCardless,
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -777,8 +787,9 @@ class _AppGridTileState extends State<AppGridTile>
     double iconBorderRadius,
     double badgeSize,
     PlusSettingsProvider plusSettings,
-    Color cardColor,
-  ) {
+    Color cardColor, {
+    bool isCardless = false,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Stack(
       clipBehavior: Clip.none,
@@ -865,6 +876,51 @@ class _AppGridTileState extends State<AppGridTile>
             ),
           ),
         ),
+        // Pinned badge attached directly to icon in cardless launcher mode
+        if (isCardless && widget.appInMemory.app.pinned && !widget.isSelected)
+          Positioned(
+            top: -4,
+            left: -4,
+            child: _buildOverlayBadge(
+              icon: Icons.push_pin_rounded,
+              backgroundColor: colorScheme.primaryContainer.withValues(
+                alpha: 0.95,
+              ),
+              iconColor: colorScheme.primary,
+              borderColor: colorScheme.primary.withValues(alpha: 0.35),
+            ),
+          ),
+        // Repo-rename badge attached directly to icon in cardless mode
+        if (isCardless && widget.appInMemory.app.hasPendingRepoRename)
+          Positioned(
+            top: -4,
+            left: (widget.appInMemory.app.pinned && !widget.isSelected)
+                ? 20
+                : -4,
+            child: _buildOverlayBadge(
+              icon: Icons.info_outline_rounded,
+              backgroundColor: colorScheme.errorContainer.withValues(
+                alpha: 0.95,
+              ),
+              iconColor: colorScheme.onErrorContainer,
+              borderColor: colorScheme.error.withValues(alpha: 0.4),
+              tooltip: tr('repoRenamed'),
+            ),
+          ),
+        // Update badge attached directly to icon in cardless mode
+        if (isCardless &&
+            widget.hasUpdate &&
+            !widget.isSelected &&
+            !plusSettings.plusUpdateExpressiveBadge)
+          Positioned(
+            top: -4,
+            right: -4,
+            child: _TileUpdateBadge(
+              appInMemory: widget.appInMemory,
+              isAmbiguous: widget.isAmbiguous,
+              animsEnabled: plusSettings.plusEnableEnhancedAnimations,
+            ),
+          ),
         // Update / install / progress action attached to the icon corner
         // (When plusUpdateExpressiveBadge is enabled, updates use the bottom
         // version capsule button instead of covering the icon corner, unless

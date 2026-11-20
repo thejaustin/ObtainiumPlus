@@ -157,6 +157,7 @@ class CategorySections extends StatelessWidget {
     final columnCount = GridMetrics.adaptiveColumns(
       context,
       preferred: settingsProvider.gridColumnCount,
+      cardless: plusSettings.plusGridCardlessStyle,
     );
 
     final bool showDetails =
