@@ -91,15 +91,13 @@ class ConnectedSettingsBar extends StatelessWidget {
                     width: badgeSize,
                     height: badgeSize,
                     decoration: ShapeDecoration(
-                      color: colorScheme.secondary.withValues(
-                        alpha: isM3E ? 0.18 : 0.12,
-                      ),
+                      color: colorScheme.secondaryContainer,
                       shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                     ),
                     child: Icon(
                       Icons.alt_route_rounded,
                       size: isCompact ? 17 : 20,
-                      color: colorScheme.secondary,
+                      color: colorScheme.onSecondaryContainer,
                     ),
                   ),
                   const SizedBox(width: 12),

@@ -212,7 +212,7 @@ class SettingsHeroOverview extends StatelessWidget {
       hapticOnPressDown: true,
       scaleDownFactor: 0.94,
       child: Material(
-        color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
+        color: colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: onTap,
@@ -224,22 +224,26 @@ class SettingsHeroOverview extends StatelessWidget {
               children: [
                 Icon(icon, size: 18, color: color),
                 const SizedBox(height: 4),
-                Text(
-                  label,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  subLabel,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 10,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    subLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 10,
+                    ),
+                    maxLines: 1,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

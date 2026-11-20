@@ -356,12 +356,12 @@ class _HubCard extends StatelessWidget {
                   width: badgeSize,
                   height: badgeSize,
                   decoration: ShapeDecoration(
-                    color: accentColor.withValues(alpha: 0.12),
+                    color: colorScheme.primaryContainer,
                     shape: CardMetrics.shape(innerRadius, expressive: isM3E),
                   ),
                   child: Icon(
                     icon,
-                    color: accentColor,
+                    color: colorScheme.onPrimaryContainer,
                     size: isCompact ? 16 : 19,
                   ),
                 ),
@@ -401,12 +401,14 @@ class _HubCard extends StatelessWidget {
                           vertical: isCompact ? 2 : 3,
                         ),
                         decoration: ShapeDecoration(
-                          color: accentColor.withValues(alpha: 0.10),
+                          color: colorScheme.secondaryContainer,
                           shape: CardMetrics.shape(
                             CardMetrics.pill(baseRadius),
                             expressive: isM3E,
                             side: BorderSide(
-                              color: accentColor.withValues(alpha: 0.24),
+                              color: colorScheme.outlineVariant.withValues(
+                                alpha: theme.brightness == Brightness.dark ? 0.35 : 0.65,
+                              ),
                               width: 0.8,
                             ),
                           ),
@@ -415,7 +417,7 @@ class _HubCard extends StatelessWidget {
                           summary,
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: accentColor,
+                            color: colorScheme.onSecondaryContainer,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

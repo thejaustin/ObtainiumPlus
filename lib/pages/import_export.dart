@@ -1013,7 +1013,20 @@ class _ImportExportPageState extends State<ImportExportPage> {
                     ],
                   ),
 
-                SizedBox(height: MediaQuery.paddingOf(context).bottom + 24),
+                Builder(
+                  builder: (ctx) {
+                    final plus = context.watch<PlusSettingsProvider>();
+                    final settings = context.watch<SettingsProvider>();
+                    final hasNavBar = plus.plusEnableBottomNavBar &&
+                        !plus.plusTopUILayout &&
+                        !settings.isTV;
+                    return SizedBox(
+                      height: (hasNavBar ? 88.0 : 0.0) +
+                          MediaQuery.paddingOf(ctx).bottom +
+                          24.0,
+                    );
+                  },
+                ),
               ]),
             ),
           ),

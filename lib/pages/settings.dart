@@ -307,6 +307,7 @@ class SettingsPageState extends State<SettingsPage> {
         plusSettings.plusEnableBottomNavBar &&
         !plusSettings.plusTopUILayout &&
         !settingsProvider.isTV;
+    final mainNavBarHeight = hasMainBottomNavBar ? 88.0 : 0.0;
     final placement = plusSettings.plusSettingsNavPlacement;
     // Home draws the category bar (separate pill or merged into its nav
     // bar) when this is its tab and its bottom bar is showing.
@@ -612,7 +613,8 @@ class SettingsPageState extends State<SettingsPage> {
                               // A hosted (home) bar is part of that inset too.
                               height: useSettingsScaffoldBottomBar
                                   ? 24.0
-                                  : MediaQuery.paddingOf(context).bottom +
+                                  : mainNavBarHeight +
+                                        MediaQuery.paddingOf(context).bottom +
                                         (useSettingsFloatingBottomDock
                                             ? kSettingsDockGap +
                                                   kSettingsDockHeight +
@@ -632,7 +634,9 @@ class SettingsPageState extends State<SettingsPage> {
             Positioned(
               left: 16,
               right: 16,
-              bottom: MediaQuery.paddingOf(context).bottom + kSettingsDockGap,
+              bottom: mainNavBarHeight +
+                  MediaQuery.paddingOf(context).bottom +
+                  kSettingsDockGap,
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 460),

@@ -2440,19 +2440,25 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                       ..._buildDiscoverResultsSlivers(context, plusSettings)
                     else
                       getDisplayedList(),
-                    // Read the inset inside this Scaffold: it already counts
-                    // Home's nav bar (extendBody) + system gesture area, and
-                    // drops it when persistent footer buttons take over.
+                    // Read the inset inside this Scaffold: accounts for Home's
+                    // nav bar (extendBody) + system gesture area + FAB clearance.
                     SliverToBoxAdapter(
                       child: Builder(
-                        builder: (ctx) => SizedBox(
-                          height:
-                              MediaQuery.paddingOf(ctx).bottom +
-                              (plusSettings.plusEnableFAB &&
-                                      !settingsProvider.isTV
-                                  ? 88.0
-                                  : 24.0),
-                        ),
+                        builder: (ctx) {
+                          final hasNavBar = plusSettings.plusEnableBottomNavBar &&
+                              !plusSettings.plusTopUILayout &&
+                              !settingsProvider.isTV;
+                          final navBarHeight = hasNavBar ? 88.0 : 0.0;
+                          final fabHeight = (plusSettings.plusEnableFAB &&
+                                  !settingsProvider.isTV)
+                              ? 72.0
+                              : 24.0;
+                          return SizedBox(
+                            height: navBarHeight +
+                                MediaQuery.paddingOf(ctx).bottom +
+                                fabHeight,
+                          );
+                        },
                       ),
                     ),
                   ],

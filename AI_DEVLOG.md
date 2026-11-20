@@ -21,10 +21,11 @@ Flutter app (Dart). Project at `/data/data/com.termux/files/home/ObtainiumPlus/`
   - In `lib/components/settings/advanced_settings_section.dart`, verification result box used `primary`/`error` text on translucent containers. Upgraded to `onPrimaryContainer`/`onErrorContainer` text on container backgrounds.
   - In `lib/components/settings/settings_search_jump.dart`, search jump highlight previously covered the target row with 0.75 alpha `secondaryContainer`, occluding row text on high-contrast themes. Switched to a subtle 0.24 alpha `primary` wash matching ShizukuPlus #687 parity.
   - In `lib/components/app_grid_tile.dart`, disabled apps were not dimmed in grid view (unlike list view). Added `Opacity(0.5)` wrap for disabled apps in `AppGridTile` for visual symmetry with `AppListTile`.
-- **Translation Hardening & Dev Flow (ShizukuPlus Parity)**:
-  - Created `scripts/dev/check-translations.py` modeled after ShizukuPlus's `check_translations.py`. It audits all 34 translation JSON files against `en.json` for invalid JSON, placeholder argument counts, named argument mismatches, and foreign placeholders.
-  - Caught and fixed 28 genuine translation defects across `he.json`, `nl.json`, `fa.json`, `pt.json`, and `vi.json` (e.g. translated named variables like `{پیش از}` and `{antes}` instead of `{before}`, Dutch missing `{}` in `downloadX`, and Hebrew inventing `{app}`/`{error}` in positional formats).
-  - Integrated `check-translations.py` into `.github/workflows/translation-validate.yaml`.
+- **M3E Viewport Insets & Bottom Navigation Clearance**:
+  - In `lib/pages/settings.dart`, `SettingsSectionDock` and the bottom scroll spacer assumed `MediaQuery.paddingOf(context).bottom` contained the main `NavigationBar`. Because `Scaffold(extendBody: true)` does not add the navigation bar to `MediaQuery`, the dock floated at `bottom: 8` directly over the bottom navigation bar and cards. Added explicit `mainNavBarHeight` (88dp) offset to dock positioning and scroll view bottom spacer.
+  - In `lib/pages/apps.dart` and `lib/pages/import_export.dart`, bottom sliver padding previously only allocated 24dp when FAB was off, causing the last 56dp of app tiles and content to be clipped behind the 80dp NavigationBar. Added full 88dp nav bar clearance + safe insets.
+  - In `lib/components/settings/settings_hero_overview.dart`, wrapped status pill labels in `FittedBox(fit: BoxFit.scaleDown)` and removed the washed-out alpha surface container to eliminate multi-line text wrapping and label cutoffs like "2h / Updates".
+  - In `lib/components/settings/appearance_hub.dart` and `connected_settings_bar.dart`, upgraded icon badge and summary pill containers to semantic paired M3 tokens (`primaryContainer`/`onPrimaryContainer`, `secondaryContainer`/`onSecondaryContainer`).
 
 ## 2026-11-14 (later) — Claude: Sentry Sweep After the Device Pass
 
