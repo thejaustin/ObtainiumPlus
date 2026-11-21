@@ -1944,5 +1944,13 @@
   "hubSummaryCards": "Cards",
   "hubSummaryHomeDp": "Home {}dp",
   "hubSummarySettingsDp": "Settings {}dp",
-  "hubSummaryAnimOff": "Animations off"
+  "hubSummaryAnimOff": "Animations off",
+  "customizeSettingsLayout": "Customize layout",
+  "customizeSettingsLayoutDesc": "Pin favorites, hide sections, or reorder blocks to match your workflow",
+  "pinnedSettingsBlocks": "Pinned to top",
+  "hiddenSettingsBlocks": "Hidden blocks",
+  "activeSettingsBlocks": "Active blocks",
+  "resetSettingsLayout": "Reset layout",
+  "resetSettingsLayoutConfirm": "Reset all settings cards to their default layout?",
+  "dragToReorder": "Reorder blocks within this tab"
 }

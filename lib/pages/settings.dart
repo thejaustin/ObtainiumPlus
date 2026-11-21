@@ -25,6 +25,7 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/components/settings/settings_layout_customizer_sheet.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -634,7 +635,8 @@ class SettingsPageState extends State<SettingsPage> {
             Positioned(
               left: 16,
               right: 16,
-              bottom: mainNavBarHeight +
+              bottom:
+                  mainNavBarHeight +
                   MediaQuery.paddingOf(context).bottom +
                   kSettingsDockGap,
               child: Center(
@@ -716,7 +718,31 @@ class SettingsPageState extends State<SettingsPage> {
     BuildContext context,
     PlusSettingsProvider plusSettings,
   ) {
+    final layoutConfig = plusSettings.settingsLayoutConfig;
+    final hasCustomLayout =
+        layoutConfig.pinnedBlocks.isNotEmpty ||
+        layoutConfig.hiddenBlocks.isNotEmpty;
+
     return [
+      ScaleTouchWrapper(
+        hapticOnPressDown: true,
+        scaleDownFactor: 0.88,
+        child: IconButton(
+          visualDensity: VisualDensity.compact,
+          tooltip: tr('customizeSettingsLayout'),
+          icon: Icon(
+            Icons.dashboard_customize_rounded,
+            size: 20,
+            color: hasCustomLayout
+                ? Theme.of(context).colorScheme.primary
+                : null,
+          ),
+          onPressed: () {
+            AppHaptics.selectionClick();
+            SettingsLayoutCustomizerSheet.show(context);
+          },
+        ),
+      ),
       ScaleTouchWrapper(
         hapticOnPressDown: true,
         scaleDownFactor: 0.88,
@@ -814,6 +840,15 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              chip(
+                icon: Icons.dashboard_customize_rounded,
+                label: tr('customizeSettingsLayout'),
+                tooltip: tr('customizeSettingsLayout'),
+                onPressed: () {
+                  AppHaptics.selectionClick();
+                  SettingsLayoutCustomizerSheet.show(context);
+                },
+              ),
               chip(
                 icon: Icons.stars_rounded,
                 label: 'Obtainium+',

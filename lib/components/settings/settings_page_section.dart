@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/settings/expressive_settings_group.dart';
 import 'package:obtainium/components/settings/settings_feature_toggle.dart';
+import 'package:obtainium/components/settings/settings_layout_customizer_sheet.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_slider_tile.dart';
 import 'package:obtainium/models/settings_enums.dart';
@@ -141,6 +142,20 @@ class SettingsPageSection extends StatelessWidget {
           onTap: () {
             AppHaptics.selectionClick();
             pushRoute(context, const VisualLabPage());
+          },
+        ),
+      if (!isSearching || _matches(tr('customizeSettingsLayout')))
+        ListTile(
+          leading: buildSettingsIconBadge(
+            context,
+            Icons.dashboard_customize_rounded,
+          ),
+          title: Text(tr('customizeSettingsLayout')),
+          subtitle: Text(tr('customizeSettingsLayoutDesc')),
+          trailing: const Icon(Icons.chevron_right_rounded),
+          onTap: () {
+            AppHaptics.selectionClick();
+            SettingsLayoutCustomizerSheet.show(context);
           },
         ),
     ];

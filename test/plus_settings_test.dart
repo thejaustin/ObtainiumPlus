@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:obtainium/models/settings_block.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -119,4 +120,54 @@ void main() {
       );
     },
   );
+
+  test('SettingsBlockRegistry and SettingsLayoutConfiguration', () {
+    expect(SettingsBlockRegistry.allBlocks.isNotEmpty, true);
+    final tileBlock = SettingsBlockRegistry.findById('app_tile_design');
+    expect(tileBlock != null, true);
+    expect(tileBlock?.category, SettingsCategory.homeAndLibrary);
+
+    final homeBlocks = SettingsBlockRegistry.forCategory(
+      SettingsCategory.homeAndLibrary,
+    );
+    expect(homeBlocks.isNotEmpty, true);
+
+    const config = SettingsLayoutConfiguration(
+      preset: 'custom',
+      pinnedBlocks: {'app_tile_design'},
+      hiddenBlocks: {'microg_integration'},
+    );
+    expect(config.isPinned('app_tile_design'), true);
+    expect(config.isHidden('microg_integration'), true);
+    expect(config.isPinned('theme_palette'), false);
+
+    final jsonStr = config.encode();
+    final decoded = SettingsLayoutConfiguration.decode(jsonStr);
+    expect(decoded.preset, 'custom');
+    expect(decoded.isPinned('app_tile_design'), true);
+    expect(decoded.isHidden('microg_integration'), true);
+  });
+
+  test('PlusSettingsProvider layout customization toggles and reset', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final provider = PlusSettingsProvider();
+    await provider.initializeSettings(prefs);
+
+    expect(provider.isSettingsBlockPinned('app_tile_design'), false);
+    expect(provider.isSettingsBlockHidden('app_tile_design'), false);
+
+    provider.togglePinSettingsBlock('app_tile_design');
+    expect(provider.isSettingsBlockPinned('app_tile_design'), true);
+
+    provider.toggleHideSettingsBlock('developer_tools');
+    expect(provider.isSettingsBlockHidden('developer_tools'), true);
+
+    provider.togglePinSettingsBlock('app_tile_design');
+    expect(provider.isSettingsBlockPinned('app_tile_design'), false);
+
+    provider.resetSettingsLayout();
+    expect(provider.settingsLayoutConfig.pinnedBlocks.isEmpty, true);
+    expect(provider.settingsLayoutConfig.hiddenBlocks.isEmpty, true);
+  });
 }

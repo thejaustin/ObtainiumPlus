@@ -1,3 +1,4 @@
+import 'package:obtainium/models/settings_block.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
@@ -923,6 +924,49 @@ class PlusSettingsProvider with ChangeNotifier {
       _getInt('plusMaxIconMemoryEntries', defaultValue: 500).clamp(100, 2000);
   set plusMaxIconMemoryEntries(int val) =>
       _setInt('plusMaxIconMemoryEntries', val);
+
+  /// Layout configuration for customizable settings blocks.
+  String get plusSettingsLayoutJson =>
+      _getString('plusSettingsLayoutJson', defaultValue: '');
+  set plusSettingsLayoutJson(String val) =>
+      _setString('plusSettingsLayoutJson', val);
+
+  SettingsLayoutConfiguration get settingsLayoutConfig =>
+      SettingsLayoutConfiguration.decode(plusSettingsLayoutJson);
+
+  void updateSettingsLayoutConfig(SettingsLayoutConfiguration config) {
+    plusSettingsLayoutJson = config.encode();
+  }
+
+  bool isSettingsBlockPinned(String id) => settingsLayoutConfig.isPinned(id);
+
+  bool isSettingsBlockHidden(String id) => settingsLayoutConfig.isHidden(id);
+
+  void togglePinSettingsBlock(String id) {
+    final current = settingsLayoutConfig;
+    final updated = Set<String>.from(current.pinnedBlocks);
+    if (updated.contains(id)) {
+      updated.remove(id);
+    } else {
+      updated.add(id);
+    }
+    updateSettingsLayoutConfig(current.copyWith(pinnedBlocks: updated));
+  }
+
+  void toggleHideSettingsBlock(String id) {
+    final current = settingsLayoutConfig;
+    final updated = Set<String>.from(current.hiddenBlocks);
+    if (updated.contains(id)) {
+      updated.remove(id);
+    } else {
+      updated.add(id);
+    }
+    updateSettingsLayoutConfig(current.copyWith(hiddenBlocks: updated));
+  }
+
+  void resetSettingsLayout() {
+    plusSettingsLayoutJson = '';
+  }
 
   ScrollPhysics get scrollPhysics => plusEnableBouncyPhysics
       ? const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics())

@@ -139,90 +139,9 @@ class AppsViewSettingsSection extends StatelessWidget {
       if (_matches(tr('defaultViewMode'))) _buildViewModeDropdown(context),
       if (_matches(tr('listDensity'), desc: tr('listDensityDescription')))
         _buildDensityDropdown(context),
-      if (_matches(
-            tr('showWebInAppView'),
-            desc: tr('showWebInAppViewDescription'),
-          ) ||
-          (_matches('default app details tab') ||
-              _matches(tr('searchKeywordDefaultAppDetailsTab'))) ||
-          (_matches('description style') ||
-              _matches(tr('searchKeywordDescriptionStyle'))) ||
-          (_matches('webpage') || _matches(tr('descriptionStyleWebpage'))))
-        _buildAppDescriptionStyleSelector(context),
       if (_matches(tr('appBarStyle'), desc: tr('appBarStyleDescription')))
         _buildAppBarStyleDropdown(context),
       _buildGridSettings(context),
-    ];
-
-    // ── Tiles ─────────────────────────────────────────────────────────────
-    final plusTileItems = [
-      if (_matches(
-        tr('plusGridShowSourceBadge'),
-        desc: tr('plusGridShowSourceBadgeDescription'),
-      ))
-        (
-          icon: Icons.badge_outlined,
-          label: tr('plusGridShowSourceBadge'),
-          description: tr('plusGridShowSourceBadgeDescription'),
-          getValue: (PlusSettingsProvider s) => s.plusGridShowSourceBadge,
-          setValue: (PlusSettingsProvider s, bool v) =>
-              onSetState(() => s.plusGridShowSourceBadge = v),
-        ),
-      if (plusSettings.plusEnableTags &&
-          _matches(
-            tr('plusShowTagsInList'),
-            desc: tr('plusShowTagsInListDescription'),
-          ))
-        (
-          icon: Icons.label_outline,
-          label: tr('plusShowTagsInList'),
-          description: tr('plusShowTagsInListDescription'),
-          getValue: (PlusSettingsProvider s) => s.plusShowTagsInList,
-          setValue: (PlusSettingsProvider s, bool v) =>
-              onSetState(() => s.plusShowTagsInList = v),
-        ),
-    ];
-    final tileWidgets = <Widget>[
-      if (!isSearching) _buildAppTileStylePreview(context),
-      if (_matches(tr('showAuthor'), desc: tr('showAuthorDescription')) ||
-          _matches(tr('showVersion'), desc: tr('showVersionDescription')) ||
-          _matches(tr('showDate'), desc: tr('showDateDescription')))
-        GenericBooleanControlGrid<ViewSettingsProvider>(
-          title: tr('appTileDisplay'),
-          embedded: true,
-          settings: [
-            if (_matches(tr('showAuthor'), desc: tr('showAuthorDescription')))
-              (
-                icon: Icons.person_outline,
-                label: tr('showAuthor'),
-                description: tr('showAuthorDescription'),
-                getValue: (s) => s.displayShowAuthor,
-                setValue: (s, v) => onSetState(() => s.displayShowAuthor = v),
-              ),
-            if (_matches(tr('showVersion'), desc: tr('showVersionDescription')))
-              (
-                icon: Icons.code,
-                label: tr('showVersion'),
-                description: tr('showVersionDescription'),
-                getValue: (s) => s.displayShowVersion,
-                setValue: (s, v) => onSetState(() => s.displayShowVersion = v),
-              ),
-            if (_matches(tr('showDate'), desc: tr('showDateDescription')))
-              (
-                icon: Icons.calendar_today_outlined,
-                label: tr('showDate'),
-                description: tr('showDateDescription'),
-                getValue: (s) => s.displayShowDate,
-                setValue: (s, v) => onSetState(() => s.displayShowDate = v),
-              ),
-          ],
-        ),
-      if (plusFeaturesEnabled && plusTileItems.isNotEmpty)
-        GenericBooleanControlGrid<PlusSettingsProvider>(
-          title: tr('settingsGroupTiles'),
-          embedded: true,
-          settings: plusTileItems,
-        ),
     ];
 
     // ── Tile style (+) ────────────────────────────────────────────────────
@@ -294,6 +213,83 @@ class AppsViewSettingsSection extends StatelessWidget {
             setValue: (PlusSettingsProvider s, bool v) =>
                 onSetState(() => e.$4(s, v)),
           ),
+    ];
+
+    // ── Tiles ─────────────────────────────────────────────────────────────
+    final plusTileItems = [
+      if (_matches(
+        tr('plusGridShowSourceBadge'),
+        desc: tr('plusGridShowSourceBadgeDescription'),
+      ))
+        (
+          icon: Icons.badge_outlined,
+          label: tr('plusGridShowSourceBadge'),
+          description: tr('plusGridShowSourceBadgeDescription'),
+          getValue: (PlusSettingsProvider s) => s.plusGridShowSourceBadge,
+          setValue: (PlusSettingsProvider s, bool v) =>
+              onSetState(() => s.plusGridShowSourceBadge = v),
+        ),
+      if (plusSettings.plusEnableTags &&
+          _matches(
+            tr('plusShowTagsInList'),
+            desc: tr('plusShowTagsInListDescription'),
+          ))
+        (
+          icon: Icons.label_outline,
+          label: tr('plusShowTagsInList'),
+          description: tr('plusShowTagsInListDescription'),
+          getValue: (PlusSettingsProvider s) => s.plusShowTagsInList,
+          setValue: (PlusSettingsProvider s, bool v) =>
+              onSetState(() => s.plusShowTagsInList = v),
+        ),
+    ];
+    final tileWidgets = <Widget>[
+      if (!isSearching) _buildAppTileStylePreview(context),
+      if (plusFeaturesEnabled && tileStyleItems.isNotEmpty)
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('settingsGroupTileStyle'),
+          embedded: true,
+          settings: tileStyleItems,
+        ),
+      if (_matches(tr('showAuthor'), desc: tr('showAuthorDescription')) ||
+          _matches(tr('showVersion'), desc: tr('showVersionDescription')) ||
+          _matches(tr('showDate'), desc: tr('showDateDescription')))
+        GenericBooleanControlGrid<ViewSettingsProvider>(
+          title: tr('appTileDisplay'),
+          embedded: true,
+          settings: [
+            if (_matches(tr('showAuthor'), desc: tr('showAuthorDescription')))
+              (
+                icon: Icons.person_outline,
+                label: tr('showAuthor'),
+                description: tr('showAuthorDescription'),
+                getValue: (s) => s.displayShowAuthor,
+                setValue: (s, v) => onSetState(() => s.displayShowAuthor = v),
+              ),
+            if (_matches(tr('showVersion'), desc: tr('showVersionDescription')))
+              (
+                icon: Icons.code,
+                label: tr('showVersion'),
+                description: tr('showVersionDescription'),
+                getValue: (s) => s.displayShowVersion,
+                setValue: (s, v) => onSetState(() => s.displayShowVersion = v),
+              ),
+            if (_matches(tr('showDate'), desc: tr('showDateDescription')))
+              (
+                icon: Icons.calendar_today_outlined,
+                label: tr('showDate'),
+                description: tr('showDateDescription'),
+                getValue: (s) => s.displayShowDate,
+                setValue: (s, v) => onSetState(() => s.displayShowDate = v),
+              ),
+          ],
+        ),
+      if (plusFeaturesEnabled && plusTileItems.isNotEmpty)
+        GenericBooleanControlGrid<PlusSettingsProvider>(
+          title: tr('settingsGroupTiles'),
+          embedded: true,
+          settings: plusTileItems,
+        ),
     ];
 
     // ── Categories & sorting ──────────────────────────────────────────────
@@ -530,6 +526,16 @@ class AppsViewSettingsSection extends StatelessWidget {
 
     // ── Home & details (+) ────────────────────────────────────────────────
     final homeDetailsWidgets = <Widget>[
+      if (_matches(
+            tr('showWebInAppView'),
+            desc: tr('showWebInAppViewDescription'),
+          ) ||
+          (_matches('default app details tab') ||
+              _matches(tr('searchKeywordDefaultAppDetailsTab'))) ||
+          (_matches('description style') ||
+              _matches(tr('searchKeywordDescriptionStyle'))) ||
+          (_matches('webpage') || _matches(tr('descriptionStyleWebpage'))))
+        _buildAppDescriptionStyleSelector(context),
       for (final e
           in <
             (
@@ -606,20 +612,6 @@ class AppsViewSettingsSection extends StatelessWidget {
             'home.tiles',
             Icons.style_rounded,
             tileWidgets,
-          ),
-        if (plusFeaturesEnabled && tileStyleItems.isNotEmpty)
-          group(
-            'settingsGroupTileStyle',
-            'home.tileStyle',
-            Icons.auto_awesome_mosaic_outlined,
-            [
-              GenericBooleanControlGrid<PlusSettingsProvider>(
-                title: tr('settingsGroupTileStyle'),
-                embedded: true,
-                settings: tileStyleItems,
-              ),
-            ],
-            collapsible: true,
           ),
         if (categorySortWidgets.isNotEmpty)
           group(
