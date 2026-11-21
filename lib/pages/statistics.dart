@@ -1,3 +1,4 @@
+import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -120,14 +121,12 @@ class _StatisticsPageState extends State<StatisticsPage>
     final pinnedApps = allApps.where((a) => a.app.pinned).length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(tr('statistics')),
-        actions: [
-          FutureBuilder<List<Log>>(
-            future: _logsFuture,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) return const SizedBox.shrink();
-              return ScaleTouchWrapper(
+      body: FutureBuilder<List<Log>>(
+        future: _logsFuture,
+        builder: (context, snapshot) {
+          final List<Widget> actions = [
+            if (snapshot.hasData)
+              ScaleTouchWrapper(
                 hapticOnPressDown: true,
                 scaleDownFactor: 0.88,
                 child: IconButton(
@@ -140,168 +139,175 @@ class _StatisticsPageState extends State<StatisticsPage>
                   ),
                   tooltip: tr('share'),
                 ),
-              );
-            },
-          ),
-        ],
-      ),
-      body: FutureBuilder<List<Log>>(
-        future: _logsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: ExpressiveCircularProgressIndicator());
-          }
+              ),
+          ];
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      tr('error'),
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          Widget sliverContent;
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            sliverContent = const SliverFillRemaining(
+              child: Center(child: ExpressiveCircularProgressIndicator()),
+            );
+          } else if (snapshot.hasError) {
+            sliverContent = SliverFillRemaining(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        size: 48,
                         color: Theme.of(context).colorScheme.error,
                       ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+                      Text(
+                        tr('error'),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
+              ),
+            );
+          } else if (totalApps == 0) {
+            sliverContent = SliverFillRemaining(
+              child: EmptyStateWidget(
+                icon: Icons.bar_chart_outlined,
+                title: tr('noApps'),
+                subtitle: tr('startByAddingFirstApp'),
+                actionLabel: tr('addApp'),
+                onActionPressed: () {
+                  AppHaptics.lightImpact();
+                  showDraggableModalBottomSheet(
+                    context: context,
+                    builder: (context, controller) =>
+                        AddAppPage(isModal: true, scrollController: controller),
+                  );
+                },
+              ),
+            );
+          } else {
+            final logs = snapshot.data ?? [];
+
+            final installEvents = logs
+                .where(
+                  (l) =>
+                      l.message.contains('EVENT: InstallCompleted') &&
+                      l.message.contains('success=true'),
+                )
+                .toList();
+
+            final successfulInstalls30Days = installEvents.length;
+
+            final sevenDaysAgo = DateTime.now().subtract(
+              const Duration(days: 7),
+            );
+            final successfulInstalls7Days = installEvents
+                .where((l) => l.timestamp.isAfter(sevenDaysAgo))
+                .length;
+
+            final screenWidth = MediaQuery.sizeOf(context).width;
+            final double adaptiveMargin = screenWidth > 1040
+                ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
+                : 16.0;
+
+            sliverContent = SliverPadding(
+              padding: EdgeInsets.symmetric(
+                horizontal: adaptiveMargin,
+                vertical: 16.0,
+              ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  ExpressiveSettingsGroup(
+                    title: tr('overview'),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: _buildMetricsGrid(context, [
+                          _MetricItem(
+                            label: tr('totalApps'),
+                            value: totalApps.toString(),
+                            icon: Icons.apps_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          _MetricItem(
+                            label: tr('installed'),
+                            value: installedApps.toString(),
+                            icon: Icons.check_circle_outline_rounded,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          _MetricItem(
+                            label: tr('updatesAvailable'),
+                            value: updatesAvailable.toString(),
+                            icon: Icons.system_update_rounded,
+                            color: Theme.of(context).colorScheme.tertiary,
+                          ),
+                          _MetricItem(
+                            label: tr('notInstalled'),
+                            value: notInstalledApps.toString(),
+                            icon: Icons.cloud_off_rounded,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                          ),
+                        ]),
+                      ),
+                    ],
+                  ),
+                  ExpressiveSettingsGroup(
+                    title: tr('activity'),
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: _buildMetricsGrid(context, [
+                          _MetricItem(
+                            label: tr('installs30Days'),
+                            value: successfulInstalls30Days.toString(),
+                            icon: Icons.history_rounded,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                          _MetricItem(
+                            label: tr('installs7Days'),
+                            value: successfulInstalls7Days.toString(),
+                            icon: Icons.calendar_today_rounded,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          _MetricItem(
+                            label: tr('pinnedApps'),
+                            value: pinnedApps.toString(),
+                            icon: Icons.push_pin_rounded,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ]),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildActivityChart(context, installEvents),
+                      const SizedBox(height: 24),
+                      _buildDistributionSection(context, allApps),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                  ExpressiveSettingsGroup(
+                    title: tr('recentInstalls'),
+                    children: [_buildRecentHistoryList(context, installEvents)],
+                  ),
+                ]),
               ),
             );
           }
 
-          if (totalApps == 0) {
-            return EmptyStateWidget(
-              icon: Icons.bar_chart_outlined,
-              title: tr('noApps'),
-              subtitle: tr('startByAddingFirstApp'),
-              actionLabel: tr('addApp'),
-              onActionPressed: () {
-                AppHaptics.lightImpact();
-                showDraggableModalBottomSheet(
-                  context: context,
-                  builder: (context, controller) =>
-                      AddAppPage(isModal: true, scrollController: controller),
-                );
-              },
-            );
-          }
-
-          final logs = snapshot.data ?? [];
-
-          final installEvents = logs
-              .where(
-                (l) =>
-                    l.message.contains('EVENT: InstallCompleted') &&
-                    l.message.contains('success=true'),
-              )
-              .toList();
-
-          final successfulInstalls30Days = installEvents.length;
-
-          final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-          final successfulInstalls7Days = installEvents
-              .where((l) => l.timestamp.isAfter(sevenDaysAgo))
-              .length;
-
-          final screenWidth = MediaQuery.sizeOf(context).width;
-          final double adaptiveMargin = screenWidth > 1040
-              ? ((screenWidth - 1040) / 2).clamp(16.0, double.infinity)
-              : 16.0;
-
-          return SingleChildScrollView(
+          return CustomScrollView(
             controller: widget.scrollController,
             physics: plusSettings.scrollPhysics,
-            padding: EdgeInsets.symmetric(
-              horizontal: adaptiveMargin,
-              vertical: 16.0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ExpressiveSettingsGroup(
-                  title: tr('overview'),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildMetricsGrid(context, [
-                        _MetricItem(
-                          label: tr('totalApps'),
-                          value: totalApps.toString(),
-                          icon: Icons.apps_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        _MetricItem(
-                          label: tr('installed'),
-                          value: installedApps.toString(),
-                          icon: Icons.check_circle_outline_rounded,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        _MetricItem(
-                          label: tr('updatesAvailable'),
-                          value: updatesAvailable.toString(),
-                          icon: Icons.system_update_rounded,
-                          color: Theme.of(context).colorScheme.tertiary,
-                        ),
-                        _MetricItem(
-                          label: tr('notInstalled'),
-                          value: notInstalledApps.toString(),
-                          icon: Icons.cloud_off_rounded,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ]),
-                    ),
-                  ],
-                ),
-
-                ExpressiveSettingsGroup(
-                  title: tr('activity'),
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: _buildMetricsGrid(context, [
-                        _MetricItem(
-                          label: tr('installs30Days'),
-                          value: successfulInstalls30Days.toString(),
-                          icon: Icons.history_rounded,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        _MetricItem(
-                          label: tr('installs7Days'),
-                          value: successfulInstalls7Days.toString(),
-                          icon: Icons.calendar_today_rounded,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        _MetricItem(
-                          label: tr('pinnedApps'),
-                          value: pinnedApps.toString(),
-                          icon: Icons.push_pin_rounded,
-                          color: Theme.of(context).colorScheme.error,
-                        ),
-                      ]),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildActivityChart(context, installEvents),
-                    const SizedBox(height: 24),
-                    _buildDistributionSection(context, allApps),
-                    const SizedBox(height: 16),
-                  ],
-                ),
-
-                ExpressiveSettingsGroup(
-                  title: tr('recentInstalls'),
-                  children: [_buildRecentHistoryList(context, installEvents)],
-                ),
-              ],
-            ),
+            slivers: [
+              CustomAppBar(title: tr('statistics'), actions: actions),
+              sliverContent,
+            ],
           );
         },
       ),
