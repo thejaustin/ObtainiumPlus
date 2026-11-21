@@ -159,9 +159,11 @@ void main() {
 
     provider.togglePinSettingsBlock('app_tile_design');
     expect(provider.isSettingsBlockPinned('app_tile_design'), true);
+    expect(provider.isSettingsBlockPinned('home.tiles'), true);
 
     provider.toggleHideSettingsBlock('developer_tools');
     expect(provider.isSettingsBlockHidden('developer_tools'), true);
+    expect(provider.isSettingsBlockHidden('advanced.developer'), true);
 
     provider.togglePinSettingsBlock('app_tile_design');
     expect(provider.isSettingsBlockPinned('app_tile_design'), false);

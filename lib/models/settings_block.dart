@@ -66,6 +66,7 @@ class SettingsBlockDescriptor {
   final SettingsCategory category;
   final int defaultPriority;
   final bool isProOrAdvanced;
+  final List<String> persistKeys;
 
   const SettingsBlockDescriptor({
     required this.id,
@@ -75,7 +76,10 @@ class SettingsBlockDescriptor {
     required this.category,
     required this.defaultPriority,
     this.isProOrAdvanced = false,
+    this.persistKeys = const [],
   });
+
+  bool matchesKey(String key) => id == key || persistKeys.contains(key);
 }
 
 /// User's custom settings layout configuration.
@@ -152,6 +156,12 @@ class SettingsBlockRegistry {
       icon: Icons.color_lens_outlined,
       category: SettingsCategory.lookAndMotion,
       defaultPriority: 10,
+      persistKeys: [
+        'look.theme',
+        'look.colour',
+        'look.designSystem',
+        'look.textLanguage',
+      ],
     ),
     SettingsBlockDescriptor(
       id: 'shapes_corners',
@@ -160,6 +170,7 @@ class SettingsBlockRegistry {
       icon: Icons.rounded_corner_rounded,
       category: SettingsCategory.lookAndMotion,
       defaultPriority: 20,
+      persistKeys: ['plusShapesAndCorners'],
     ),
     SettingsBlockDescriptor(
       id: 'motion_haptics',
@@ -168,6 +179,7 @@ class SettingsBlockRegistry {
       icon: Icons.animation_rounded,
       category: SettingsCategory.lookAndMotion,
       defaultPriority: 30,
+      persistKeys: ['look.motion', 'look.haptics', 'look.controls'],
     ),
     SettingsBlockDescriptor(
       id: 'settings_page_appearance',
@@ -176,6 +188,11 @@ class SettingsBlockRegistry {
       icon: Icons.settings_accessibility_rounded,
       category: SettingsCategory.lookAndMotion,
       defaultPriority: 40,
+      persistKeys: [
+        'look.settingsPage',
+        'look.settingsGroups',
+        'look.settingsExtras',
+      ],
     ),
 
     // Home & Library
@@ -186,6 +203,7 @@ class SettingsBlockRegistry {
       icon: Icons.auto_awesome_mosaic_outlined,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 10,
+      persistKeys: ['home.tiles', 'home.tileStyle'],
     ),
     SettingsBlockDescriptor(
       id: 'app_list_layout',
@@ -194,6 +212,7 @@ class SettingsBlockRegistry {
       icon: Icons.view_list_rounded,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 20,
+      persistKeys: ['home.appList'],
     ),
     SettingsBlockDescriptor(
       id: 'categories_sorting',
@@ -202,6 +221,7 @@ class SettingsBlockRegistry {
       icon: Icons.category_outlined,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 30,
+      persistKeys: ['categorySettings'],
     ),
     SettingsBlockDescriptor(
       id: 'updates_in_list',
@@ -210,6 +230,7 @@ class SettingsBlockRegistry {
       icon: Icons.update_rounded,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 40,
+      persistKeys: ['home.updatesInList'],
     ),
     SettingsBlockDescriptor(
       id: 'navigation_search',
@@ -218,6 +239,7 @@ class SettingsBlockRegistry {
       icon: Icons.navigation_outlined,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 50,
+      persistKeys: ['home.navSearch'],
     ),
     SettingsBlockDescriptor(
       id: 'floating_add_button',
@@ -226,6 +248,7 @@ class SettingsBlockRegistry {
       icon: Icons.add_circle_outline_rounded,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 60,
+      persistKeys: ['home.addButton'],
     ),
     SettingsBlockDescriptor(
       id: 'home_app_details',
@@ -234,6 +257,7 @@ class SettingsBlockRegistry {
       icon: Icons.home_outlined,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 70,
+      persistKeys: ['home.homeDetails'],
     ),
     SettingsBlockDescriptor(
       id: 'swipe_gestures',
@@ -242,6 +266,7 @@ class SettingsBlockRegistry {
       icon: Icons.swipe_outlined,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 80,
+      persistKeys: ['swipeGestures'],
     ),
     SettingsBlockDescriptor(
       id: 'library_management',
@@ -250,6 +275,7 @@ class SettingsBlockRegistry {
       icon: Icons.local_library_outlined,
       category: SettingsCategory.homeAndLibrary,
       defaultPriority: 90,
+      persistKeys: ['libraryAndStorage', 'home.discover'],
     ),
 
     // Updates & Notifications
@@ -260,6 +286,7 @@ class SettingsBlockRegistry {
       icon: Icons.schedule_rounded,
       category: SettingsCategory.updatesAndNotifications,
       defaultPriority: 10,
+      persistKeys: ['updates_schedule'],
     ),
     SettingsBlockDescriptor(
       id: 'update_conditions',
@@ -268,6 +295,7 @@ class SettingsBlockRegistry {
       icon: Icons.wifi_protected_setup_rounded,
       category: SettingsCategory.updatesAndNotifications,
       defaultPriority: 20,
+      persistKeys: ['updates_constraints', 'updates_performance'],
     ),
     SettingsBlockDescriptor(
       id: 'update_notifications',
@@ -276,6 +304,7 @@ class SettingsBlockRegistry {
       icon: Icons.notifications_active_outlined,
       category: SettingsCategory.updatesAndNotifications,
       defaultPriority: 30,
+      persistKeys: ['notifications'],
     ),
 
     // Install & Safety
@@ -286,6 +315,7 @@ class SettingsBlockRegistry {
       icon: Icons.install_mobile_outlined,
       category: SettingsCategory.installAndSafety,
       defaultPriority: 10,
+      persistKeys: ['installation_method', 'install.downloads'],
     ),
     SettingsBlockDescriptor(
       id: 'safety_ban_warnings',
@@ -295,6 +325,7 @@ class SettingsBlockRegistry {
       category: SettingsCategory.installAndSafety,
       defaultPriority: 20,
       isProOrAdvanced: true,
+      persistKeys: ['safetyAndRateLimits'],
     ),
     SettingsBlockDescriptor(
       id: 'package_verification',
@@ -303,6 +334,7 @@ class SettingsBlockRegistry {
       icon: Icons.verified_user_outlined,
       category: SettingsCategory.installAndSafety,
       defaultPriority: 30,
+      persistKeys: ['install.before', 'install.sources'],
     ),
 
     // System & Advanced
@@ -313,6 +345,7 @@ class SettingsBlockRegistry {
       icon: Icons.backup_outlined,
       category: SettingsCategory.advanced,
       defaultPriority: 10,
+      persistKeys: ['advanced_data'],
     ),
     SettingsBlockDescriptor(
       id: 'developer_tools',
@@ -322,6 +355,7 @@ class SettingsBlockRegistry {
       category: SettingsCategory.advanced,
       defaultPriority: 20,
       isProOrAdvanced: true,
+      persistKeys: ['advanced.developer', 'troubleshootingAndSystem'],
     ),
     SettingsBlockDescriptor(
       id: 'microg_integration',
@@ -331,6 +365,7 @@ class SettingsBlockRegistry {
       category: SettingsCategory.advanced,
       defaultPriority: 30,
       isProOrAdvanced: true,
+      persistKeys: ['advanced.microg', 'microg_hub'],
     ),
   ];
 

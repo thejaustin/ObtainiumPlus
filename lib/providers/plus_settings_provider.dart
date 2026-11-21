@@ -938,9 +938,27 @@ class PlusSettingsProvider with ChangeNotifier {
     plusSettingsLayoutJson = config.encode();
   }
 
-  bool isSettingsBlockPinned(String id) => settingsLayoutConfig.isPinned(id);
+  bool isSettingsBlockPinned(String idOrKey) {
+    if (idOrKey.isEmpty) return false;
+    final config = settingsLayoutConfig;
+    if (config.isPinned(idOrKey)) return true;
+    for (final blockId in config.pinnedBlocks) {
+      final desc = SettingsBlockRegistry.findById(blockId);
+      if (desc != null && desc.matchesKey(idOrKey)) return true;
+    }
+    return false;
+  }
 
-  bool isSettingsBlockHidden(String id) => settingsLayoutConfig.isHidden(id);
+  bool isSettingsBlockHidden(String idOrKey) {
+    if (idOrKey.isEmpty) return false;
+    final config = settingsLayoutConfig;
+    if (config.isHidden(idOrKey)) return true;
+    for (final blockId in config.hiddenBlocks) {
+      final desc = SettingsBlockRegistry.findById(blockId);
+      if (desc != null && desc.matchesKey(idOrKey)) return true;
+    }
+    return false;
+  }
 
   void togglePinSettingsBlock(String id) {
     final current = settingsLayoutConfig;

@@ -95,11 +95,18 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
 
   @override
   Widget build(BuildContext context) {
-    final groupStyle =
-        widget.style ??
-        context.select<PlusSettingsProvider, SettingsGroupStyle>(
-          (p) => p.plusSettingsGroupStyle,
-        );
+    final plusSettings = context.watch<PlusSettingsProvider>();
+    final isSearching = widget.title == null;
+    if (!isSearching &&
+        widget.persistKey != null &&
+        plusSettings.isSettingsBlockHidden(widget.persistKey!)) {
+      return const SizedBox.shrink();
+    }
+    final isPinned =
+        widget.persistKey != null &&
+        plusSettings.isSettingsBlockPinned(widget.persistKey!);
+
+    final groupStyle = widget.style ?? plusSettings.plusSettingsGroupStyle;
     if (groupStyle == SettingsGroupStyle.segmented) {
       return SegmentedSettingsGroup(
         title: widget.title,
@@ -261,9 +268,26 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              widget.title!,
-                              style: _headerTitleStyle(context, colorScheme),
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.title!,
+                                    style: _headerTitleStyle(
+                                      context,
+                                      colorScheme,
+                                    ),
+                                  ),
+                                ),
+                                if (isPinned) ...[
+                                  const SizedBox(width: 6),
+                                  Icon(
+                                    Icons.push_pin_rounded,
+                                    size: 14,
+                                    color: colorScheme.primary,
+                                  ),
+                                ],
+                              ],
                             ),
                             if (!isCompact &&
                                 (widget.description != null ||
@@ -312,11 +336,14 @@ class _ExpressiveSettingsGroupState extends State<ExpressiveSettingsGroup>
                 radius,
                 expressive: isM3E,
                 side: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
+                  color: isPinned
+                      ? colorScheme.primary.withValues(alpha: 0.75)
+                      : colorScheme.outlineVariant.withValues(
+                          alpha: Theme.of(context).brightness == Brightness.dark
+                              ? 0.35
+                              : 0.65,
+                        ),
+                  width: isPinned ? 1.5 : 1.0,
                 ),
               ),
               child: ClipPath(
