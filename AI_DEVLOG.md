@@ -1769,3 +1769,16 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - `collapsible_about.dart` is now unreachable (its only import was unused).
 
 **Next:** named theme system (Obtainium / Obtainium+ / Expressive / Expressive+), default Obtainium+; stability target = ObtainX parity.
+
+### 2026-11-23 (cont.) — Named theme styles [not yet device-tested]
+
+**Added:** `AppThemeStyle { obtainium, obtainiumPlus, expressive, expressivePlus }` (`settings_enums.dart`), persisted as `appThemeStyle` via `safeEnum` in `ThemeSettingsProvider`.
+- **Obtainium** = upstream: seed `0xFF6438B5`, tonalSpot, `lib/utils/upstream_theme.dart` (port of upstream `buildObtainiumTheme`, Montserrat).
+- **Obtainium+** = same layout, corners scaled by `plusGlobalCornerRadius/24` (preset 16, sharper) + gold tertiary roles from a tonal palette of `plusAccentSeed` (`lib/utils/theme_style.dart`, no hand-picked on-colors; skipped under Material You).
+- **Expressive / Expressive+** = existing `ThemeBuilder` (radius 28, expressive variant); `+` adds the gold accent and glass.
+- **Decision:** a style is a *preset*. Picking one writes defaults into the existing granular toggles (expressive, glassmorphism, enhanced animations, corner radius); those stay individually editable. Style itself only drives colour recipe and which builder is used.
+- **Defaults/migration:** new installs → Obtainium+. Existing installs map from their stored expressive/glass toggles (default → Expressive+) so the update doesn't reskin. Missing/garbage key → Obtainium+.
+- UI: the old 2-way segmented design selector in Theme settings is now a 4-way radio list with colour swatches; strings `themeStyleName_*` / `themeStyleDesc_*` (English fallback in all locales).
+- Tests: `test/theme_style_test.dart` (4 styles × light/dark contrast ≥4.5 on primary/tertiary/tertiaryContainer, theme builds, migration). Suite 906/906, analyzer 0 errors.
+
+**Open:** device screenshots of all 4 styles (light/dark/AMOLED/Material You); gold tuning by eye; ObtainX stability review not started.

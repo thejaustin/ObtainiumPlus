@@ -1,4 +1,6 @@
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
+import 'package:obtainium/utils/theme_style.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,6 +12,42 @@ class ThemeSettingsProvider with ChangeNotifier {
 
   Future<void> initializeSettings(SharedPreferences p) async {
     prefs = p;
+    _migrateThemeStyle(p);
+    notifyListeners();
+  }
+
+  /// First launch after the named styles were introduced. New installs get
+  /// [AppThemeStyle.obtainiumPlus]; existing installs keep their current look
+  /// (the app already used Expressive shapes plus the Plus effects) unless
+  /// they had switched Expressive off.
+  void _migrateThemeStyle(SharedPreferences p) {
+    if (p.containsKey('appThemeStyle')) return;
+    const existingInstallKeys = [
+      'theme',
+      'themeColor',
+      'themeVariant',
+      'plusEnableMaterialExpressive',
+      'plusEnableGlassmorphism',
+    ];
+    final existing = existingInstallKeys.any(p.containsKey);
+    if (!existing) return;
+    final expressive = p.safeBool('plusEnableMaterialExpressive') ?? true;
+    final glass = p.safeBool('plusEnableGlassmorphism') ?? true;
+    final style = switch ((expressive, glass)) {
+      (true, true) => AppThemeStyle.expressivePlus,
+      (true, false) => AppThemeStyle.expressive,
+      (false, true) => AppThemeStyle.obtainiumPlus,
+      (false, false) => AppThemeStyle.obtainium,
+    };
+    p.setInt('appThemeStyle', style.index);
+  }
+
+  AppThemeStyle get themeStyle =>
+      prefs?.safeEnum('appThemeStyle', AppThemeStyle.values) ??
+      AppThemeStyle.obtainiumPlus;
+
+  set themeStyle(AppThemeStyle s) {
+    prefs?.setInt('appThemeStyle', s.index);
     notifyListeners();
   }
 
@@ -25,7 +63,7 @@ class ThemeSettingsProvider with ChangeNotifier {
 
   DynamicSchemeVariant get themeVariant {
     return prefs?.safeEnum('themeVariant', DynamicSchemeVariant.values) ??
-        DynamicSchemeVariant.expressive;
+        defaultVariantFor(themeStyle);
   }
 
   set themeVariant(DynamicSchemeVariant t) {
@@ -35,7 +73,7 @@ class ThemeSettingsProvider with ChangeNotifier {
 
   Color get themeColor {
     int? colorCode = prefs?.safeInt('themeColor');
-    return (colorCode != null) ? Color(colorCode) : const Color(0xFF6438B5);
+    return (colorCode != null) ? Color(colorCode) : obtainiumSeedColor;
   }
 
   set themeColor(Color themeColor) {

@@ -38,7 +38,10 @@ import 'package:obtainium/providers/auth_provider.dart';
 import 'package:obtainium/providers/native_provider.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/material_ui_bridge.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/theme_builder.dart';
+import 'package:obtainium/utils/theme_style.dart';
+import 'package:obtainium/utils/upstream_theme.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -866,6 +869,21 @@ class _ObtainiumState extends State<Obtainium> {
                 .harmonized();
           }
 
+          // Plus styles swap the tertiary roles for a gold tonal palette. Skipped
+          // for Material You so the system palette stays untouched.
+          if (!(themeSettings.useMaterialYou &&
+              lightDynamic != null &&
+              darkDynamic != null)) {
+            lightColorScheme = applyPlusAccent(
+              lightColorScheme,
+              themeSettings.themeStyle,
+            );
+            darkColorScheme = applyPlusAccent(
+              darkColorScheme,
+              themeSettings.themeStyle,
+            );
+          }
+
           // The system font is also needed when matching the system style
           if ((themeSettings.useSystemFont || matchSystemStyle) &&
               !_fontLoaded) {
@@ -880,6 +898,29 @@ class _ObtainiumState extends State<Obtainium> {
               ? ThemeMode.dark
               : ThemeMode.light;
 
+          final themeStyle = themeSettings.themeStyle;
+          // Non-expressive styles use the upstream-shaped theme; Obtainium+
+          // tightens its corners. Expressive styles and "match system style"
+          // keep the full ThemeBuilder.
+          ThemeData buildStyledTheme(ColorScheme scheme) =>
+              themeStyle.isExpressive || matchSystemStyle
+              ? ThemeBuilder.buildTheme(
+                  colorScheme: scheme,
+                  useSystemFont: themeSettings.useSystemFont,
+                  plusEnableMaterialExpressive: plusEnableMaterialExpressive,
+                  cornerRadius: plusGlobalCornerRadius,
+                  matchSystemMaterialStyle: matchSystemStyle,
+                  isTV: isTV,
+                )
+              : buildUpstreamTheme(
+                  scheme,
+                  useSystemFont: themeSettings.useSystemFont,
+                  isTV: isTV,
+                  radiusScale: themeStyle == AppThemeStyle.obtainium
+                      ? 1
+                      : plusGlobalCornerRadius / 24,
+                );
+
           return MaterialApp(
             title: 'Obtainium',
             localizationsDelegates: appLocalizationsDelegates(
@@ -890,22 +931,8 @@ class _ObtainiumState extends State<Obtainium> {
             navigatorKey: appNavigatorKey,
             debugShowCheckedModeBanner: false,
             themeMode: themeMode,
-            theme: ThemeBuilder.buildTheme(
-              colorScheme: lightColorScheme,
-              useSystemFont: themeSettings.useSystemFont,
-              plusEnableMaterialExpressive: plusEnableMaterialExpressive,
-              cornerRadius: plusGlobalCornerRadius,
-              matchSystemMaterialStyle: matchSystemStyle,
-              isTV: isTV,
-            ),
-            darkTheme: ThemeBuilder.buildTheme(
-              colorScheme: darkColorScheme,
-              useSystemFont: themeSettings.useSystemFont,
-              plusEnableMaterialExpressive: plusEnableMaterialExpressive,
-              cornerRadius: plusGlobalCornerRadius,
-              matchSystemMaterialStyle: matchSystemStyle,
-              isTV: isTV,
-            ),
+            theme: buildStyledTheme(lightColorScheme),
+            darkTheme: buildStyledTheme(darkColorScheme),
             builder: (context, child) =>
                 MaterialUiThemeBridge(child: child ?? const SizedBox.shrink()),
             home: Shortcuts(

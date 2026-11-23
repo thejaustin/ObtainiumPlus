@@ -83,3 +83,36 @@ enum IconMorphStyle { morph, spin, pop }
 
 /// Haptic strength. [standard] is exactly the shipped haptics.
 enum HapticIntensity { standard, subtle, strong }
+
+/// The four core looks of the app. A style is a preset: it picks the colour
+/// recipe and applies default values to the granular Plus toggles (which stay
+/// individually editable afterwards).
+///
+/// - [obtainium]: matches upstream Obtainium (stock purple seed, tonal spot,
+///   upstream shapes, no Plus extras).
+/// - [obtainiumPlus]: upstream layout with sharper highlights and a gold
+///   tertiary accent for a premium feel. The default for new installs.
+/// - [expressive]: Material 3 Expressive shapes and motion, plain accents.
+/// - [expressivePlus]: Expressive blended with the Plus accents and effects.
+enum AppThemeStyle { obtainium, obtainiumPlus, expressive, expressivePlus }
+
+extension AppThemeStyleX on AppThemeStyle {
+  bool get isPlus =>
+      this == AppThemeStyle.obtainiumPlus ||
+      this == AppThemeStyle.expressivePlus;
+
+  bool get isExpressive =>
+      this == AppThemeStyle.expressive || this == AppThemeStyle.expressivePlus;
+
+  /// Corner radius preset. Plus-over-upstream is deliberately sharper.
+  double get presetCornerRadius => switch (this) {
+    AppThemeStyle.obtainium => 24,
+    AppThemeStyle.obtainiumPlus => 16,
+    AppThemeStyle.expressive => 28,
+    AppThemeStyle.expressivePlus => 28,
+  };
+
+  bool get presetGlassmorphism => isPlus;
+
+  bool get presetEnhancedAnimations => this != AppThemeStyle.obtainium;
+}

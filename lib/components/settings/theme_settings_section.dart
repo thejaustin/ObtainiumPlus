@@ -19,6 +19,8 @@ import 'package:provider/provider.dart';
 import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/utils/card_metrics.dart';
+import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/utils/theme_style.dart';
 
 /// Theme & Colors settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -92,8 +94,7 @@ class ThemeSettingsSection extends StatelessWidget {
     // Design system: the only home of these two (the Look & motion hub
     // card and the Obtainium+ sheet link here).
     final designWidgets = <Widget>[
-      if (plusSettings.enableAllPlusFeatures &&
-          (_matches(tr('designSystemThemeStyle')) ||
+      if ((_matches(tr('designSystemThemeStyle')) ||
               _matches(
                 tr('obtainiumPlusTheme'),
                 desc: tr('obtainiumPlusThemeDescription'),
@@ -468,65 +469,71 @@ class ThemeSettingsSection extends StatelessWidget {
   }
 
   Widget _buildDesignSystemSelector(BuildContext context) {
-    return Consumer<PlusSettingsProvider>(
-      builder: (context, plusSettings, child) {
-        final isM3E = plusSettings.plusEnableMaterialExpressive;
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              leading: buildSettingsIconBadge(
-                context,
-                isM3E ? Icons.brush_rounded : Icons.auto_awesome_rounded,
-                active: true,
-              ),
-              title: Text(
-                tr('designSystemThemeStyle'),
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-              subtitle: Text(
-                isM3E
-                    ? tr('materialExpressiveThemeDescription')
-                    : tr('obtainiumPlusThemeDescription'),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: SegmentedButton<bool>(
-                  segments: [
-                    ButtonSegment<bool>(
-                      value: false,
-                      label: Text(tr('obtainiumPlusThemeShort')),
-                      tooltip: tr('obtainiumPlusTheme'),
-                      icon: const Icon(Icons.auto_awesome_rounded),
-                    ),
-                    ButtonSegment<bool>(
-                      value: true,
-                      label: Text(tr('materialExpressiveThemeShort')),
-                      tooltip: tr('materialExpressiveTheme'),
-                      icon: const Icon(Icons.brush_rounded),
-                    ),
-                  ],
-                  selected: {isM3E},
-                  onSelectionChanged: (Set<bool> newSelection) {
-                    final next = newSelection.first;
-                    if (next) {
-                      AppHaptics.toggleOn();
-                    } else {
-                      AppHaptics.toggleOff();
-                    }
-                    plusSettings.plusEnableMaterialExpressive = next;
-                  },
+    final themeSettings = context.watch<ThemeSettingsProvider>();
+    final plusSettings = context.read<PlusSettingsProvider>();
+    final current = themeSettings.themeStyle;
+    final scheme = Theme.of(context).colorScheme;
+    String name(AppThemeStyle s) => tr('themeStyleName_${s.name}');
+    String desc(AppThemeStyle s) => tr('themeStyleDesc_${s.name}');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ListTile(
+          leading: buildSettingsIconBadge(
+            context,
+            current.isExpressive
+                ? Icons.brush_rounded
+                : Icons.auto_awesome_rounded,
+            active: true,
+          ),
+          title: Text(
+            tr('designSystemThemeStyle'),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+          ),
+          subtitle: Text(desc(current)),
+        ),
+        RadioGroup<AppThemeStyle>(
+          groupValue: current,
+          onChanged: (AppThemeStyle? next) {
+            if (next == null || next == current) return;
+            AppHaptics.toggleOn();
+            // A style is a preset: it sets the granular toggles to its
+            // defaults, which stay individually editable afterwards.
+            plusSettings.plusEnableMaterialExpressive = next.isExpressive;
+            plusSettings.plusEnableGlassmorphism = next.presetGlassmorphism;
+            plusSettings.plusEnableEnhancedAnimations =
+                next.presetEnhancedAnimations;
+            plusSettings.plusGlobalCornerRadius = next.presetCornerRadius;
+            themeSettings.themeStyle = next;
+          },
+          child: Column(
+            children: [
+              for (final style in AppThemeStyle.values)
+                RadioListTile<AppThemeStyle>(
+                  value: style,
+                  title: Text(name(style)),
+                  subtitle: Text(desc(style)),
+                  secondary: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(radius: 8, backgroundColor: scheme.primary),
+                      const SizedBox(width: 4),
+                      CircleAvatar(
+                        radius: 8,
+                        backgroundColor: style.isPlus
+                            ? applyPlusAccent(scheme, style).tertiary
+                            : scheme.secondary,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-          ],
-        );
-      },
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 

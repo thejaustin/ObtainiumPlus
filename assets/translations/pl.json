@@ -1986,5 +1986,13 @@
     "activeSettingsBlocks": "Active blocks",
     "resetSettingsLayout": "Reset layout",
     "resetSettingsLayoutConfirm": "Reset all settings cards to their default layout?",
-    "dragToReorder": "Reorder blocks within this tab"
+    "dragToReorder": "Reorder blocks within this tab",
+  "themeStyleName_obtainium": "Obtainium",
+  "themeStyleDesc_obtainium": "The original Obtainium look, matching upstream.",
+  "themeStyleName_obtainiumPlus": "Obtainium+",
+  "themeStyleDesc_obtainiumPlus": "Upstream layout with sharper highlights and a gold accent.",
+  "themeStyleName_expressive": "Material Expressive",
+  "themeStyleDesc_expressive": "Material 3 Expressive shapes and motion.",
+  "themeStyleName_expressivePlus": "Expressive+",
+  "themeStyleDesc_expressivePlus": "Material Expressive blended with the Plus accents and effects."
 }
