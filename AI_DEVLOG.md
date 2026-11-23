@@ -1782,3 +1782,8 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Tests: `test/theme_style_test.dart` (4 styles × light/dark contrast ≥4.5 on primary/tertiary/tertiaryContainer, theme builds, migration). Suite 906/906, analyzer 0 errors.
 
 **Open:** device screenshots of all 4 styles (light/dark/AMOLED/Material You); gold tuning by eye; ObtainX stability review not started.
+
+## 2026-11-23 — device test of theme styles (vscreen)
+- Verified on device (dark, Material You off): Obtainium (flat upstream look, glass off), Obtainium+ (16dp corners, glass on, gold gradient on Add app), Expressive+ select OK. Presets update toggles; settings card shows "Obtainium+ · Follow system", "Corner: 16dp".
+- Bug found: switching between the upstream and ThemeBuilder themes crashed (TextStyle.lerp "different inherit values" → `_dependents.isEmpty`). Fixed in main.dart by snapping (themeAnimationDuration zero) when the builder kind changes.
+- Not yet checked: light / AMOLED, Material Expressive on its own, Material You gold interplay (Material You on by default hides the purple/gold palette), fresh-install 0px corner radius reading on the Shapes tab.

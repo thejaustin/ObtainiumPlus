@@ -236,6 +236,8 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
   return event;
 }
 
+bool? _lastUsedThemeBuilder;
+
 void main() async {
   // Crash reporting was silently dropped in a May refactor (fb5a91c2) —
   // without it, release-mode build failures like issue #217 are invisible.
@@ -902,8 +904,15 @@ class _ObtainiumState extends State<Obtainium> {
           // Non-expressive styles use the upstream-shaped theme; Obtainium+
           // tightens its corners. Expressive styles and "match system style"
           // keep the full ThemeBuilder.
+          final usesThemeBuilder = themeStyle.isExpressive || matchSystemStyle;
+          // The two builders emit TextStyles with different `inherit` values,
+          // so fading between them throws in TextStyle.lerp. Snap instead.
+          final snapTheme =
+              _lastUsedThemeBuilder != null &&
+              _lastUsedThemeBuilder != usesThemeBuilder;
+          _lastUsedThemeBuilder = usesThemeBuilder;
           ThemeData buildStyledTheme(ColorScheme scheme) =>
-              themeStyle.isExpressive || matchSystemStyle
+              usesThemeBuilder
               ? ThemeBuilder.buildTheme(
                   colorScheme: scheme,
                   useSystemFont: themeSettings.useSystemFont,
@@ -931,6 +940,9 @@ class _ObtainiumState extends State<Obtainium> {
             navigatorKey: appNavigatorKey,
             debugShowCheckedModeBanner: false,
             themeMode: themeMode,
+            themeAnimationDuration: snapTheme
+                ? Duration.zero
+                : kThemeAnimationDuration,
             theme: buildStyledTheme(lightColorScheme),
             darkTheme: buildStyledTheme(darkColorScheme),
             builder: (context, child) =>
