@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:provider/provider.dart';
 
 class ImportErrorDialog extends StatefulWidget {
@@ -28,6 +29,7 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
+    final shapes = AppShapes.of(context);
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -35,25 +37,27 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: enableGlass
               ? colorScheme.surface.withValues(alpha: 0.78)
               : colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: enableGlass
-                ? colorScheme.onSurface.withValues(alpha: 0.18)
-                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
-            width: 1,
+          shape: shapes.borderOf(
+            ShapeRole.dialog,
+            side: BorderSide(
+              color: enableGlass
+                  ? colorScheme.onSurface.withValues(alpha: 0.18)
+                  : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+              width: 1,
+            ),
           ),
-          boxShadow: AppShadows.smooth(
+          shadows: AppShadows.smooth(
             color: Colors.black,
             opacity: enableGlass ? 0.28 : 0.1,
             blurFactor: enableGlass ? 1.5 : 1.0,
           ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: shapes.borderOf(ShapeRole.dialog)),
           child: ConditionalBlur(
             sigma: 24,
             enabled: enableGlass,
@@ -84,7 +88,11 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
         color: Theme.of(
           context,
         ).colorScheme.errorContainer.withValues(alpha: enableGlass ? 0.3 : 0.5),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(
+            AppShapes.of(context).radiusOf(ShapeRole.dialog),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -195,7 +203,11 @@ class _ImportErrorDialogState extends State<ImportErrorDialog> {
         color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
           alpha: AppOpacity.medium,
         ),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(
+            AppShapes.of(context).radiusOf(ShapeRole.dialog),
+          ),
+        ),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,

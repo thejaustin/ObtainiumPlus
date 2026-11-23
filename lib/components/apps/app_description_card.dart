@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -47,7 +48,7 @@ class _AppDescriptionModalSheet extends StatelessWidget {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final sheetRadius = Radius.circular(
-      plusSettings.plusGlobalCornerRadius.clamp(20.0, 32.0),
+      AppShapes.of(context).radiusOf(ShapeRole.sheet),
     );
 
     final Widget sheetContent = Container(
@@ -209,7 +210,8 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
     final wantsReadme = style == AppDescriptionStyle.githubReadme;
     final raw = widget.app.app.additionalSettings['about'];
     final hasAbout = raw is String && raw.trim().isNotEmpty;
-    if (!wantsReadme && (hasAbout || style == AppDescriptionStyle.liveWebpage)) {
+    if (!wantsReadme &&
+        (hasAbout || style == AppDescriptionStyle.liveWebpage)) {
       return;
     }
     _readmeFullRequested = wantsReadme;
@@ -328,11 +330,6 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
     final anims = plusSettings.plusEnableEnhancedAnimations;
     final currentStyle = plusSettings.plusAppDescriptionStyle;
 
-    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(baseRadius);
-
     final String text = _aboutText;
     final bool hasText = text.isNotEmpty;
 
@@ -343,7 +340,7 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
                 alpha: theme.brightness == Brightness.dark ? 0.78 : 0.88,
               )
             : cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(cardRadius),
+        borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
         border: Border.all(
           color: enableGlass
               ? cs.onSurface.withValues(alpha: AppConstants.glassBorderAlpha)
@@ -501,7 +498,8 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
                     alpha: 0.5,
                   ),
                   showCheckmark: false,
-                  shape: StadiumBorder(
+                  shape: AppShapes.of(context).borderOf(
+                    ShapeRole.chip,
                     side: BorderSide(
                       color: isSelected
                           ? Colors.transparent
@@ -801,21 +799,24 @@ class _AppDescriptionCardState extends State<AppDescriptionCard> {
                 ),
               ),
               if (branch != null)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: cs.secondaryContainer,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  branch,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: cs.onSecondaryContainer,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.secondaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    branch,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: cs.onSecondaryContainer,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
         ),

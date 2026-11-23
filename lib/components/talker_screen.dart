@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -107,8 +108,8 @@ class _TalkerScreenState extends State<TalkerScreen> {
             padding: const EdgeInsets.all(12.0),
             child: Card(
               elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              shape: AppShapes.of(context).borderOf(
+                ShapeRole.card,
                 side: BorderSide(
                   color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 ),
@@ -210,9 +211,7 @@ class _TalkerScreenState extends State<TalkerScreen> {
                         color: colorScheme.surfaceContainerHighest.withValues(
                           alpha: 0.3,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: AppShapes.of(context).borderOf(ShapeRole.card),
                         child: ExpansionTile(
                           key: PageStorageKey<String>(
                             'talker_log:${log.timestamp.millisecondsSinceEpoch}:$index',

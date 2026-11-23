@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'dart:ui';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -44,7 +45,9 @@ Future<List<String>?> showTagEditor({
                         context,
                       ).colorScheme.surface.withValues(alpha: 0.85)
                     : Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: AppShapes.of(
+                  context,
+                ).borderRadiusOf(ShapeRole.dialog),
                 border: Border.all(
                   color: Theme.of(
                     context,
@@ -58,7 +61,9 @@ Future<List<String>?> showTagEditor({
                 ),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: AppShapes.of(
+                  context,
+                ).borderRadiusOf(ShapeRole.dialog),
                 child: ConditionalBlur(
                   sigma: 15,
                   enabled: enableGlass,
@@ -86,6 +91,7 @@ Future<List<String>?> showTagEditor({
                                         final colorScheme = Theme.of(
                                           context,
                                         ).colorScheme;
+                                        final shapes = AppShapes.of(context);
 
                                         return AnimatedContainer(
                                           duration: Duration(
@@ -97,9 +103,13 @@ Future<List<String>?> showTagEditor({
                                           ),
                                           curve: Easing.emphasizedDecelerate,
                                           decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(
-                                              isActive ? 14.0 : 24.0,
-                                            ),
+                                            borderRadius: isActive
+                                                ? shapes.borderRadiusOf(
+                                                    ShapeRole.input,
+                                                  )
+                                                : shapes.borderRadiusOf(
+                                                    ShapeRole.card,
+                                                  ),
                                             boxShadow: isActive
                                                 ? [
                                                     BoxShadow(
@@ -123,10 +133,13 @@ Future<List<String>?> showTagEditor({
                                             decoration: InputDecoration(
                                               hintText: tr('newTag'),
                                               border: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      isActive ? 14.0 : 24.0,
-                                                    ),
+                                                borderRadius: isActive
+                                                    ? shapes.borderRadiusOf(
+                                                        ShapeRole.input,
+                                                      )
+                                                    : shapes.borderRadiusOf(
+                                                        ShapeRole.card,
+                                                      ),
                                                 borderSide: BorderSide(
                                                   color: isActive
                                                       ? colorScheme.primary
@@ -139,18 +152,23 @@ Future<List<String>?> showTagEditor({
                                                 ),
                                               ),
                                               focusedBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(14.0),
+                                                borderRadius: shapes
+                                                    .borderRadiusOf(
+                                                      ShapeRole.input,
+                                                    ),
                                                 borderSide: BorderSide(
                                                   color: colorScheme.primary,
                                                   width: 1.6,
                                                 ),
                                               ),
                                               enabledBorder: OutlineInputBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(
-                                                      isActive ? 14.0 : 24.0,
-                                                    ),
+                                                borderRadius: isActive
+                                                    ? shapes.borderRadiusOf(
+                                                        ShapeRole.input,
+                                                      )
+                                                    : shapes.borderRadiusOf(
+                                                        ShapeRole.card,
+                                                      ),
                                                 borderSide: BorderSide(
                                                   color: isActive
                                                       ? colorScheme.primary
@@ -327,7 +345,9 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppShapes.of(context).radiusOf(ShapeRole.dialog)),
+      ),
     ),
     child: Row(
       children: [
@@ -365,7 +385,11 @@ Widget _buildActions(BuildContext context, List<String> selectedTags) {
       color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
         alpha: AppOpacity.medium,
       ),
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(
+        bottom: Radius.circular(
+          AppShapes.of(context).radiusOf(ShapeRole.dialog),
+        ),
+      ),
     ),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.end,

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/models/app.dart';
 import 'package:obtainium/models/release_note.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -37,19 +38,15 @@ class AppVersionHistoryWidget extends StatelessWidget {
 
     final plusSettings = context.watch<PlusSettingsProvider>();
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(radius);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(cardRadius),
+        borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
         child: Container(
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(cardRadius),
+            borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
             border: Border.all(
               color: colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
@@ -99,12 +96,8 @@ class AppVersionHistoryWidget extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(cardRadius),
-              ),
-              collapsedShape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(cardRadius),
-              ),
+              shape: AppShapes.of(context).borderOf(ShapeRole.card),
+              collapsedShape: AppShapes.of(context).borderOf(ShapeRole.card),
               children: [
                 Divider(
                   height: 1,
@@ -261,9 +254,9 @@ class _VersionHistoryBodyState extends State<_VersionHistoryBody> {
         padding: const EdgeInsets.all(16),
         child: Text(
           tr('noVersionHistory'),
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
         ),
       );
     }

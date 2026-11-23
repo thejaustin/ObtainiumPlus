@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -213,10 +214,10 @@ class SettingsHeroOverview extends StatelessWidget {
       scaleDownFactor: 0.94,
       child: Material(
         color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
             child: Column(

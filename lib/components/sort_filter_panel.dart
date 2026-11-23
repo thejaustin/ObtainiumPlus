@@ -1,8 +1,8 @@
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/motion.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
-import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -130,13 +130,12 @@ class _SortFilterPanelState extends State<SortFilterPanel>
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final sheetRadius = radius.clamp(28.0, 48.0);
 
     final borderColor = plusSettings.plusEnableGlassmorphism
         ? theme.colorScheme.onSurface.withValues(alpha: 0.14)
         : theme.colorScheme.outlineVariant.withValues(alpha: AppOpacity.subtle);
-    final sheetShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(sheetRadius)),
+    final sheetShape = AppShapes.of(context).borderOf(
+      ShapeRole.sheet,
       side: BorderSide(color: borderColor, width: 1.0),
     );
 
@@ -348,7 +347,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
   OutlinedBorder _chipShape(double itemRadius) =>
       context.read<PlusSettingsProvider>().plusExpressiveFilterChips
       ? const StadiumBorder()
-      : RoundedRectangleBorder(borderRadius: BorderRadius.circular(itemRadius));
+      : AppShapes.of(context).borderOf(ShapeRole.chip);
 
   Widget _buildSortSection(
     ViewSettingsProvider sp,
@@ -460,9 +459,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             showSelectedIcon: false,
             style: SegmentedButton.styleFrom(
               visualDensity: VisualDensity.comfortable,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(CardMetrics.pill(radius)),
-              ),
+              shape: AppShapes.of(context).borderOf(ShapeRole.segmented),
             ),
           ),
         ),
@@ -763,7 +760,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 vertical: 12,
               ),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: AppShapes.of(
+                  context,
+                ).borderRadiusOf(ShapeRole.input),
                 borderSide: BorderSide(
                   color: theme.colorScheme.outlineVariant.withValues(
                     alpha: 0.3,
@@ -772,7 +771,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                 ),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20.0),
+                borderRadius: AppShapes.of(
+                  context,
+                ).borderRadiusOf(ShapeRole.input),
                 borderSide: BorderSide(
                   color: theme.colorScheme.outlineVariant.withValues(
                     alpha: 0.3,
@@ -864,13 +865,16 @@ class _SortFilterPanelState extends State<SortFilterPanel>
             builder: (fContext) {
               final isFocused = Focus.of(fContext).hasFocus;
               final isShifted = isFocused || hasText;
+              final shapes = AppShapes.of(fContext);
               return AnimatedContainer(
                 duration: Duration(
                   milliseconds: AppMotion.enabled(fContext) ? 280 : 0,
                 ),
                 curve: Easing.emphasizedDecelerate,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(isShifted ? 16.0 : 28.0),
+                  borderRadius: isShifted
+                      ? shapes.borderRadiusOf(ShapeRole.input)
+                      : shapes.borderRadiusOf(ShapeRole.card),
                   boxShadow: isShifted
                       ? [
                           BoxShadow(
@@ -909,9 +913,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                       vertical: 12,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        isShifted ? 16.0 : 28.0,
-                      ),
+                      borderRadius: isShifted
+                          ? shapes.borderRadiusOf(ShapeRole.input)
+                          : shapes.borderRadiusOf(ShapeRole.card),
                       borderSide: BorderSide(
                         color: isShifted
                             ? theme.colorScheme.primary
@@ -922,9 +926,9 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                       ),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        isShifted ? 16.0 : 28.0,
-                      ),
+                      borderRadius: isShifted
+                          ? shapes.borderRadiusOf(ShapeRole.input)
+                          : shapes.borderRadiusOf(ShapeRole.card),
                       borderSide: BorderSide(
                         color: isShifted
                             ? theme.colorScheme.primary
@@ -935,7 +939,7 @@ class _SortFilterPanelState extends State<SortFilterPanel>
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16.0),
+                      borderRadius: shapes.borderRadiusOf(ShapeRole.input),
                       borderSide: BorderSide(
                         color: theme.colorScheme.primary,
                         width: 1.8,

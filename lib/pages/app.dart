@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -502,6 +503,7 @@ class _AppPageState extends State<AppPage> {
     var plusSettings = context.watch<PlusSettingsProvider>();
     var viewSettings = context.watch<ViewSettingsProvider>();
     var updateSettings = context.watch<UpdateSettingsProvider>();
+    final shapes = AppShapes.of(context);
     final cardRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
@@ -672,7 +674,7 @@ class _AppPageState extends State<AppPage> {
                 ),
                 if (app != null) UpdateHealthNote(app: app.app),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(cardRadius),
+                  borderRadius: shapes.borderRadiusOf(ShapeRole.card),
                   child: ConditionalBlur(
                     enabled: plusSettings.plusEnableGlassmorphism,
                     sigma: AppConstants.glassBlurSigma,
@@ -684,7 +686,7 @@ class _AppPageState extends State<AppPage> {
                                 alpha: AppConstants.glassSurfaceAlpha,
                               )
                             : Theme.of(context).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(cardRadius),
+                        borderRadius: shapes.borderRadiusOf(ShapeRole.card),
                         border: Border.all(
                           color: plusSettings.plusEnableGlassmorphism
                               ? Theme.of(
@@ -1026,8 +1028,8 @@ class _AppPageState extends State<AppPage> {
                 elevation: 0,
                 color: Theme.of(context).colorScheme.surfaceContainerLow,
                 clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(cardRadius),
+                shape: shapes.borderOf(
+                  ShapeRole.card,
                   side: BorderSide(
                     color: Theme.of(context).colorScheme.outlineVariant
                         .withValues(
@@ -1866,7 +1868,7 @@ class _AppPageState extends State<AppPage> {
 
       final ShapeBorder targetShape = (isDownloading || updating)
           ? const StadiumBorder()
-          : RoundedRectangleBorder(borderRadius: BorderRadius.circular(14));
+          : shapes.borderOf(ShapeRole.button);
 
       final Color fillColor = (isDownloading || updating)
           ? colorScheme.surfaceContainerHighest
@@ -2057,19 +2059,14 @@ class _AppPageState extends State<AppPage> {
                 builder: (ctx, width, _) {
                   return TweenAnimationBuilder<ShapeBorder?>(
                     tween: ShapeBorderTween(
-                      begin: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
+                      begin: shapes.borderOf(ShapeRole.button),
                       end: targetShape,
                     ),
                     duration: morphDuration,
                     curve: morphCurve,
                     builder: (ctx, shape, _) {
                       final resolvedShape =
-                          shape ??
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          );
+                          shape ?? shapes.borderOf(ShapeRole.button);
                       return AnimatedContainer(
                         duration: Duration(
                           milliseconds: animsEnabled ? 260 : 0,
@@ -2082,7 +2079,7 @@ class _AppPageState extends State<AppPage> {
                           // Mirror shape for BoxDecoration clip
                           borderRadius: resolvedShape is StadiumBorder
                               ? BorderRadius.circular(24)
-                              : BorderRadius.circular(14),
+                              : shapes.borderRadiusOf(ShapeRole.button),
                         ),
                         child: Material(
                           color: Colors.transparent,
@@ -2429,7 +2426,7 @@ class _AppPageState extends State<AppPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
+                  borderRadius: shapes.borderRadiusOf(ShapeRole.card),
                   child: ConditionalBlur(
                     enabled: enableGlass,
                     sigma: AppConstants.glassBlurSigma,
@@ -2438,7 +2435,7 @@ class _AppPageState extends State<AppPage> {
                         color: colorScheme.surfaceContainerHigh.withValues(
                           alpha: enableGlass ? 0.85 : 0.95,
                         ),
-                        borderRadius: BorderRadius.circular(28),
+                        borderRadius: shapes.borderRadiusOf(ShapeRole.card),
                         border: Border.all(
                           color: colorScheme.outlineVariant.withValues(
                             alpha: 0.35,

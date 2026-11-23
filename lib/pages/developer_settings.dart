@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/settings/theme_settings_section.dart';
 import 'package:obtainium/pages/settings_subpage.dart';
@@ -321,7 +322,9 @@ class DeveloperSettingsPage extends StatelessWidget {
                           .colorScheme
                           .surfaceContainerHighest
                           .withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: AppShapes.of(
+                        context,
+                      ).borderRadiusOf(ShapeRole.card),
                       border: Border.all(
                         color: Theme.of(
                           context,
@@ -1030,17 +1033,11 @@ class DeveloperSettingsPage extends StatelessWidget {
         ? 'safetyExcellent'
         : (score > 50 ? 'safetyModerate' : 'safetyLow');
 
-    final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusSettingsCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(baseRadius);
-    final innerRadius = CardMetrics.inner(cardRadius);
-
     return Card(
       elevation: 0,
       color: color.withValues(alpha: AppOpacity.subtle),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(innerRadius),
+      shape: AppShapes.of(context).borderOf(
+        ShapeRole.card,
         side: BorderSide(color: color.withValues(alpha: AppOpacity.medium)),
       ),
       child: Padding(
@@ -1454,9 +1451,5 @@ Future<void> checkAndPromptBanWarnings(BuildContext context) async {
 /// Top corner radius for this page's bottom sheets, matching
 /// `showDraggableModalBottomSheet` (user's corner radius, clamped).
 Radius _sheetRadius(BuildContext context) {
-  final plus = context.read<PlusSettingsProvider>();
-  final base = plus.plusOverrideIndividualCornerRadius
-      ? plus.plusHomeCornerRadius
-      : plus.plusGlobalCornerRadius;
-  return Radius.circular(base.clamp(20.0, 36.0));
+  return Radius.circular(AppShapes.of(context).radiusOf(ShapeRole.sheet));
 }

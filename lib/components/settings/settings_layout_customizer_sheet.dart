@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -53,7 +54,9 @@ class _SettingsLayoutCustomizerSheetState
       ),
       decoration: BoxDecoration(
         color: theme.scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppShapes.of(context).radiusOf(ShapeRole.sheet)),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -137,7 +140,9 @@ class _SettingsLayoutCustomizerSheetState
                         color: colorScheme.primaryContainer.withValues(
                           alpha: 0.5,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppShapes.of(
+                          context,
+                        ).borderRadiusOf(ShapeRole.chip),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -168,7 +173,9 @@ class _SettingsLayoutCustomizerSheetState
                         color: colorScheme.errorContainer.withValues(
                           alpha: 0.4,
                         ),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppShapes.of(
+                          context,
+                        ).borderRadiusOf(ShapeRole.chip),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -257,7 +264,9 @@ class _SettingsLayoutCustomizerSheetState
                             alpha: 0.35,
                           )
                         : colorScheme.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppShapes.of(
+                      context,
+                    ).borderRadiusOf(ShapeRole.card),
                     border: Border.all(
                       color: isPinned
                           ? colorScheme.primary.withValues(alpha: 0.5)

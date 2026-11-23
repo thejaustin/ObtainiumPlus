@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -86,7 +87,7 @@ class _VariantConflictDialogState extends State<_VariantConflictDialog> {
             color: emphasized
                 ? colorScheme.primaryContainer.withValues(alpha: 0.55)
                 : colorScheme.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
             clipBehavior: Clip.antiAlias,
             child: ListTile(
               onTap: () => _pick(choice),

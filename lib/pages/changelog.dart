@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/changelog/changelog_timeline.dart';
@@ -122,10 +123,12 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final enableAnims = plusSettings.plusEnableEnhancedAnimations;
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = plusSettings.plusGlobalCornerRadius;
+    final sheetTop = Radius.circular(
+      AppShapes.of(context).radiusOf(ShapeRole.sheet),
+    );
 
     return ClipRRect(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(radius + 4)),
+      borderRadius: BorderRadius.vertical(top: sheetTop),
       child: ConditionalBlur(
         enabled: enableGlass,
         sigma: AppConstants.glassBlurSigma,
@@ -136,9 +139,7 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
             color: colorScheme.surfaceContainerLow.withValues(
               alpha: enableGlass ? AppConstants.glassSurfaceAlpha : 1.0,
             ),
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(radius + 4),
-            ),
+            borderRadius: BorderRadius.vertical(top: sheetTop),
             border: Border.all(
               color: colorScheme.outline.withValues(
                 alpha: enableGlass

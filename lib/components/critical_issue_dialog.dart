@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -45,7 +46,7 @@ class CriticalIssueDialog extends StatelessWidget {
           color: enableGlass
               ? colorScheme.surface.withValues(alpha: 0.78)
               : colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.dialog),
           border: Border.all(
             color: enableGlass
                 ? colorScheme.onSurface.withValues(alpha: 0.18)
@@ -59,7 +60,7 @@ class CriticalIssueDialog extends StatelessWidget {
           ),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.dialog),
           child: ConditionalBlur(
             sigma: 24,
             enabled: enableGlass,
@@ -101,7 +102,11 @@ class CriticalIssueDialog extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(
+            AppShapes.of(context).radiusOf(ShapeRole.dialog),
+          ),
+        ),
       ),
       child: Column(
         children: [
@@ -168,7 +173,11 @@ class CriticalIssueDialog extends StatelessWidget {
         color: colorScheme.surfaceContainerHighest.withValues(
           alpha: AppOpacity.medium,
         ),
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          bottom: Radius.circular(
+            AppShapes.of(context).radiusOf(ShapeRole.dialog),
+          ),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

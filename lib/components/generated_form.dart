@@ -4,10 +4,10 @@ import 'package:hsluv/hsluv.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/generated_form_modal.dart';
 import 'package:obtainium/providers/settings_provider.dart';
-import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 import 'package:provider/provider.dart';
@@ -680,14 +680,7 @@ class _GeneratedFormState extends State<GeneratedForm> {
                         ).withValues(alpha: 50 / 255),
                         selectedColor: Color(e2.value.key),
                         visualDensity: VisualDensity.compact,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            Provider.of<PlusSettingsProvider>(
-                              context,
-                              listen: false,
-                            ).plusGlobalCornerRadius.clamp(0.0, 16.0),
-                          ),
-                        ),
+                        shape: AppShapes.of(context).borderOf(ShapeRole.chip),
                         selected: e2.value.value,
                         onSelected: (value) {
                           setState(() {

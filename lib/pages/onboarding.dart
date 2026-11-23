@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -260,7 +261,7 @@ class _OnboardingPageState extends State<OnboardingPage>
         color: colorScheme.surfaceContainerLow.withValues(
           alpha: enableGlass ? 0.45 : 1.0,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(
             alpha: enableGlass ? 0.3 : 0.1,
@@ -281,14 +282,14 @@ class _OnboardingPageState extends State<OnboardingPage>
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
           child: cardContent,
         ),
       ),
     );
 
     Widget card = ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
       child: ConditionalBlur(enabled: enableGlass, sigma: 10, child: container),
     );
 
@@ -362,7 +363,7 @@ class _OnboardingPageState extends State<OnboardingPage>
         onChanged(v);
       },
       dense: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape: AppShapes.of(context).borderOf(ShapeRole.card),
     );
   }
 
@@ -514,7 +515,6 @@ class _OnboardingPageState extends State<OnboardingPage>
           decoration: pageDecoration,
           bodyWidget: Consumer<AuthProvider>(
             builder: (context, auth, _) {
-              final plusSettings = context.watch<PlusSettingsProvider>();
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -646,10 +646,8 @@ class _OnboardingPageState extends State<OnboardingPage>
                       color: Theme.of(
                         context,
                       ).colorScheme.surfaceVariant.withValues(alpha: 0.3),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          plusSettings.plusEnableMaterialExpressive ? 24 : 16,
-                        ),
+                      shape: AppShapes.of(context).borderOf(
+                        ShapeRole.card,
                         side: BorderSide(
                           color: Theme.of(
                             context,
@@ -691,9 +689,9 @@ class _OnboardingPageState extends State<OnboardingPage>
                       labelText: tr('addDispenserUrl'),
                       hintText: 'https://your-dispenser.com/api/auth',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          plusSettings.plusEnableMaterialExpressive ? 28 : 12,
-                        ),
+                        borderRadius: AppShapes.of(
+                          context,
+                        ).borderRadiusOf(ShapeRole.input),
                       ),
                       suffixIcon: IconButton(
                         icon: const Icon(Icons.add),

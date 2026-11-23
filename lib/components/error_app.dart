@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/app_localizations_delegates.dart';
 import 'package:obtainium/utils/crash_tracker.dart';
 import 'package:obtainium/utils/startup_repair_service.dart';
@@ -130,9 +131,9 @@ class _ErrorAppState extends State<ErrorApp> {
                           Card(
                             color: Colors.black26,
                             elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
+                            shape: AppShapes.of(
+                              context,
+                            ).borderOf(ShapeRole.card),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Column(

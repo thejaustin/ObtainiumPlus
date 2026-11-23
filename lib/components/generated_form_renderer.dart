@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -910,10 +911,17 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final dialogRadius = radius.clamp(24.0, 48.0);
+    final shapes = AppShapes.of(context);
+    final dialogRadius = shapes.radiusOf(ShapeRole.dialog);
+    final dialogShape = shapes.borderOf(
+      ShapeRole.dialog,
+      side: BorderSide(
+        color: enableGlass
+            ? colorScheme.onSurface.withValues(alpha: 0.18)
+            : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+        width: 1.5,
+      ),
+    );
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -921,18 +929,12 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: enableGlass
               ? colorScheme.surface.withValues(alpha: 0.78)
               : colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(dialogRadius),
-          border: Border.all(
-            color: enableGlass
-                ? colorScheme.onSurface.withValues(alpha: 0.18)
-                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
-            width: 1.5,
-          ),
-          boxShadow: [
+          shape: dialogShape,
+          shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
               blurRadius: 20,
@@ -940,8 +942,8 @@ class _GeneratedFormModalState extends State<GeneratedFormModal> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(dialogRadius),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: shapes.borderOf(ShapeRole.dialog)),
           child: ConditionalBlur(
             sigma: 24,
             enabled: enableGlass,

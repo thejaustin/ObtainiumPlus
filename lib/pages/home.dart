@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/deep_link_parser.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'dart:async';
@@ -887,7 +888,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     // Shadows outside ClipRRect so they aren't clipped.
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius: AppShapes.of(
+                          context,
+                        ).borderRadiusOf(ShapeRole.card),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.06),
@@ -913,7 +916,9 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(32),
+                        borderRadius: AppShapes.of(
+                          context,
+                        ).borderRadiusOf(ShapeRole.card),
                         child: ConditionalBlur(
                           enabled: blurEnabled,
                           sigma: sigmaFor(20),

@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
@@ -324,7 +325,9 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
                     _onHorizontalDragUpdate(d, totalWidth),
                 onHorizontalDragEnd: (d) => _onHorizontalDragEnd(d, totalWidth),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppShapes.of(
+                    context,
+                  ).borderRadiusOf(ShapeRole.card),
                   child: Stack(
                     children: [
                       // Background action reveal
@@ -332,7 +335,9 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
                         child: Container(
                           decoration: BoxDecoration(
                             color: spec.containerColor(colorScheme),
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: AppShapes.of(
+                              context,
+                            ).borderRadiusOf(ShapeRole.card),
                           ),
                           alignment: isRight
                               ? Alignment.centerLeft
@@ -396,7 +401,9 @@ class _SwipePreviewWidgetState extends State<SwipePreviewWidget>
                         child: Container(
                           decoration: BoxDecoration(
                             color: colorScheme.surfaceContainerHigh,
-                            borderRadius: BorderRadius.circular(16),
+                            borderRadius: AppShapes.of(
+                              context,
+                            ).borderRadiusOf(ShapeRole.card),
                             border: Border.all(
                               color: colorScheme.outlineVariant.withValues(
                                 alpha: 0.3,

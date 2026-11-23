@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/morph_switch.dart';
@@ -48,9 +49,7 @@ class _MotionControlsCardState extends State<MotionControlsCard> {
           ),
           Material(
             color: cs.surfaceContainer,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            shape: AppShapes.of(context).borderOf(ShapeRole.card),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: () => setState(() => _demo = !_demo),

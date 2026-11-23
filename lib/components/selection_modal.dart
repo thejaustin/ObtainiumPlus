@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -138,10 +139,9 @@ class _SelectionModalState extends State<SelectionModal> {
     final enableGlass = plusSettings.plusEnableGlassmorphism;
     final colorScheme = Theme.of(context).colorScheme;
 
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final dialogRadius = radius.clamp(24.0, 48.0);
+    final shapes = AppShapes.of(context);
+    final dialogRadius = shapes.radiusOf(ShapeRole.dialog);
+    final radius = dialogRadius;
 
     _updateFilteredEntries();
 
@@ -151,18 +151,20 @@ class _SelectionModalState extends State<SelectionModal> {
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
         constraints: const BoxConstraints(maxWidth: 550, maxHeight: 650),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: enableGlass
               ? colorScheme.surface.withValues(alpha: 0.78)
               : colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(dialogRadius),
-          border: Border.all(
-            color: enableGlass
-                ? colorScheme.onSurface.withValues(alpha: 0.18)
-                : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
-            width: 1.5,
+          shape: shapes.borderOf(
+            ShapeRole.dialog,
+            side: BorderSide(
+              color: enableGlass
+                  ? colorScheme.onSurface.withValues(alpha: 0.18)
+                  : colorScheme.outline.withValues(alpha: AppOpacity.subtle),
+              width: 1.5,
+            ),
           ),
-          boxShadow: [
+          shadows: [
             BoxShadow(
               color: Colors.black.withValues(alpha: enableGlass ? 0.2 : 0.1),
               blurRadius: 20,
@@ -170,8 +172,8 @@ class _SelectionModalState extends State<SelectionModal> {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(dialogRadius),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: shapes.borderOf(ShapeRole.dialog)),
           child: ConditionalBlur(
             sigma: 20,
             enabled: enableGlass,
@@ -281,14 +283,14 @@ class _SelectionModalState extends State<SelectionModal> {
     ColorScheme colorScheme,
     PlusSettingsProvider plusSettings,
   ) {
-    final itemRadius = (radius * 0.5).clamp(8.0, 20.0);
+    final shapes = AppShapes.of(context);
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(itemRadius),
+            borderRadius: shapes.borderRadiusOf(ShapeRole.input),
           ),
           child: GeneratedForm(
             items: [
@@ -388,12 +390,14 @@ class _SelectionModalState extends State<SelectionModal> {
                   widget.onlyOneSelectionAllowed
               ? Container(
                   margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(itemRadius),
-                    border: Border.all(
-                      color: colorScheme.primary.withValues(alpha: 0.4),
-                      width: 1.5,
+                    shape: shapes.borderOf(
+                      ShapeRole.card,
+                      side: BorderSide(
+                        color: colorScheme.primary.withValues(alpha: 0.4),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   child: RadioListTile<String>(
@@ -407,9 +411,7 @@ class _SelectionModalState extends State<SelectionModal> {
                     },
                     title: urlLink,
                     subtitle: entry.value.length <= 1 ? null : descriptionText,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(itemRadius),
-                    ),
+                    shape: shapes.borderOf(ShapeRole.card),
                     activeColor: colorScheme.primary,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
@@ -424,18 +426,20 @@ class _SelectionModalState extends State<SelectionModal> {
                         : 0,
                   ),
                   margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
+                  decoration: ShapeDecoration(
                     color: entrySelections[entry] == true
                         ? colorScheme.primaryContainer.withValues(alpha: 0.55)
                         : colorScheme.surfaceContainerHighest.withValues(
                             alpha: 0.42,
                           ),
-                    borderRadius: BorderRadius.circular(itemRadius),
-                    border: Border.all(
-                      color: entrySelections[entry] == true
-                          ? colorScheme.primary.withValues(alpha: 0.65)
-                          : colorScheme.outline.withValues(alpha: 0.15),
-                      width: 1.5,
+                    shape: shapes.borderOf(
+                      ShapeRole.card,
+                      side: BorderSide(
+                        color: entrySelections[entry] == true
+                            ? colorScheme.primary.withValues(alpha: 0.65)
+                            : colorScheme.outline.withValues(alpha: 0.15),
+                        width: 1.5,
+                      ),
                     ),
                   ),
                   child: CheckboxListTile(
@@ -447,9 +451,7 @@ class _SelectionModalState extends State<SelectionModal> {
                     title: urlLink,
                     subtitle: entry.value.length <= 1 ? null : descriptionText,
                     controlAffinity: ListTileControlAffinity.leading,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(itemRadius),
-                    ),
+                    shape: shapes.borderOf(ShapeRole.card),
                     activeColor: colorScheme.primary,
                     checkColor: colorScheme.onPrimary,
                     contentPadding: const EdgeInsets.symmetric(

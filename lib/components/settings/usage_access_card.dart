@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -230,7 +231,8 @@ class _UsageAccessCardState extends State<UsageAccessCard>
                   ),
                   decoration: ShapeDecoration(
                     color: statusBg,
-                    shape: StadiumBorder(
+                    shape: AppShapes.of(context).borderOf(
+                      ShapeRole.pill,
                       side: BorderSide(
                         color: statusColor.withValues(alpha: 0.35),
                       ),
@@ -328,9 +330,9 @@ class _UsageAccessCardState extends State<UsageAccessCard>
                         ),
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 10),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          shape: AppShapes.of(
+                            context,
+                          ).borderOf(ShapeRole.button),
                         ),
                       ),
                     ),
@@ -349,9 +351,7 @@ class _UsageAccessCardState extends State<UsageAccessCard>
                           horizontal: 12,
                           vertical: 10,
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        shape: AppShapes.of(context).borderOf(ShapeRole.button),
                       ),
                     ),
                   ),
@@ -381,9 +381,7 @@ class _UsageAccessCardState extends State<UsageAccessCard>
                         horizontal: 12,
                         vertical: 8,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                      shape: AppShapes.of(context).borderOf(ShapeRole.button),
                     ),
                   ),
                 ],

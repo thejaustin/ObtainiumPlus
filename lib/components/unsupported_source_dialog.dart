@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -44,7 +45,7 @@ Future<void> showUnsupportedSourceDialog({
           color: enableGlass
               ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.85)
               : Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.dialog),
           border: Border.all(
             color: Theme.of(
               context,
@@ -58,7 +59,7 @@ Future<void> showUnsupportedSourceDialog({
           ),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.dialog),
           child: ConditionalBlur(
             sigma: 15,
             enabled: enableGlass,
@@ -99,7 +100,9 @@ Widget _buildHeader(BuildContext context, bool enableGlass) {
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppShapes.of(context).radiusOf(ShapeRole.dialog)),
+      ),
     ),
     child: Row(
       children: [
@@ -251,7 +254,7 @@ Widget _buildSourceChip(BuildContext context, String source) {
       color: Theme.of(
         context,
       ).colorScheme.primaryContainer.withValues(alpha: AppOpacity.half),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
       border: Border.all(
         color: Theme.of(
           context,
@@ -310,7 +313,11 @@ Widget _buildActions(BuildContext context) {
       color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(
         alpha: AppOpacity.medium,
       ),
-      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+      borderRadius: BorderRadius.vertical(
+        bottom: Radius.circular(
+          AppShapes.of(context).radiusOf(ShapeRole.dialog),
+        ),
+      ),
     ),
     child: Row(
       mainAxisAlignment: MainAxisAlignment.end,

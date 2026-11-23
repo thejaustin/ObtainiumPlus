@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/motion.dart';
 
@@ -220,7 +221,7 @@ class _RowPulseState extends State<_RowPulse>
         return DecoratedBox(
           decoration: BoxDecoration(
             color: widget.color.withValues(alpha: 0.24 * a),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
           ),
         );
       },

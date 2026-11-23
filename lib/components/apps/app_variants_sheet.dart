@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -129,7 +130,7 @@ class _AppVariantsSheetState extends State<_AppVariantsSheet> {
         app?.app.additionalSettings['linkedPackage'] as String? ?? app?.app.id;
 
     final sheetRadius = Radius.circular(
-      plusSettings.plusGlobalCornerRadius.clamp(20.0, 32.0),
+      AppShapes.of(context).radiusOf(ShapeRole.sheet),
     );
 
     return ClipRRect(
@@ -283,7 +284,9 @@ class _AppVariantsSheetState extends State<_AppVariantsSheet> {
                                             ? colorScheme.primaryContainer
                                                   .withValues(alpha: 0.45)
                                             : colorScheme.surfaceContainerHigh,
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: AppShapes.of(
+                                          context,
+                                        ).borderRadiusOf(ShapeRole.card),
                                         border: Border.all(
                                           color: isLinked
                                               ? colorScheme.primary
@@ -451,7 +454,9 @@ class _AppVariantsSheetState extends State<_AppVariantsSheet> {
                                 decoration: BoxDecoration(
                                   color: colorScheme.surfaceContainerHighest
                                       .withValues(alpha: 0.5),
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: AppShapes.of(
+                                    context,
+                                  ).borderRadiusOf(ShapeRole.card),
                                   border: Border.all(
                                     color: colorScheme.outlineVariant
                                         .withValues(alpha: 0.3),

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/services/app_update_service.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/drag_handle.dart';
@@ -293,10 +294,7 @@ class _CommandCenterState extends State<CommandCenter> {
     final isUrl = _isDirectUrl(_query);
     final plusSettings = context.watch<PlusSettingsProvider>();
     final animsEnabled = plusSettings.plusEnableEnhancedAnimations;
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final sheetRadius = radius.clamp(24.0, 48.0);
+    final sheetRadius = AppShapes.of(context).radiusOf(ShapeRole.sheet);
     final isDark = theme.brightness == Brightness.dark;
 
     return SafeArea(
@@ -643,8 +641,8 @@ class _CommandCenterState extends State<CommandCenter> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Material(
               color: cs.primaryContainer.withValues(alpha: 0.35),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(itemRadius),
+              shape: AppShapes.of(context).borderOf(
+                ShapeRole.card,
                 side: BorderSide(
                   color: cs.primary.withValues(alpha: 0.3),
                   width: 1,
@@ -779,8 +777,8 @@ class _CommandCenterState extends State<CommandCenter> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Material(
         color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(itemRadius),
+        shape: AppShapes.of(context).borderOf(
+          ShapeRole.card,
           side: BorderSide(
             color: hasUpdate
                 ? cs.primary.withValues(alpha: 0.4)
@@ -791,7 +789,7 @@ class _CommandCenterState extends State<CommandCenter> {
         child: ScaleTouchWrapper(
           hapticOnPressDown: true,
           child: InkWell(
-            borderRadius: BorderRadius.circular(itemRadius),
+            borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
             onTap: () {
               Navigator.pop(context);
               showAdaptiveDetailSheet(
@@ -1066,13 +1064,13 @@ class _CommandCenterState extends State<CommandCenter> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Material(
                 color: theme.colorScheme.surfaceContainer,
-                borderRadius: BorderRadius.circular(itemRadius),
+                borderRadius: AppShapes.of(
+                  context,
+                ).borderRadiusOf(ShapeRole.card),
                 child: ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(itemRadius),
-                    ),
+                    shape: AppShapes.of(context).borderOf(ShapeRole.card),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 4,
@@ -1405,11 +1403,7 @@ class _CommandCenterState extends State<CommandCenter> {
     bool isTag = false,
   }) {
     if (items.isEmpty) return const SizedBox.shrink();
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final chipRadius = CardMetrics.inner(radius);
+    final shapes = AppShapes.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1440,9 +1434,7 @@ class _CommandCenterState extends State<CommandCenter> {
                     horizontal: 6,
                     vertical: 2,
                   ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(chipRadius),
-                  ),
+                  shape: shapes.borderOf(ShapeRole.chip),
                 ),
               );
             }).toList(),
@@ -1496,11 +1488,7 @@ class _CommandCenterState extends State<CommandCenter> {
   }
 
   Widget _buildActionChip(IconData icon, String label, VoidCallback onPressed) {
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final chipRadius = CardMetrics.inner(radius);
+    final shapes = AppShapes.of(context);
 
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
@@ -1513,9 +1501,7 @@ class _CommandCenterState extends State<CommandCenter> {
           onPressed();
         },
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(chipRadius),
-        ),
+        shape: shapes.borderOf(ShapeRole.chip),
       ),
     );
   }
@@ -1527,11 +1513,7 @@ class _CommandCenterState extends State<CommandCenter> {
         .toList();
     if (searchableSources.isEmpty) return const SizedBox.shrink();
 
-    final plusSettings = context.watch<PlusSettingsProvider>();
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final chipRadius = CardMetrics.inner(radius);
+    final shapes = AppShapes.of(context);
 
     return SizedBox(
       height: 48,
@@ -1563,9 +1545,7 @@ class _CommandCenterState extends State<CommandCenter> {
                     _handleSearch(_query);
                   }
                 },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(chipRadius),
-                ),
+                shape: shapes.borderOf(ShapeRole.chip),
               ),
             ),
           );

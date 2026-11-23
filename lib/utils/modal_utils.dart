@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -17,10 +18,9 @@ Future<T?> showDraggableModalBottomSheet<T>({
   ScaffoldMessenger.of(context).hideCurrentSnackBar();
   final plusSettings = context.read<PlusSettingsProvider>();
   final enableGlass = plusSettings.plusEnableGlassmorphism;
-  final radius = plusSettings.plusOverrideIndividualCornerRadius
-      ? plusSettings.plusHomeCornerRadius
-      : plusSettings.plusGlobalCornerRadius;
-  final sheetRadius = Radius.circular(radius.clamp(20.0, 36.0));
+  final sheetRadius = Radius.circular(
+    AppShapes.of(context).radiusOf(ShapeRole.sheet),
+  );
 
   return showModalBottomSheet<T>(
     context: context,
@@ -113,10 +113,9 @@ Future<T?> showAdaptiveDetailSheet<T>({
       width < kSideSheetBreakpoint) {
     return showDraggableModalBottomSheet<T>(context: context, builder: builder);
   }
-  final radius = plusSettings.plusOverrideIndividualCornerRadius
-      ? plusSettings.plusHomeCornerRadius
-      : plusSettings.plusGlobalCornerRadius;
-  final sheetRadius = Radius.circular(radius.clamp(20.0, 36.0));
+  final sheetRadius = Radius.circular(
+    AppShapes.of(context).radiusOf(ShapeRole.sheet),
+  );
   final sheetWidth = (width * 0.45).clamp(360.0, 560.0);
   final anims = plusSettings.plusEnableEnhancedAnimations;
   return showGeneralDialog<T>(

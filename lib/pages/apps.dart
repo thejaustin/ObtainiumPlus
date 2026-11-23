@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -2621,13 +2622,11 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Material(
                 color: cs.surfaceContainer,
-                borderRadius: BorderRadius.circular(itemRadius),
+                borderRadius: AppShapes.of(ctx).borderRadiusOf(ShapeRole.card),
                 child: ScaleTouchWrapper(
                   hapticOnPressDown: !isPending,
                   child: ListTile(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(itemRadius),
-                    ),
+                    shape: AppShapes.of(ctx).borderOf(ShapeRole.card),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 4,
@@ -3087,7 +3086,10 @@ class _TVSearchBarState extends State<_TVSearchBar> {
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final isShifted = _isFocused || widget.controller.text.isNotEmpty;
-    final currentRadius = isShifted ? 18.0 : 28.0;
+    final shapes = AppShapes.of(context);
+    final currentRadius = isShifted
+        ? shapes.radiusOf(ShapeRole.input)
+        : shapes.radiusOf(ShapeRole.card);
     return Column(
       children: [
         TvTextFieldFocus(

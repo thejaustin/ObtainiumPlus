@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -35,7 +36,7 @@ class GlassDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final enableGlass = plusSettings.plusEnableGlassmorphism;
-    final radius = plusSettings.plusGlobalCornerRadius;
+    final shapes = AppShapes.of(context);
 
     final dialogWidget = Dialog(
       backgroundColor: Colors.transparent,
@@ -44,26 +45,28 @@ class GlassDialog extends StatelessWidget {
       child: Container(
         width: width,
         constraints: const BoxConstraints(maxWidth: 500, maxHeight: 600),
-        decoration: BoxDecoration(
+        decoration: ShapeDecoration(
           color: enableGlass
               ? Theme.of(context).colorScheme.surfaceContainerHigh.withValues(
                   alpha: AppConstants.glassSurfaceAlpha,
                 )
               : Theme.of(context).colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(radius),
-          border: Border.all(
-            color: enableGlass
-                ? Theme.of(context).colorScheme.onSurface.withValues(
-                    alpha: AppConstants.glassBorderAlpha,
-                  )
-                : Theme.of(context).colorScheme.outlineVariant.withValues(
-                    alpha: Theme.of(context).brightness == Brightness.dark
-                        ? 0.35
-                        : 0.65,
-                  ),
-            width: 1,
+          shape: shapes.borderOf(
+            ShapeRole.dialog,
+            side: BorderSide(
+              color: enableGlass
+                  ? Theme.of(context).colorScheme.onSurface.withValues(
+                      alpha: AppConstants.glassBorderAlpha,
+                    )
+                  : Theme.of(context).colorScheme.outlineVariant.withValues(
+                      alpha: Theme.of(context).brightness == Brightness.dark
+                          ? 0.35
+                          : 0.65,
+                    ),
+              width: 1,
+            ),
           ),
-          boxShadow: AppShadows.smooth(
+          shadows: AppShadows.smooth(
             color: Colors.black,
             opacity: enableGlass ? 0.28 : 0.1,
             blurFactor: enableGlass ? 1.5 : 1.0,
@@ -71,8 +74,8 @@ class GlassDialog extends StatelessWidget {
         ),
         // Blur must stay inside this ClipRRect so it is clipped to the
         // dialog's bounds and never bleeds over the content behind it.
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(radius),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(shape: shapes.borderOf(ShapeRole.dialog)),
           child: Builder(
             builder: (context) {
               final inner = Column(
@@ -190,7 +193,8 @@ class GlassDialog extends StatelessWidget {
           if (showCloseButton)
             IconButton(
               icon: const Icon(Icons.close_rounded, size: 20),
-              tooltip: Localizations.of<MaterialLocalizations>(
+              tooltip:
+                  Localizations.of<MaterialLocalizations>(
                     context,
                     MaterialLocalizations,
                   )?.closeButtonTooltip ??

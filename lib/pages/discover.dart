@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/logger.dart';
@@ -404,7 +405,6 @@ class DiscoverPageState extends State<DiscoverPage> {
     final radius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusHomeCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(radius);
     final staggerMs = animsEnabled
         ? (60 + (resultIndex < 12 ? resultIndex * 40 : 0))
         : 0;
@@ -422,7 +422,7 @@ class DiscoverPageState extends State<DiscoverPage> {
         ),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(cardRadius),
+        borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
         child: ConditionalBlur(
           sigma: 12,
           enabled: plusSettings.plusEnableGlassmorphism,
@@ -433,7 +433,9 @@ class DiscoverPageState extends State<DiscoverPage> {
               color: theme.colorScheme.surfaceContainerLow.withValues(
                 alpha: plusSettings.plusEnableGlassmorphism ? 0.65 : 1.0,
               ),
-              borderRadius: BorderRadius.circular(cardRadius),
+              borderRadius: AppShapes.of(
+                context,
+              ).borderRadiusOf(ShapeRole.card),
               border: Border.all(
                 color: theme.colorScheme.outlineVariant.withValues(
                   alpha: isDark ? 0.35 : 0.65,
@@ -471,7 +473,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                 ScaleTouchWrapper(
                   hapticOnPressDown: true,
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(cardRadius),
+                    borderRadius: AppShapes.of(
+                      context,
+                    ).borderRadiusOf(ShapeRole.card),
                     onTap: () {
                       AppHaptics.selectionClick();
                       _openAddApp(url);
@@ -530,11 +534,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                             },
                             style: FilledButton.styleFrom(
                               visualDensity: VisualDensity.compact,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  CardMetrics.inner(radius),
-                                ),
-                              ),
+                              shape: AppShapes.of(
+                                context,
+                              ).borderOf(ShapeRole.button),
                             ),
                             child: Text(tr('add')),
                           ),
@@ -615,11 +617,13 @@ class DiscoverPageState extends State<DiscoverPage> {
                     ),
                     curve: Easing.emphasizedDecelerate,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                        _isSearchFocused || searchQuery.isNotEmpty
-                            ? 18.0
-                            : 28.0,
-                      ),
+                      borderRadius: (_isSearchFocused || searchQuery.isNotEmpty
+                          ? AppShapes.of(
+                              context,
+                            ).borderRadiusOf(ShapeRole.input)
+                          : AppShapes.of(
+                              context,
+                            ).borderRadiusOf(ShapeRole.card)),
                       boxShadow: (_isSearchFocused || searchQuery.isNotEmpty)
                           ? [
                               BoxShadow(
@@ -674,11 +678,14 @@ class DiscoverPageState extends State<DiscoverPage> {
                           ],
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            _isSearchFocused || searchQuery.isNotEmpty
-                                ? 18.0
-                                : 28.0,
-                          ),
+                          borderRadius:
+                              (_isSearchFocused || searchQuery.isNotEmpty
+                              ? AppShapes.of(
+                                  context,
+                                ).borderRadiusOf(ShapeRole.input)
+                              : AppShapes.of(
+                                  context,
+                                ).borderRadiusOf(ShapeRole.card)),
                           borderSide: BorderSide(
                             color: (_isSearchFocused || searchQuery.isNotEmpty)
                                 ? Theme.of(context).colorScheme.primary
@@ -689,11 +696,14 @@ class DiscoverPageState extends State<DiscoverPage> {
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(
-                            _isSearchFocused || searchQuery.isNotEmpty
-                                ? 18.0
-                                : 28.0,
-                          ),
+                          borderRadius:
+                              (_isSearchFocused || searchQuery.isNotEmpty
+                              ? AppShapes.of(
+                                  context,
+                                ).borderRadiusOf(ShapeRole.input)
+                              : AppShapes.of(
+                                  context,
+                                ).borderRadiusOf(ShapeRole.card)),
                           borderSide: BorderSide(
                             color: (_isSearchFocused || searchQuery.isNotEmpty)
                                 ? Theme.of(context).colorScheme.primary
@@ -705,7 +715,9 @@ class DiscoverPageState extends State<DiscoverPage> {
                           ),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(18.0),
+                          borderRadius: AppShapes.of(
+                            context,
+                          ).borderRadiusOf(ShapeRole.input),
                           borderSide: BorderSide(
                             color: Theme.of(context).colorScheme.primary,
                             width: 1.8,
@@ -1048,7 +1060,9 @@ class DiscoverCategoryRow extends StatelessWidget {
                     colorScheme.tertiaryContainer,
                   ],
                 ),
-                borderRadius: BorderRadius.circular(cornerRadius),
+                borderRadius: AppShapes.of(
+                  context,
+                ).borderRadiusOf(ShapeRole.chip),
                 boxShadow: AppShadows.glow(
                   color: colorScheme.primary,
                   intensity: 0.35,
@@ -1071,9 +1085,7 @@ class DiscoverCategoryRow extends StatelessWidget {
             AppHaptics.selectionClick();
             onTap();
           },
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(cornerRadius),
-          ),
+          shape: AppShapes.of(context).borderOf(ShapeRole.chip),
           side: isSelected
               ? BorderSide(
                   color: colorScheme.primary.withValues(alpha: 0.3),

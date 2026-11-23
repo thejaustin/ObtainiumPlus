@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -473,10 +474,6 @@ class _StatisticsPageState extends State<StatisticsPage>
   Widget _buildMetricsGrid(BuildContext context, List<_MetricItem> items) {
     final plusSettings = context.watch<PlusSettingsProvider>();
     final theme = Theme.of(context);
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
-    final itemRadius = (radius * 0.75).clamp(12.0, 24.0);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -516,7 +513,9 @@ class _StatisticsPageState extends State<StatisticsPage>
               child: SlideTransition(
                 position: slide,
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(itemRadius),
+                  borderRadius: AppShapes.of(
+                    context,
+                  ).borderRadiusOf(ShapeRole.card),
                   child: ConditionalBlur(
                     sigma: 12,
                     enabled: plusSettings.plusEnableGlassmorphism,
@@ -538,7 +537,9 @@ class _StatisticsPageState extends State<StatisticsPage>
                             ),
                           ],
                         ),
-                        borderRadius: BorderRadius.circular(itemRadius),
+                        borderRadius: AppShapes.of(
+                          context,
+                        ).borderRadiusOf(ShapeRole.card),
                         border: Border.all(
                           color: item.color.withValues(
                             alpha: plusSettings.plusEnableGlassmorphism
@@ -646,7 +647,7 @@ class _StatisticsPageState extends State<StatisticsPage>
               end: Alignment.bottomRight,
               colors: [primaryColor.withValues(alpha: 0.06), bgColor],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
             border: Border.all(color: primaryColor.withValues(alpha: 0.16)),
           ),
           child: CustomPaint(

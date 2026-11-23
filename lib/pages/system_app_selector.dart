@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/components/common/conditional_blur.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
@@ -370,8 +371,10 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerLow,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(28),
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(
+                    AppShapes.of(context).radiusOf(ShapeRole.sheet),
+                  ),
                 ),
               ),
               child: Column(
@@ -441,9 +444,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                               ),
                               curve: Easing.emphasizedDecelerate,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(
-                                  isActive ? 14.0 : 24.0,
-                                ),
+                                borderRadius: (isActive
+                                    ? AppShapes.of(
+                                        context,
+                                      ).borderRadiusOf(ShapeRole.input)
+                                    : AppShapes.of(
+                                        context,
+                                      ).borderRadiusOf(ShapeRole.card)),
                                 boxShadow: isActive
                                     ? [
                                         BoxShadow(
@@ -463,9 +470,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                 decoration: InputDecoration(
                                   hintText: tr('newLabel'),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      isActive ? 14.0 : 24.0,
-                                    ),
+                                    borderRadius: (isActive
+                                        ? AppShapes.of(
+                                            context,
+                                          ).borderRadiusOf(ShapeRole.input)
+                                        : AppShapes.of(
+                                            context,
+                                          ).borderRadiusOf(ShapeRole.card)),
                                     borderSide: BorderSide(
                                       color: isActive
                                           ? colorScheme.primary
@@ -475,16 +486,22 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                     ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(14.0),
+                                    borderRadius: AppShapes.of(
+                                      context,
+                                    ).borderRadiusOf(ShapeRole.input),
                                     borderSide: BorderSide(
                                       color: colorScheme.primary,
                                       width: 1.6,
                                     ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      isActive ? 14.0 : 24.0,
-                                    ),
+                                    borderRadius: (isActive
+                                        ? AppShapes.of(
+                                            context,
+                                          ).borderRadiusOf(ShapeRole.input)
+                                        : AppShapes.of(
+                                            context,
+                                          ).borderRadiusOf(ShapeRole.card)),
                                     borderSide: BorderSide(
                                       color: isActive
                                           ? colorScheme.primary
@@ -592,9 +609,6 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
         filteredApps.isNotEmpty && filteredApps.every((a) => a.isSelected);
 
     final plusSettings = context.watch<PlusSettingsProvider>();
-    final radius = plusSettings.plusOverrideIndividualCornerRadius
-        ? plusSettings.plusHomeCornerRadius
-        : plusSettings.plusGlobalCornerRadius;
 
     final gridColumns = GridMetrics.adaptiveColumns(
       context,
@@ -659,7 +673,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           constraints: const BoxConstraints(maxWidth: 840),
           child: ClipRRect(
             borderRadius: BorderRadius.vertical(
-              top: Radius.circular(radius.clamp(20.0, 48.0)),
+              top: Radius.circular(
+                AppShapes.of(context).radiusOf(ShapeRole.sheet),
+              ),
             ),
             child: ConditionalBlur(
               enabled: plusSettings.plusEnableGlassmorphism,
@@ -823,9 +839,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                           ),
                           curve: Easing.emphasizedDecelerate,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              _searchQuery.isNotEmpty ? 18.0 : 28.0,
-                            ),
+                            borderRadius: (_searchQuery.isNotEmpty
+                                ? AppShapes.of(
+                                    context,
+                                  ).borderRadiusOf(ShapeRole.input)
+                                : AppShapes.of(
+                                    context,
+                                  ).borderRadiusOf(ShapeRole.card)),
                             boxShadow: _searchQuery.isNotEmpty
                                 ? [
                                     BoxShadow(
@@ -852,10 +872,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                               );
                               final isShifted =
                                   isFocused || _searchQuery.isNotEmpty;
-                              return RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  isShifted ? 18.0 : 28.0,
-                                ),
+                              return AppShapes.of(context).borderOf(
+                                isShifted ? ShapeRole.input : ShapeRole.card,
                                 side: BorderSide(
                                   color: isShifted
                                       ? Theme.of(context).colorScheme.primary
@@ -969,7 +987,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: AppShapes.of(
+                                  context,
+                                ).borderRadiusOf(ShapeRole.fab),
                                 border: Border.all(
                                   color: Colors.white.withValues(alpha: 0.25),
                                   width: 1,
@@ -1169,9 +1189,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                   ),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      _searchQuery.isNotEmpty ? 18.0 : 28.0,
-                    ),
+                    borderRadius: (_searchQuery.isNotEmpty
+                        ? AppShapes.of(context).borderRadiusOf(ShapeRole.input)
+                        : AppShapes.of(context).borderRadiusOf(ShapeRole.card)),
                     boxShadow: _searchQuery.isNotEmpty
                         ? [
                             BoxShadow(
@@ -1193,10 +1213,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                     shape: WidgetStateProperty.resolveWith((states) {
                       final isFocused = states.contains(WidgetState.focused);
                       final isShifted = isFocused || _searchQuery.isNotEmpty;
-                      return RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          isShifted ? 18.0 : 28.0,
-                        ),
+                      return AppShapes.of(context).borderOf(
+                        isShifted ? ShapeRole.input : ShapeRole.card,
                         side: BorderSide(
                           color: isShifted
                               ? Theme.of(context).colorScheme.primary
@@ -1343,7 +1361,9 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppShapes.of(
+                      context,
+                    ).borderRadiusOf(ShapeRole.fab),
                     border: Border.all(
                       color: Colors.white.withValues(alpha: 0.25),
                       width: 1,
@@ -1441,8 +1461,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
                 alpha: AppOpacity.half,
               ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+        shape: AppShapes.of(context).borderOf(
+          ShapeRole.card,
           side: BorderSide(
             color: pkg.isSelected
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
@@ -1455,7 +1475,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
           onTap: () {
             if (widget.returnUrlOnSelect) {
               if (pkg.packageName == null) return;
@@ -1555,8 +1575,8 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
             : Theme.of(context).colorScheme.surfaceContainerLow.withValues(
                 alpha: AppOpacity.half,
               ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+        shape: AppShapes.of(context).borderOf(
+          ShapeRole.card,
           side: BorderSide(
             color: pkg.isSelected
                 ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)
@@ -1569,7 +1589,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           ),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.card),
           onTap: () {
             if (widget.returnUrlOnSelect) {
               if (pkg.packageName == null) return;

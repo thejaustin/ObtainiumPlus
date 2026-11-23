@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:provider/provider.dart';
@@ -138,6 +139,7 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                 final isFocused = _urlFocusNode.hasFocus;
                 final hasText = val.text.isNotEmpty;
                 final isActive = isFocused || hasText;
+                final shapes = AppShapes.of(context);
 
                 return AnimatedContainer(
                   duration: Duration(
@@ -147,7 +149,9 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                   ),
                   curve: Easing.emphasizedDecelerate,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(isActive ? 16.0 : 26.0),
+                    borderRadius: (isActive
+                        ? shapes.borderRadiusOf(ShapeRole.input)
+                        : shapes.borderRadiusOf(ShapeRole.card)),
                     boxShadow: isActive
                         ? [
                             BoxShadow(
@@ -167,9 +171,9 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                       hintText:
                           'https://raw.githubusercontent.com/.../plugin.js',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          isActive ? 16.0 : 26.0,
-                        ),
+                        borderRadius: (isActive
+                            ? shapes.borderRadiusOf(ShapeRole.input)
+                            : shapes.borderRadiusOf(ShapeRole.card)),
                         borderSide: BorderSide(
                           color: isActive
                               ? cs.primary
@@ -178,13 +182,13 @@ class _PluginManagerPageState extends State<PluginManagerPage> {
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16.0),
+                        borderRadius: shapes.borderRadiusOf(ShapeRole.input),
                         borderSide: BorderSide(color: cs.primary, width: 1.6),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(
-                          isActive ? 16.0 : 26.0,
-                        ),
+                        borderRadius: (isActive
+                            ? shapes.borderRadiusOf(ShapeRole.input)
+                            : shapes.borderRadiusOf(ShapeRole.card)),
                         borderSide: BorderSide(
                           color: isActive
                               ? cs.primary

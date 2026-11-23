@@ -1,3 +1,4 @@
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
@@ -643,7 +644,7 @@ class _InstallationSectionState extends State<InstallationSection>
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: chipColor,
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: AppShapes.of(context).borderRadiusOf(ShapeRole.pill),
         ),
         child: Text(
           label,
