@@ -167,6 +167,9 @@ ThemeData applyAppShapes(ThemeData base, AppShapes shapes) {
     bottomSheetTheme: base.bottomSheetTheme.copyWith(
       shape: shapes.borderOf(ShapeRole.sheet),
     ),
+    searchBarTheme: base.searchBarTheme.copyWith(
+      shape: WidgetStatePropertyAll(shapes.borderOf(ShapeRole.pill)),
+    ),
     chipTheme: base.chipTheme.copyWith(shape: shapes.borderOf(ShapeRole.chip)),
     floatingActionButtonTheme: base.floatingActionButtonTheme.copyWith(
       shape: shapes.borderOf(ShapeRole.fab),

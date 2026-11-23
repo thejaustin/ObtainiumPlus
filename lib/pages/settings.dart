@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
@@ -407,7 +408,11 @@ class SettingsPageState extends State<SettingsPage> {
                         curve: Easing.emphasizedDecelerate,
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(
-                            _searchQuery.isNotEmpty ? 18.0 : 28.0,
+                            _searchQuery.isNotEmpty
+                                ? AppShapes.of(context).radiusOf(ShapeRole.card)
+                                : AppShapes.of(
+                                    context,
+                                  ).radiusOf(ShapeRole.pill),
                           ),
                           boxShadow: _searchQuery.isNotEmpty
                               ? [
@@ -450,10 +455,9 @@ class SettingsPageState extends State<SettingsPage> {
                             );
                             final isShifted =
                                 isFocused || _searchQuery.isNotEmpty;
-                            return CardMetrics.shape(
-                              isShifted ? 18.0 : 28.0,
-                              expressive:
-                                  plusSettings.plusEnableMaterialExpressive,
+                            final shapes = AppShapes.of(context);
+                            return shapes.borderOf(
+                              isShifted ? ShapeRole.card : ShapeRole.pill,
                               side: BorderSide(
                                 color: isShifted
                                     ? Theme.of(context).colorScheme.primary

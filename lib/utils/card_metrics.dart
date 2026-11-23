@@ -10,17 +10,17 @@ import 'package:flutter/widgets.dart';
 /// ignored the setting entirely.
 class CardMetrics {
   /// Outer radius for compact cards (grid tiles, discover results,
-  /// dashboard sub-cards). Caps the user value so small cards don't
-  /// turn into pills at high settings.
-  static double card(double base) => base.clamp(12.0, 24.0);
+  /// dashboard sub-cards). Follows the user's value across its full range;
+  /// [cardFor] still caps by extent for measured tiles.
+  static double card(double base) => base.clamp(0.0, 40.0);
 
   /// Radius for elements nested one level inside a card (app icons,
   /// thumbnails, inner buttons) — reads as concentric with [card].
-  static double inner(double base) => (base * 0.5).clamp(8.0, 16.0);
+  static double inner(double base) => (base * 0.5).clamp(0.0, 20.0);
 
   /// Radius for pill-shaped elements (segmented filter bars, capsule chips, badges)
   /// adhering to Material 3 Expressive guidelines.
-  static double pill([double base = 28.0]) => max(24.0, base).clamp(24.0, 32.0);
+  static double pill([double base = 28.0]) => base.clamp(0.0, 40.0);
 
   /// Radius for pill/capsule shaped elements (badges, indicator chips, micro-pills).
   /// Using a large constant (100.0) ensures complete semicircular capsule caps.
