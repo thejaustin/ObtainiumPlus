@@ -41,6 +41,7 @@ import 'package:obtainium/utils/material_ui_bridge.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/theme_builder.dart';
 import 'package:obtainium/utils/app_shapes.dart';
+import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/utils/theme_style.dart';
 import 'package:obtainium/utils/upstream_theme.dart';
 import 'package:provider/provider.dart';
@@ -938,6 +939,7 @@ class _ObtainiumState extends State<Obtainium> {
                       : plusGlobalCornerRadius / 24,
                 );
 
+          CardMetrics.activeFamily = applyShapes ? appShapes.family : null;
           ThemeData buildStyledTheme(ColorScheme scheme) {
             final t = buildBaseTheme(scheme);
             return applyShapes ? applyAppShapes(t, appShapes) : t;

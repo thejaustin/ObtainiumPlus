@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/widgets.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 
 /// One radius system for the cards that compartmentalize apps —
 /// dashboard sub-cards, app grid tiles, Discover results, app icons.
@@ -9,6 +10,11 @@ import 'package:flutter/widgets.dart';
 /// clamp (0.5/0.7/0.75, clamps of 8–20, 10–24, 12–24…) and the grid tile
 /// ignored the setting entirely.
 class CardMetrics {
+  /// Corner family chosen in settings, published by the theme build so the
+  /// context-free [shape] helper (134 call sites) honours it. Null means
+  /// "legacy": [shape] falls back to its `expressive` flag.
+  static ShapeFamily? activeFamily;
+
   /// Outer radius for compact cards (grid tiles, discover results,
   /// dashboard sub-cards). Follows the user's value across its full range;
   /// [cardFor] still caps by extent for measured tiles.
@@ -41,6 +47,19 @@ class CardMetrics {
     BorderSide side = BorderSide.none,
   }) {
     final borderRadius = BorderRadius.circular(radius);
+    switch (activeFamily) {
+      case ShapeFamily.rounded:
+        return RoundedRectangleBorder(borderRadius: borderRadius, side: side);
+      case ShapeFamily.squircle:
+        return RoundedSuperellipseBorder(
+          borderRadius: borderRadius,
+          side: side,
+        );
+      case ShapeFamily.bevel:
+        return BeveledRectangleBorder(borderRadius: borderRadius, side: side);
+      case null:
+        break;
+    }
     return expressive
         ? RoundedSuperellipseBorder(borderRadius: borderRadius, side: side)
         : RoundedRectangleBorder(borderRadius: borderRadius, side: side);
