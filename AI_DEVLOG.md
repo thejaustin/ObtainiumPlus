@@ -1787,3 +1787,10 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Verified on device (dark, Material You off): Obtainium (flat upstream look, glass off), Obtainium+ (16dp corners, glass on, gold gradient on Add app), Expressive+ select OK. Presets update toggles; settings card shows "Obtainium+ · Follow system", "Corner: 16dp".
 - Bug found: switching between the upstream and ThemeBuilder themes crashed (TextStyle.lerp "different inherit values" → `_dependents.isEmpty`). Fixed in main.dart by snapping (themeAnimationDuration zero) when the builder kind changes.
 - Not yet checked: light / AMOLED, Material Expressive on its own, Material You gold interplay (Material You on by default hides the purple/gold palette), fresh-install 0px corner radius reading on the Shapes tab.
+
+## 2026-11-23 — AppShapes (per-element corners)
+- `lib/utils/app_shapes.dart`: `AppShapes` ThemeExtension (global radius + family rounded/squircle/bevel + per-role overrides), `applyAppShapes()` post-processes component themes; wired in main.dart. Plain Obtainium style stays upstream-exact unless "individual corner radii" is on.
+- Prefs: `plusShapeFamily`, `plusShapeRadius_<role>` (-1 = inherit), `plusShapeFamily_<role>` (-1 = inherit). Roles: pill, button, card, collection, dialog, sheet, input, chip, fab, segmented. UI in Shapes tab; strings English-only in all locales.
+- 3 agents migrated ~48 files of hardcoded radii (small badges/icon clips deliberately left).
+- Device-tested: radius slider (0.1 steps), family picker, live preview, Bevel at 5.3px sharpens preview/segmented control. NOT following yet at 5dp: Settings home cards, search bars (pill), CardMetrics-based tiles (clamped 12–24), grid/list app tiles, CardMetrics.pillRadius capsules.
+- Open: CardMetrics.card/inner/pill clamps still bound several tiles; route them through AppShapes next.
