@@ -19,9 +19,24 @@ import 'package:shared_storage/shared_storage.dart' as saf;
 /// Imported apps never carry allowIdChange (it bypasses the package ID check).
 App prepareImportedApp(App app, String? deviceInstalledVersion) {
   return app.copyWith(
-    installedVersion: deviceInstalledVersion,
+    installedVersion: resolveImportedInstalledVersion(
+      app,
+      deviceInstalledVersion,
+    ),
     allowIdChange: false,
   );
+}
+
+String? resolveImportedInstalledVersion(
+  App app,
+  String? deviceInstalledVersion,
+) {
+  if (deviceInstalledVersion != null) return deviceInstalledVersion;
+  if (app.settings.getBool('trackOnly') ||
+      !app.settings.getBool('versionDetection')) {
+    return app.installedVersion;
+  }
+  return null;
 }
 
 /// Import/export of app configurations for [AppsProvider].
