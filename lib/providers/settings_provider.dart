@@ -19,7 +19,6 @@ import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/dcl_support.dart';
 import 'package:obtainium/services/http_client_factory.dart';
 import 'package:obtainium/utils/device_utils.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:obtainium/models/settings_enums.dart';

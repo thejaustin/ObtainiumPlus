@@ -1753,3 +1753,19 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - CI pipeline verified green: `Lint and Test`, `Build and Release` (`36214682585`), and auto-bumped to `v1.6.10-p5`.
 - Successfully deployed `app-release.apk` to connected test device via ADB loopback.
 
+
+### 2026-11-23 — Claude Code (Sonnet 5.5) [gap-fill for 2026-11-20 local device-tested work]
+
+**Covers commits:** `5c43c7d45` … `4eeb1f3cb` (8 commits, 2026-11-20). These were built and tested on-device by the user; this entry records them and the follow-up cleanup.
+
+**2026-11-20 work (summary):**
+- Startup/perf: parallel provider init, fast-path cache validation, zero-buffer fast launch, GPU repaint boundaries, 120Hz refresh, image cache + list allocation tuning.
+- UI: launcher-style grid (icon scaling, predictive back), One UI `CustomAppBar` on settings subpages + Statistics, unified app tile design, modular settings layout customization, `ExpressiveSettingsGroup` wired to pin/hide states.
+
+**Cleanup this session:**
+- 20 translation keys (hardware/GPU/icon-memory settings) were missing from all 31 non-English locales and failed `translation_shape_test`; appended with English fallback values.
+- Removed unused imports/locals left by the 11-20 commits (`main.dart`, `settings.dart`, `settings_subpage.dart`, `app.dart`, layout customizer sheet, `settings_provider.dart`). Icon memory cache cap is enforced (500); the stale `_maxIconMemoryEntries = 300` duplicate now drives the default.
+- State: analyzer 0 live errors, `flutter test` 894/894. Remaining analyzer warnings predate this work (`rustore.dart`, `error_app.dart`, `onboarding.dart`).
+- `collapsible_about.dart` is now unreachable (its only import was unused).
+
+**Next:** named theme system (Obtainium / Obtainium+ / Expressive / Expressive+), default Obtainium+; stability target = ObtainX parity.

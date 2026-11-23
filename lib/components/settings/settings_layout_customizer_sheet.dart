@@ -4,7 +4,6 @@ import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/glass_dialog.dart';
 import 'package:obtainium/models/settings_block.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
-import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:provider/provider.dart';
 

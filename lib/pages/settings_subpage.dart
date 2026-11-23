@@ -115,7 +115,6 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
     final baseRadius = plusSettings.plusOverrideIndividualCornerRadius
         ? plusSettings.plusSettingsCornerRadius
         : plusSettings.plusGlobalCornerRadius;
-    final cardRadius = CardMetrics.card(baseRadius);
 
     final hasSiblings = widget.siblings != null && widget.siblings!.isNotEmpty;
     final currentSibling =
@@ -124,10 +123,6 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
         : null;
     final activeTitle = currentSibling?.title ?? widget.title;
     final activeSubtitle = currentSibling?.subtitle ?? widget.subtitle;
-    final resolvedAccent =
-        currentSibling?.accentColor ??
-        widget.accentColor ??
-        colorScheme.primary;
     final activeChild = currentSibling?.child ?? widget.child;
 
     final screenWidth = MediaQuery.sizeOf(context).width;
@@ -177,8 +172,6 @@ class _SettingsSubpageState extends State<SettingsSubpage> {
                           ) {
                             final sibling = widget.siblings![index];
                             final isCurrent = index == _currentIndex;
-                            final siblingAccent =
-                                sibling.accentColor ?? resolvedAccent;
                             final chipRadius = CardMetrics.pill(baseRadius);
                             final chipKey = index < _siblingKeys.length
                                 ? _siblingKeys[index]

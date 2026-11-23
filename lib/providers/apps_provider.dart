@@ -2576,7 +2576,7 @@ class AppsProvider with ChangeNotifier {
   /// Fast in-memory L1 cache of decoded app icon bytes to eliminate repeated
   /// filesystem stat/read overhead when navigating between app cards (<0.1ms).
   static final Map<String, Uint8List> _iconMemoryCache = {};
-  static const int _maxIconMemoryEntries = 300;
+  static const int _maxIconMemoryEntries = 500;
 
   /// Number of active icon textures cached in RAM.
   static int get iconMemoryCacheCount => _iconMemoryCache.length;
@@ -2584,7 +2584,7 @@ class AppsProvider with ChangeNotifier {
   static void _putIconMemory(
     String appId,
     Uint8List bytes, {
-    int maxEntries = 500,
+    int maxEntries = _maxIconMemoryEntries,
   }) {
     if (_iconMemoryCache.length >= maxEntries) {
       _iconMemoryCache.remove(_iconMemoryCache.keys.first);

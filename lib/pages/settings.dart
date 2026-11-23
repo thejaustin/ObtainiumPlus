@@ -1472,8 +1472,6 @@ class _FooterIcon extends StatelessWidget {
     final isM3E = context
         .watch<PlusSettingsProvider>()
         .plusEnableMaterialExpressive;
-    final color = accentColor ?? colorScheme.primary;
-
     return ScaleTouchWrapper(
       hapticOnPressDown: true,
       scaleDownFactor: 0.92,

@@ -42,7 +42,6 @@ import 'package:obtainium/utils/theme_builder.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dynamic_color/dynamic_color.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 // ignore: implementation_imports
 import 'package:easy_localization/src/easy_localization_controller.dart';
@@ -782,9 +781,7 @@ class _ObtainiumState extends State<Obtainium> {
           (p) => (p.plusEnableMaterialExpressive, p.plusGlobalCornerRadius),
         );
     final themeSettings = context.watch<ThemeSettingsProvider>();
-    final settingsProvider = context.read<SettingsProvider>();
     final updateSettings = context.read<UpdateSettingsProvider>();
-    final appsProvider = context.read<AppsProvider>();
     final logs = context.read<LogsProvider>();
 
     if (updateInterval != existingUpdateInterval) {
