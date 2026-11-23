@@ -1,5 +1,6 @@
 import 'package:obtainium/models/settings_block.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:flutter/material.dart';
@@ -656,6 +657,55 @@ class PlusSettingsProvider with ChangeNotifier {
       _getBool('plusOverrideIndividualCornerRadius', defaultValue: false);
   set plusOverrideIndividualCornerRadius(bool val) =>
       _setBool('plusOverrideIndividualCornerRadius', val);
+
+  ShapeFamily get plusShapeFamily => _getEnum(
+    'plusShapeFamily',
+    ShapeFamily.values,
+    defaultValue: ShapeFamily.squircle,
+  );
+  set plusShapeFamily(ShapeFamily val) => _setEnum('plusShapeFamily', val);
+
+  /// Per-element radius; null means "inherit the global radius".
+  double? shapeRadiusOverride(ShapeRole role) {
+    final v = _getDouble('plusShapeRadius_${role.name}', defaultValue: -1);
+    return v < 0 ? null : v.clamp(0.0, 64.0);
+  }
+
+  void setShapeRadiusOverride(ShapeRole role, double? val) =>
+      _setDouble('plusShapeRadius_${role.name}', val ?? -1);
+
+  /// Per-element family; null means "inherit the global family".
+  ShapeFamily? shapeFamilyOverride(ShapeRole role) {
+    final i = _getInt('plusShapeFamily_${role.name}', defaultValue: -1);
+    return i >= 0 && i < ShapeFamily.values.length
+        ? ShapeFamily.values[i]
+        : null;
+  }
+
+  void setShapeFamilyOverride(ShapeRole role, ShapeFamily? val) =>
+      _setInt('plusShapeFamily_${role.name}', val?.index ?? -1);
+
+  /// Resolved shapes for the theme. Per-element overrides only apply while
+  /// the "individual corner radius" switch is on.
+  AppShapes get appShapes {
+    final custom = plusOverrideIndividualCornerRadius;
+    return AppShapes(
+      radius: plusGlobalCornerRadius,
+      family: plusShapeFamily,
+      radiusOverrides: custom
+          ? {
+              for (final r in ShapeRole.values)
+                if (shapeRadiusOverride(r) case final v?) r: v,
+            }
+          : const {},
+      familyOverrides: custom
+          ? {
+              for (final r in ShapeRole.values)
+                if (shapeFamilyOverride(r) case final v?) r: v,
+            }
+          : const {},
+    );
+  }
 
   bool get plusTopUILayout => _getBool('plusTopUILayout', defaultValue: false);
   set plusTopUILayout(bool val) => _setBool('plusTopUILayout', val);

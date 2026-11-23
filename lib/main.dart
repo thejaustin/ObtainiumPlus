@@ -40,6 +40,7 @@ import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/material_ui_bridge.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/theme_builder.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/theme_style.dart';
 import 'package:obtainium/utils/upstream_theme.dart';
 import 'package:provider/provider.dart';
@@ -785,6 +786,10 @@ class _ObtainiumState extends State<Obtainium> {
         .select<PlusSettingsProvider, (bool, double)>(
           (p) => (p.plusEnableMaterialExpressive, p.plusGlobalCornerRadius),
         );
+    final (appShapes, customShapes) = context
+        .select<PlusSettingsProvider, (AppShapes, bool)>(
+          (p) => (p.appShapes, p.plusOverrideIndividualCornerRadius),
+        );
     final themeSettings = context.watch<ThemeSettingsProvider>();
     final updateSettings = context.read<UpdateSettingsProvider>();
     final logs = context.read<LogsProvider>();
@@ -911,8 +916,11 @@ class _ObtainiumState extends State<Obtainium> {
               _lastUsedThemeBuilder != null &&
               _lastUsedThemeBuilder != usesThemeBuilder;
           _lastUsedThemeBuilder = usesThemeBuilder;
-          ThemeData buildStyledTheme(ColorScheme scheme) =>
-              usesThemeBuilder
+          // Plain Obtainium stays pixel-faithful to upstream unless the user
+          // opts into custom shapes.
+          final applyShapes =
+              themeStyle != AppThemeStyle.obtainium || customShapes;
+          ThemeData buildBaseTheme(ColorScheme scheme) => usesThemeBuilder
               ? ThemeBuilder.buildTheme(
                   colorScheme: scheme,
                   useSystemFont: themeSettings.useSystemFont,
@@ -929,6 +937,11 @@ class _ObtainiumState extends State<Obtainium> {
                       ? 1
                       : plusGlobalCornerRadius / 24,
                 );
+
+          ThemeData buildStyledTheme(ColorScheme scheme) {
+            final t = buildBaseTheme(scheme);
+            return applyShapes ? applyAppShapes(t, appShapes) : t;
+          }
 
           return MaterialApp(
             title: 'Obtainium',

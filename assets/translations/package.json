@@ -11,5 +11,21 @@
     "plusGridAmbientIconHaloDescription": "Project a soft radial color glow behind app icons on grid and list tiles",
     "plusGridShowSourceBadge": "Source Icon Badge",
     "plusGridShowSourceBadgeDescription": "Show the repository source icon next to version pills on app tiles",
-    "appTilePreview": "Live Tile & Grid Style Preview"
+    "appTilePreview": "Live Tile & Grid Style Preview",
+    "shapeFamily": "Corner style",
+    "shapeFamily_rounded": "Rounded",
+    "shapeFamily_squircle": "Squircle",
+    "shapeFamily_bevel": "Bevel",
+    "shapeInherit": "Follow global",
+    "shapeResetRadius": "Use global radius",
+    "shapeRole_pill": "Pills",
+    "shapeRole_button": "Buttons",
+    "shapeRole_card": "Cards",
+    "shapeRole_collection": "Collections",
+    "shapeRole_dialog": "Dialogs",
+    "shapeRole_sheet": "Bottom sheets",
+    "shapeRole_input": "Text fields",
+    "shapeRole_chip": "Chips",
+    "shapeRole_fab": "Floating buttons",
+    "shapeRole_segmented": "Segmented controls"
 }

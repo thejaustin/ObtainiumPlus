@@ -1994,5 +1994,21 @@
   "themeStyleName_expressive": "Material Expressive",
   "themeStyleDesc_expressive": "Material 3 Expressive shapes and motion.",
   "themeStyleName_expressivePlus": "Expressive+",
-  "themeStyleDesc_expressivePlus": "Material Expressive blended with the Plus accents and effects."
+  "themeStyleDesc_expressivePlus": "Material Expressive blended with the Plus accents and effects.",
+  "shapeFamily": "Corner style",
+  "shapeFamily_rounded": "Rounded",
+  "shapeFamily_squircle": "Squircle",
+  "shapeFamily_bevel": "Bevel",
+  "shapeInherit": "Follow global",
+  "shapeResetRadius": "Use global radius",
+  "shapeRole_pill": "Pills",
+  "shapeRole_button": "Buttons",
+  "shapeRole_card": "Cards",
+  "shapeRole_collection": "Collections",
+  "shapeRole_dialog": "Dialogs",
+  "shapeRole_sheet": "Bottom sheets",
+  "shapeRole_input": "Text fields",
+  "shapeRole_chip": "Chips",
+  "shapeRole_fab": "Floating buttons",
+  "shapeRole_segmented": "Segmented controls"
 }

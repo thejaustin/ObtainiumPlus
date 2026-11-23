@@ -20,6 +20,7 @@ import 'package:obtainium/components/settings/connected_setting_container.dart';
 import 'package:obtainium/components/settings/visual_theme_selector.dart';
 import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/theme_style.dart';
 
 /// Theme & Colors settings section widget
@@ -95,18 +96,18 @@ class ThemeSettingsSection extends StatelessWidget {
     // card and the Obtainium+ sheet link here).
     final designWidgets = <Widget>[
       if ((_matches(tr('designSystemThemeStyle')) ||
-              _matches(
-                tr('obtainiumPlusTheme'),
-                desc: tr('obtainiumPlusThemeDescription'),
-              ) ||
-              _matches(
-                tr('materialExpressiveTheme'),
-                desc: tr('materialExpressiveThemeDescription'),
-              ) ||
-              _matches(
-                tr('plusMaterialExpressive'),
-                desc: tr('plusMaterialExpressiveDescription'),
-              )))
+          _matches(
+            tr('obtainiumPlusTheme'),
+            desc: tr('obtainiumPlusThemeDescription'),
+          ) ||
+          _matches(
+            tr('materialExpressiveTheme'),
+            desc: tr('materialExpressiveThemeDescription'),
+          ) ||
+          _matches(
+            tr('plusMaterialExpressive'),
+            desc: tr('plusMaterialExpressiveDescription'),
+          )))
         _buildDesignSystemSelector(context),
       if (_matches(
         tr('glassmorphismUI'),
@@ -146,10 +147,16 @@ class ThemeSettingsSection extends StatelessWidget {
           defaultValue: 28.0,
           min: 0,
           max: 40,
-          divisions: 40,
-          labelBuilder: (v) => '${v.toInt()}px',
+          divisions: 160,
+          labelBuilder: (v) => '${v.toStringAsFixed(1)}px',
           onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
         ),
+      _buildShapeFamilyPicker(
+        context,
+        title: tr('shapeFamily'),
+        selected: plusSettings.plusShapeFamily,
+        onSelected: (f) => plusSettings.plusShapeFamily = f!,
+      ),
       if (_matches(
         tr('plusOverrideIndividualCornerRadius'),
         desc: tr('plusOverrideIndividualCornerRadiusDescription'),
@@ -193,6 +200,15 @@ class ThemeSettingsSection extends StatelessWidget {
                   onChanged: (val) =>
                       plusSettings.plusSettingsCornerRadius = val,
                 ),
+            ],
+          ),
+        ),
+      if (plusSettings.plusOverrideIndividualCornerRadius)
+        ConnectedSettingContainer(
+          child: Column(
+            children: [
+              for (final role in ShapeRole.values)
+                _buildShapeRoleTile(context, plusSettings, role),
             ],
           ),
         ),
@@ -284,6 +300,81 @@ class ThemeSettingsSection extends StatelessWidget {
             persistKey: 'look.more',
             icon: Icons.more_horiz_rounded,
             children: moreWidgets,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildShapeFamilyPicker(
+    BuildContext context, {
+    required String title,
+    required ShapeFamily? selected,
+    required ValueChanged<ShapeFamily?> onSelected,
+    bool allowInherit = false,
+  }) {
+    final names = {
+      ShapeFamily.rounded: tr('shapeFamily_rounded'),
+      ShapeFamily.squircle: tr('shapeFamily_squircle'),
+      ShapeFamily.bevel: tr('shapeFamily_bevel'),
+    };
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          SegmentedButton<ShapeFamily?>(
+            showSelectedIcon: false,
+            segments: [
+              if (allowInherit)
+                ButtonSegment(value: null, label: Text(tr('shapeInherit'))),
+              for (final f in ShapeFamily.values)
+                ButtonSegment(value: f, label: Text(names[f]!)),
+            ],
+            selected: {selected},
+            onSelectionChanged: (v) => onSelected(v.first),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShapeRoleTile(
+    BuildContext context,
+    PlusSettingsProvider plus,
+    ShapeRole role,
+  ) {
+    final override = plus.shapeRadiusOverride(role);
+    final shown = override ?? plus.plusGlobalCornerRadius * role.defaultScale;
+    return Column(
+      children: [
+        SettingsSliderTile(
+          icon: Icons.crop_square_rounded,
+          title: tr('shapeRole_${role.name}'),
+          subtitle: override == null ? tr('shapeInherit') : null,
+          value: shown.clamp(0.0, 64.0),
+          defaultValue: plus.plusGlobalCornerRadius * role.defaultScale,
+          min: 0,
+          max: 64,
+          divisions: 256,
+          labelBuilder: (v) => '${v.toStringAsFixed(1)}px',
+          onChanged: (v) => plus.setShapeRadiusOverride(role, v),
+        ),
+        _buildShapeFamilyPicker(
+          context,
+          title: tr('shapeFamily'),
+          selected: plus.shapeFamilyOverride(role),
+          allowInherit: true,
+          onSelected: (f) => plus.setShapeFamilyOverride(role, f),
+        ),
+        if (override != null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => plus.setShapeRadiusOverride(role, null),
+              child: Text(tr('shapeResetRadius')),
+            ),
           ),
       ],
     );
