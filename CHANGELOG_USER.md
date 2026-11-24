@@ -9,6 +9,9 @@
 ### Added
 - Custom certificate pinning (from Obtainium): pin your own certificates per host, turn built-in pins off, and restore them if update checks start failing. If a pinned host is blocked you now get a clear message and a one-tap Restore or Turn off.
 
+### Fixed
+- Switching "Match system Material style" on or off in Theme settings no longer causes a crash.
+
 ### Improved
 - Settings search, GitLab and F-Droid update checks, and the App details screen load faster, and grid/filter animations follow the animations setting. Update checks use fewer GitHub requests (the repository-info lookup now runs once a day per app, and GitHub's Atom feed takes over before the rate limit runs out), the automatic check on launch waits a moment so the app opens smoothly and skips apps checked in the last 30 minutes, and apps checked through GitHub's feed (when the rate limit is reached) now answer from a cached copy when nothing changed, GitHub apps whose release feed hasn't changed since the last check are skipped entirely (re-checked at least daily), app icons load sooner after launch and appear one by one without redrawing the whole list, the servers your apps use are looked up in the background before the launch check starts, and large GitHub release lists no longer stall the screen while a big library is checked. On launch, installed-app status and the update count are ready about 4 seconds sooner with a large library.
 

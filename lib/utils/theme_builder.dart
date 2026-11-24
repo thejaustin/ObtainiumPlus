@@ -26,6 +26,22 @@ class ThemeBuilder {
         useMaterial3: true,
         colorScheme: colorScheme,
         fontFamily: 'SystemFont',
+        // The custom theme's segmented-button label is `inherit: true`; the
+        // stock one is `inherit: false`, and Material animates between them on
+        // a theme change (TextStyle.lerp asserts on mismatched inherit).
+        segmentedButtonTheme: const SegmentedButtonThemeData(
+          style: ButtonStyle(
+            textStyle: WidgetStatePropertyAll(
+              TextStyle(
+                fontFamily: 'SystemFont',
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.1,
+                height: 1.43,
+              ),
+            ),
+          ),
+        ),
         sliderTheme: const SliderThemeData(year2023: false),
         progressIndicatorTheme: const ProgressIndicatorThemeData(
           year2023: false,
