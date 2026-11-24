@@ -4,7 +4,7 @@ Flutter/Dart app-updater fork (github.com/thejaustin/ObtainiumPlus).
 Read `AI_DEVLOG.md` at session start; update it before ending a session.
 
 ## Build commands
-Local Flutter SDK (3.47.7, glibc build at `~/flutter`, wrapper `~/.local/bin/flutter`) runs **analyze and tests** on-device; APKs are still CI-only (no Android SDK locally). Use `scripts/dev/`:
+Local Flutter SDK (3.50.1 at `~/flutter-3.50.1`, use `PATH=$HOME/bin350:$PATH`) runs **analyze and tests** on-device. Debug APKs also build locally (`ANDROID_HOME=~/android-sdk flutter build apk --debug --flavor fdroid --target-platform android-arm64`); release APKs are CI-only. Use `scripts/dev/`:
 
 | Task | Command |
 |------|---------|

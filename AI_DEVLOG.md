@@ -1826,3 +1826,10 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Local SDK: second worktree `~/flutter-3.50.1` + wrapper `flutter350` (PATH `~/bin350`). Needed `glibcify` on dart-sdk/bin/{dart,dartaotruntime,dartcliruntime,dartvm} and engine/linux-arm64/{impellerc,flutter_tester,font-subset}, plus shebang patch in bin/*.sh.
 - Upstream #3460 (stale cert-prompt locale text): not applicable — the keys it edits (builtInPin*, deletePinSetConfirmation, ...) don't exist in our locales.
 - Upstream custom certificate pinning UI (#3200/#3172: 3fc108a46, 57f5de908, 013b58265; in v1.7.2+) is NOT ported. Our tree stops at 80bc82f84 (embedded Cronet + Android trust store); a cherry-pick conflicts across MainActivity (package path), settings, http_service and all locales, and needs a hand port (~4k lines: pin_store, pin_set_editor, certificate channel). Decision pending with user; blocks the "all upstream merged" claim for the 1.7.5 base bump.
+
+## 2026-11-24 — Upstream parity triage + speed pass (branch feat/upstream-cert-pinning, merged to main)
+- Ported: certificate pinning (hand port, plus fork-only failure recovery: `_PinGuardClient`, `CertificatePinningError`, banner with Restore/Turn off), github-latest-stable fallback.
+- Already present in our tree (verified by tests/code, cherry-picks only conflict): system-disabled update toggle, phone refresh button, App details deep link, per-app install method, farsroid API, Forgejo pagination, GitHub Enterprise URLs, F-Droid index ETag cache, signing-key lineage, import hardening, legacy root install.
+- Not applicable: skill docs, e2e/test-fakes, PGP/README (c570dccb0), upstream "Increment version", fe9319579. Skipped docs/changelog-restructure (stale, conflicts).
+- Speed: settings search debounce 120ms; GitLab releases and F-Droid author requests overlap their sibling calls; App details icon future cached; command-center icon decoded at size; grid/filter-bar durations gated on `AppMotion.enabledNow` (not `enabled`: context.select is illegal inside itemBuilder).
+- Full suite 978 green. Base version bumped to 1.7.5-p1.

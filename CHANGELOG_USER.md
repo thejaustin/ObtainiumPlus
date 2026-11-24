@@ -2,6 +2,12 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+### Added
+- Custom certificate pinning (from Obtainium): pin your own certificates per host, turn built-in pins off, and restore them if update checks start failing. If a pinned host is blocked you now get a clear message and a one-tap Restore or Turn off.
+
+### Improved
+- Settings search, GitLab and F-Droid update checks, and the App details screen load faster, and grid/filter animations follow the animations setting.
+
 ### Fixed
 - "Add to Obtainium" links from app stores such as ShizuStore and ObtainX, and links shared to Obtainium+ from other apps, open correctly again instead of failing with "invalid input".
 - Some app icons stayed as placeholders until the app was restarted, when the icon was requested before installed apps had been scanned.
