@@ -7,6 +7,8 @@ import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/utils/app_id_utils.dart';
+import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/services/privileged_ops_service.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -1639,6 +1641,15 @@ class AppsProvider with ChangeNotifier {
   }
 
   Future<void> uninstallApp(String appId) async {
+    // Honours the per-operation backend setting; any failure falls through
+    // to the system uninstall dialog so the user is never stuck.
+    if (await PrivilegedOps.run(
+      PrivilegedOp.uninstall,
+      appId,
+      settingsProvider.privilegedBackendFor(PrivilegedOp.uninstall),
+    )) {
+      return;
+    }
     var intent = AndroidIntent(
       action: 'android.intent.action.DELETE',
       data: 'package:$appId',

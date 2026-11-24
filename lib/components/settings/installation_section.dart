@@ -20,6 +20,7 @@ import 'package:obtainium/utils/app_constants.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:obtainium/utils/haptic_utils.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:provider/provider.dart';
 import 'package:obtainium/services/shizuku_status_service.dart';
@@ -106,6 +107,96 @@ class _InstallationSectionState extends State<InstallationSection>
     }
   }
 
+  Widget _buildPrivilegedOpsTile(
+    BuildContext context,
+    BehaviorSettingsProvider settings,
+  ) {
+    final theme = Theme.of(context);
+    Widget row(PrivilegedOp op, IconData icon, String title, String desc) {
+      final current = settings.privilegedBackendFor(op);
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 20, color: theme.colorScheme.primary),
+                const SizedBox(width: 12),
+                Expanded(child: Text(title, style: theme.textTheme.titleSmall)),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              desc,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<PrivilegedBackend>(
+                showSelectedIcon: false,
+                style: const ButtonStyle(visualDensity: VisualDensity.compact),
+                segments: [
+                  ButtonSegment(
+                    value: PrivilegedBackend.system,
+                    label: Text(tr('privilegedBackendSystem')),
+                  ),
+                  ButtonSegment(
+                    value: PrivilegedBackend.auto,
+                    label: Text(tr('privilegedBackendAuto')),
+                  ),
+                  const ButtonSegment(
+                    value: PrivilegedBackend.shizuku,
+                    label: Text('Shizuku'),
+                  ),
+                  const ButtonSegment(
+                    value: PrivilegedBackend.root,
+                    label: Text('Root'),
+                  ),
+                ],
+                selected: {current},
+                onSelectionChanged: (v) {
+                  AppHaptics.selectionClick();
+                  settings.setPrivilegedBackend(op, v.first);
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+          child: Text(
+            tr('privilegedOpsDesc'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        row(
+          PrivilegedOp.uninstall,
+          Icons.delete_outline_rounded,
+          tr('privilegedOpUninstall'),
+          tr('privilegedOpUninstallDesc'),
+        ),
+        row(
+          PrivilegedOp.batteryWhitelist,
+          Icons.battery_saver_outlined,
+          tr('privilegedOpBattery'),
+          tr('privilegedOpBatteryDesc'),
+        ),
+      ],
+    );
+  }
+
   bool _matches(String text, {bool isAdvanced = false, String? desc}) {
     if (isAdvanced && !(widget.showAdvancedSettings ?? false)) return false;
     if (widget.searchQuery == null || widget.searchQuery!.isEmpty) return true;
@@ -146,6 +237,11 @@ class _InstallationSectionState extends State<InstallationSection>
               behaviorSettings,
               plusSettings,
             ),
+          if (_matches(tr('privilegedOps'), desc: tr('privilegedOpsDesc')) ||
+              _matches(tr('privilegedOpUninstall')) ||
+              _matches(tr('privilegedOpBattery')) ||
+              !isSearching)
+            _buildPrivilegedOpsTile(context, behaviorSettings),
         ];
 
         // Installer: the method picker comes first (see methodChildren).

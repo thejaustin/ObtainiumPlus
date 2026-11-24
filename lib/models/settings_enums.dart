@@ -36,6 +36,15 @@ enum AppBarStyle { compact, large }
 
 enum InstallerMode { system, shizuku, external, root }
 
+/// Which privileged route a system operation (uninstall, battery exemption)
+/// may use. [system] is the plain Android path; [auto] tries Shizuku, then
+/// root, then falls back to [system]. Dhizuku is not offered: it only
+/// delegates installs, it can't run these shell operations.
+enum PrivilegedBackend { system, auto, shizuku, root }
+
+/// Operations that can run through a privileged backend.
+enum PrivilegedOp { uninstall, batteryWhitelist }
+
 enum SettingsLayoutMode { m3eCompactGrid, classicGrouped }
 
 enum ColourSchemeMode { standard, vibrant, expressive, materialYou }

@@ -236,6 +236,22 @@ class SettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  PrivilegedBackend privilegedBackendFor(PrivilegedOp op) {
+    final fallback = op == PrivilegedOp.batteryWhitelist
+        ? PrivilegedBackend.auto
+        : PrivilegedBackend.system;
+    return prefs?.safeEnum(
+          'privilegedBackend_${op.name}',
+          PrivilegedBackend.values,
+        ) ??
+        fallback;
+  }
+
+  void setPrivilegedBackend(PrivilegedOp op, PrivilegedBackend backend) {
+    prefs?.setInt('privilegedBackend_${op.name}', backend.index);
+    notifyListeners();
+  }
+
   String get shizukuInstallerMode {
     final stored = _getString('shizukuInstallerMode');
     return stored == 'shizuku' || stored == 'dhizuku' ? stored! : 'auto';

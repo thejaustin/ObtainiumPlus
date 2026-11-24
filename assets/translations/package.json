@@ -27,5 +27,13 @@
     "shapeRole_input": "Text fields",
     "shapeRole_chip": "Chips",
     "shapeRole_fab": "Floating buttons",
-    "shapeRole_segmented": "Segmented controls"
+    "shapeRole_segmented": "Segmented controls",
+    "privilegedOps": "Privileged operations",
+    "privilegedOpsDesc": "Choose how Obtainium+ runs system actions. Auto tries Shizuku, then root, then the normal Android prompt. If a privileged route fails, the normal prompt is used instead. Dhizuku can only help with installs.",
+    "privilegedOpUninstall": "Uninstall apps",
+    "privilegedOpUninstallDesc": "Used when you remove an app and tick \"uninstall too\". System shows Android's own dialog.",
+    "privilegedOpBattery": "Battery optimisation exemption",
+    "privilegedOpBatteryDesc": "Lets Obtainium+ run background update checks reliably without asking each time.",
+    "privilegedBackendSystem": "System",
+    "privilegedBackendAuto": "Auto"
 }

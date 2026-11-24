@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
+import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
+import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/utils/card_metrics.dart';
@@ -382,7 +384,11 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   trailing: const Icon(Icons.open_in_new_rounded, size: 18),
                   onTap: () {
                     AppHaptics.lightImpact();
-                    AppInstallService.requestBatteryOptimizationExemption();
+                    AppInstallService.requestBatteryOptimizationExemption(
+                      backend: context
+                          .read<SettingsProvider>()
+                          .privilegedBackendFor(PrivilegedOp.batteryWhitelist),
+                    );
                   },
                 ),
               ],

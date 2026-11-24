@@ -21,6 +21,7 @@ import 'package:obtainium/models/app_in_memory.dart';
 import 'package:obtainium/models/downloaded_artifact.dart';
 import 'package:obtainium/installers/installer.dart';
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/services/privileged_ops_service.dart';
 import 'package:obtainium/installers/install_landed.dart';
 import 'package:obtainium/installers/external_installer.dart';
 import 'package:obtainium/installers/root_installer.dart';
@@ -289,7 +290,22 @@ class AppInstallService {
   // dialog). Xiaomi/MIUI is known to suppress or ignore this dialog, so it
   // falls back to the settings page there. The settings page remains
   // available separately as a manual fallback for any other OEM quirks.
-  static Future<bool> requestBatteryOptimizationExemption() async {
+  static Future<bool> requestBatteryOptimizationExemption({
+    PrivilegedBackend backend = PrivilegedBackend.system,
+  }) async {
+    // Silent whitelist through Shizuku/root when chosen; otherwise (or on any
+    // failure) fall through to the standard dialog below.
+    final ownId = backend == PrivilegedBackend.system
+        ? null
+        : await PrivilegedOps.ownPackageId();
+    if (ownId != null &&
+        await PrivilegedOps.run(
+          PrivilegedOp.batteryWhitelist,
+          ownId,
+          backend,
+        )) {
+      return true;
+    }
     final manufacturer = (await DeviceInfoPlugin().androidInfo).manufacturer
         .toLowerCase();
     final isMiui = ['xiaomi', 'redmi', 'poco'].any(manufacturer.contains);

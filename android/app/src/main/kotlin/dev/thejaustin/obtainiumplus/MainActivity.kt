@@ -762,6 +762,17 @@ class MainActivity : FlutterActivity() {
                             }
                         }.start()
                     }
+                    "runPrivilegedOp" -> {
+                        val op = call.argument<String>("op") ?: ""
+                        val pkg = call.argument<String>("package") ?: ""
+                        val backend = call.argument<String>("backend") ?: ""
+                        Thread {
+                            val out = runPrivilegedOp(op, pkg, backend)
+                            runOnUiThread {
+                                try { result.success(out) } catch (_: Exception) {}
+                            }
+                        }.start()
+                    }
                     "getInstallerPackageName" -> {
                         val target = call.argument<String>("packageName")
                         if (target.isNullOrEmpty()) {
@@ -1009,6 +1020,62 @@ class MainActivity : FlutterActivity() {
                 p?.inputStream?.close()
                 p?.errorStream?.close()
             } catch (_: Throwable) {}
+            try { p?.destroy() } catch (_: Throwable) {}
+        }
+    }
+
+    private val privilegedPackageRegex =
+        Regex("^[A-Za-z][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)+$")
+
+    /**
+     * Runs one fixed, allowlisted command through Shizuku or root. Dart never
+     * sends a shell string: the command is built here from [op] and a validated
+     * package name, and `batteryWhitelist` may only target this app itself.
+     */
+    private fun runPrivilegedOp(op: String, pkg: String, backend: String): Map<String, Any?> {
+        fun fail(status: String) = mapOf<String, Any?>("ok" to false, "status" to status, "backend" to backend)
+        if (!privilegedPackageRegex.matches(pkg)) return fail("INVALID_PACKAGE")
+        val argv: Array<String> = when (op) {
+            "uninstall" -> arrayOf("pm", "uninstall", pkg)
+            "batteryWhitelist" -> {
+                if (pkg != packageName) return fail("INVALID_PACKAGE")
+                arrayOf("cmd", "deviceidle", "whitelist", "+$pkg")
+            }
+            else -> return fail("UNKNOWN_OP")
+        }
+        var p: Process? = null
+        return try {
+            when (backend) {
+                "shizuku" -> {
+                    val alive = try { Shizuku.pingBinder() } catch (_: Throwable) { false }
+                    if (!alive) return fail("SHIZUKU_UNAVAILABLE")
+                    val granted = try {
+                        Shizuku.checkSelfPermission() == PackageManager.PERMISSION_GRANTED
+                    } catch (_: Throwable) { false }
+                    if (!granted) return fail("SHIZUKU_PERMISSION_REQUIRED")
+                    val newProcessMethod = Shizuku::class.java.getDeclaredMethod(
+                        "newProcess",
+                        Array<String>::class.java,
+                        Array<String>::class.java,
+                        String::class.java
+                    ).apply { isAccessible = true }
+                    p = newProcessMethod.invoke(null, argv, null, null) as? Process
+                }
+                "root" -> {
+                    if (!isRooted()) return fail("ROOT_UNAVAILABLE")
+                    p = Runtime.getRuntime().exec(arrayOf("su", "-c", argv.joinToString(" ")))
+                }
+                else -> return fail("UNKNOWN_BACKEND")
+            }
+            val proc = p ?: return fail("EXEC_FAILED")
+            try { proc.outputStream.close() } catch (_: Throwable) {}
+            val text = proc.inputStream.bufferedReader().use { it.readText() }
+            val code = proc.waitFor()
+            mapOf("ok" to (code == 0), "status" to if (code == 0) "OK" else "EXIT_$code", "backend" to backend, "output" to text.trim())
+        } catch (_: Throwable) {
+            fail("EXEC_FAILED")
+        } finally {
+            try { p?.inputStream?.close(); p?.errorStream?.close() } catch (_: Throwable) {}
             try { p?.destroy() } catch (_: Throwable) {}
         }
     }
