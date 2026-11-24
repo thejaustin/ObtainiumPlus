@@ -2815,7 +2815,10 @@ class AppsProvider with ChangeNotifier {
           // each other's tmp file.
           final tmpFile = File('$filePath.${_saveTmpCounter++}.tmp');
           try {
-            await tmpFile.writeAsString(safeJsonEncode(app.toJson()));
+            await tmpFile.writeAsString(
+              safeJsonEncode(app.toJson()),
+              flush: true,
+            );
             await tmpFile.rename(filePath);
             if (_isBg) {
               // Again after the write: a foreground scan that ran while this
