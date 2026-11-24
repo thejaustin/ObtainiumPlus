@@ -117,15 +117,12 @@ word in one only. en.json also has `visualLabPlusEntry` / `visualLabPlusEntryDes
 Fix: add "Also under Settings > Appearance" to the Lab subtitle; remove the unused
 `visualLabPlusEntry*` keys if no other file references them.
 
-## 9. Navigation labels: two rows for one idea (medium) - effort S
+## 9. Navigation labels: not a duplicate after all (resolved) - no change
 
-`navigationLabels` ("Choose when to show text labels...") and `plusNavBarAlwaysShowLabels`
-("Always Show Navigation Labels") are two rows in `theme_settings_section.dart` (lines 130-135),
-and `view_settings_provider.dart:281` shows the boolean is only consulted as a fallback. A user
-can set "Navigation labels" to "never" and flip "Always show" on with no explanation of the winner.
-
-Fix: if the choice row already has an Always option, hide the boolean behind it (code check
-needed), otherwise merge copy: "Navigation labels (when 'Always show' is on, this is ignored)".
+Code check: only one row is shown (`_buildNavigationLabelSegmented`, a 3-way segmented control).
+`plusNavBarAlwaysShowLabels` is just the legacy fallback used when `navigationLabelBehavior` has
+never been set (`view_settings_provider.dart`), so users cannot hit a conflict. Only the search
+matcher still lists the old boolean's strings; harmless.
 
 ## 10. Experimental / legacy words with nothing behind them (medium) - effort S
 
@@ -173,3 +170,10 @@ Fix: sentence case for all setting titles in one pass; no key changes.
    -> "Animated progress bars"; `plusUpdateExpressiveBadge` -> "Version pill on update button".
 5. `obtainiumPlusTheme` "Obtainium+ Theme" -> "Classic"; `plusMaterialExpressive` ->
    "Material 3 Expressive (light)"; `advancedFeaturesSubtitle` -> "Optional Obtainium+ features and tools".
+
+## Status (2026-11-24)
+
+Done in this pass (strings only): cheap wins 1-3 and 5, the unreferenced keys from #2, #8 and #10
+removed from every locale, #9 closed by code check. Still open: #3 (needs a check that the two
+Material style options differ), #4 child row, #5 master-switch wording, #6 duplicate Shapes card,
+#7 layout grouping, #11 jargon rewrites, #12 sentence-case pass, and cheap win 4.

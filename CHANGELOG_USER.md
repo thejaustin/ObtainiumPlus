@@ -1,5 +1,9 @@
 ## [Upcoming]
 
+### 🎨 Design
+
+- **Clearer setting names** — Expressive motion, two-column toggles, service banners.
+
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
