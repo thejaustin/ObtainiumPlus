@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
 import 'package:obtainium/providers/apps_provider.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
@@ -152,7 +153,9 @@ class CategoryFilterBar extends StatelessWidget {
                 scaleDownFactor: 0.94,
                 hapticOnPressDown: true,
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
+                  duration: AppMotion.enabledNow(context)
+                      ? const Duration(milliseconds: 220)
+                      : Duration.zero,
                   curve: Curves.easeOutCubic,
                   decoration: ShapeDecoration(
                     color: isSelected

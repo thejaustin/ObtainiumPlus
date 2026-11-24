@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/app_icon_shimmer.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -1317,11 +1318,15 @@ class _AppGridTileState extends State<AppGridTile>
             // Fade/resize between idle, checking and downloading instead of
             // popping the strip in and out as a batch check sweeps the grid.
             return AnimatedSize(
-              duration: const Duration(milliseconds: 220),
+              duration: AppMotion.enabledNow(context)
+                  ? const Duration(milliseconds: 220)
+                  : Duration.zero,
               curve: Easing.emphasizedDecelerate,
               alignment: Alignment.topCenter,
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 220),
+                duration: AppMotion.enabledNow(context)
+                    ? const Duration(milliseconds: 220)
+                    : Duration.zero,
                 switchInCurve: Easing.emphasizedDecelerate,
                 switchOutCurve: Easing.emphasizedAccelerate,
                 child: KeyedSubtree(

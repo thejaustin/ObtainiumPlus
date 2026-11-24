@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/motion.dart';
 import 'package:obtainium/components/app_grid_tile.dart';
 import 'package:obtainium/components/apps/app_actions_context_menu.dart';
 import 'package:obtainium/components/common/scale_touch_wrapper.dart';
@@ -234,10 +235,14 @@ class _AppGridViewState extends State<AppGridView> {
 
             final tileContainer = AnimatedScale(
               scale: isTarget ? 1.04 : 1.0,
-              duration: const Duration(milliseconds: 180),
+              duration: AppMotion.enabledNow(context)
+                  ? const Duration(milliseconds: 180)
+                  : Duration.zero,
               curve: Curves.easeOutCubic,
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: AppMotion.enabledNow(context)
+                    ? const Duration(milliseconds: 180)
+                    : Duration.zero,
                 curve: Curves.easeOutCubic,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(cardBorderRadius),
