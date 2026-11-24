@@ -11,6 +11,7 @@ import android.app.usage.UsageStats
 import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.ComponentName
+import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
