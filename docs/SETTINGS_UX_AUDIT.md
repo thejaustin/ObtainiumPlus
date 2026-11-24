@@ -34,22 +34,14 @@ which no Dart file references (`rg` finds no usage). They read as a second switc
 thing as #1 and confuse translators and anyone grepping labels. Delete both keys (and the other
 translations' copies), or alias them to the live key.
 
-## 3. Three overlapping "Expressive" style controls (high) - effort M
+## 3. "Expressive" naming sprawl (medium, partly resolved) - effort S
 
-`theme_settings_section.dart` offers a Design system selector whose options are "Obtainium+ Theme",
-"Material 3 Expressive" and "Material Expressive style" (`plusMaterialExpressive`, "Use the latest
-Material 3 expressive motion and shapes"), next to "Match system Material style"
-(`matchSystemMaterialStyle`, which per its own description overrides Expressive styling and custom
-corner radius). Two options named almost identically sit in one picker, and the third control
-silently overrides both. In Motion, `plusExpressiveProgress` "Expressive progress bars",
-`plusUpdateExpressiveBadge` "Expressive Update Pill" and `plusEnableModernAppListTile`
-"Expressive app list" use the word for per-widget toggles that have no relation to the design system.
-
-Fix: give the picker three distinct names ("Obtainium+ classic", "Material 3 Expressive (full)",
-"Material 3 Expressive (light)" or drop the duplicate if both resolve to the same style, which
-needs a code check first), and put "Match system Material style" directly under it with
-"Overrides the style above" in the title area. Reserve "Expressive" for the design system;
-rename the per-widget ones to what they change (see quick wins).
+Code check: the design picker (`_buildDesignSystemSelector`) offers two options, "Classic"
+(`obtainiumPlusTheme`) and "Material 3 Expressive" (`materialExpressiveTheme`). `plusMaterialExpressive`
+is not a second option; it is only a link row in the Obtainium+ features sheet and a search alias,
+so it now reads "Material 3 Expressive". "Match system Material style" still silently overrides the
+picker; say so in its description. The per-widget toggles that reuse "Expressive"
+(`plusEnableModernAppListTile`) should be renamed to what they change.
 
 ## 4. Animation switches overlap (high) - effort S
 

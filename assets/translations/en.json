@@ -766,7 +766,7 @@
   "plusEnhancedAnimationsDescription": "Enable smooth expressive transitions and bouncy physics",
   "plusBouncyPhysics": "Bouncy scroll physics",
   "plusBouncyPhysicsDescription": "Add tactile elasticity to lists and grids",
-  "plusMaterialExpressive": "Material 3 Expressive (light)",
+  "plusMaterialExpressive": "Material 3 Expressive",
   "plusMaterialExpressiveDescription": "Use the latest Material 3 expressive motion and shapes",
   "plusGlassmorphism": "Glassmorphism UI",
   "plusGlassmorphismDescription": "Enable modern translucent effects across the application",
