@@ -55,14 +55,14 @@ class RootInstaller extends Installer {
       final stagedApks = [
         for (var i = 0; i < apkFilePaths.length; i++) '"\$d/obt$i.apk"',
       ].join(' ');
+      final userId = await _userId();
       final installLine = installOptions['shizukuPretendToBeGooglePlay'] == true
-          ? "pm install -r -i 'com.android.vending' --user \"\$uid\" $stagedApks"
-          : 'pm install -r --user "\$uid" $stagedApks';
+          ? "pm install -r -i 'com.android.vending' --user $userId $stagedApks"
+          : 'pm install -r --user $userId $stagedApks';
       final script = [
         'd="\$(mktemp -d /data/local/tmp/obtainium.XXXXXX)" || exit 1',
         'trap \'rm -rf "\$d"\' EXIT',
         stagedCopies,
-        'uid="\$(am get-current-user 2>/dev/null)"; uid="\${uid:-0}"',
         installLine,
       ].join('\n');
       final result = await _runAsRoot(script);
@@ -100,6 +100,16 @@ class RootInstaller extends Installer {
       process.kill();
       rethrow;
     }
+  }
+
+  /// The Android user (profile) Obtainium itself runs in, derived from its uid.
+  Future<int> _userId() async {
+    final status = await File('/proc/self/status').readAsString();
+    final uid = int.tryParse(
+      RegExp(r'^Uid:\s+(\d+)', multiLine: true).firstMatch(status)?.group(1) ??
+          '',
+    );
+    return (uid ?? 0) ~/ 100000;
   }
 
   /// Maps `Failure [INSTALL_FAILED_*]` output from `pm install` to
