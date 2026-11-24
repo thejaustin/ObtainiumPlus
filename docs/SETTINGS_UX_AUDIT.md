@@ -169,3 +169,7 @@ Done in this pass (strings only): cheap wins 1-3 and 5, the unreferenced keys fr
 removed from every locale, #9 closed by code check. Also done: #4 (description no longer claims bouncy physics; Bouncy scroll stays a separate row since it is not gated by the master). Still open: #3 (needs a check that the two
 Material style options differ), #4 child row, #5 master-switch wording, #6 duplicate Shapes card,
 #7 layout grouping, #11 jargon rewrites, #12 sentence-case pass, and cheap win 4.
+
+Update: #11 jargon rewrites and the "Match system Material style" override note are done (en.json
+only). #12 (full sentence-case pass) is deliberately deferred: Title Case is used for ~100 keys and
+a bulk rename adds churn for little gain; apply it to new strings only. Open: #5, #6, #7.
