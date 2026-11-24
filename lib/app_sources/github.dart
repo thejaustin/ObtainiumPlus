@@ -317,6 +317,20 @@ class GitHub extends AppSource {
     pathPattern: r'/[^/]+/[^/]+',
   );
 
+  /// The API, plus the Atom feed and expanded-asset pages the no-quota
+  /// fallback reads: those answer conditional requests with a cheap 304 too.
+  @visibleForTesting
+  static bool isEtagCacheableForTest(String url) => _isEtagCacheable(url);
+
+  static bool _isEtagCacheable(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return false;
+    if (uri.host == 'api.github.com') return true;
+    return uri.host == 'github.com' &&
+        (uri.path.endsWith('/releases.atom') ||
+            uri.path.contains('/releases/expanded_assets/'));
+  }
+
   /// API GETs go through [GitHubEtagCache]: unchanged resources come back
   /// as a bodyless 304 that is answered from the cache.
   @override
@@ -327,7 +341,7 @@ class GitHub extends AppSource {
     Object? postBody,
     Map<String, String>? extraHeaders,
   }) async {
-    if (postBody != null || Uri.tryParse(url)?.host != 'api.github.com') {
+    if (postBody != null || !_isEtagCacheable(url)) {
       return super.sourceRequest(
         url,
         additionalSettings,

@@ -23,7 +23,7 @@ class GitHubCachedResponse {
 class GitHubEtagCache {
   GitHubEtagCache({
     Future<Directory> Function()? directory,
-    this.maxEntries = 600,
+    this.maxEntries = 1000,
     this.maxBytes = 40 * 1024 * 1024,
   }) : _directory = directory ?? _defaultDirectory;
 

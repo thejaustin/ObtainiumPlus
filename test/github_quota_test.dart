@@ -80,4 +80,29 @@ void main() {
     GitHub.noteQuotaForTest(_apiResponse(remaining: 0, reset: reset));
     expect(await GitHub.repoProbeDueForTest('https://github.com/o/c'), isFalse);
   });
+
+  test('the Atom feed and asset pages use the ETag cache, other pages not', () {
+    expect(
+      GitHub.isEtagCacheableForTest('https://api.github.com/repos/o/r'),
+      isTrue,
+    );
+    expect(
+      GitHub.isEtagCacheableForTest('https://github.com/o/r/releases.atom'),
+      isTrue,
+    );
+    expect(
+      GitHub.isEtagCacheableForTest(
+        'https://github.com/o/r/releases/expanded_assets/v1',
+      ),
+      isTrue,
+    );
+    expect(
+      GitHub.isEtagCacheableForTest('https://github.com/o/r/releases'),
+      isFalse,
+    );
+    expect(
+      GitHub.isEtagCacheableForTest('https://example.com/releases.atom'),
+      isFalse,
+    );
+  });
 }
