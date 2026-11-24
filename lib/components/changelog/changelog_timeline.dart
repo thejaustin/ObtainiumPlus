@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/changelog/changelog_parser.dart';
@@ -501,6 +502,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
 
 String kindLabel(ChangeKind k) => switch (k) {
   ChangeKind.feature => tr('changelogKindFeatures'),
+  ChangeKind.perf => tr('changelogKindSpeed'),
   ChangeKind.fix => tr('changelogKindFixes'),
   ChangeKind.ui => tr('changelogKindDesign'),
   ChangeKind.docs => tr('changelogKindDocs'),
@@ -509,6 +511,7 @@ String kindLabel(ChangeKind k) => switch (k) {
 
 IconData kindIcon(ChangeKind k) => switch (k) {
   ChangeKind.feature => Icons.bolt_rounded,
+  ChangeKind.perf => Icons.speed_rounded,
   ChangeKind.fix => Icons.build_circle_outlined,
   ChangeKind.ui => Icons.palette_outlined,
   ChangeKind.docs => Icons.translate_rounded,
@@ -517,6 +520,7 @@ IconData kindIcon(ChangeKind k) => switch (k) {
 
 (Color, Color) _kindColors(ColorScheme cs, ChangeKind k) => switch (k) {
   ChangeKind.feature => (cs.primaryContainer, cs.onPrimaryContainer),
+  ChangeKind.perf => (cs.secondaryContainer, cs.onSecondaryContainer),
   ChangeKind.fix => (cs.tertiaryContainer, cs.onTertiaryContainer),
   ChangeKind.ui => (cs.secondaryContainer, cs.onSecondaryContainer),
   _ => (cs.surfaceContainerHighest, cs.onSurfaceVariant),
@@ -1132,13 +1136,26 @@ class _ChangeLine extends StatelessWidget {
   const _ChangeLine({required this.text, required this.dot});
 
   static final _tokens = RegExp(r'\*\*(.+?)\*\*|`([^`]+)`|#(\d+)\b');
+  static final _headline = RegExp(
+    r'^\*\*([^*]+)\*\*\s*[—–:-]\s+(.+)$',
+    dotAll: true,
+  );
+
+  /// Splits "**Title** — description" so the title can lead the entry.
+  @visibleForTesting
+  static (String?, String) splitHeadline(String text) {
+    final m = _headline.firstMatch(text.trim());
+    return m == null ? (null, text) : (m.group(1)!.trim(), m.group(2)!.trim());
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final base = Theme.of(
-      context,
-    ).textTheme.bodyMedium?.copyWith(height: 1.4, color: cs.onSurface);
+    final (headline, text) = splitHeadline(this.text);
+    final base = Theme.of(context).textTheme.bodyMedium?.copyWith(
+      height: 1.4,
+      color: headline == null ? cs.onSurface : cs.onSurfaceVariant,
+    );
     final spans = <InlineSpan>[];
     var last = 0;
     String? firstIssue;
@@ -1178,7 +1195,7 @@ class _ChangeLine extends StatelessWidget {
     if (last < text.length) spans.add(TextSpan(text: text.substring(last)));
 
     final line = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1195,7 +1212,20 @@ class _ChangeLine extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Text.rich(TextSpan(style: base, children: spans)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (headline != null)
+                  Text(
+                    headline,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
+                  ),
+                Text.rich(TextSpan(style: base, children: spans)),
+              ],
+            ),
           ),
         ],
       ),

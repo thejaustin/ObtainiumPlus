@@ -71,8 +71,6 @@ enum SettingsHeaderSize { large, compact }
 
 enum NavBarBlurStrength { off, soft, strong }
 
-enum PlusFeaturesEntry { sheet, jumpToSection }
-
 // ── Expressive settings kit (opt-in previews). Stored by index, so only ever
 // append members; the first member is the shipped look. ──
 

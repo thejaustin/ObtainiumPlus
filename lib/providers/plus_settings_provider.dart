@@ -329,14 +329,6 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusLabNavBarBlur(NavBarBlurStrength val) =>
       _setEnum('plusLabNavBarBlur', val);
 
-  PlusFeaturesEntry get plusLabPlusFeaturesEntry => _getEnum(
-    'plusLabPlusFeaturesEntry',
-    PlusFeaturesEntry.values,
-    defaultValue: PlusFeaturesEntry.sheet,
-  );
-  set plusLabPlusFeaturesEntry(PlusFeaturesEntry val) =>
-      _setEnum('plusLabPlusFeaturesEntry', val);
-
   /// Writes every Visual Lab option's default explicitly (removing the
   /// placement key would re-run the old-bool migration).
   void resetVisualLab() {
@@ -347,7 +339,6 @@ class PlusSettingsProvider with ChangeNotifier {
     plusLabSettingsHeaderSize = SettingsHeaderSize.large;
     plusLabCompactDescriptionLines = 2;
     plusLabNavBarBlur = NavBarBlurStrength.strong;
-    plusLabPlusFeaturesEntry = PlusFeaturesEntry.sheet;
     resetExpressiveKit();
   }
 

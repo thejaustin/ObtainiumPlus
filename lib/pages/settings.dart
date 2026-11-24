@@ -6,8 +6,6 @@ import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:obtainium/components/custom_app_bar.dart';
 import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/connected_settings_bar.dart';
-import 'package:obtainium/components/settings/plus_features_section.dart';
-import 'package:obtainium/components/settings/plus_features_sheet.dart';
 import 'package:obtainium/components/settings/settings_hero_overview.dart';
 import 'package:obtainium/components/settings/settings_search_jump.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
@@ -107,44 +105,6 @@ class SettingsPageState extends State<SettingsPage> {
   void _setDockVisible(bool visible) {
     _dockVisible.value = visible;
     widget.sectionController?.dockVisible.value = visible;
-  }
-
-  /// Visual Lab "jump" entry for the Obtainium+ button: opens the Advanced
-  /// tab and scrolls its Obtainium+ group (master switch + layout) into view.
-  void jumpToPlusFeatures() {
-    if (_searchQuery.isNotEmpty) _searchController.clear();
-    if (_selectedSectionIndex != SettingsSectionIndex.advanced) {
-      _selectSection(SettingsSectionIndex.advanced);
-    } else {
-      AppHaptics.selectionClick();
-    }
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      Element? found;
-      void visit(Element e) {
-        if (found != null) return;
-        if (e.widget is PlusFeaturesSection) {
-          found = e;
-          return;
-        }
-        e.visitChildren(visit);
-      }
-
-      (_resultsKey.currentContext as Element?)?.visitChildren(visit);
-      final target = found;
-      if (target == null) return;
-      Scrollable.ensureVisible(
-        target,
-        alignment: 0.15,
-        duration: Duration(
-          milliseconds:
-              context.read<PlusSettingsProvider>().plusEnableEnhancedAnimations
-              ? 350
-              : 0,
-        ),
-        curve: Curves.easeOutCubic,
-      );
-    });
   }
 
   /// Search jump (preview): leave the search, open [section], then scroll
@@ -689,15 +649,6 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _openPlusFeatures() {
-    final entry = context.read<PlusSettingsProvider>().plusLabPlusFeaturesEntry;
-    if (entry == PlusFeaturesEntry.jumpToSection) {
-      jumpToPlusFeatures();
-    } else {
-      showPlusFeaturesSheet(context: context, onOpenSection: _selectSection);
-    }
-  }
-
   Widget _buildDensityToggle(PlusSettingsProvider plusSettings) {
     return ScaleTouchWrapper(
       hapticOnPressDown: false,
@@ -754,20 +705,6 @@ class SettingsPageState extends State<SettingsPage> {
           },
         ),
       ),
-      ScaleTouchWrapper(
-        hapticOnPressDown: true,
-        scaleDownFactor: 0.88,
-        child: IconButton(
-          visualDensity: VisualDensity.compact,
-          tooltip: 'Obtainium+',
-          icon: Icon(
-            Icons.stars_rounded,
-            size: 20,
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          onPressed: _openPlusFeatures,
-        ),
-      ),
       FutureBuilder<dynamic>(
         future: _versionFuture,
         builder: (context, snap) {
@@ -780,7 +717,7 @@ class SettingsPageState extends State<SettingsPage> {
               tooltip: (v != null && v.isNotEmpty)
                   ? '${tr('viewChangelog')} ($v)'
                   : tr('viewChangelog'),
-              icon: const Icon(Icons.history_edu_rounded, size: 20),
+              icon: const Icon(Icons.new_releases_outlined, size: 20),
               onPressed: () => showWhatsNewSheet(context),
             ),
           );
@@ -860,18 +797,12 @@ class SettingsPageState extends State<SettingsPage> {
                   SettingsLayoutCustomizerSheet.show(context);
                 },
               ),
-              chip(
-                icon: Icons.stars_rounded,
-                label: 'Obtainium+',
-                tooltip: 'Obtainium+',
-                onPressed: _openPlusFeatures,
-              ),
               FutureBuilder<dynamic>(
                 future: _versionFuture,
                 builder: (context, snap) {
                   final String? v = snap.data?.versionName as String?;
                   return chip(
-                    icon: Icons.history_edu_rounded,
+                    icon: Icons.new_releases_outlined,
                     label: (v != null && v.isNotEmpty)
                         ? v
                         : tr('viewChangelog'),

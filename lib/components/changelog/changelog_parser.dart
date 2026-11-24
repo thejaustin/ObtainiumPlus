@@ -1,7 +1,7 @@
 // Splits Obtainium+ GitHub release bodies into categorised changes for the
 // timeline changelog. Pure Dart so it can be unit-tested without widgets.
 
-enum ChangeKind { feature, fix, ui, docs, other }
+enum ChangeKind { feature, perf, fix, ui, docs, other }
 
 class ChangeSection {
   final ChangeKind kind;
@@ -186,9 +186,10 @@ class ChangelogParser {
       final type = m.group(1)!.toLowerCase();
       final uiScope = _uiScope.hasMatch((m.group(2) ?? '').toLowerCase());
       switch (type) {
+        case 'perf':
+          return ChangeKind.perf;
         case 'fix':
         case 'revert':
-        case 'perf':
           return ChangeKind.fix;
         case 'feat':
           return uiScope ? ChangeKind.ui : ChangeKind.feature;
@@ -220,6 +221,13 @@ class ChangelogParser {
     bool word(String w) => RegExp('\\b$w').hasMatch(h);
     if (word('fix') || word('bug') || word('crash') || h.contains('🐛')) {
       return ChangeKind.fix;
+    }
+    if (word('faster') ||
+        word('speed') ||
+        word('perf') ||
+        word('quicker') ||
+        h.contains('⚡')) {
+      return ChangeKind.perf;
     }
     if (word('feat') ||
         word('added') ||

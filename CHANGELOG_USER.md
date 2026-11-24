@@ -1,72 +1,61 @@
 ## [Upcoming]
 
+### ✨ New
+
+- **Easier-to-scan What's New** — each change now has a bold headline with a short description underneath, and a new "Speed" group for performance work.
+
+### 🎨 Design
+
+- **Cleaner Settings header** — removed the duplicate Obtainium+ popup button; the Obtainium+ switches stay in Settings › Advanced. The What's New button now uses a clearer icon.
+
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
 
-## [1.7.5-p2] — 2026-11-24
+## [1.7.5-p8] — 2026-11-24
 
-### Added
-- Custom certificate pinning (from Obtainium): pin your own certificates per host, turn built-in pins off, and restore them if update checks start failing. If a pinned host is blocked you now get a clear message and a one-tap Restore or Turn off.
+### ✨ New
+- **Custom certificate pinning** — Pin your own certificates per host, turn the built-in pins off, and restore them if update checks start failing. A blocked host now gets a clear message with one-tap Restore or Turn off (from Obtainium).
+- **Disable an app without removing it** — A disabled app stays in your library, is marked "Disabled", and is skipped by update checks, "Update all" and background installs (from Obtainium).
+- **Per-app install method** — Each app can use its own installer instead of the global one (from Obtainium).
+- **Skip whole categories** — Exclude a category from update checks (from Obtainium).
+- **Smarter background rules** — "When not on Wi-Fi" and "When not charging" can be Nothing, Check only, or Check and update. Your old switches carry over (from Obtainium).
+- **Update health flags more** — Archived repositories and releases hidden by your filters now show up (from Obtainium).
+- **Android certificate store option** — A new setting, with a one-time notice when the device blocks it, as GrapheneOS does (from Obtainium).
+- **Real version history** — Expand an app to see its latest 20 releases with notes from GitHub, GitLab, Codeberg, Gitea and F-Droid, following your release-title and version filters.
+- **README in the About card** — The README tab loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links.
+- **Release notes for more sources** — GitLab and Google Play (native) apps now show release notes.
+- **Visual Lab** — Developer & Diagnostics has a playground for alternative layouts, such as the settings bar at the top, a smaller header or less blur. Everything starts at the current look and can be reset.
+- **Preview options** — Off by default, under Look & motion: grouped-rows style, three new switch styles, icon morphing on toggles, haptic intensity, predictive back on settings pages, and search results that jump to their row.
 
-### Fixed
-- Switching "Match system Material style" on or off in Theme settings no longer causes a crash.
-- Button labels no longer crash the same toggle, and app icons no longer get stuck on an outdated image in the list.
-- The settings layout customiser now shows proper names and descriptions instead of raw text.
+### ⚡ Faster
+- **Quicker launch** — With a big library, installed-app status and the update count are ready about 4 seconds sooner. The launch check waits a moment so the app opens smoothly, and skips apps checked in the last 30 minutes.
+- **Fewer GitHub requests** — Repository info is looked up once a day per app, GitHub's Atom feed takes over before the rate limit runs out, and apps whose release feed hasn't changed are skipped (re-checked at least daily).
+- **Smoother lists** — App icons load sooner and appear one by one without redrawing the whole list, and large release lists no longer stall the screen during a big check.
+- **Faster pages** — Settings search, GitLab and F-Droid checks and App details load faster. Importing many installed apps saves in batches.
 
-### Improved
-- Settings search, GitLab and F-Droid update checks, and the App details screen load faster, and grid/filter animations follow the animations setting. Update checks use fewer GitHub requests (the repository-info lookup now runs once a day per app, and GitHub's Atom feed takes over before the rate limit runs out), the automatic check on launch waits a moment so the app opens smoothly and skips apps checked in the last 30 minutes, and apps checked through GitHub's feed (when the rate limit is reached) now answer from a cached copy when nothing changed, GitHub apps whose release feed hasn't changed since the last check are skipped entirely (re-checked at least daily), app icons load sooner after launch and appear one by one without redrawing the whole list, the servers your apps use are looked up in the background before the launch check starts, and large GitHub release lists no longer stall the screen while a big library is checked. On launch, installed-app status and the update count are ready about 4 seconds sooner with a large library.
+### 🎨 Design
+- **Settings in five clear sections** — Look & motion, Home & library, Updates & notifications, Install & safety, Advanced. Every setting lives in one place, with rarely used options on a "More…" page. Search still finds everything.
+- **Settings pages match** — Service Doctor, Play Store diagnostics and the multi-user diagnostic are full pages like the rest of Settings, and header buttons no longer run off narrow screens.
+- **Calmer feedback** — Toggles give one haptic per change, and turning animations off (in Obtainium+ or Android) now also stops settings, page and tab transitions.
+- **Better wording** — More of Settings is translatable, search matches descriptions in other languages, and the layout customiser shows real names instead of raw text.
 
-### Fixed
-- "Add to Obtainium" links from app stores such as ShizuStore and ObtainX, and links shared to Obtainium+ from other apps, open correctly again instead of failing with "invalid input".
-- Some app icons stayed as placeholders until the app was restarted, when the icon was requested before installed apps had been scanned.
-- Links like "CHANGELOG.md" in GitHub release notes open the file at that release instead of a broken github.com page, and line breaks in release notes are kept (from Obtainium).
-- Settings tabs no longer show red "Something went wrong" cards after scrolling another tab.
-- Service Doctor is now a regular page and no longer opens copies of itself.
-- Settings header buttons, diagnostic rows and the usage-access buttons no longer run off narrow screens. Compact mode shows two lines of each setting's description instead of one.
-- The Updates summary tile shows the real check interval ("2h", not "120h").
-- Release notes: version history no longer repeats the same notes, F-Droid apps show only that version's section of the changelog, and Play Store notes no longer show raw `<br>` tags.
-- The webpage view in an app's About card scrolls, and store pages that try to open another app show a message instead of an error page.
-- Shizuku installs are checked against the live package, so a finished update shouldn't keep showing as pending.
-- Shizuku status is the same on every screen. The installer section could say "not running" while Service Doctor said active.
-- The multi-user diagnostic lists your profiles instead of always saying none were found.
-- Obtainium+ showed an older installed version than the one actually installed (the "v" in tags wasn't ignored).
-- The app library repairs its index if it drifts from the saved apps, so apps can't silently go missing from the list.
-- Only one notice about Google's sideloading changes at startup, with up-to-date wording (the extra dialog repeated it with old dates).
-- The Add app sheet no longer shows two drag handles.
-- "Sign in with GitHub" for the API token was pointed at an OAuth app that doesn't exist, so it could never work. It's hidden until a real one is configured. When enabled it saves the token by itself, copies the code for you, and handles GitHub asking it to slow down or the code expiring.
-- Back with the settings search keyboard open now just closes the keyboard instead of also switching tabs, and matching pages such as Developer & Diagnostics show at the top of search results.
-- Shizuku shows "permission needed" instead of "not running" while its permission prompt is still open, and no longer stacks repeated prompts.
-- README links and images that start with "/" open inside the repo instead of the site root.
-- Apps could be marked as uninstalled, or removed, when Android returned an incomplete list of installed apps. Each one is now double-checked first (from Obtainium).
-- On Android 9 and 10, installs no longer fail the signing-certificate check every time (from Obtainium).
-- No more crash at launch on GrapheneOS when "Dynamic code loading via memory" is restricted; Obtainium+ uses its built-in network client there instead (from Obtainium).
+### 🐛 Fixed
+- **Theme toggle crash** — Switching "Match system Material style" no longer crashes, including its button labels.
+- **Stuck icons** — App icons no longer stay as placeholders or on an outdated image.
+- **"Add to Obtainium" links** — Links from stores such as ShizuStore and ObtainX, and links shared from other apps, open correctly instead of "invalid input".
+- **Release notes** — Links like "CHANGELOG.md" open the file at that release, line breaks are kept, version history no longer repeats itself, and Play Store notes lose raw `<br>` tags.
+- **Wrong versions and statuses** — A tag's leading "v" is ignored, a finished Shizuku update no longer shows as pending, and apps are only marked uninstalled after a double check when Android returns an incomplete list (from Obtainium).
+- **Missing apps** — The library repairs its index if it drifts from the saved apps, so apps can't silently disappear.
+- **Installs** — On Android 9 and 10 installs no longer fail the signing check every time, and GrapheneOS no longer crashes at launch (from Obtainium).
+- **Shizuku status** — The same on every screen, "permission needed" while the prompt is open, and no stacked prompts. The multi-user diagnostic lists your profiles.
+- **Settings polish** — No red "Something went wrong" cards after scrolling tabs, Back closes the search keyboard first, and the Updates tile shows "2h", not "120h".
+- **Sign in with GitHub** — Hidden until a working login is configured. When enabled it saves the token itself and copes with slow-down and expiry.
+- **Smaller fixes** — Service Doctor opens once, the About card's web view scrolls, the Add app sheet has one drag handle, one notice about Google's sideloading changes at startup, and README links starting with "/" stay inside the repo.
 
-### Improved
-- Settings are reorganised into five clear sections — Look & motion, Home & library, Updates & notifications, Install & safety, Advanced — with every setting in exactly one place and rarely used options on a "More…" page per section. Searching still finds everything, including rows on subpages.
-- New preview options (all off by default, under Look & motion and the Settings page options): a segmented grouped-rows style with adjustable corner rounding, three new switch styles (Expressive, Shape thumb, Icon is the switch), icon shape morphing on toggles, haptic intensity with an option to follow the system's haptics or use Android's native ticks, predictive back on settings pages, search results that jump to their row, and live current-value summaries on the Look & motion cards.
-- Apps can be disabled without removing them: a disabled app stays in your library, is marked "Disabled", and is skipped by update checks, "Update all" and background installs (from Obtainium).
-- Each app can use its own install method, overriding the global one (from Obtainium).
-- Categories can be excluded from update checks (from Obtainium).
-- Update health also flags archived repositories and releases hidden by your filters (from Obtainium).
-- New "Use Android certificate store" setting, with a one-time notice when the device blocks it (such as GrapheneOS's memory restrictions) (from Obtainium).
-- Settings toggles give one haptic per change instead of two.
-- Turning off animations (in Obtainium+ or Android's "remove animations") now also stops settings, page and tab transitions that ignored it before.
-- More of Settings is translatable, and settings search also matches descriptions and works in other languages.
-- Apps with "use versionCode" no longer have version detection switched off by themselves (from Obtainium).
-- Self-hosted Gitea/Forgejo URLs with a port number are accepted (from Obtainium).
-- With architecture filtering on, a saved universal APK choice moves to the APK built for your device, and APK names using alternative ABI spellings are recognised (from Obtainium).
-- About card: the README tab now loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links, and apps without a description show their README.
-- GitLab and Google Play (native) apps now show release notes.
-- Version History now loads the latest 20 releases with their notes from GitHub, GitLab, Codeberg, Gitea and F-Droid (from the app's changelog) when you expand it, instead of only the versions this device happened to see. It follows each app's release-title filter and version extraction settings.
-- Service Doctor, Play Store diagnostics and inspector, and the multi-user diagnostic are full pages that match the rest of settings.
-- Background updates: "When not on Wi-Fi" and "When not charging" can now be set to Nothing, Check only (notify, don't install) or Check and update, instead of only on or off (from Obtainium). Your previous switches carry over.
-- The installed-apps picker loads small icons and names in batches and sorts by app name. The rows on screen fill in first.
-- With Shizuku, the profiles page also names users whose apps Android hides from other apps, such as Secure Folder.
-- The settings category bar no longer sits on top of the main navigation bar.
-- New Visual Lab in Developer & Diagnostics: try alternative layouts, such as the settings category bar at the top or merged into the main navigation bar, a smaller settings header, or less blur. Everything starts at the current look and can be reset.
-- Importing many installed apps saves them in batches instead of one at a time.
-- Less work at startup: icons that load together redraw the list once, and app-usage data loads only when you sort by last used.
+### 🔧 Other
+- **Version detection** — Apps with "use versionCode" keep version detection on, self-hosted Gitea/Forgejo URLs with a port work, and with architecture filtering on a saved universal APK moves to the one built for your device (from Obtainium).
+- **Less startup work** — Icons that load together redraw the list once, and app-usage data loads only when you sort by last used.
 
 ---
 

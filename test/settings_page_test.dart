@@ -416,9 +416,8 @@ void main() {
       await pumpCapturingErrors(tester, app);
       expect(find.byType(SettingsPage), findsOneWidget);
 
-      // Obtainium+ features entry in the app bar (an icon button since the
-      // labelled chips overflowed phone widths)
-      expect(find.byTooltip('Obtainium+'), findsOneWidget);
+      // The redundant Obtainium+ popup button is gone from the app bar.
+      expect(find.byTooltip('Obtainium+'), findsNothing);
 
       // Verify no redundant uppercase or banner duplication
       expect(find.text('APPEARANCE'), findsNothing);
@@ -556,10 +555,6 @@ void main() {
     ),
     ('blur off', {'plusLabNavBarBlur': NavBarBlurStrength.off.index}),
     ('blur soft', {'plusLabNavBarBlur': NavBarBlurStrength.soft.index}),
-    (
-      'plus entry jump',
-      {'plusLabPlusFeaturesEntry': PlusFeaturesEntry.jumpToSection.index},
-    ),
   ]) {
     for (final tab in [0, 6]) {
       testWidgets('visual lab "${variant.$1}" fits 360dp (tab $tab)', (
@@ -630,27 +625,6 @@ void main() {
       print('──── captured error detail ────\n${d.exceptionAsString()}');
     }
     expect(errors, isEmpty);
-  }, timeout: const Timeout(Duration(minutes: 1)));
-
-  testWidgets('Obtainium+ jump entry opens the Advanced tab', (tester) async {
-    SharedPreferences.setMockInitialValues({
-      'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
-      'plusLabPlusFeaturesEntry': PlusFeaturesEntry.jumpToSection.index,
-    });
-    late Widget app;
-    await tester.runAsync(() async {
-      await EasyLocalization.ensureInitialized();
-      app = await buildSettingsApp(0);
-    });
-    await pumpCapturingErrors(tester, app);
-    await tester.tap(find.byTooltip('Obtainium+'));
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.takeException(), isNull);
-    expect(
-      find.text(translations['settingsTabAdvancedDebugDesc'] as String),
-      findsWidgets,
-    );
   }, timeout: const Timeout(Duration(minutes: 1)));
 
   testWidgets('Visual Lab page builds, switches and resets at 360dp', (

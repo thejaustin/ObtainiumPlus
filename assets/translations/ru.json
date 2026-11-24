@@ -2121,5 +2121,6 @@
     "themeShapes": "Shapes",
     "themeShapesDesc": "Corner radius and shape style for cards, tiles and buttons",
     "updateCheckFrequency": "Update check frequency",
-    "updateCheckFrequencyDescription": "How often apps are checked for updates in the background"
+    "updateCheckFrequencyDescription": "How often apps are checked for updates in the background",
+  "changelogKindSpeed": "Speed"
 }

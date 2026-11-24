@@ -5,6 +5,7 @@ const _badge =
     '[![Co-developed with Antigravity](https://img.shields.io/badge/x)](https://deepmind.google)';
 
 void main() {
+  titledEntryTests();
   test('CI release body: fix bullet is classified and hash stripped', () {
     const body =
         '''
@@ -88,5 +89,22 @@ $_badge
     expect(r.publishedAt, isNull);
     expect(r.changeCount, 1);
     expect(r.count(ChangeKind.fix), 1);
+  });
+}
+
+void titledEntryTests() {
+  test('speed heading groups entries as perf', () {
+    const body = '''
+### ⚡ Faster
+- **Quicker launch** — Ready about 4 seconds sooner.
+''';
+    final s = ChangelogParser.parse(body).single;
+    expect(s.kind, ChangeKind.perf);
+    expect(s.items.single, startsWith('**Quicker launch**'));
+  });
+
+  test('conventional perf commits are speed, not fixes', () {
+    final s = ChangelogParser.parse('- perf: cache feeds (abc1234)').single;
+    expect(s.kind, ChangeKind.perf);
   });
 }

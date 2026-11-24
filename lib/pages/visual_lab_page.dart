@@ -114,17 +114,6 @@ class VisualLabPage extends StatelessWidget {
                         },
                         onChanged: (v) => plus.plusLabSettingsAppBarActions = v,
                       ),
-                      _ChoiceOption<PlusFeaturesEntry>(
-                        title: tr('visualLabPlusEntry'),
-                        description: tr('visualLabPlusEntryDesc'),
-                        value: plus.plusLabPlusFeaturesEntry,
-                        defaultValue: PlusFeaturesEntry.sheet,
-                        options: {
-                          PlusFeaturesEntry.sheet: tr('visualLabSheet'),
-                          PlusFeaturesEntry.jumpToSection: tr('visualLabJump'),
-                        },
-                        onChanged: (v) => plus.plusLabPlusFeaturesEntry = v,
-                      ),
                       _ChoiceOption<bool>(
                         title: tr('visualLabHero'),
                         description: tr('visualLabHeroDesc'),
