@@ -2547,6 +2547,21 @@ class AppsProvider with ChangeNotifier {
       logs.add('Phase-2 reconciliation error: $e', level: LogLevel.error);
     }
 
+    // Start fetching missing icons now, ahead of the (possibly slow) save and
+    // restore steps below, so icons past the first screen don't wait on them.
+    // A concurrency limit keeps the fetches from flooding the UI thread with
+    // notifications; apps about to be removed are left out.
+    final doomedIds = {...removedAppIds, ...errors.map((e) => e[0])};
+    final missingIconIds = [
+      for (final id in apps.keys)
+        if (apps[id]?.icon == null && !doomedIds.contains(id)) id,
+    ];
+    if (missingIconIds.isNotEmpty) {
+      unawaited(
+        _runWithConcurrencyLimit(missingIconIds, 4, (id) => updateAppIcon(id)),
+      );
+    }
+
     // Persist any corrections so they aren't recomputed on the next load.
     if (corrections.isNotEmpty) {
       try {
@@ -2582,18 +2597,6 @@ class AppsProvider with ChangeNotifier {
       await _addRestoredApps(restored, appsDir.path);
     } catch (_) {}
 
-    // Proactively fetch any missing icons in the background without UI blocking.
-    // Use a concurrency limit so icon fetches don't all compete at once and
-    // cause rapid-fire notifyListeners calls that saturate the UI thread.
-    final missingIconIds = [
-      for (final id in apps.keys)
-        if (apps[id]?.icon == null) id,
-    ];
-    if (missingIconIds.isNotEmpty) {
-      unawaited(
-        _runWithConcurrencyLimit(missingIconIds, 4, (id) => updateAppIcon(id)),
-      );
-    }
     notifyListeners();
   }
 
@@ -2746,10 +2749,11 @@ class AppsProvider with ChangeNotifier {
 
   // Each icon load finishes in its own event-loop turn, so a microtask never
   // grouped anything: every icon rebuilt the whole apps page. A short timer
-  // folds a burst of icon loads into one rebuild.
+  // folds a burst of icon loads into one rebuild; at launch ~160 icons arrive
+  // over a few seconds, so a longer window means far fewer page rebuilds.
   void _scheduleIconBatchNotification() {
     if (_iconBatchTimer?.isActive ?? false) return;
-    _iconBatchTimer = Timer(const Duration(milliseconds: 80), () {
+    _iconBatchTimer = Timer(const Duration(milliseconds: 250), () {
       if (!_disposed) _notifyUiOnly();
     });
   }
