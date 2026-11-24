@@ -17,6 +17,20 @@ subprojects {
     }
 }
 
+// Some plugins (sentry_flutter) still compile against android-34 while their
+// dependencies (package_info_plus) need 36+, which fails release AAR metadata
+// checks. Raise any library below the app's compileSdk.
+subprojects {
+    afterEvaluate {
+        extensions.findByType<com.android.build.api.dsl.LibraryExtension>()?.let { lib ->
+            val current = lib.compileSdk ?: 0
+            if (current < 36) {
+                lib.compileSdk = 36
+            }
+        }
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")
