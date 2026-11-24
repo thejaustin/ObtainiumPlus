@@ -54,17 +54,22 @@ class FDroid extends AppSource {
     if (changelogUrl == null || !changelogUrl.contains('/blob/')) {
       return const [];
     }
-    final isForgeFile = [
-      () => GitHub(hostChanged: true).sourceSpecificStandardizeURL(changelogUrl),
-      () => GitLab(hostChanged: true).sourceSpecificStandardizeURL(changelogUrl),
-    ].any((standardize) {
-      try {
-        standardize();
-        return true;
-      } on InvalidURLError {
-        return false;
-      }
-    });
+    final isForgeFile =
+        [
+          () => GitHub(
+            hostChanged: true,
+          ).sourceSpecificStandardizeURL(changelogUrl),
+          () => GitLab(
+            hostChanged: true,
+          ).sourceSpecificStandardizeURL(changelogUrl),
+        ].any((standardize) {
+          try {
+            standardize();
+            return true;
+          } on InvalidURLError {
+            return false;
+          }
+        });
     if (!isForgeFile) return const [];
     final res = await sourceRequest(
       changelogUrl.replaceFirst('/blob/', '/raw/'),
@@ -83,6 +88,7 @@ class FDroid extends AppSource {
         )
         .toList();
   }
+
   static const _pageCacheDuration = Duration(minutes: 10);
   final Map<String, ({FDroidPageMetadata data, DateTime at})> _pageCache = {};
   static const String _fdroidDataBaseUrl =
@@ -162,6 +168,11 @@ class FDroid extends AppSource {
       }
       final String host = Uri.parse(standardUrl).host;
       final isOfficialHost = !hostChanged || hostIdenticalDespiteAnyChange;
+      // Author metadata is independent of the packages call; overlap them.
+      final Future<Response>? authorFuture = isOfficialHost
+          ? sourceRequest('$_fdroidDataBaseUrl/$appId.yml', additionalSettings)
+          : null;
+      authorFuture?.ignore();
       var details = await getAPKUrlsFromFDroidPackagesAPIResponse(
         await sourceRequest(
           'https://$host/api/v1/packages/$appId',
@@ -177,10 +188,7 @@ class FDroid extends AppSource {
       );
       if (isOfficialHost) {
         try {
-          final res = await sourceRequest(
-            '$_fdroidDataBaseUrl/$appId.yml',
-            additionalSettings,
-          );
+          final res = await authorFuture!;
           final lines = res.body.split('\n');
           final authorLines = lines.where((l) => l.startsWith('AuthorName: '));
           if (authorLines.isNotEmpty) {

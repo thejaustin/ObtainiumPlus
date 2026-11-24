@@ -199,6 +199,19 @@ class GitLab extends AppSource {
 
       final bool trackOnly = additionalSettings['trackOnly'] == true;
 
+      // Releases are addressed by the encoded path, not the id, so start
+      // that request now and overlap it with the project lookup.
+      final String releasesPath = trackOnly ? 'repository/tags' : 'releases';
+      final String query = [
+        if (optionalAuth.isNotEmpty) optionalAuth,
+        'per_page=100',
+      ].join('&');
+      final Future<Response> releasesFuture = sourceRequest(
+        'https://${hosts[0]}/api/v4/projects/$projectUriComponent/$releasesPath?$query',
+        additionalSettings,
+      );
+      releasesFuture.ignore(); // errors surface at the await below
+
       // Get project ID
       final Response res0 = await sourceRequest(
         'https://${hosts[0]}/api/v4/projects/$projectUriComponent?$optionalAuth',
@@ -214,16 +227,7 @@ class GitLab extends AppSource {
           ? projectJson['archived'] as bool
           : null;
 
-      // Request data from REST API
-      final String releasesPath = trackOnly ? 'repository/tags' : 'releases';
-      final String query = [
-        if (optionalAuth.isNotEmpty) optionalAuth,
-        'per_page=100',
-      ].join('&');
-      final Response res = await sourceRequest(
-        'https://${hosts[0]}/api/v4/projects/$projectUriComponent/$releasesPath?$query',
-        additionalSettings,
-      );
+      final Response res = await releasesFuture;
       ensureHttpSuccess(res);
 
       // Extract .apk details from received data
