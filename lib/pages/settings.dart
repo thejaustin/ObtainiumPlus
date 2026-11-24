@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/app_shapes.dart';
@@ -58,6 +59,7 @@ class SettingsPageState extends State<SettingsPage> {
   final ScrollController _scrollController = ScrollController();
   final ScrollController _tabsScrollController = ScrollController();
   String _searchQuery = '';
+  Timer? _searchDebounce;
   bool _showIntervalLabel = true;
   late Future<AndroidDeviceInfo> _androidInfoFuture;
   int _selectedSectionIndex = 0;
@@ -262,11 +264,15 @@ class SettingsPageState extends State<SettingsPage> {
     }
     _androidInfoFuture = DeviceInfoPlugin().androidInfo;
     _searchController.addListener(() {
-      if (!mounted) return;
-      setState(() {
-        _searchQuery = _searchController.text.trim();
+      // Debounce: each change rebuilds and re-filters every settings section.
+      _searchDebounce?.cancel();
+      _searchDebounce = Timer(const Duration(milliseconds: 120), () {
+        if (!mounted) return;
+        setState(() {
+          _searchQuery = _searchController.text.trim();
+        });
+        widget.sectionController?.searching.value = _searchQuery.isNotEmpty;
       });
-      widget.sectionController?.searching.value = _searchQuery.isNotEmpty;
     });
   }
 
@@ -283,6 +289,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     final controller = widget.sectionController;
     if (controller != null && controller.onSelect == _selectSection) {
       controller.onSelect = null;
