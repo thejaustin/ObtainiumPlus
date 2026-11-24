@@ -14,6 +14,22 @@ enum UpdateHealthReason {
   filteredReleases,
 }
 
+bool isConfigRelatedUpdateHealthReason(UpdateHealthReason reason) =>
+    reason != UpdateHealthReason.staleRelease &&
+    reason != UpdateHealthReason.staleVersion;
+
+/// Translation key for the app page's update-health link: the config warning
+/// for config-related (or mixed) reasons, a neutral note for stale-only flags.
+String updateHealthLinkLabelKey({
+  required bool ignored,
+  required List<UpdateHealthReason> reasons,
+}) {
+  if (ignored) return 'updateHealthIgnoredNote';
+  return reasons.any(isConfigRelatedUpdateHealthReason)
+      ? 'updateHealthViewDetails'
+      : 'updateHealthStaleNote';
+}
+
 class UpdateHealthConfig {
   final int? staleReleaseDays;
   final int? staleVersionDays;
