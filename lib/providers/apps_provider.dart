@@ -3101,6 +3101,27 @@ class AppsProvider with ChangeNotifier {
     }
   }
 
+  /// Resolves the hosts the next update check will talk to, so DNS lookups
+  /// (slow on a cold radio) are done by the time the check starts. Plain
+  /// lookups only: no request is sent, so nothing counts against a rate limit.
+  void prewarmUpdateHosts() {
+    final hosts = <String>{};
+    for (final aim in apps.values) {
+      if (aim.app.disabled) continue;
+      final host = Uri.tryParse(aim.app.url)?.host.toLowerCase();
+      if (host == null || host.isEmpty) continue;
+      hosts.add(host);
+      if (host == 'github.com') hosts.add('api.github.com');
+    }
+    for (final host in hosts) {
+      unawaited(
+        InternetAddress.lookup(
+          host,
+        ).timeout(const Duration(seconds: 5)).then((_) {}, onError: (_) {}),
+      );
+    }
+  }
+
   /// A source that stalls mid-response must not hold a worker slot (and the
   /// whole check) forever.
   static const Duration _updateCheckTimeout = Duration(seconds: 90);

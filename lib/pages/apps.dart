@@ -375,7 +375,9 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         updateSettings.checkOnStart) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         // Let the launch animation, icon decoding and the installed-app scan
-        // settle before the check's network and parsing work starts.
+        // settle before the check's network and parsing work starts; DNS can
+        // be warmed meanwhile.
+        appsProvider.prewarmUpdateHosts();
         await Future.delayed(_startupCheckDelay);
         if (!mounted) return;
         final indicator = _refreshIndicatorKey.currentState;
