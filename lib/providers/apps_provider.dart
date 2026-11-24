@@ -2755,6 +2755,18 @@ class AppsProvider with ChangeNotifier {
   ValueListenable<AppInMemory?> iconListenable(String appId) => _iconNotifiers
       .putIfAbsent(appId, () => ValueNotifier<AppInMemory?>(apps[appId]));
 
+  /// Keeps the per-tile notifiers in step with [apps] after any change (an
+  /// app replaced, reinstalled, removed), and forgets removed apps.
+  void _syncIconNotifiers() {
+    _iconNotifiers.removeWhere((id, n) {
+      final current = apps[id];
+      // Not disposed: a tile that is animating out may still listen to it.
+      if (current == null) return true;
+      n.value = current;
+      return false;
+    });
+  }
+
   // Each icon load finishes in its own event-loop turn. The tile showing it
   // is updated directly; everything else that reads icons (detail page,
   // search, widgets) gets one page-wide notification once the burst settles,
@@ -3717,6 +3729,7 @@ class AppsProvider with ChangeNotifier {
   void notifyListeners() {
     _appsRevision++;
     _cachedPendingUpdates = null;
+    _syncIconNotifiers();
     super.notifyListeners();
     // Debounce: coalesce rapid bursts (download progress, icon loads) into a
     // single widget update 500 ms after the last notification settles.

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'dart:convert';
 import 'dart:io';
@@ -16,13 +17,18 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _TestAppsProvider extends ChangeNotifier implements AppsProvider {
+  _TestAppsProvider({this.liveByApp = const {}});
+
+  /// What the per-tile icon notifiers hold, by app id.
+  final Map<String, AppInMemory?> liveByApp;
+
   @override
   final Set<String> checkingUpdateIds = const {};
   @override
   final Map<String, AppInMemory> apps = const {};
   @override
   ValueListenable<AppInMemory?> iconListenable(String appId) =>
-      ValueNotifier<AppInMemory?>(apps[appId]);
+      ValueNotifier<AppInMemory?>(liveByApp[appId] ?? apps[appId]);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
@@ -172,5 +178,144 @@ void main() {
     );
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Author'), findsWidgets);
+  });
+
+  // 1x1 transparent PNG
+  final png = Uint8List.fromList(const [
+    0x89,
+    0x50,
+    0x4e,
+    0x47,
+    0x0d,
+    0x0a,
+    0x1a,
+    0x0a,
+    0x00,
+    0x00,
+    0x00,
+    0x0d,
+    0x49,
+    0x48,
+    0x44,
+    0x52,
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x00,
+    0x00,
+    0x00,
+    0x01,
+    0x08,
+    0x06,
+    0x00,
+    0x00,
+    0x00,
+    0x1f,
+    0x15,
+    0xc4,
+    0x89,
+    0x00,
+    0x00,
+    0x00,
+    0x0d,
+    0x49,
+    0x44,
+    0x41,
+    0x54,
+    0x78,
+    0x9c,
+    0x63,
+    0x00,
+    0x01,
+    0x00,
+    0x00,
+    0x05,
+    0x00,
+    0x01,
+    0x0d,
+    0x0a,
+    0x2d,
+    0xb4,
+    0x00,
+    0x00,
+    0x00,
+    0x00,
+    0x49,
+    0x45,
+    0x4e,
+    0x44,
+    0xae,
+    0x42,
+    0x60,
+    0x82,
+  ]);
+
+  Future<void> pumpTile(
+    WidgetTester tester,
+    AppInMemory shown,
+    AppInMemory? live,
+  ) async {
+    SharedPreferences.setMockInitialValues({'tactileFeedbackEnabled': false});
+    final prefs = await SharedPreferences.getInstance();
+    final viewSettings = ViewSettingsProvider()..prefs = prefs;
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<AppsProvider>.value(
+            value: _TestAppsProvider(liveByApp: {shown.app.id: live}),
+          ),
+          ChangeNotifierProvider<PlusSettingsProvider>.value(
+            value: PlusSettingsProvider(),
+          ),
+          ChangeNotifierProvider<ViewSettingsProvider>.value(
+            value: viewSettings,
+          ),
+          Provider<SourceProvider>.value(value: SourceProvider()),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: CustomScrollView(
+              slivers: [
+                AppGridView(
+                  apps: [shown],
+                  onAppTap: (_) {},
+                  selectedAppIds: const {},
+                  onToggleSelected: (_) {},
+                  updateAppIds: const {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+  }
+
+  testWidgets('tile shows an icon that only the notifier has', (tester) async {
+    final shown = makeApp('a', 'App A');
+    await pumpTile(tester, shown, shown.copyWith(icon: png));
+    expect(
+      find.descendant(
+        of: find.byType(AppGridTile),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('tile keeps its own icon when the notifier snapshot is stale', (
+    tester,
+  ) async {
+    final stale = makeApp('a', 'App A');
+    await pumpTile(tester, stale.copyWith(icon: png), stale);
+    expect(
+      find.descendant(
+        of: find.byType(AppGridTile),
+        matching: find.byType(Image),
+      ),
+      findsOneWidget,
+    );
   });
 }

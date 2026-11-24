@@ -833,7 +833,11 @@ class _AppGridTileState extends State<AppGridTile>
                 widget.appInMemory.app.id,
               ),
               builder: (context, live, _) {
-                final aim = live ?? widget.appInMemory;
+                // The page's own copy wins once it has an icon; the notifier only
+                // supplies one that arrived since this tile last rebuilt.
+                final aim = widget.appInMemory.icon != null
+                    ? widget.appInMemory
+                    : (live ?? widget.appInMemory);
                 return AnimatedSwitcher(
                   duration: Duration(
                     milliseconds: plusSettings.plusEnableEnhancedAnimations

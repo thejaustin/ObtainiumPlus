@@ -263,7 +263,11 @@ class _AppListTileState extends State<AppListTile>
               appInMemory.app.id,
             ),
             builder: (context, live, _) {
-              final aim = live ?? appInMemory;
+              // The page's own copy wins once it has an icon; the notifier only
+              // supplies one that arrived since this tile last rebuilt.
+              final aim = appInMemory.icon != null
+                  ? appInMemory
+                  : (live ?? appInMemory);
               return AnimatedSwitcher(
                 duration: Duration(
                   milliseconds: plusSettings.plusEnableEnhancedAnimations
