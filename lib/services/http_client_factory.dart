@@ -19,6 +19,7 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/services/dcl_support.dart';
 import 'package:obtainium/services/pin_store.dart';
 import 'package:obtainium/utils/source_utils.dart' show createHttpClient;
@@ -104,10 +105,12 @@ class HttpClientFactory {
                 utf8.encode(await certificate.loadPem()),
               );
             }
-            return IOClient(
-              HttpClient(context: context)
-                ..connectionTimeout = const Duration(seconds: 30)
-                ..badCertificateCallback = (cert, host, port) => false,
+            return _PinGuardClient(
+              IOClient(
+                HttpClient(context: context)
+                  ..connectionTimeout = const Duration(seconds: 30)
+                  ..badCertificateCallback = (cert, host, port) => false,
+              ),
             );
           },
         );
@@ -200,4 +203,25 @@ class HttpClientFactory {
       return null;
     }
   }
+}
+
+/// Turns TLS failures on a pinned connection into a [CertificatePinningError]
+/// and remembers the host so the pinning page can offer a one-tap restore.
+class _PinGuardClient extends http.BaseClient {
+  _PinGuardClient(this._inner);
+  final http.Client _inner;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    try {
+      return await _inner.send(request);
+    } on TlsException catch (e) {
+      AppLogger.warn('Pinned TLS failure for ${request.url.host}: $e');
+      PinStore.instance.recordFailure(request.url.host);
+      throw CertificatePinningError(request.url.host);
+    }
+  }
+
+  @override
+  void close() => _inner.close();
 }

@@ -514,11 +514,15 @@ class _InstallationSectionState extends State<InstallationSection>
             ),
           // Android certificate store (embedded Cronet vs dart:io)
           if (_matches(
+            tr('certificatePinning'),
+            desc: tr('certificatePinningAdditiveHelp'),
+          ))
+            const _CertificatePinningTile(),
+          if (_matches(
             tr('androidCertStore'),
             desc: tr('androidCertStoreHelp'),
           ))
-            const _CertificatePinningTile(),
-          const _AndroidCertStoreTile(),
+            const _AndroidCertStoreTile(),
         ];
 
         final List<Widget> moreChildren = [

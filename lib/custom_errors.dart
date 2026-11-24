@@ -109,6 +109,12 @@ class ObtainiumHttpError extends ObtainiumError {
 
 typedef HTTPStatusError = ObtainiumHttpError;
 
+/// A TLS handshake failed against a host covered by a certificate pin set.
+class CertificatePinningError extends ObtainiumError {
+  CertificatePinningError(String host)
+    : super.withCode('CERT_PINNING', data: {'host': host});
+}
+
 class RateLimitError extends ObtainiumError {
   final int remainingMinutes;
   RateLimitError(this.remainingMinutes)
@@ -354,6 +360,7 @@ String localizeErrorCode(String code, Map<String, dynamic>? data) {
       'requiresCredentialsInSettings',
       args: [data?['sourceName'] ?? ''],
     ),
+    'CERT_PINNING' => tr('certificatePinningFailed', args: [data?['host'] ?? '']),
     'NO_APK' => tr('noAPKFound'),
     'MIN_UPDATE_AGE' => tr(
       'releaseTooYoungForMinAge',

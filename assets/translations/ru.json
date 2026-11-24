@@ -2092,5 +2092,9 @@
     "yourPinSets": "Пользовательские наборы привязок",
     "galaxyStoreInstallSourceRequiresShizuku": "Для указания Samsung Galaxy Store в качестве источника установки требуется Shizuku или root, Dhizuku не поддерживается.",
     "themeMode": "Режим темы",
-    "updateChecks": "Проверки обновлений"
+    "updateChecks": "Проверки обновлений",
+    "certificatePinningFailed": "Secure connection to {} was blocked by certificate pinning. Open Settings → Certificate pinning to restore the built-in pins or turn pinning off.",
+    "pinningFailureTitle": "Certificate pinning blocked {}",
+    "pinningFailureBody": "Update checks for this site are failing because its certificate isn't in the pinned set. If you removed a built-in certificate, or the site changed its certificate, restore the built-in pins or turn pinning off.",
+    "turnOffCertificatePinning": "Turn off pinning"
 }

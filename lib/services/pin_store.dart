@@ -239,8 +239,26 @@ class PinStore extends ChangeNotifier {
     await _save();
   }
 
+  /// Host of the most recent TLS failure against a pinned connection, so the
+  /// pinning page can offer to restore the built-in pins. Not persisted.
+  String? get lastFailureHost => _lastFailureHost;
+  String? _lastFailureHost;
+
+  void recordFailure(String host) {
+    if (_lastFailureHost == host) return;
+    _lastFailureHost = host;
+    notifyListeners();
+  }
+
+  void clearFailure() {
+    if (_lastFailureHost == null) return;
+    _lastFailureHost = null;
+    notifyListeners();
+  }
+
   Future<void> restoreAllBuiltIn() async {
     await ensureLoaded();
+    _lastFailureHost = null;
     _disabledBuiltInHosts.clear();
     _disabledBuiltInCerts.clear();
     _changed();

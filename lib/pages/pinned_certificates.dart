@@ -75,6 +75,63 @@ class _CertificatePinningPageState extends State<CertificatePinningPage> {
                           pinning,
                           anyPins,
                         ),
+                        if (store.lastFailureHost != null) ...[
+                          const SizedBox(height: AppSpacings.md),
+                          CardTile(
+                            padding: AppPaddings.cardInner,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.warning_amber_rounded,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                    ),
+                                    const SizedBox(width: AppSpacings.md),
+                                    Expanded(
+                                      child: Text(
+                                        tr(
+                                          'pinningFailureTitle',
+                                          args: [store.lastFailureHost!],
+                                        ),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacings.sm),
+                                Text(tr('pinningFailureBody')),
+                                const SizedBox(height: AppSpacings.md),
+                                Wrap(
+                                  spacing: AppSpacings.sm,
+                                  children: [
+                                    FilledButton(
+                                      onPressed: () =>
+                                          PinStore.instance.restoreAllBuiltIn(),
+                                      child: Text(tr('restoreAllBuiltInPins')),
+                                    ),
+                                    OutlinedButton(
+                                      onPressed: () {
+                                        settingsProvider
+                                                .enableCertificatePinning =
+                                            false;
+                                        PinStore.instance.clearFailure();
+                                      },
+                                      child: Text(
+                                        tr('turnOffCertificatePinning'),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         if (store.loadError != null) ...[
                           const SizedBox(height: AppSpacings.md),
                           CardTile(
