@@ -42,6 +42,11 @@ class ThemeBuilder {
             ),
           ),
         ),
+        // Same mismatch for every button label (custom: inherit true).
+        elevatedButtonTheme: const ElevatedButtonThemeData(style: _stockButton),
+        filledButtonTheme: const FilledButtonThemeData(style: _stockButton),
+        textButtonTheme: const TextButtonThemeData(style: _stockButton),
+        outlinedButtonTheme: const OutlinedButtonThemeData(style: _stockButton),
         sliderTheme: const SliderThemeData(year2023: false),
         progressIndicatorTheme: const ProgressIndicatorThemeData(
           year2023: false,
@@ -890,6 +895,20 @@ class ThemeBuilder {
       elevation: 4,
     );
   }
+
+  /// Stock M3 button label, spelled out with `inherit: true` so it can be
+  /// animated against the custom theme's button labels.
+  static const ButtonStyle _stockButton = ButtonStyle(
+    textStyle: WidgetStatePropertyAll(
+      TextStyle(
+        fontFamily: 'SystemFont',
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.1,
+        height: 1.43,
+      ),
+    ),
+  );
 
   static ElevatedButtonThemeData _buildElevatedButtonTheme(
     double? cornerRadius,
