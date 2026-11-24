@@ -12,6 +12,7 @@ import 'package:obtainium/providers/logs_provider.dart';
 import 'package:obtainium/providers/source_provider.dart' hide createHttpClient;
 import 'package:obtainium/utils/source_utils.dart'
     hide sourceRequestStreamResponse;
+import 'package:obtainium/utils/cache_dir_utils.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
@@ -152,15 +153,10 @@ class AppFileService {
         );
         APKDir = cacheRoot;
         iconsCacheDir = Directory('${cacheRoot.path}/icons');
-        try {
-          if (!APKDir.existsSync()) {
-            APKDir.createSync(recursive: true);
-          }
-          if (!iconsCacheDir.existsSync()) {
-            iconsCacheDir.createSync(recursive: true);
-          }
-        } catch (e) {
-          // External cache unavailable at runtime; fall through to internal storage
+        // Probe writability (not just existence): external storage can exist
+        // yet be read-only/unwritable, which must fall back to internal cache.
+        if (prepareWritableDirectory(APKDir) == null ||
+            prepareWritableDirectory(iconsCacheDir) == null) {
           cacheRoot = null;
         }
       }
