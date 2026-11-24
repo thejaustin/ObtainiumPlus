@@ -622,7 +622,8 @@ abstract class AppSource {
     Map<String, String> results = {};
     for (var e in sourceConfigSettingFormItems) {
       var val = hostChanged && !hostIdenticalDespiteAnyChange
-          ? additionalSettings[e.key]
+          ? (additionalSettings[e.key] ??
+                (e is GeneratedFormSwitch ? false : ''))
           : additionalSettings[e.key] ??
                 settingsProvider.getSettingString(e.key);
       if (val != null) {
