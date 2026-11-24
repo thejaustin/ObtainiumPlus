@@ -9,6 +9,7 @@
 ### 🎨 Design
 
 - **Clearer setting names** — Expressive motion, two-column toggles, service banners.
+- **Clearer motion switch** — No longer claims to include bouncy scrolling.
 
 ---
 
