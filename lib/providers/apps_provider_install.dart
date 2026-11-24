@@ -1368,9 +1368,10 @@ extension AppsProviderInstall on AppsProvider {
   /// option) and is treated as blocked when there is no context (background).
   Future<void> _verifyDownloadedApkSignatures(
     AppInMemory appEntry,
-    Set<String> apkHashes,
+    ApkSigningCertInfo signingInfo,
     BuildContext? context,
   ) async {
+    final apkHashes = signingInfo.hashes;
     final userHashes = parseAllowedSigningCertHashes(
       appEntry.app.settings.getStringOrNull('allowedSigningCertHashes'),
     );
@@ -1422,7 +1423,11 @@ extension AppsProviderInstall on AppsProvider {
 
     if (!settingsProvider.verifySigningCertHashes ||
         installedHashes.isEmpty ||
-        apkHashes.every(installedHashes.contains)) {
+        signingCertsMatch(
+          installedHashes: installedHashes,
+          apkHashes: apkHashes,
+          apkHasPastSigningCertificates: signingInfo.hasPastSigningCertificates,
+        )) {
       return;
     }
 
@@ -1507,9 +1512,9 @@ extension AppsProviderInstall on AppsProvider {
     if (downloadedFile == null && downloadedDir == null) return;
     // Verify the signing certificate(s) before any install attempt so a
     // mismatched or unverifiable APK never reaches the installer (#2922).
-    final apkHashes = downloadedFile != null
-        ? await apkSigningCertHashes(downloadedFile.file.path)
-        : await apkFilesSigningCertHashes(
+    final apkSigningInfo = downloadedFile != null
+        ? await apkSigningCertInfo(downloadedFile.file.path)
+        : await apkFilesSigningCertInfo(
             downloadedDir!.extracted
                 .listSync(recursive: true, followLinks: false)
                 .whereType<File>()
@@ -1522,7 +1527,7 @@ extension AppsProviderInstall on AppsProvider {
           : null;
       await _verifyDownloadedApkSignatures(
         appEntry,
-        apkHashes,
+        apkSigningInfo,
         // ignore: use_build_context_synchronously
         verificationContext,
       );
