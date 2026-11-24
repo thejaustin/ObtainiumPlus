@@ -123,6 +123,9 @@ class BackgroundUpdateService {
                     onlyCheckInstalledOrTrackOnlyApps: appsProvider
                         .updateSettings
                         .onlyCheckInstalledOrTrackOnlyApps,
+                    checkSystemDisabledApps: appsProvider
+                        .updateSettings
+                        .checkSystemDisabledApps,
                   ).map((e) => MapEntry(e, 0))
                 : <MapEntry<String, int>>[])),
       ];

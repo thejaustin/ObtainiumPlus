@@ -196,8 +196,10 @@ class AppUpdateService {
     Map<String, AppInMemory> apps, {
     DateTime? ignoreAppsCheckedAfter,
     bool onlyCheckInstalledOrTrackOnlyApps = false,
+    bool checkSystemDisabledApps = true,
   }) {
     List<String> appIds = apps.values
+        .where((app) => checkSystemDisabledApps || !app.isSystemDisabled)
         .where(
           (app) =>
               app.app.lastUpdateCheck == null ||
@@ -287,6 +289,8 @@ class AppUpdateService {
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
           onlyCheckInstalledOrTrackOnlyApps:
               updateSettings.onlyCheckInstalledOrTrackOnlyApps,
+          checkSystemDisabledApps:
+              specificIds != null || updateSettings.checkSystemDisabledApps,
         );
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();

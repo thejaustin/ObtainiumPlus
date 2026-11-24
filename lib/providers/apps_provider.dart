@@ -3044,10 +3044,12 @@ class AppsProvider with ChangeNotifier {
   List<String> getAppsSortedByUpdateCheckTime({
     DateTime? ignoreAppsCheckedAfter,
     bool onlyCheckInstalledOrTrackOnlyApps = false,
+    bool checkSystemDisabledApps = true,
   }) {
     final excludedCategories = settingsProvider.categoriesExcludedFromChecks;
     List<String> appIds = apps.values
         .where((app) => !app.app.disabled)
+        .where((app) => checkSystemDisabledApps || !app.isSystemDisabled)
         .where(
           (app) =>
               excludedCategories.isEmpty ||
@@ -3081,6 +3083,28 @@ class AppsProvider with ChangeNotifier {
     return appIds;
   }
 
+  /// Re-reads installed package info so the system-disabled state is current
+  /// before filtering (it can change while Obtainium is in the foreground).
+  Future<void> refreshInstalledInfoForChecks({
+    Future<List<PackageInfo>> Function()? fetchInstalledInfo,
+  }) async {
+    try {
+      final installed = await (fetchInstalledInfo ?? getAllInstalledInfo)();
+      final Map<String, PackageInfo> installedMap = {
+        for (final info in installed)
+          if (info.packageName != null) info.packageName!: info,
+      };
+      for (final entry in apps.entries.toList()) {
+        final fresh = installedMap[entry.key];
+        if (fresh != null) {
+          apps[entry.key] = entry.value.copyWith(installedInfo: fresh);
+        }
+      }
+    } catch (e) {
+      AppLogger.warn('Failed to refresh installed package info: $e');
+    }
+  }
+
   Future<List<App>> checkUpdates({
     DateTime? ignoreAppsCheckedAfter,
     bool throwErrorsForRetry = false,
@@ -3102,10 +3126,15 @@ class AppsProvider with ChangeNotifier {
       // counts toward the Update Health failed-checks threshold.
       final Map<String, bool> failedIds = {};
       try {
+        if (specificIds == null && !updateSettings.checkSystemDisabledApps) {
+          await refreshInstalledInfoForChecks();
+        }
         List<String> appIds = getAppsSortedByUpdateCheckTime(
           ignoreAppsCheckedAfter: ignoreAppsCheckedAfter,
           onlyCheckInstalledOrTrackOnlyApps:
               updateSettings.onlyCheckInstalledOrTrackOnlyApps,
+          checkSystemDisabledApps:
+              specificIds != null || updateSettings.checkSystemDisabledApps,
         );
         if (specificIds != null) {
           final wanted = specificIds.toSet();

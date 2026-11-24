@@ -95,6 +95,8 @@ class AppInMemory {
     return installedInfo?.signingInfo?.hasMultipleSigners ?? false;
   }
 
+  bool get isSystemDisabled => installedInfo?.applicationInfo?.enabled == false;
+
   List<String> get certificateHashes {
     final signatures = this.hasMultipleSigners
         ? installedInfo?.signingInfo?.apkContentSigners

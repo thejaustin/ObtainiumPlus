@@ -94,7 +94,8 @@ class UpdateSettingsSection extends StatelessWidget {
     final List<Widget> constraintsChildren = [
       if (_matches(tr('bgUpdateRequiresWifi')) ||
           _matches(tr('bgUpdateRequiresCharging')) ||
-          _matches(tr('onlyCheckInstalledOrTrackOnlyApps')))
+          _matches(tr('onlyCheckInstalledOrTrackOnlyApps')) ||
+          _matches(tr('checkSystemDisabledApps')))
         GenericBooleanControlGrid<UpdateSettingsProvider>(
           // The surrounding group already shows this title, except in search.
           title: isSearching ? tr('sectionDeviceOptions') : '',
@@ -123,6 +124,14 @@ class UpdateSettingsSection extends StatelessWidget {
                 description: tr('onlyCheckInstalledOrTrackOnlyAppsDescription'),
                 getValue: (s) => s.onlyCheckInstalledOrTrackOnlyApps,
                 setValue: (s, v) => s.onlyCheckInstalledOrTrackOnlyApps = v,
+              ),
+            if (_matches(tr('checkSystemDisabledApps')))
+              (
+                icon: Icons.block_outlined,
+                label: tr('checkSystemDisabledApps'),
+                description: tr('checkSystemDisabledAppsHelp'),
+                getValue: (s) => s.checkSystemDisabledApps,
+                setValue: (s, v) => s.checkSystemDisabledApps = v,
               ),
           ],
         ),
