@@ -6,6 +6,7 @@ import 'package:obtainium/utils/app_utils.dart'
 import 'package:obtainium/utils/url_validator.dart';
 import 'package:obtainium/utils/locale_utils.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
+import 'package:obtainium/utils/app_id_utils.dart';
 import 'package:home_widget/home_widget.dart';
 // Manages state related to the list of Apps tracked by Obtainium,
 // Exposes related functions such as those used to add, remove, download, and install Apps.
@@ -2356,6 +2357,13 @@ class AppsProvider with ChangeNotifier {
         logs.add('Skipped unreadable app data: $err', level: LogLevel.warning);
         continue;
       }
+      if (!isValidAppId(app.id)) {
+        logs.add(
+          'Skipped app data with unsafe ID: ${app.id}',
+          level: LogLevel.warning,
+        );
+        continue;
+      }
       String? sourceType;
       try {
         sourceType = sp
@@ -2795,6 +2803,12 @@ class AppsProvider with ChangeNotifier {
         if (attemptToCorrectInstallStatus) {
           app = getCorrectedInstallStatusAppIfPossible(app, info) ?? app;
         }
+        if (!isValidAppId(app.id)) {
+          AppLogger.warn(
+            'Refusing to write app JSON with unsafe ID: ${app.id}',
+          );
+          throw ObtainiumError(tr('invalidInput'));
+        }
         if (!onlyIfExists || this.apps.containsKey(app.id)) {
           String filePath = '$appsDirPath/${app.id}.json';
           // Unique tmp name so concurrent saves of one app can't clobber
@@ -2876,6 +2890,13 @@ class AppsProvider with ChangeNotifier {
     try {
       await Future.wait(
         appIds.map((appId) async {
+          if (!isValidAppId(appId)) {
+            AppLogger.warn(
+              'Refusing to delete files for unsafe app ID: $appId',
+            );
+            apps.remove(appId);
+            return;
+          }
           try {
             File file = File('$appsDirPath/$appId.json');
             if (file.existsSync()) {
