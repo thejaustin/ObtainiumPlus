@@ -175,3 +175,5 @@ only). #12 (full sentence-case pass) is deliberately deferred: Title Case is use
 a bulk rename adds churn for little gain; apply it to new strings only. Open: #5, #6, #7.
 #6 closed: the Developer-options row is a link to the Appearance Shapes page, not a second control;
 its section is now titled "Shape and spinner options". Open: #5, #7.
+
+Update: #5 done (master retitled "Plus enhancements"; description lists what it gates: Plus rows via hideWhenPlusOff, notification enhancements and quiet hours, system updates scanner, Plus-only visual groups; layout toggles stay visible). #7 done: rows were already grouped under "Settings page" and the hero-card rename was in place; added Visual Lab <-> Settings pointers in descriptions (strings only, no key changes).

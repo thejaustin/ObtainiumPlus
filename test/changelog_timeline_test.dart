@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:obtainium/components/changelog/changelog_parser.dart';
 import 'package:obtainium/components/changelog/changelog_timeline.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_localizations_delegates.dart';
@@ -238,6 +240,122 @@ void main() {
     expect(label(DateTime(2026, 10, 19, 12)), 'Monday');
     expect(label(DateTime(2026, 10, 2, 12)), 'October 2');
     expect(label(DateTime(2025, 6, 15, 12)), 'June 15, 2025');
+  });
+
+  testWidgets('marks the boundary with "You are here" when behind', (
+    tester,
+  ) async {
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [
+            _release('v3', '2026-10-21T20:00:00Z', '- feat: newest'),
+            _release('v2', '2026-10-21T11:00:00Z', '- fix: mine'),
+          ]
+        : [];
+    await pumpTimeline(tester, installed: '2');
+    expect(find.text('You are here'), findsOneWidget);
+    final here = tester.getTopLeft(find.text('You are here')).dy;
+    expect(tester.getTopLeft(find.text('v3').last).dy, lessThan(here));
+    expect(here, lessThan(tester.getTopLeft(find.text('v2').last).dy));
+  });
+
+  testWidgets('no marker when up to date', (tester) async {
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [_release('v3', '2026-10-21T20:00:00Z', '- feat: newest')]
+        : [];
+    await pumpTimeline(tester, installed: '3');
+    expect(find.text('You are here'), findsNothing);
+  });
+
+  testWidgets('filter chips show counts, are remembered, empty state clears', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360 * 3, 800 * 3);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [
+            _release(
+              'v3',
+              '2026-10-21T20:00:00Z',
+              '- fix: one\n- fix: two\n- feat: shiny',
+            ),
+          ]
+        : [];
+    await pumpTimeline(tester, installed: '3');
+    expect(
+      find.descendant(
+        of: find.widgetWithText(FilterChip, 'Fixes'),
+        matching: find.text('2'),
+      ),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.widgetWithText(FilterChip, 'Fixes'));
+    await tester.pump();
+    await tester.tap(find.widgetWithText(FilterChip, 'Fixes'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Shiny'), findsNothing);
+
+    // Reopen within the session: the choice is remembered.
+    await tester.pumpWidget(const SizedBox());
+    await pumpTimeline(tester, installed: '3');
+    expect(find.text('Shiny'), findsNothing);
+    expect(find.text('One'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  test('copy notes builds plain text without markdown', () {
+    final r = ChangelogRelease(
+      tag: 'v9',
+      publishedAt: null,
+      sections: [
+        ChangeSection(ChangeKind.fix, ['fix **a** `b`']),
+        ChangeSection(ChangeKind.feature, ['new thing']),
+      ],
+    );
+    expect(
+      changelogReleaseNotes(r),
+      'v9\n\nFeatures\n- new thing\n\nFixes\n- fix a b',
+    );
+  });
+
+  testWidgets('shows a skeleton while loading and a saved copy on failure', (
+    tester,
+  ) async {
+    final gate = Completer<List<Object?>>();
+    ChangelogTimeline.debugFetchPage = (_) => gate.future;
+    final prefs = await SharedPreferences.getInstance();
+    final plus = PlusSettingsProvider();
+    await plus.initializeSettings(prefs);
+    Widget app() => EasyLocalization(
+      supportedLocales: const [Locale('en')],
+      startLocale: const Locale('en'),
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      assetLoader: _MemoryAssetLoader(translations),
+      child: ChangeNotifierProvider.value(
+        value: plus,
+        child: Builder(
+          builder: (context) => MaterialApp(
+            localizationsDelegates: appLocalizationsDelegates(
+              context.localizationDelegates,
+            ),
+            locale: const Locale('en'),
+            supportedLocales: const [Locale('en')],
+            home: const Scaffold(
+              body: ChangelogTimeline(installedVersion: '1'),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(app());
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.byType(FadeTransition), findsWidgets);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    gate.complete([]);
+    await tester.pump();
   });
 
   testWidgets('shows retry when the first page fails', (tester) async {

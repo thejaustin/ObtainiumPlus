@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:http/http.dart';
 import 'package:obtainium/components/changelog/changelog_parser.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -38,6 +39,13 @@ class _ReleaseCache {
   static bool exhausted = false;
   static DateTime? fetchedAt;
 
+  /// Releases from an expired cache, kept so a failed refresh can still show
+  /// them (marked "saved copy") instead of an empty error page.
+  static List<ChangelogRelease> stale = [];
+
+  /// Kind filter chosen earlier this session; survives reopening the sheet.
+  static Set<ChangeKind> lastFilter = {};
+
   /// Bumped by [reset] so a fetch started before a reset is discarded.
   static int generation = 0;
 
@@ -51,6 +59,8 @@ class _ReleaseCache {
     nextPage = 1;
     exhausted = false;
     fetchedAt = null;
+    stale = [];
+    lastFilter = {};
     generation++;
   }
 }
@@ -115,7 +125,8 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
       widget.scrollController ?? (_ownController ??= ScrollController());
 
   _LoadState _state = _LoadState.idle;
-  final Set<ChangeKind> _filter = {};
+  final Set<ChangeKind> _filter = {..._ReleaseCache.lastFilter};
+  bool _cached = false; // showing a saved copy after a failed refresh
   final Set<String> _toggled = {}; // releases flipped from their default
   bool _showTop = false;
 
@@ -125,7 +136,11 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
   void initState() {
     super.initState();
     if (!_ReleaseCache.fresh) {
+      final old = List<ChangelogRelease>.of(_releases);
+      final keepFilter = _ReleaseCache.lastFilter;
       _ReleaseCache.reset();
+      _ReleaseCache.lastFilter = keepFilter;
+      _ReleaseCache.stale = old;
       _loadMore();
     }
   }
@@ -168,8 +183,14 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
       _ReleaseCache.nextPage = math.max(_ReleaseCache.nextPage, requested + 1);
       _ReleaseCache.fetchedAt = DateTime.now();
       if (page.length < _perPage) _ReleaseCache.exhausted = true;
+      _cached = false;
+      _ReleaseCache.stale = [];
       if (mounted) setState(() => _state = _LoadState.idle);
     } catch (_) {
+      if (_releases.isEmpty && _ReleaseCache.stale.isNotEmpty) {
+        _releases.addAll(_ReleaseCache.stale);
+        _cached = true;
+      }
       if (mounted) setState(() => _state = _LoadState.failed);
     }
   }
@@ -196,6 +217,34 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
     } else {
       _controller.jumpTo(0);
     }
+  }
+
+  static final Object _youAreHere = Object();
+
+  void _setFilter(void Function() change) {
+    setState(() {
+      change();
+      _ReleaseCache.lastFilter = {..._filter};
+    });
+  }
+
+  void _retryFresh() {
+    AppHaptics.selectionClick();
+    final keep = List<ChangelogRelease>.of(_releases);
+    _ReleaseCache.reset();
+    _ReleaseCache.stale = keep;
+    _releases.clear();
+    _loadMore();
+  }
+
+  Future<void> _copyNotes(ChangelogRelease r) async {
+    AppHaptics.selectionClick();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    await Clipboard.setData(ClipboardData(text: changelogReleaseNotes(r)));
+    if (!mounted) return;
+    messenger
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(tr('changelogNotesCopied'))));
   }
 
   bool _isInstalled(ChangelogRelease r) =>
@@ -263,13 +312,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
             _loadMore();
           },
         ),
-        _ => const Center(
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: ExpressiveCircularProgressIndicator(),
-          ),
-        ),
+        _ => _TimelineSkeleton(animsEnabled: anims, radius: radius),
       };
     }
 
@@ -280,6 +323,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
     // follow the filter. Undated releases (sorted last) get no header.
     final entries = <Object>[];
     DateTime? lastDay;
+    var sawAvailable = false, markerAdded = false;
     for (final r in shown) {
       final local = r.publishedAt?.toLocal();
       if (local != null) {
@@ -287,6 +331,11 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
         if (day != lastDay) entries.add(day);
         lastDay = day;
       }
+      if (sawAvailable && !_isAvailable(r) && !markerAdded) {
+        entries.add(_youAreHere);
+        markerAdded = true;
+      }
+      if (_isAvailable(r)) sawAvailable = true;
       entries.add(r);
     }
     final now = DateTime.now();
@@ -309,16 +358,33 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
             ),
           ),
           SliverToBoxAdapter(child: _buildFilters(context, meaningful)),
+          if (_cached)
+            SliverToBoxAdapter(child: _CachedHint(onRetry: _retryFresh)),
           if (shown.isEmpty && _state == _LoadState.idle)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(32),
-                child: Text(
-                  tr('changelogNoMatches'),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.filter_list_off_rounded,
+                      size: 32,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      tr('changelogNoMatches'),
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (_filter.isNotEmpty)
+                      TextButton(
+                        onPressed: () => _setFilter(_filter.clear),
+                        child: Text(tr('changelogFilterAll')),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -327,6 +393,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
             sliver: SliverList(
               delegate: SliverChildBuilderDelegate((context, i) {
                 final entry = entries[i];
+                if (identical(entry, _youAreHere)) return const _YouAreHere();
                 if (entry is DateTime) {
                   return _DayHeader(
                     label: changelogDayLabel(
@@ -360,6 +427,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
                   collapsible: collapsible,
                   animsEnabled: anims,
                   radius: radius,
+                  onCopy: () => _copyNotes(r),
                   onToggle: () {
                     AppHaptics.segmentTick();
                     setState(() {
@@ -410,6 +478,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
         .where((k) => all.any((r) => r.count(k) > 0))
         .toList();
     if (present.length < 2) return const SizedBox(height: 8);
+    // (a remembered filter whose kind is gone shows the empty state + "All")
     return SizedBox(
       height: 52,
       child: ListView(
@@ -422,19 +491,31 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
             showCheckmark: false,
             onSelected: (_) {
               AppHaptics.segmentTick();
-              setState(_filter.clear);
+              _setFilter(_filter.clear);
             },
           ),
           for (final k in present) ...[
             const SizedBox(width: 8),
             FilterChip(
               avatar: Icon(kindIcon(k), size: 16),
-              label: Text(kindLabel(k)),
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(kindLabel(k)),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${all.fold<int>(0, (n, r) => n + r.count(k))}',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
               selected: _filter.contains(k),
               showCheckmark: false,
               onSelected: (_) {
                 AppHaptics.segmentTick();
-                setState(() {
+                _setFilter(() {
                   if (!_filter.remove(k)) _filter.add(k);
                 });
               },
@@ -723,6 +804,7 @@ class _ReleaseRow extends StatelessWidget {
   final bool animsEnabled;
   final double radius;
   final VoidCallback onToggle;
+  final VoidCallback onCopy;
 
   const _ReleaseRow({
     super.key,
@@ -738,6 +820,7 @@ class _ReleaseRow extends StatelessWidget {
     required this.animsEnabled,
     required this.radius,
     required this.onToggle,
+    required this.onCopy,
   });
 
   @override
@@ -813,6 +896,14 @@ class _ReleaseRow extends StatelessWidget {
                       ],
                     ),
                   ),
+                  if (collapsible)
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 18),
+                      tooltip: tr('changelogCopyNotes'),
+                      visualDensity: VisualDensity.compact,
+                      color: cs.onSurfaceVariant,
+                      onPressed: onCopy,
+                    ),
                   if (collapsible)
                     AnimatedRotation(
                       turns: expanded ? 0.5 : 0,
@@ -1512,6 +1603,257 @@ class _ErrorState extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Plain-text notes for one release: tag, then each kind with its items.
+@visibleForTesting
+String changelogReleaseNotes(ChangelogRelease r) {
+  String clean(String t) => t.replaceAll('**', '').replaceAll('`', '');
+  final b = StringBuffer(r.tag);
+  for (final k in _kindOrder) {
+    final items = [
+      for (final s in r.sections)
+        if (s.kind == k) ...s.items,
+    ];
+    if (items.isEmpty) continue;
+    b.write('\n\n${kindLabel(k)}');
+    for (final i in items) {
+      b.write('\n- ${clean(i)}');
+    }
+  }
+  return b.toString();
+}
+
+/// Boundary between releases the user hasn't installed and the ones they have.
+class _YouAreHere extends StatelessWidget {
+  const _YouAreHere();
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: 44,
+      child: Stack(
+        children: [
+          PositionedDirectional(
+            start: 0,
+            top: 0,
+            bottom: 0,
+            width: _railWidth,
+            child: CustomPaint(
+              painter: _RailLinePainter(
+                color: cs.outlineVariant,
+                fromCenter: false,
+              ),
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(start: _railWidth + 8),
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: cs.tertiaryContainer,
+                        borderRadius: BorderRadius.circular(
+                          CardMetrics.pillRadius,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.my_location_rounded,
+                            size: 14,
+                            color: cs.onTertiaryContainer,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              tr('changelogYouAreHere'),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: cs.onTertiaryContainer,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      indent: 8,
+                      endIndent: 0,
+                      thickness: 2,
+                      color: cs.tertiaryContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Hint that the visible releases are a saved copy because refreshing failed.
+class _CachedHint extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _CachedHint({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      child: Row(
+        children: [
+          Icon(Icons.cloud_off_rounded, size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              tr('changelogCachedHint'),
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, size: 18),
+            tooltip: tr('retry'),
+            visualDensity: VisualDensity.compact,
+            onPressed: onRetry,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Calm placeholder rows while the first page loads; pulses only when
+/// animations are enabled.
+class _TimelineSkeleton extends StatefulWidget {
+  final bool animsEnabled;
+  final double radius;
+  const _TimelineSkeleton({required this.animsEnabled, required this.radius});
+
+  @override
+  State<_TimelineSkeleton> createState() => _TimelineSkeletonState();
+}
+
+class _TimelineSkeletonState extends State<_TimelineSkeleton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.animsEnabled) _c.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_TimelineSkeleton old) {
+    super.didUpdateWidget(old);
+    if (widget.animsEnabled && !_c.isAnimating) {
+      _c.repeat(reverse: true);
+    } else if (!widget.animsEnabled && _c.isAnimating) {
+      _c.stop();
+    }
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    Widget bar(double w, double h) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(
+        color: cs.onSurface.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(h / 2),
+      ),
+    );
+    return Semantics(
+      label: tr('loading'),
+      child: ExcludeSemantics(
+        child: FadeTransition(
+          opacity: Tween<double>(begin: 1, end: 0.45).animate(_c),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              children: [
+                for (var i = 0; i < 3; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 14,
+                          height: 14,
+                          margin: const EdgeInsets.symmetric(horizontal: 7),
+                          decoration: BoxDecoration(
+                            color: cs.onSurface.withValues(alpha: 0.08),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: ShapeDecoration(
+                              color: cs.surfaceContainerLow,
+                              shape: CardMetrics.shape(
+                                CardMetrics.card(widget.radius),
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                bar(96, 14),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    bar(48, 22),
+                                    const SizedBox(width: 6),
+                                    bar(48, 22),
+                                    const SizedBox(width: 6),
+                                    bar(48, 22),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ),
     );
