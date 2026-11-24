@@ -1813,3 +1813,8 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Already present: #3473 ABI preference (fork has its own resolver).
 - Deferred: #3470 changelog link resolution (needs App.releaseUrl model field; upstream edit is in our dead top-level app_list_tile.dart), #3460 stale cert-prompt locale text (31-file JSON conflicts), PGP key/README (#3504, upstream-specific), Flutter 3.50.1 + AGP/Kotlin bump (local SDK is 3.47.7; can't validate), skill docs/test-infra commits.
 - Version stays 1.7.3-pN until the Flutter bump and #3470 are in.
+
+## 2026-11-23 — Support link and fork/upstream link audit
+- Added `.github/FUNDING.yml` (GitHub Sponsors + Buy Me a Coffee, thejaustin), README "Support" section (also points to upstream author's Sponsors), and a Settings footer "Support" link (new key `supportDevelopment`, English placeholder in all locales).
+- Issue templates now link to our issues first, upstream issues/wiki labelled as upstream's. README PGP key relabelled as upstream-only (our builds verify via the signature hash).
+- First-run self-entry now records author `thejaustin`, name `Obtainium+`. Deliberately kept as upstream refs: wiki + crowdsourced app list links, `imranr98_obtainium_github.com` temp-id strings, ImranR98 forks in pubspec, APKMirror UA, README credits.

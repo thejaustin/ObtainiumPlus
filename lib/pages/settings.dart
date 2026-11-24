@@ -898,6 +898,12 @@ class SettingsPageState extends State<SettingsPage> {
         color: colorScheme.primary,
       ),
       _SettingsLink(
+        icon: Icons.favorite_rounded,
+        label: tr('supportDevelopment'),
+        url: 'https://github.com/sponsors/thejaustin',
+        color: colorScheme.primary,
+      ),
+      _SettingsLink(
         icon: Icons.apps_rounded,
         label: tr('crowdsourcedConfigsLabel'),
         url: 'https://apps.obtainium.imranr.dev/',

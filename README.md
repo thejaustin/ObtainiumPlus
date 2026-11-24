@@ -142,7 +142,7 @@ To ensure you have a genuine, unmodified build of Obtainium+, you can verify the
 *   **Package ID:** `dev.thejaustin.obtainiumplus`
 *   **SHA-256 Signature Hash:**
     `B3:53:60:1F:6A:1D:5F:D6:60:3A:E2:F5:0B:E8:0C:F3:01:36:7B:86:B6:AB:8B:1F:66:24:3D:A9:6C:D5:73:62`
-*   **[PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index)** (used to verify official APK hashes)
+*   **[Upstream Obtainium PGP Public Key](https://keyserver.ubuntu.com/pks/lookup?search=contact%40imranr.dev&fingerprint=on&op=index)** (verifies *upstream Obtainium's* release hashes only; Obtainium+ builds are verified with the signature hash above)
 
 ---
 
@@ -159,6 +159,12 @@ Obtainium+ is built on the shoulders of giants. We are deeply grateful to the or
 *   **[Sentry Flutter](https://pub.dev/packages/sentry_flutter):** Powers our opt-in, telemetry-free crash analytics engine.
 
 </details>
+
+---
+
+## 💛 Support
+
+Free and open source. If Obtainium+ saved you a headache, you can [sponsor on GitHub](https://github.com/sponsors/thejaustin) or [buy me a coffee](https://buymeacoffee.com/thejaustin). Obtainium+ is a fork, so please also consider supporting the original project's author, [ImranR98](https://github.com/sponsors/ImranR98).
 
 ---
 

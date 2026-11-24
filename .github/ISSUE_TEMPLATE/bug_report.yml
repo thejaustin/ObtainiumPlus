@@ -9,8 +9,8 @@ body:
       value: |
         ## Prerequisites
 
-        - Please ensure your request is not part of an [existing issue](https://github.com/ImranR98/Obtainium/issues?q=is%3Aissue%20label%3Abug).
-        - Please ensure you have checked the [Obtainium Wiki](https://wiki.obtainium.imranr.dev/).
+        - Please ensure your request is not part of an [existing issue](https://github.com/thejaustin/ObtainiumPlus/issues) (if it also happens in the original app, check [upstream Obtainium issues](https://github.com/ImranR98/Obtainium/issues) too).
+        - Please ensure you have checked the [Obtainium Wiki](https://wiki.obtainium.imranr.dev/) (maintained by upstream Obtainium).
         - Please ensure your request is an actual bug and not intended behaviour (this is frequently the case for issues involving version strings and the HTML source).
 
   - type: textarea
