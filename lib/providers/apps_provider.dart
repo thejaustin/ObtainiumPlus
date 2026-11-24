@@ -842,6 +842,13 @@ class AppsProvider with ChangeNotifier {
   final ValueNotifier<double?> refreshProgress = ValueNotifier<double?>(null);
   final ValueNotifier<int> refreshTotal = ValueNotifier<int>(0);
 
+  /// Token of the running batch check, or null when none is running.
+  CancellationToken? updateCheckCancellation;
+
+  /// Stops the running batch check: apps already being checked finish and the
+  /// rest are left for the next check.
+  void cancelUpdateCheck() => updateCheckCancellation?.cancel();
+
   /// Updates found so far by the running batch check.
   final ValueNotifier<int> refreshFound = ValueNotifier<int>(0);
   LogsProvider logs = LogsProvider();
@@ -3116,6 +3123,7 @@ class AppsProvider with ChangeNotifier {
     MultiAppMultiError errors = MultiAppMultiError();
     if (!gettingUpdates) {
       gettingUpdates = true;
+      final cancellation = updateCheckCancellation = CancellationToken();
       refreshFound.value = 0;
       notify();
       // Finished results waiting for the next periodic save.
@@ -3239,9 +3247,13 @@ class AppsProvider with ChangeNotifier {
         }
 
         Future<void> worker() async {
-          while (true) {
+          while (!cancellation.isCancelled) {
             final appId = await queue.take();
             if (appId == null) return;
+            if (cancellation.isCancelled) {
+              queue.done(appId);
+              return;
+            }
             try {
               await checkOne(appId);
             } finally {
@@ -3299,6 +3311,7 @@ class AppsProvider with ChangeNotifier {
           }
         } finally {
           gettingUpdates = false;
+          updateCheckCancellation = null;
           refreshProgress.value = null;
           refreshTotal.value = 0;
           checkingUpdateIds.clear();

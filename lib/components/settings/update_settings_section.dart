@@ -88,6 +88,23 @@ class UpdateSettingsSection extends StatelessWidget {
             },
           ),
         ),
+      if (_matches(tr('useRefreshButton')) &&
+          !context.read<SettingsProvider>().isTV)
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, updateSettings, _) => SwitchListTile.adaptive(
+            secondary: buildSettingsIconBadge(
+              context,
+              Icons.refresh_rounded,
+              active: updateSettings.useRefreshButton,
+            ),
+            title: Text(tr('useRefreshButton')),
+            value: updateSettings.useRefreshButton,
+            onChanged: (val) {
+              val ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              updateSettings.useRefreshButton = val;
+            },
+          ),
+        ),
       _buildScheduleOptions(context),
     ];
 

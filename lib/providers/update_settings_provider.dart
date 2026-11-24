@@ -126,6 +126,15 @@ class UpdateSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get useRefreshButton {
+    return prefs?.safeBool('useRefreshButton') ?? false;
+  }
+
+  set useRefreshButton(bool val) {
+    prefs?.setBool('useRefreshButton', val);
+    notifyListeners();
+  }
+
   bool get onlyCheckInstalledOrTrackOnlyApps {
     return prefs?.safeBool('onlyCheckInstalledOrTrackOnlyApps') ?? false;
   }
