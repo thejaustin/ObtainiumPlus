@@ -673,6 +673,12 @@ class _CommandCenterState extends State<CommandCenter> {
                                     app.icon!,
                                     fit: BoxFit.cover,
                                     filterQuality: FilterQuality.medium,
+                                    cacheWidth:
+                                        (40 *
+                                                MediaQuery.devicePixelRatioOf(
+                                                  context,
+                                                ))
+                                            .round(),
                                   ),
                                 )
                               : const Icon(Icons.downloading_rounded),

@@ -76,6 +76,18 @@ class AppPage extends StatefulWidget {
 }
 
 class _AppPageState extends State<AppPage> {
+  Future<void>? _iconFetch;
+  String? _iconFetchId;
+
+  /// One icon fetch per app id, not one per build.
+  Future<void> _iconFuture(AppsProvider provider, String? id) {
+    if (_iconFetch == null || _iconFetchId != id) {
+      _iconFetchId = id;
+      _iconFetch = provider.updateAppIcon(id);
+    }
+    return _iconFetch!;
+  }
+
   /// Built on first use: most users never show the web page, and creating
   /// a WebView (and loading the app's page) on every open is costly.
   WebViewController? _webViewControllerInstance;
@@ -1526,7 +1538,7 @@ class _AppPageState extends State<AppPage> {
       children: [
         const SizedBox(height: 12),
         FutureBuilder(
-          future: appsProvider.updateAppIcon(app?.app.id),
+          future: _iconFuture(appsProvider, app?.app.id),
           builder: (ctx, val) {
             final iconSize = small ? 80.0 : 120.0;
             return Row(
