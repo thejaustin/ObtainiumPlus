@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/dynamic_color_utils.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_file_handler.dart';
@@ -362,6 +363,14 @@ Future<void> _runObtainium() async {
 }
 
 Future<void> _startObtainium() async {
+  // The installed-package query is the slowest part of app sync and does not
+  // depend on anything below; start it now so phase 2 of loadApps() finds the
+  // result cached (or in flight) instead of beginning it after the tracked
+  // apps have been read.
+  unawaited(
+    AppInstallService.getAllInstalledInfo().then((_) {}, onError: (_) {}),
+  );
+
   // Fire non-critical platform & certificate setup asynchronously so it never
   // delays the first frame.
   unawaited(() async {
