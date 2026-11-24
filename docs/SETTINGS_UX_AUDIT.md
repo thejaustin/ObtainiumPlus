@@ -173,3 +173,5 @@ Material style options differ), #4 child row, #5 master-switch wording, #6 dupli
 Update: #11 jargon rewrites and the "Match system Material style" override note are done (en.json
 only). #12 (full sentence-case pass) is deliberately deferred: Title Case is used for ~100 keys and
 a bulk rename adds churn for little gain; apply it to new strings only. Open: #5, #6, #7.
+#6 closed: the Developer-options row is a link to the Appearance Shapes page, not a second control;
+its section is now titled "Shape and spinner options". Open: #5, #7.
