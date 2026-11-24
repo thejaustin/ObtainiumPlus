@@ -2188,6 +2188,9 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
             RefreshIndicator(
               key: _refreshIndicatorKey,
               onRefresh: refresh,
+              notificationPredicate: updateSettings.useRefreshButton
+                  ? (_) => false
+                  : defaultScrollNotificationPredicate,
               child: Scrollbar(
                 interactive: true,
                 controller: scrollController,
@@ -2226,6 +2229,40 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
                                 CommandCenter.show(context);
                               },
                             ),
+                          ),
+                        if (settingsProvider.isTV ||
+                            updateSettings.useRefreshButton)
+                          ValueListenableBuilder<double?>(
+                            valueListenable: context
+                                .read<AppsProvider>()
+                                .refreshProgress,
+                            builder: (context, refreshProgress, _) =>
+                                ScaleTouchWrapper(
+                                  hapticOnPressDown: true,
+                                  scaleDownFactor: 0.88,
+                                  child: refreshProgress == null
+                                      ? IconButton(
+                                          onPressed: () {
+                                            AppHaptics.selectionClick();
+                                            _refreshIndicatorKey.currentState
+                                                ?.show();
+                                          },
+                                          icon: const Icon(
+                                            Icons.refresh_rounded,
+                                          ),
+                                          tooltip: tr('refresh'),
+                                        )
+                                      : IconButton(
+                                          onPressed: () {
+                                            AppHaptics.selectionClick();
+                                            context
+                                                .read<AppsProvider>()
+                                                .cancelUpdateCheck();
+                                          },
+                                          icon: const Icon(Icons.stop_rounded),
+                                          tooltip: tr('cancel'),
+                                        ),
+                                ),
                           ),
                         if (!plusSettings.plusEnableFAB)
                           // A single InkWell handles tap+long-press on
