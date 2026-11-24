@@ -6,14 +6,17 @@ App _app({
   String? installedVersion,
   Map<String, dynamic> additionalSettings = const {},
 }) => App(
-  id: 'com.example.app',
-  url: 'https://example.com/app',
-  author: 'Author',
-  name: 'App',
-  installedVersion: installedVersion,
-  latestVersion: '2.0.0',
-  preferredApkIndex: 0,
-  additionalSettings: additionalSettings,
+  'com.example.app',
+  'https://example.com/app',
+  'Author',
+  'App',
+  installedVersion,
+  '2.0.0',
+  const [],
+  0,
+  additionalSettings,
+  null,
+  false,
 );
 
 void main() {
