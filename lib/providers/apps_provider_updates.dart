@@ -48,11 +48,21 @@ extension AppsProviderUpdates on AppsProvider {
       return null;
     }
     final SourceProvider sourceProvider = SourceProvider();
+    final source = sourceProvider.getSource(
+      currentApp.url,
+      overrideSource: currentApp.overrideSource,
+    );
+    // A source can prove with one cheap request that nothing changed; the app
+    // then only needs its check time refreshed. Single-app refreshes (detail
+    // page, manual download) always do the full check.
+    if (!includeDisabled && await source.unchangedSinceLastCheck(currentApp)) {
+      return currentApp.copyWith(
+        lastUpdateCheck: DateTime.now(),
+        consecutiveFailedChecks: 0,
+      );
+    }
     App newApp = await sourceProvider.getApp(
-      sourceProvider.getSource(
-        currentApp.url,
-        overrideSource: currentApp.overrideSource,
-      ),
+      source,
       currentApp.url,
       currentApp.additionalSettings,
       currentApp: currentApp,
@@ -64,6 +74,7 @@ extension AppsProviderUpdates on AppsProvider {
     } else if (newApp.apkUrls.isNotEmpty) {
       newApp.preferredApkIndex = 0;
     }
+    await source.recordCheckSucceeded(currentApp);
     return recordLatestVersionChange(
       currentApp,
       newApp.copyWith(consecutiveFailedChecks: 0),

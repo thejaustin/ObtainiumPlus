@@ -301,6 +301,15 @@ abstract class AppSource {
     return getLatestAPKDetails(standardUrl, additionalSettings);
   }
 
+  /// Whether a cheap request proves nothing changed since the last successful
+  /// check, so the full check can be skipped. Sources without such a request
+  /// keep the default. Must be followed by [recordCheckSucceeded] after a
+  /// full check, which lets the source remember what it saw.
+  Future<bool> unchangedSinceLastCheck(App app) async => false;
+
+  /// Called after a full check of [app] succeeded and was not skipped.
+  Future<void> recordCheckSucceeded(App app) async {}
+
   /// Optional pre-pass before a batch of update checks, allowing sources to
   /// fetch shared data once (e.g. APKMirror's batched API lookup).
   Future<void> prefetchUpdateInfo(List<App> apps) async {}

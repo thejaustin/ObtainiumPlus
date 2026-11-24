@@ -5,7 +5,9 @@ import 'dart:isolate';
 import 'package:obtainium/utils/min_update_age.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:crypto/crypto.dart';
 import 'package:http/http.dart';
+import 'package:obtainium/models/app.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/utils/string_compare.dart';
 import 'package:obtainium/components/generated_form_model.dart';
@@ -399,6 +401,115 @@ class GitHub extends AppSource {
       reset * 1000,
     );
   }
+
+  static const Duration _unchangedMaxAge = Duration(hours: 24);
+  static const String _atomStatePrefsKey = 'ghAtomState';
+
+  /// Atom ETags seen by [unchangedSinceLastCheck], waiting to be stored once
+  /// the full check that follows succeeds (so a release published in between
+  /// is never skipped).
+  static final Map<String, String> _pendingAtomEtags = {};
+
+  static String _settingsHash(Map<String, dynamic> settings) =>
+      sha1.convert(utf8.encode(jsonEncode(settings))).toString();
+
+  @visibleForTesting
+  static Future<Response> Function(String url, Map<String, String> headers)?
+  atomRequestOverride;
+
+  Future<Response> _rawRequest(
+    String url,
+    Map<String, dynamic> additionalSettings,
+    Map<String, String> extraHeaders,
+  ) => atomRequestOverride != null
+      ? atomRequestOverride!(url, extraHeaders)
+      : super.sourceRequest(
+          url,
+          additionalSettings,
+          extraHeaders: extraHeaders,
+        );
+
+  /// A 304 for the repo's release feed means nothing was published or edited
+  /// since the last full check, which costs neither API quota nor the asset
+  /// page. Falls through to a full check whenever that could hide something:
+  /// no stored state, changed settings, a failed last check, a minimum update
+  /// age (a held release becomes eligible while the feed stays identical), or
+  /// a state older than a day (assets can be attached to a release after its
+  /// feed entry last changed).
+  @override
+  Future<bool> unchangedSinceLastCheck(App app) async {
+    try {
+      final uri = Uri.tryParse(app.url);
+      if (uri == null ||
+          uri.host != hosts[0] ||
+          uri.pathSegments.length < 2 ||
+          app.consecutiveFailedChecks != 0 ||
+          app.latestVersion.isEmpty) {
+        return false;
+      }
+      final settings = Map<String, dynamic>.from(app.additionalSettings)
+        ..['skipAuth'] = true;
+      if (await effectiveMinUpdateAgeDays(settings) > 0) return false;
+      final atomUrl =
+          'https://github.com/${uri.pathSegments[0]}/${uri.pathSegments[1]}'
+          '/releases.atom';
+      final prefs = await SharedPreferences.getInstance();
+      final state = _atomState(prefs)[app.url];
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final canSkip =
+          state != null &&
+          state['hash'] == _settingsHash(app.additionalSettings) &&
+          state['etag'] is String &&
+          state['at'] is int &&
+          now >= (state['at'] as int) &&
+          now - (state['at'] as int) < _unchangedMaxAge.inMilliseconds;
+      final res = await _rawRequest(atomUrl, settings, {
+        if (canSkip) HttpHeaders.ifNoneMatchHeader: state['etag'] as String,
+      }).timeout(const Duration(seconds: 15));
+      if (res.statusCode == 304) return canSkip;
+      final etag = res.headers['etag'];
+      if (res.statusCode == 200 && etag != null && etag.isNotEmpty) {
+        _pendingAtomEtags[app.url] = etag;
+      }
+    } catch (_) {}
+    return false;
+  }
+
+  @override
+  Future<void> recordCheckSucceeded(App app) async {
+    final etag = _pendingAtomEtags.remove(app.url);
+    if (etag == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final map = _atomState(prefs);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      map[app.url] = {
+        'etag': etag,
+        'hash': _settingsHash(app.additionalSettings),
+        'at': now,
+      };
+      map.removeWhere(
+        (_, v) => v['at'] is! int || now - (v['at'] as int) > 3 * 86400000,
+      );
+      await prefs.setString(_atomStatePrefsKey, jsonEncode(map));
+    } catch (_) {}
+  }
+
+  static Map<String, Map<String, dynamic>> _atomState(SharedPreferences p) {
+    try {
+      final raw = p.getString(_atomStatePrefsKey);
+      if (raw == null) return {};
+      return {
+        for (final e in (jsonDecode(raw) as Map<String, dynamic>).entries)
+          if (e.value is Map) e.key: Map<String, dynamic>.from(e.value as Map),
+      };
+    } catch (_) {
+      return {};
+    }
+  }
+
+  @visibleForTesting
+  static void clearAtomStateForTest() => _pendingAtomEtags.clear();
 
   static const Duration _repoProbeInterval = Duration(hours: 24);
   static const String _repoProbePrefsKey = 'ghRepoProbeAt';
