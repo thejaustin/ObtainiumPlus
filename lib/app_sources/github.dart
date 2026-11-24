@@ -899,6 +899,7 @@ class GitHub extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings, {
     Function(Response)? onHttpErrorCode,
+    Future<List<dynamic>> Function(String requestUrl)? releaseListLoader,
   }) async {
     final SettingsProvider settingsProvider = SettingsProvider();
     await settingsProvider.initializeSettings();
@@ -965,12 +966,13 @@ class GitHub extends AppSource {
         throw getObtainiumHttpError(res);
       }
     }
-    final Response res = await _sourceRequestWithAuthFallback(
-      requestUrl,
-      additionalSettings,
-    );
-    if (res.statusCode == 200) {
-      final decoded = jsonDecode(res.body);
+    final Response? res = releaseListLoader == null
+        ? await _sourceRequestWithAuthFallback(requestUrl, additionalSettings)
+        : null;
+    if (releaseListLoader != null || res!.statusCode == 200) {
+      final dynamic decoded = releaseListLoader != null
+          ? await releaseListLoader(requestUrl)
+          : jsonDecode(res!.body);
       if (decoded is! List) {
         throw NoReleasesError();
       }
@@ -1261,8 +1263,9 @@ class GitHub extends AppSource {
     String standardUrl,
     Map<String, dynamic> additionalSettings,
     Future<String> Function(bool) reqUrlGenerator,
-    dynamic Function(Response)? onHttpErrorCode,
-  ) async {
+    dynamic Function(Response)? onHttpErrorCode, {
+    Future<List<dynamic>> Function(String requestUrl)? releaseListLoader,
+  }) async {
     final apiUrl = await reqUrlGenerator(false);
     if (Uri.tryParse(apiUrl)?.host == 'api.github.com') {
       final authenticated =
@@ -1284,6 +1287,7 @@ class GitHub extends AppSource {
         standardUrl,
         additionalSettings,
         onHttpErrorCode: onHttpErrorCode,
+        releaseListLoader: releaseListLoader,
       );
     } catch (err) {
       if (err is RateLimitError ||
@@ -1303,6 +1307,7 @@ class GitHub extends AppSource {
             standardUrl,
             additionalSettings,
             onHttpErrorCode: onHttpErrorCode,
+            releaseListLoader: releaseListLoader,
           );
         } catch (err2) {
           if (err2 is RateLimitError ||
