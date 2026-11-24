@@ -1807,3 +1807,9 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Hooks: `AppsProvider.uninstallApp` (live), `AppInstallService.requestBatteryOptimizationExemption(backend:)`. UI: installation_section "Privileged operations" segmented rows. New strings English-only in all locales.
 - Verified: analyze 0 errors, new unit tests, settings/translation tests, Kotlin compiles. NOT exercised on device: Shizuku/root execution (Shizuku not authorised in this session; battery exemption already granted). Root path untested.
 - Gotcha: `dart format lib` reformats unrelated files; revert them.
+
+## 2026-11-23 — Remaining upstream v1.7.x sweep
+- Ported: #3523 pseudo-version updates (3650f629f), #3531 import keeps tracked versions (0fcbdb4d7, merged with our allowIdChange hardening; test adapted to positional App ctor).
+- Already present: #3473 ABI preference (fork has its own resolver).
+- Deferred: #3470 changelog link resolution (needs App.releaseUrl model field; upstream edit is in our dead top-level app_list_tile.dart), #3460 stale cert-prompt locale text (31-file JSON conflicts), PGP key/README (#3504, upstream-specific), Flutter 3.50.1 + AGP/Kotlin bump (local SDK is 3.47.7; can't validate), skill docs/test-infra commits.
+- Version stays 1.7.3-pN until the Flutter bump and #3470 are in.
