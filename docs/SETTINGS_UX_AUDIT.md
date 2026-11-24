@@ -166,6 +166,6 @@ Fix: sentence case for all setting titles in one pass; no key changes.
 ## Status (2026-11-24)
 
 Done in this pass (strings only): cheap wins 1-3 and 5, the unreferenced keys from #2, #8 and #10
-removed from every locale, #9 closed by code check. Still open: #3 (needs a check that the two
+removed from every locale, #9 closed by code check. Also done: #4 (description no longer claims bouncy physics; Bouncy scroll stays a separate row since it is not gated by the master). Still open: #3 (needs a check that the two
 Material style options differ), #4 child row, #5 master-switch wording, #6 duplicate Shapes card,
 #7 layout grouping, #11 jargon rewrites, #12 sentence-case pass, and cheap win 4.

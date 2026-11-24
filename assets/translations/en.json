@@ -763,7 +763,7 @@
   "plusSectionInterfaceVisuals": "Interface & Visuals",
   "plusSectionOrganizationSorting": "Organization & Sorting",
   "plusEnhancedAnimations": "Expressive motion",
-  "plusEnhancedAnimationsDescription": "Enable smooth expressive transitions and bouncy physics",
+  "plusEnhancedAnimationsDescription": "Master switch for entrance, press and transition animations",
   "plusBouncyPhysics": "Bouncy scroll physics",
   "plusBouncyPhysicsDescription": "Add tactile elasticity to lists and grids",
   "plusMaterialExpressive": "Material 3 Expressive",
