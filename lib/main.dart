@@ -239,7 +239,7 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
   return event;
 }
 
-bool? _lastUsedThemeBuilder;
+(bool, bool)? _lastUsedThemeBuilder;
 
 void main() async {
   // Crash reporting was silently dropped in a May refactor (fb5a91c2) —
@@ -922,10 +922,13 @@ class _ObtainiumState extends State<Obtainium> {
           final usesThemeBuilder = themeStyle.isExpressive || matchSystemStyle;
           // The two builders emit TextStyles with different `inherit` values,
           // so fading between them throws in TextStyle.lerp. Snap instead.
+          // "Match system style" also swaps in a stock ThemeData, even when
+          // both sides use ThemeBuilder, so it counts as a builder change.
+          final builderKey = (usesThemeBuilder, matchSystemStyle);
           final snapTheme =
               _lastUsedThemeBuilder != null &&
-              _lastUsedThemeBuilder != usesThemeBuilder;
-          _lastUsedThemeBuilder = usesThemeBuilder;
+              _lastUsedThemeBuilder != builderKey;
+          _lastUsedThemeBuilder = builderKey;
           // Plain Obtainium stays pixel-faithful to upstream unless the user
           // opts into custom shapes.
           final applyShapes =
