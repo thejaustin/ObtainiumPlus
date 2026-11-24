@@ -22,6 +22,7 @@ import 'package:android_package_manager/android_package_manager.dart';
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'package:flutter/material.dart';
 import 'package:obtainium/utils/backup_crypto.dart';
 import 'package:flutter/services.dart';
@@ -2655,7 +2656,7 @@ class AppsProvider with ChangeNotifier {
             sourceType: currentApp.sourceType,
           ),
         );
-        _scheduleIconBatchNotification();
+        _scheduleIconBatchNotification(appId);
         return;
       }
     } else if (ignoreCache) {
@@ -2732,7 +2733,7 @@ class AppsProvider with ChangeNotifier {
             sourceType: currentApp.sourceType,
           ),
         );
-        _scheduleIconBatchNotification();
+        _scheduleIconBatchNotification(appId);
       } else if (apps[appId]?.installedInfo != null) {
         // Only a real attempt counts as a failure. A tile can ask before the
         // phase-2 package scan has filled installedInfo; marking that as
@@ -2747,13 +2748,21 @@ class AppsProvider with ChangeNotifier {
 
   Timer? _iconBatchTimer;
 
-  // Each icon load finishes in its own event-loop turn, so a microtask never
-  // grouped anything: every icon rebuilt the whole apps page. A short timer
-  // folds a burst of icon loads into one rebuild; at launch ~160 icons arrive
-  // over a few seconds, so a longer window means far fewer page rebuilds.
-  void _scheduleIconBatchNotification() {
-    if (_iconBatchTimer?.isActive ?? false) return;
-    _iconBatchTimer = Timer(const Duration(milliseconds: 250), () {
+  final Map<String, ValueNotifier<AppInMemory?>> _iconNotifiers = {};
+
+  /// The latest in-memory state of [appId], fired when its icon arrives.
+  /// Tiles listen to this for their icon instead of rebuilding the whole page.
+  ValueListenable<AppInMemory?> iconListenable(String appId) => _iconNotifiers
+      .putIfAbsent(appId, () => ValueNotifier<AppInMemory?>(apps[appId]));
+
+  // Each icon load finishes in its own event-loop turn. The tile showing it
+  // is updated directly; everything else that reads icons (detail page,
+  // search, widgets) gets one page-wide notification once the burst settles,
+  // instead of a full-page rebuild every few hundred ms while ~160 icons load.
+  void _scheduleIconBatchNotification([String? appId]) {
+    if (appId != null) _iconNotifiers[appId]?.value = apps[appId];
+    _iconBatchTimer?.cancel();
+    _iconBatchTimer = Timer(const Duration(milliseconds: 1200), () {
       if (!_disposed) _notifyUiOnly();
     });
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable, ValueNotifier;
 import 'dart:convert';
 import 'dart:io';
 
@@ -19,6 +20,9 @@ class _TestAppsProvider extends ChangeNotifier implements AppsProvider {
   final Set<String> checkingUpdateIds = const {};
   @override
   final Map<String, AppInMemory> apps = const {};
+  @override
+  ValueListenable<AppInMemory?> iconListenable(String appId) =>
+      ValueNotifier<AppInMemory?>(apps[appId]);
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

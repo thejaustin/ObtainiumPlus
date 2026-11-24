@@ -828,52 +828,62 @@ class _AppGridTileState extends State<AppGridTile>
                     ),
                   )
                 : null,
-            child: AnimatedSwitcher(
-              duration: Duration(
-                milliseconds: plusSettings.plusEnableEnhancedAnimations
-                    ? 350
-                    : 0,
+            child: ValueListenableBuilder<AppInMemory?>(
+              valueListenable: context.read<AppsProvider>().iconListenable(
+                widget.appInMemory.app.id,
               ),
-              switchInCurve: AppConstants.expressiveDecelerate,
-              switchOutCurve: AppConstants.expressiveAccelerate,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: Tween<double>(
-                    begin: 0.82,
-                    end: 1.0,
-                  ).animate(animation),
-                  child: child,
-                ),
-              ),
-              child: widget.appInMemory.icon != null
-                  ? ClipPath(
-                      key: ValueKey('icon_${widget.appInMemory.app.id}'),
-                      clipper: ShapeBorderClipper(
-                        shape: CardMetrics.shape(
-                          iconBorderRadius,
-                          expressive: plusSettings.plusEnableMaterialExpressive,
-                        ),
-                      ),
-                      child: Image(
-                        image: ResizeImage.resizeIfNeeded(
-                          (iconSize * MediaQuery.devicePixelRatioOf(context))
-                              .round(),
-                          (iconSize * MediaQuery.devicePixelRatioOf(context))
-                              .round(),
-                          widget.appInMemory.memoryImage ??
-                              MemoryImage(widget.appInMemory.icon!),
-                        ),
-                        fit: BoxFit.contain,
-                        gaplessPlayback: true,
-                        filterQuality: FilterQuality.medium,
-                      ),
-                    )
-                  : AppIconShimmer(
-                      key: const ValueKey('shimmer'),
-                      size: iconSize,
-                      borderRadius: iconBorderRadius,
+              builder: (context, live, _) {
+                final aim = live ?? widget.appInMemory;
+                return AnimatedSwitcher(
+                  duration: Duration(
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
+                        ? 350
+                        : 0,
+                  ),
+                  switchInCurve: AppConstants.expressiveDecelerate,
+                  switchOutCurve: AppConstants.expressiveAccelerate,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(
+                        begin: 0.82,
+                        end: 1.0,
+                      ).animate(animation),
+                      child: child,
                     ),
+                  ),
+                  child: aim.icon != null
+                      ? ClipPath(
+                          key: ValueKey('icon_${widget.appInMemory.app.id}'),
+                          clipper: ShapeBorderClipper(
+                            shape: CardMetrics.shape(
+                              iconBorderRadius,
+                              expressive:
+                                  plusSettings.plusEnableMaterialExpressive,
+                            ),
+                          ),
+                          child: Image(
+                            image: ResizeImage.resizeIfNeeded(
+                              (iconSize *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                              (iconSize *
+                                      MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                              aim.memoryImage ?? MemoryImage(aim.icon!),
+                            ),
+                            fit: BoxFit.contain,
+                            gaplessPlayback: true,
+                            filterQuality: FilterQuality.medium,
+                          ),
+                        )
+                      : AppIconShimmer(
+                          key: const ValueKey('shimmer'),
+                          size: iconSize,
+                          borderRadius: iconBorderRadius,
+                        ),
+                );
+              },
             ),
           ),
         ),

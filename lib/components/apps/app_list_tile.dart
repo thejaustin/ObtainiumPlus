@@ -258,57 +258,68 @@ class _AppListTileState extends State<AppListTile>
               blurFactor: 0.5,
             ),
           ),
-          child: AnimatedSwitcher(
-            duration: Duration(
-              milliseconds: plusSettings.plusEnableEnhancedAnimations
-                  ? 350
-                  : 180,
+          child: ValueListenableBuilder<AppInMemory?>(
+            valueListenable: context.read<AppsProvider>().iconListenable(
+              appInMemory.app.id,
             ),
-            switchInCurve: plusSettings.plusEnableEnhancedAnimations
-                ? AppConstants.expressiveDecelerate
-                : Curves.easeOut,
-            switchOutCurve: plusSettings.plusEnableEnhancedAnimations
-                ? AppConstants.expressiveAccelerate
-                : Curves.easeIn,
-            transitionBuilder: (child, animation) =>
-                plusSettings.plusEnableEnhancedAnimations
-                ? FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      scale: Tween<double>(
-                        begin: 0.82,
-                        end: 1.0,
-                      ).animate(animation),
-                      child: child,
-                    ),
-                  )
-                : FadeTransition(opacity: animation, child: child),
-            child: appInMemory.icon != null
-                ? ClipPath(
-                    key: ValueKey('icon_${appInMemory.app.id}'),
-                    clipper: ShapeBorderClipper(
-                      shape: CardMetrics.shape(
-                        itemRadius,
-                        expressive: plusSettings.plusEnableMaterialExpressive,
+            builder: (context, live, _) {
+              final aim = live ?? appInMemory;
+              return AnimatedSwitcher(
+                duration: Duration(
+                  milliseconds: plusSettings.plusEnableEnhancedAnimations
+                      ? 350
+                      : 180,
+                ),
+                switchInCurve: plusSettings.plusEnableEnhancedAnimations
+                    ? AppConstants.expressiveDecelerate
+                    : Curves.easeOut,
+                switchOutCurve: plusSettings.plusEnableEnhancedAnimations
+                    ? AppConstants.expressiveAccelerate
+                    : Curves.easeIn,
+                transitionBuilder: (child, animation) =>
+                    plusSettings.plusEnableEnhancedAnimations
+                    ? FadeTransition(
+                        opacity: animation,
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.82,
+                            end: 1.0,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      )
+                    : FadeTransition(opacity: animation, child: child),
+                child: aim.icon != null
+                    ? ClipPath(
+                        key: ValueKey('icon_${appInMemory.app.id}'),
+                        clipper: ShapeBorderClipper(
+                          shape: CardMetrics.shape(
+                            itemRadius,
+                            expressive:
+                                plusSettings.plusEnableMaterialExpressive,
+                          ),
+                        ),
+                        child: Image.memory(
+                          aim.icon!,
+                          fit: BoxFit.cover,
+                          filterQuality: FilterQuality.medium,
+                          cacheWidth:
+                              (48 * MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                          cacheHeight:
+                              (48 * MediaQuery.devicePixelRatioOf(context))
+                                  .round(),
+                        ),
+                      )
+                    : Icon(
+                        key: const ValueKey('placeholder'),
+                        Icons.apps_rounded,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.5),
                       ),
-                    ),
-                    child: Image.memory(
-                      appInMemory.icon!,
-                      fit: BoxFit.cover,
-                      filterQuality: FilterQuality.medium,
-                      cacheWidth: (48 * MediaQuery.devicePixelRatioOf(context))
-                          .round(),
-                      cacheHeight: (48 * MediaQuery.devicePixelRatioOf(context))
-                          .round(),
-                    ),
-                  )
-                : Icon(
-                    key: const ValueKey('placeholder'),
-                    Icons.apps_rounded,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.primary.withValues(alpha: 0.5),
-                  ),
+              );
+            },
           ),
         ),
       );
