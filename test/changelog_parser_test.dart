@@ -59,11 +59,11 @@ $_badge
     expect(byKind[ChangeKind.fix], ['Crash on cold start']);
     expect(byKind[ChangeKind.docs], ['Wiki links']);
     expect(byKind[ChangeKind.feature], ['Scroll-morphing FAB']);
-    // Sections come out in enum order.
+    // Stable display order: feature, perf, ui, fix, docs, other.
     expect(sections.map((s) => s.kind).toList(), [
       ChangeKind.feature,
-      ChangeKind.fix,
       ChangeKind.ui,
+      ChangeKind.fix,
       ChangeKind.docs,
     ]);
   });
@@ -101,6 +101,69 @@ void titledEntryTests() {
     final s = ChangelogParser.parse(body).single;
     expect(s.kind, ChangeKind.perf);
     expect(s.items.single, startsWith('**Quicker launch**'));
+  });
+
+  test('same kind under two headings merges into one section', () {
+    const body = '''
+### ✨ New
+- **A** — one.
+### ⚡ Faster
+- **B** — two.
+### New stuff
+- **C** — three.
+''';
+    final sections = ChangelogParser.parse(body);
+    expect(sections.map((s) => s.kind).toList(), [
+      ChangeKind.feature,
+      ChangeKind.perf,
+    ]);
+    expect(sections.first.items, hasLength(2));
+  });
+
+  test('sections are ordered feature, perf, ui, fix, other', () {
+    const body = '''
+### 🔧 Other
+- **O** — x.
+### 🐛 Fixed
+- **F** — x.
+### 🎨 Design
+- **D** — x.
+### ⚡ Faster
+- **P** — x.
+### ✨ New
+- **N** — x.
+''';
+    expect(ChangelogParser.parse(body).map((s) => s.kind).toList(), [
+      ChangeKind.feature,
+      ChangeKind.perf,
+      ChangeKind.ui,
+      ChangeKind.fix,
+      ChangeKind.other,
+    ]);
+  });
+
+  test('identical titles in one release are deduped', () {
+    const body = '''
+### ✨ New
+- **Quick launch** — a.
+### ⚡ Faster
+- **quick launch** — b.
+''';
+    final sections = ChangelogParser.parse(body);
+    expect(sections, hasLength(1));
+    expect(sections.single.items, ['**Quick launch** — a.']);
+  });
+
+  test('commit fallback strips prefix and scope and capitalises', () {
+    final s = ChangelogParser.parse('- fix(apps)!: handle empty list').single;
+    expect(s.kind, ChangeKind.fix);
+    expect(s.items, ['Handle empty list']);
+    final r = ChangelogParser.parse('- refactor(core): split cache').single;
+    expect(r.kind, ChangeKind.other);
+    expect(r.items, ['Split cache']);
+    final st = ChangelogParser.parse('- style: round chips').single;
+    expect(st.kind, ChangeKind.ui);
+    expect(st.items, ['Round chips']);
   });
 
   test('conventional perf commits are speed, not fixes', () {

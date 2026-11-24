@@ -129,7 +129,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('long releases start collapsed and expand on tap', (
+  testWidgets('older releases collapse to kind chips and expand on tap', (
     tester,
   ) async {
     final bullets = List.generate(
@@ -146,12 +146,65 @@ void main() {
     await pumpTimeline(tester, installed: '2', brightness: Brightness.light);
 
     expect(find.textContaining('2025'), findsOneWidget);
-    expect(find.text('Issue number 0'), findsOneWidget);
-    expect(find.text('Issue number 8'), findsNothing);
-    await tester.tap(find.text('Show 6 more'));
+    // Latest is expanded, the older one is only a summary chip.
+    expect(find.text('Newest thing'), findsOneWidget);
+    expect(find.text('Issue number 0'), findsNothing);
+    expect(find.text('9'), findsWidgets);
+    await tester.tap(find.text('v1'));
     await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Issue number 0'), findsOneWidget);
     expect(find.text('Issue number 8'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sections follow the fixed order; rows expand on tap at 360dp', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360 * 3, 800 * 3);
+    tester.view.devicePixelRatio = 3;
+    tester.platformDispatcher.textScaleFactorTestValue = 1.3;
+    addTearDown(tester.view.reset);
+    addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+    const longDesc =
+        'a very long description that cannot possibly fit on a single line '
+        'of a phone screen so it must be ellipsized until the row is tapped '
+        'to reveal the remaining words';
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [
+            _release(
+              'v3',
+              '2026-10-21T00:00:00Z',
+              '### Bug Fixes\n- fix: a crash on launch\n'
+                  '### New Features\n- **Shiny thing** — $longDesc (#12)\n'
+                  '- feat: Plain entry. Second sentence here',
+            ),
+          ]
+        : [];
+    await pumpTimeline(tester, installed: '3');
+
+    final feat = tester.getTopLeft(find.text('Features').last).dy;
+    final fixes = tester.getTopLeft(find.text('Fixes').last).dy;
+    expect(feat, lessThan(fixes));
+    expect(find.text('Shiny thing'), findsOneWidget);
+    expect(find.text('#12'), findsWidgets);
+    // No-headline entry: first sentence leads.
+    expect(find.text('Plain entry.'), findsOneWidget);
+
+    final desc = find.textContaining('a very long description');
+    final collapsedH = tester.getSize(desc).height;
+    await tester.tap(find.text('Shiny thing'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(tester.getSize(desc).height, greaterThan(collapsedH));
+    expect(tester.takeException(), isNull);
+  });
+
+  test('headlineAndBody uses the first sentence when no title', () {
+    expect(changelogHeadlineAndBody('Fixed it. More detail here.'), (
+      'Fixed it.',
+      'More detail here.',
+    ));
+    expect(changelogHeadlineAndBody('One liner'), ('One liner', ''));
+    expect(changelogHeadlineAndBody('**T** — body'), ('T', 'body'));
   });
 
   testWidgets('when behind, newer releases are marked available', (

@@ -158,14 +158,36 @@ class ChangelogParser {
     flushSection();
 
     final grouped = <ChangeKind, List<String>>{};
+    final seenTitles = <String>{};
     for (final (kind, text) in classified) {
-      final list = grouped.putIfAbsent(kind, () => []);
-      if (!list.contains(text)) list.add(text);
+      // Same headline twice in one release (even under different headings)
+      // is one change.
+      final key = _titleKey(text);
+      if (!seenTitles.add(key)) continue;
+      grouped.putIfAbsent(kind, () => []).add(text);
     }
     return [
-      for (final kind in ChangeKind.values)
+      for (final kind in displayOrder)
         if (grouped[kind] != null) ChangeSection(kind, grouped[kind]!),
     ];
+  }
+
+  /// Stable section order: new, speed, design, fixes, docs, other.
+  static const displayOrder = <ChangeKind>[
+    ChangeKind.feature,
+    ChangeKind.perf,
+    ChangeKind.ui,
+    ChangeKind.fix,
+    ChangeKind.docs,
+    ChangeKind.other,
+  ];
+
+  static final _boldTitle = RegExp(r'^\*\*(.+?)\*\*');
+
+  /// Case-insensitive identity of an entry: its bold title, else its text.
+  static String _titleKey(String text) {
+    final m = _boldTitle.firstMatch(text);
+    return (m?.group(1) ?? text).trim().toLowerCase();
   }
 
   /// Older notes join several commit subjects with ";" in one bullet.

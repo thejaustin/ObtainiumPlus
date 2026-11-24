@@ -19,9 +19,15 @@ import 'package:url_launcher/url_launcher_string.dart';
 const _repo = 'thejaustin/ObtainiumPlus';
 const releasesPageUrl = 'https://github.com/$_repo/releases';
 
-/// Releases with more changes than this start collapsed to a preview.
-const _collapseAbove = 5;
-const _previewCount = 3;
+/// Fixed section order inside a release.
+const _kindOrder = [
+  ChangeKind.feature,
+  ChangeKind.perf,
+  ChangeKind.ui,
+  ChangeKind.fix,
+  ChangeKind.docs,
+  ChangeKind.other,
+];
 const _perPage = 30;
 
 /// Session cache so reopening the sheet doesn't spend the unauthenticated
@@ -332,7 +338,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
                   );
                 }
                 final r = entry as ChangelogRelease;
-                final collapsible = r.changeCount > _collapseAbove;
+                final collapsible = r.changeCount > 0;
                 final defaultOpen =
                     !collapsible ||
                     r.tag == latestTag ||
@@ -488,11 +494,14 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
           children: [
             Icon(Icons.flag_rounded, size: 16, color: cs.onSurfaceVariant),
             const SizedBox(width: 6),
-            Text(
-              tr('changelogAllLoaded'),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+            Flexible(
+              child: Text(
+                tr('changelogAllLoaded'),
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
             ),
           ],
         );
@@ -738,10 +747,6 @@ class _ReleaseRow extends StatelessWidget {
     final active = isLatest || isInstalled || isNew || isAvailable;
     final node = active ? cs.primary : cs.outline;
     final r = release;
-    // A release with one kind of change shows that kind here instead of a
-    // section heading over its list.
-    final single = r.sections.length == 1 ? r.sections.single.kind : null;
-
     // The day header carries the date; rows show the time.
     final meta = [
       if (r.publishedAt != null) _time(context, r.publishedAt!),
@@ -789,21 +794,19 @@ class _ReleaseRow extends StatelessWidget {
                             ..._badges(cs),
                           ],
                         ),
-                        if (meta.isNotEmpty || single != null) ...[
+                        if (meta.isNotEmpty) ...[
                           const SizedBox(height: 4),
                           Wrap(
                             spacing: 8,
                             runSpacing: 2,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              if (single != null) _KindTag(kind: single),
-                              if (meta.isNotEmpty)
-                                Text(
-                                  meta,
-                                  style: text.labelSmall?.copyWith(
-                                    color: cs.onSurfaceVariant,
-                                  ),
+                              Text(
+                                meta,
+                                style: text.labelSmall?.copyWith(
+                                  color: cs.onSurfaceVariant,
                                 ),
+                              ),
                             ],
                           ),
                         ],
@@ -931,81 +934,79 @@ class _ReleaseRow extends StatelessWidget {
   Widget _buildBody(BuildContext context, ColorScheme cs, TextTheme text) {
     final r = release;
     if (r.sections.isEmpty) return const SizedBox(width: double.infinity);
-    var budget = expanded ? 1 << 30 : _previewCount;
+
+    // Collapsed: just icon + count chips in the fixed kind order.
+    if (!expanded) {
+      return Padding(
+        padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+        child: Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final k in _kindOrder)
+                if (r.count(k) > 0)
+                  _KindTag(kind: k, count: r.count(k), compact: true),
+            ],
+          ),
+        ),
+      );
+    }
+
     final children = <Widget>[];
-    final single = r.sections.length == 1;
-    for (final s in r.sections) {
-      if (budget <= 0) break;
-      final items = s.items.take(budget).toList();
-      budget -= items.length;
-      final (bg, fg) = _kindColors(cs, s.kind);
-      if (!single)
-        children.add(
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 2),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: ShapeDecoration(
-                    color: bg,
-                    shape: CardMetrics.shape(8),
-                  ),
-                  child: Icon(kindIcon(s.kind), size: 13, color: fg),
+    for (final k in _kindOrder) {
+      final items = [
+        for (final s in r.sections)
+          if (s.kind == k) ...s.items,
+      ];
+      if (items.isEmpty) continue;
+      final (bg, fg) = _kindColors(cs, k);
+      children.add(
+        Padding(
+          padding: EdgeInsets.only(top: children.isEmpty ? 2 : 8, bottom: 2),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: ShapeDecoration(
+                  color: bg,
+                  shape: CardMetrics.shape(8),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  kindLabel(s.kind),
+                child: Icon(kindIcon(k), size: 13, color: fg),
+              ),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  kindLabel(k),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: text.labelMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                     color: cs.onSurface,
                   ),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  '${s.items.length}',
-                  style: text.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${items.length}',
+                style: text.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ],
           ),
-        );
+        ),
+      );
       for (final item in items) {
         children.add(
-          _ChangeLine(
-            text: item,
-            dot: fg == cs.onSurfaceVariant ? cs.outline : cs.primary,
+          Padding(
+            padding: const EdgeInsetsDirectional.only(start: 24),
+            child: _ChangeLine(text: item, animsEnabled: animsEnabled),
           ),
         );
       }
     }
-    final hidden = r.changeCount - (expanded ? r.changeCount : _previewCount);
-    if (collapsible) {
-      children.add(
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: TextButton(
-            style: TextButton.styleFrom(
-              visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-            ),
-            onPressed: onToggle,
-            child: Text(
-              expanded
-                  ? tr('changelogShowLess')
-                  : tr('changelogShowMore', args: ['${hidden.clamp(0, 9999)}']),
-            ),
-          ),
-        ),
-      );
-    }
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        14,
-        single ? 2 : 0,
-        14,
-        collapsible ? 4 : 12,
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: children,
@@ -1019,37 +1020,48 @@ class _KindTag extends StatelessWidget {
   final ChangeKind kind;
   final int? count;
 
-  const _KindTag({required this.kind, this.count});
+  /// Icon + count only (collapsed release summaries).
+  final bool compact;
+
+  const _KindTag({required this.kind, this.count, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final (bg, fg) = _kindColors(cs, kind);
-    return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(5, 2, 8, 2),
-      decoration: ShapeDecoration(color: bg, shape: CardMetrics.shape(8)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(kindIcon(kind), size: 12, color: fg),
-          const SizedBox(width: 4),
-          Text(
-            kindLabel(kind),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (count != null) ...[
+    return Semantics(
+      label: '${kindLabel(kind)} ${count ?? ''}'.trim(),
+      excludeSemantics: compact,
+      child: Container(
+        padding: const EdgeInsetsDirectional.fromSTEB(5, 2, 8, 2),
+        decoration: ShapeDecoration(color: bg, shape: CardMetrics.shape(8)),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(kindIcon(kind), size: 12, color: fg),
             const SizedBox(width: 4),
-            Text(
-              '$count',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: fg.withValues(alpha: 0.75),
+            if (!compact) ...[
+              const SizedBox(width: 4),
+              Text(
+                kindLabel(kind),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
+            ],
+            if (count != null) ...[
+              const SizedBox(width: 4),
+              Text(
+                '$count',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: compact ? fg : fg.withValues(alpha: 0.75),
+                  fontWeight: compact ? FontWeight.w700 : null,
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -1127,19 +1139,26 @@ class _RailLinePainter extends CustomPainter {
       old.color != color || old.fromCenter != fromCenter;
 }
 
-/// One change, with `**bold**`, `` `code` `` and `#123` issue references
-/// rendered inline; issue references open on GitHub.
-class _ChangeLine extends StatelessWidget {
-  final String text;
-  final Color dot;
+@visibleForTesting
+(String, String) changelogHeadlineAndBody(String text) =>
+    _ChangeLine.headlineAndBody(text);
 
-  const _ChangeLine({required this.text, required this.dot});
+/// One change: a bold one-line headline over a single muted description line
+/// that expands on tap. Entries without a "**Title** — body" shape use their
+/// first sentence as the headline. `**bold**`, `` `code` `` and `#123` render
+/// inline; the first issue reference becomes a chip that opens GitHub.
+class _ChangeLine extends StatefulWidget {
+  final String text;
+  final bool animsEnabled;
+
+  const _ChangeLine({required this.text, required this.animsEnabled});
 
   static final _tokens = RegExp(r'\*\*(.+?)\*\*|`([^`]+)`|#(\d+)\b');
   static final _headline = RegExp(
     r'^\*\*([^*]+)\*\*\s*[—–:-]\s+(.+)$',
     dotAll: true,
   );
+  static final _sentenceEnd = RegExp(r'(?<=[.!?])\s+(?=\S)');
 
   /// Splits "**Title** — description" so the title can lead the entry.
   @visibleForTesting
@@ -1148,18 +1167,29 @@ class _ChangeLine extends StatelessWidget {
     return m == null ? (null, text) : (m.group(1)!.trim(), m.group(2)!.trim());
   }
 
+  /// Headline + description for display: an explicit title, else the first
+  /// sentence (the rest, if any, becomes the description).
+  @visibleForTesting
+  static (String, String) headlineAndBody(String text) {
+    final (title, body) = splitHeadline(text);
+    if (title != null) return (title, body);
+    final t = text.trim();
+    final m = _sentenceEnd.firstMatch(t);
+    if (m == null) return (t, '');
+    return (t.substring(0, m.start).trim(), t.substring(m.end).trim());
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final (headline, text) = splitHeadline(this.text);
-    final base = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      height: 1.4,
-      color: headline == null ? cs.onSurface : cs.onSurfaceVariant,
-    );
+  State<_ChangeLine> createState() => _ChangeLineState();
+}
+
+class _ChangeLineState extends State<_ChangeLine> {
+  bool _open = false;
+
+  List<InlineSpan> _spans(String text, TextStyle? base, ColorScheme cs) {
     final spans = <InlineSpan>[];
     var last = 0;
-    String? firstIssue;
-    for (final m in _tokens.allMatches(text)) {
+    for (final m in _ChangeLine._tokens.allMatches(text)) {
       if (m.start > last) {
         spans.add(TextSpan(text: text.substring(last, m.start)));
       }
@@ -1182,7 +1212,6 @@ class _ChangeLine extends StatelessWidget {
           ),
         );
       } else {
-        firstIssue ??= m.group(3);
         spans.add(
           TextSpan(
             text: '#${m.group(3)}',
@@ -1193,54 +1222,132 @@ class _ChangeLine extends StatelessWidget {
       last = m.end;
     }
     if (last < text.length) spans.add(TextSpan(text: text.substring(last)));
+    return spans;
+  }
 
-    final line = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(
-              top: 8,
-              start: 6,
-              end: 10,
-            ),
-            child: Container(
-              width: 5,
-              height: 5,
-              decoration: BoxDecoration(color: dot, shape: BoxShape.circle),
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (headline != null)
-                  Text(
-                    headline,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                    ),
-                  ),
-                Text.rich(TextSpan(style: base, children: spans)),
-              ],
-            ),
-          ),
-        ],
-      ),
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final (headline, body) = _ChangeLine.headlineAndBody(widget.text);
+    final firstIssue = _ChangeLine._tokens
+        .allMatches(widget.text)
+        .map((m) => m.group(3))
+        .whereType<String>()
+        .firstOrNull;
+
+    final headStyle = textTheme.bodyMedium?.copyWith(
+      fontWeight: FontWeight.w700,
+      height: 1.3,
+      color: cs.onSurface,
     );
-    if (firstIssue == null) return line;
+    final bodyStyle = textTheme.bodySmall?.copyWith(
+      height: 1.35,
+      color: cs.onSurfaceVariant,
+    );
+    final hasBody = body.isNotEmpty;
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(style: headStyle, children: _spans(headline, headStyle, cs)),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        if (hasBody)
+          AnimatedSize(
+            duration: Duration(milliseconds: widget.animsEnabled ? 200 : 0),
+            curve: AppConstants.expressiveDecelerate,
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: Text.rich(
+                TextSpan(
+                  style: bodyStyle,
+                  children: _spans(body, bodyStyle, cs),
+                ),
+                maxLines: _open ? null : 1,
+                overflow: _open ? TextOverflow.clip : TextOverflow.ellipsis,
+              ),
+            ),
+          ),
+      ],
+    );
+
     return InkWell(
       borderRadius: BorderRadius.circular(8),
+      onTap: hasBody
+          ? () {
+              AppHaptics.selectionClick();
+              setState(() => _open = !_open);
+            }
+          : null,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: 4, top: 4, bottom: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: content),
+            if (hasBody)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4, top: 1),
+                child: AnimatedRotation(
+                  turns: _open ? 0.5 : 0,
+                  duration: Duration(
+                    milliseconds: widget.animsEnabled ? 200 : 0,
+                  ),
+                  curve: AppConstants.expressiveDecelerate,
+                  child: Icon(
+                    Icons.expand_more_rounded,
+                    size: 18,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            if (firstIssue != null)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(start: 4),
+                child: _IssueChip(number: firstIssue),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _IssueChip extends StatelessWidget {
+  final String number;
+
+  const _IssueChip({required this.number});
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
       onTap: () {
         AppHaptics.selectionClick();
         launchUrlString(
-          'https://github.com/$_repo/issues/$firstIssue',
+          'https://github.com/$_repo/issues/$number',
           mode: LaunchMode.externalApplication,
         );
       },
-      child: line,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+        decoration: BoxDecoration(
+          color: cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+        ),
+        child: Text(
+          '#$number',
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            color: cs.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
     );
   }
 }

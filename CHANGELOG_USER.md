@@ -2,11 +2,11 @@
 
 ### ✨ New
 
-- **Easier-to-scan What's New** — each change now has a bold headline with a short description underneath, and a new "Speed" group for performance work.
+- **Scannable What's New** — Bold headlines, short descriptions, Speed group.
 
 ### 🎨 Design
 
-- **Cleaner Settings header** — removed the duplicate Obtainium+ popup button; the Obtainium+ switches stay in Settings › Advanced. The What's New button now uses a clearer icon.
+- **Cleaner Settings header** — Duplicate popup button removed, clearer icon.
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
@@ -15,161 +15,116 @@
 ## [1.7.5-p8] — 2026-11-24
 
 ### ✨ New
-- **Custom certificate pinning** — Pin your own certificates per host, turn the built-in pins off, and restore them if update checks start failing. A blocked host now gets a clear message with one-tap Restore or Turn off (from Obtainium).
-- **Disable an app without removing it** — A disabled app stays in your library, is marked "Disabled", and is skipped by update checks, "Update all" and background installs (from Obtainium).
-- **Per-app install method** — Each app can use its own installer instead of the global one (from Obtainium).
-- **Skip whole categories** — Exclude a category from update checks (from Obtainium).
-- **Smarter background rules** — "When not on Wi-Fi" and "When not charging" can be Nothing, Check only, or Check and update. Your old switches carry over (from Obtainium).
-- **Update health flags more** — Archived repositories and releases hidden by your filters now show up (from Obtainium).
-- **Android certificate store option** — A new setting, with a one-time notice when the device blocks it, as GrapheneOS does (from Obtainium).
-- **Real version history** — Expand an app to see its latest 20 releases with notes from GitHub, GitLab, Codeberg, Gitea and F-Droid, following your release-title and version filters.
-- **README in the About card** — The README tab loads the real README from GitHub, GitLab, Codeberg and Gitea/Forgejo, with working images and links.
-- **Release notes for more sources** — GitLab and Google Play (native) apps now show release notes.
-- **Visual Lab** — Developer & Diagnostics has a playground for alternative layouts, such as the settings bar at the top, a smaller header or less blur. Everything starts at the current look and can be reset.
-- **Preview options** — Off by default, under Look & motion: grouped-rows style, three new switch styles, icon morphing on toggles, haptic intensity, predictive back on settings pages, and search results that jump to their row.
+- **Certificate pinning** — Pin your own certificates per host.
+- **Disable apps** — Keep an app, skip its updates.
+- **Per-app installer** — Each app can use its own install method.
+- **Category exclusions** — Skip whole categories during update checks.
+- **Version history** — Latest 20 releases with notes per app.
+- **Real README tab** — Loads from GitHub, GitLab, Codeberg, Gitea.
 
 ### ⚡ Faster
-- **Quicker launch** — With a big library, installed-app status and the update count are ready about 4 seconds sooner. The launch check waits a moment so the app opens smoothly, and skips apps checked in the last 30 minutes.
-- **Fewer GitHub requests** — Repository info is looked up once a day per app, GitHub's Atom feed takes over before the rate limit runs out, and apps whose release feed hasn't changed are skipped (re-checked at least daily).
-- **Smoother lists** — App icons load sooner and appear one by one without redrawing the whole list, and large release lists no longer stall the screen during a big check.
-- **Faster pages** — Settings search, GitLab and F-Droid checks and App details load faster. Importing many installed apps saves in batches.
+- **Quicker launch** — Library status ready about 4 seconds sooner.
+- **Fewer GitHub requests** — Daily repo lookups, feed fallback, skipped unchanged feeds.
+- **Smoother lists** — Icons load one by one, big lists don't stall.
+- **Faster pages** — Settings search, checks and app details.
 
 ### 🎨 Design
-- **Settings in five clear sections** — Look & motion, Home & library, Updates & notifications, Install & safety, Advanced. Every setting lives in one place, with rarely used options on a "More…" page. Search still finds everything.
-- **Settings pages match** — Service Doctor, Play Store diagnostics and the multi-user diagnostic are full pages like the rest of Settings, and header buttons no longer run off narrow screens.
-- **Calmer feedback** — Toggles give one haptic per change, and turning animations off (in Obtainium+ or Android) now also stops settings, page and tab transitions.
-- **Better wording** — More of Settings is translatable, search matches descriptions in other languages, and the layout customiser shows real names instead of raw text.
+- **Five Settings sections** — Look, Home, Updates, Install, Advanced.
+- **Consistent diagnostics pages** — Full pages, headers fit narrow screens.
+- **Calmer feedback** — One haptic per toggle; animations-off respected.
+- **Translatable Settings** — More text translated, search matches descriptions.
 
 ### 🐛 Fixed
-- **Theme toggle crash** — Switching "Match system Material style" no longer crashes, including its button labels.
-- **Stuck icons** — App icons no longer stay as placeholders or on an outdated image.
-- **"Add to Obtainium" links** — Links from stores such as ShizuStore and ObtainX, and links shared from other apps, open correctly instead of "invalid input".
-- **Release notes** — Links like "CHANGELOG.md" open the file at that release, line breaks are kept, version history no longer repeats itself, and Play Store notes lose raw `<br>` tags.
-- **Wrong versions and statuses** — A tag's leading "v" is ignored, a finished Shizuku update no longer shows as pending, and apps are only marked uninstalled after a double check when Android returns an incomplete list (from Obtainium).
-- **Missing apps** — The library repairs its index if it drifts from the saved apps, so apps can't silently disappear.
-- **Installs** — On Android 9 and 10 installs no longer fail the signing check every time, and GrapheneOS no longer crashes at launch (from Obtainium).
-- **Shizuku status** — The same on every screen, "permission needed" while the prompt is open, and no stacked prompts. The multi-user diagnostic lists your profiles.
-- **Settings polish** — No red "Something went wrong" cards after scrolling tabs, Back closes the search keyboard first, and the Updates tile shows "2h", not "120h".
-- **Sign in with GitHub** — Hidden until a working login is configured. When enabled it saves the token itself and copes with slow-down and expiry.
-- **Smaller fixes** — Service Doctor opens once, the About card's web view scrolls, the Add app sheet has one drag handle, one notice about Google's sideloading changes at startup, and README links starting with "/" stay inside the repo.
+- **Theme toggle crash** — Switching Material style no longer crashes.
+- **Stuck icons** — Placeholders and stale icons fixed.
+- **Add to Obtainium links** — Store and shared links now open.
+- **Release notes** — Links, line breaks, repeats and stray tags fixed.
+- **Wrong versions** — Leading "v" ignored, stale Shizuku status cleared.
+- **Missing apps** — Library repairs itself if the index drifts.
 
 ### 🔧 Other
-- **Version detection** — Apps with "use versionCode" keep version detection on, self-hosted Gitea/Forgejo URLs with a port work, and with architecture filtering on a saved universal APK moves to the one built for your device (from Obtainium).
-- **Less startup work** — Icons that load together redraw the list once, and app-usage data loads only when you sort by last used.
+- **Version detection** — Better handling of versionCode, ports, architectures.
+- **Less startup work** — Fewer list redraws, lazy usage data.
 
 ---
 
 ## [1.7.3-p13] — 2026-11-03
 
-### 🎨 Material 3 Expressive UI & Gestures
-- **Settings Architecture & Fluid Navigation Overhaul (M3E)**:
-  - **Single Authoritative Domain Architecture**: Deduplicated settings across screens under the "Single Authoritative Home" rule. Re-categorized `removeOnExternalUninstall` into Tab 3 (App Behavior) under a unified "Library & Storage Management" group, decoupled battery optimizations into dedicated connected action cards, and cross-referenced features via lightweight connected pills instead of duplicating controls.
-  - **In-Place Seamless Sibling Switching**: Overhauled `SettingsSubpage` sibling tab navigation. Switching between sibling sections (e.g., in Appearance Hub: Themes & Colors ↔ App Tile Styling ↔ Layout & Navigation ↔ Motion & Physics) now executes in-place via an emphasized horizontal `AnimatedSwitcher` without rebuilding the route scaffold, unmounting the app bar, or flickering.
-  - **Eliminated Tab Switching Layout Jumpiness**: Configured top-anchored layout builders (`Alignment.topCenter`) and smooth scroll handling in `SettingsPage`, eliminating vertical jumps and conflicting scroll animations when switching between categories of varying height.
-  - **M3E Design Documentation**: Documented the complete Material 3 Expressive settings design specification, typography tokens, haptics hierarchy, and spatial transition models in `docs/designs/m3e_settings_architecture.md`.
-- **Settings Redesign & Hero Overview**: Redesigned the top of the Settings view with an interactive `SettingsHeroOverview` dashboard featuring live installer mode pills (`Shizuku`, `Root`, `System`), background update intervals, and 1-tap device optimization shortcuts. Added horizontal quick-topic search filter chips (`Themes`, `Shizuku`, `Swipe`, `Usage Access`, `Backups`, `Safety`) under the search bar for instant 1-tap filter navigation with tactile haptics.
-- **Stability, Leak Prevention & Crash Hardening**: Audited and resolved potential resource leaks and runtime break points:
-  - **Native Pipe Descriptor Leaks**: Explicitly closed `outputStream`, `inputStream`, and `errorStream` on spawned Shizuku and root shell processes in `MainActivity.kt`, ensuring file descriptors and buffer pipes are freed immediately upon task completion.
-  - **Unbounded Memory Cache Protection**: Applied bounded size limits and LRU eviction to `OnlineAppDatabaseService` (200 entries) and `GitHubEtagCache` (250 entries), preventing background sync from continuously expanding heap usage.
-  - **Crash-Proof JSON Deserialization**: Hardened `InstallHistoryEntry.fromJson` and `App.fromJson` to safely parse polymorphic `timestamp` fields (handling both microsecond and millisecond timestamps and `num`/`double` representations) and wrapped nested lists to prevent unhandled `TypeError` crashes.
-  - **Safe URI Parsing**: Replaced unsafe `Uri.parse()` calls with `Uri.tryParse()` in the embedded WebView controller and open registry query services, preventing fatal `FormatException` crashes on malformed URLs.
-  - **Widget Lifecycle & Listener Cleanup**: Added strict `mounted` guards in `UsageAccessCard` to prevent post-dispose `setState` calls during background lifecycle resumes, and explicitly removed animation controllers' listeners in `SwipePreviewWidget.dispose()`.
-- **Startup Time & Update/Install Acceleration (4x Target)**:
-  - **Fast App Index Cache (`apps_cache.json`)**: Consolidated app library loading into a single unified JSON index cache. Cold start now loads the entire app library in one ~5-10ms snapshot read instead of performing dozens to hundreds of separate file reads and JSON parses. The index automatically and atomically updates whenever apps are saved, updated, or removed, with automatic fallback if missing.
-  - **Multi-Tier Caching Pipeline**:
-    - **L1 In-Memory ETag Cache**: Upgraded `GitHubEtagCache` with a zero-latency in-memory L1 cache (`_l1MemoryCache`), eliminating repetitive disk reads and gzip decompression for hot update checks and release lookups.
-    - **In-Memory App Icon Cache**: Added bounded L1 memory caching for decoded app icon bytes in `AppsProvider`, preventing redundant filesystem `stat()` and `readAsBytes()` calls when scrolling or opening app details.
-    - **PackageManager Query Caching & Deduplication**: Added a memoized 10-second cache with in-flight deduplication to `AppInstallService.getAllInstalledInfo()` and in-memory package lookups to `getInstalledInfo()`, eliminating 200–500ms binder IPC round-trips across sheets, tabs, and diagnostic utilities.
-  - **Deduplicated System & File IPC**: Memoized in-flight `DeviceUtils.getAndroidInfo()` and `AppFileService.initAppDirectories()` so concurrent providers share a single platform channel invocation instead of issuing duplicate IPC queries.
-  - **Eliminated Startup Directory Scan**: Replaced the blocking disk scan of the entire icons directory in `_loadAppsPhase1()` with targeted checks for the initial 12 viewport tiles, keeping remaining tiles lazy.
-  - **Doubled Update Check Concurrency**: Increased default concurrent update checks from 3 to 6 (slider steps: `[1, 2, 4, 6, 8, 12]`) and bumped per-host check concurrency from 3 to 4, significantly accelerating batch update checks.
-  - **Progressive Shizuku Install Polling**: Replaced fixed 350ms install polling with progressive polling (120ms intervals for the first 1.2s, 300ms, then backoff), detecting landed package manager installs up to 230ms faster.
-  - **Zero-Latency Press-Down Feedback**: Removed artificial 35ms press delays in `ScaleTouchWrapper` so tactile haptic feedback (`tapDown`) fires instantly upon touch contact. Added `AnimatedScale` spring pop (1.05×) and cubic easing to all settings feature toggles.
-  - Removed redundant `_handleFirstRun` execution from the root build frame loop.
-- **In-App Usage Access Tracking & 1-Tap Shizuku Grant**: Obtainium+ can now monitor app launch recency and foreground screen time using Android's `PACKAGE_USAGE_STATS` (`AppOpsManager`). You can grant Usage Access in 1-tap directly within Obtainium+ using **Shizuku** / privileged shell without navigating through Android Settings, or use the standard Android Settings fallback. Once granted, Obtainium+ displays live "Last Used" and "Screen Time" badges on app cards and allows sorting the entire apps library by **"Last Used"** to quickly identify abandonware and prioritize active apps. Includes a dedicated `UsageAccessCard` in Developer Settings and the Device Optimization Sheet with live app tracking metrics and real-time permission status.
-- **Install & Update History Tracking**: Obtainium+ now tracks and records the exact timestamp an app was first installed and every subsequent update performed. Automatically synchronizes with Android's system `firstInstallTime` and `lastUpdateTime`, tracks the installer method (Obtainium+, Shizuku, Root, System), records version transitions, and displays the full timeline in the app overview. Apps can now also be sorted by `First Installed Date`, `Last Updated Date`, `Source`, and `Date Added` in the main list.
-- **App Description Card & Pop-Up Overhaul with Multi-Style Switching**: Completely redesigned the app description card on the app detail page and in its modal popup with live one-tap style switching between:
-  - 🚀 **Obtainium+ App Info**: Technical specifications dashboard with source provider pill, package and variant links, track-only flags, APK asset details, and rich description text.
-  - 🐙 **GitHub README**: Repository banner header, branch pill, GitHub Flavored Markdown with monospaced code blocks, tables, and anchor links.
-  - 🛍️ **Play Store**: Play Protect verification, package metrics, release chips, feature highlights, and clean store typography.
-  - 🌐 **Live Webpage**: Interactive embedded browser view with reload, SSL domain badge, and external browser shortcuts directly in the card or modal sheet.
-  - 📝 **Raw Markdown / Text**: Formatted monospaced view with live word & character counts and quick copy.
-  The legacy binary "Show Webpage in App View" toggle has been upgraded in Settings → Appearance to a segmented **"Default App Details Tab"** selector so you can choose which style opens by default. Includes theme-adaptive glassmorphism transparency, smooth spring transitions, haptic feedback on style switching, collapsible preview controls, and full-screen modal sheet with downward dismiss.
-- **ShizukuPlus-Style Swipe Gestures & Settings Sandbox**: Swiping app rows in the management list now features an exact 38% trigger threshold, 3-stage haptic feedback (threshold activate, release tick, and success confirmation), progressive icon scaling (75% to 100%), spring-animated badge pop (1.15×), and Material 3 container colors. In Settings → App Behavior, a new interactive preview sandbox lets you test swipe gestures in real time alongside an auto-animating demo row.
-- **Local App Installation & Variant Detection Hub**: When an app is installed under an alternate package name (such as ShizukuPlus drop-in `moe.shizuku.privileged.api` vs standalone `org.thejaustin.shizuku`, F-Droid, or debug variants), Obtainium+ now automatically detects the local installation on load and properly offers "Update" or "Open" instead of getting stuck on "Install". A new "Local Installation & Variants" menu allows viewing all installed builds on the device, one-tap active variant switching, and browsing all system apps to link custom installations.
-- **Parallel Apps, Insular & Dual Messenger Detection**: Local detection now inspects Android's multi-user profiles, discovering clone and parallel installations across Work Profiles (Insular, Shelter, Island), Samsung Dual Messenger, and Parallel Space (Xiaomi/OnePlus Dual Apps) alongside the main profile.
-- **Galaxy Store & Google Play Store Integration**: Added Galaxy Store (`com.sec.android.app.samsungapps`) and Google Play Store (`com.android.vending`) directly to the store chooser and automatic origin detection, showing which store an app was originally installed from.
-- **Google Play & Network Diagnostics Suite**: Added a comprehensive diagnostic tool to Developer Settings to verify microG availability, VPN IP leak protection, Aurora AAS dispenser latency and rate limits, and live FDFE endpoint handshakes.
-- **Play Store FDFE Inspector & Live Sandbox**: Interactive developer tool in Developer Settings to test and inspect any package against Google Play's protobuf endpoints, resolving version metadata, developer info, and split APK delivery URLs live with one-tap JSON export.
-- **Multi-User Environment Diagnostic Tool**: Added an on-device environment inspector in Developer Settings to view all detected user profiles (User 0 Personal, User 10 Work Profile, User 95 Dual Messenger) and package sources with one-click markdown report generation for GitHub issues.
-- **Quota-Free Online Database Queries**: Added `OnlineAppDatabaseService` and a developer toggle to query unmetered open app registries (F-Droid and IzzyOnDroid open APIs) and GitHub Atom feeds directly, avoiding exhausting GitHub's 60 req/hr unauthenticated API limit when checking for app details and releases.
-- **Swipe-Dismissible Modal Sheets & Dialogs**: App description sheets, installation conflict popups, and homescreen context submenus can now be effortlessly swiped or flicked away downwards. Added visible Material 3 drag handles, top close buttons in modal views, and barrier dismissal to avoid blocking underlying navigation.
-- **Smooth Indeterminate Progress Waves & Compact Spinners**: Fixed the wavy progress indicator to animate in a continuous, fluid cyclic loop without pausing, freezing, or jumping at the end of each cycle. Small in-button spinners now use an adaptive radius-scaled wave count to eliminate jagged vibration and flickering.
-- **Expressive Homescreen Submenus & Toggles**: Submenus and action sheets now feature Material 3 Expressive spring physics, tactile press-down scale feedback (`ScaleTouchWrapper`), and responsive haptics on toggles and menu selections.
+### ✨ New
+- **App description styles** — Switch between info, README, Play Store, web, text.
+- **Install history** — Records first install and every update.
+- **Usage access** — See app recency, grant with Shizuku.
+- **Parallel app detection** — Finds clones in work profiles, Dual Messenger.
+- **Store detection** — Galaxy Store and Google Play as install origins.
+- **Dismissible sheets** — Swipe sheets and dialogs away.
 
-### ⚡ Update Checks
-- **Asks When Another Version Is Installed**: Before installing a build of an app that's already on your phone under another package name, Obtainium+ now asks instead of quietly adding a second copy. Examples are Shizuku+ and its drop-in "Shizuku" build, or an app's F-Droid and GitHub builds. You can replace the installed build (it's uninstalled only after the new one installs), keep the installed build and pick its file from the release, or keep both. "Don't ask again" remembers Keep both for that app. Background updates no longer install a second copy without asking; they wait and tell you to choose. You can turn the question off or forget your choices in Settings → Updates & Install.
-- **Smoother Scrolling in the Apps List**: App rows no longer fade in again every time they scroll back into view (rows near the top could sit blank for up to a third of a second). The fade now plays once, when the list first opens. When an install finishes and an app moves in the list, its row moves with it instead of flashing in again, and the progress banner stays put in the short gap between one app's install and the next download instead of collapsing and reopening.
-- **Faster, More Compatible Network Requests**: Update checks now go through Android's own network stack (embedded Cronet, no Google Play Services needed). Connections are reused across a check instead of reopened for every request, Android proxy settings apply, and certificates you've installed on the device (for a self-hosted or company server) are trusted. App downloads themselves still use the previous network code for now.
-- **Cleaner Finish to Installs**: When an install finishes, the progress text on the app row fades out before the menu button fades in, instead of the two overlapping. The progress banner keeps saying "Installing" as it slides away instead of flipping to "Please wait".
-- **Smoother End of Update Checks**: The progress banner no longer vanishes in a single frame when a check finishes right after finding updates. It fills its bar and slides away.
-- **Faster "Update All"**: Each app now installs as soon as its own download finishes, while the others keep downloading. Before, nothing installed until every download was done. Obtainium+ itself and Shizuku providers still install last.
-- **Much Less Data for GitHub Checks**: GitHub apps are now checked with conditional requests, so a repo with no new release answers with an empty "not modified" reply instead of resending its whole release list (often hundreds of KB per app). With a GitHub token set, these replies also don't count against your rate limit.
+### ⚡ Faster
+- **Quicker startup** — Whole library loads from one cache.
+- **Faster update checks** — More checks run in parallel.
+- **Faster Update All** — Each app installs when its download finishes.
+- **Less GitHub data** — Unchanged repos skip the full release list.
+- **Smoother scrolling** — Rows fade in once, not repeatedly.
 
-### 🛡️ Fixes
-- **Dhizuku No Longer Mistaken for Shizuku+**: Dhizuku was treated as another version of Shizuku+, so Shizuku+ could show as installed when only Dhizuku was, and a Dhizuku download could be accepted as a Shizuku+ update. They're now kept apart.
-- **Shizuku+ Updates No Longer Fail With "App not found"**: When a Shizuku+ update's APK used the other Shizuku+ package name (its drop-in build shares stock Shizuku's), the update stopped with "App not found" after downloading. It now installs. This affected any app whose download turned out to have a related package name.
-- **Settings Redesign Pass**: Every section and card now uses one header style, one text size for settings and one icon style, so the tabs look like one app instead of several. The card repeating the tab name at the top of each tab is now a short line of text. Descriptions that were cut off after one line now show in full. Option tiles no longer cut off their labels, no longer jump when tapped, and a lone last tile fills the row. On the Advanced tab, the Obtainium+ switch and layout picker no longer sit as boxes inside a box. The update interval slider now shows its value right away instead of a blank bubble, "Use a foreground service…" is now "Reliable background checks" with the details underneath, the footer links line up, and compact mode now applies to every row the same way.
-- **Cleaner Settings**: Setting titles now share one size and tighter spacing, so they wrap less and no longer outweigh their section headers. Sections no longer repeat their own name ("Device options", "Notifications", "Automatic update rules" and "Update scheduling" each appeared twice). The concurrency sliders' descriptions moved under their titles, and "Device options" and "Update options" got their own short summaries instead of repeating a setting's text. "Related Settings" no longer links to cards already on the same page, its descriptions can now be translated, and the app is now called Obtainium+ and Shizuku+ throughout instead of "ObtainiumPlus" and "ShizukuPlus".
-- **Release Dates Settle Unclear Updates**: When version numbers can't say which release is newer (for example `1.4.0-rc1` vs `1.4.0`, or an app that switched from date-style versions like `2024.10.5` to `3.2.0`), Obtainium+ now checks when each version came out. Newer releases are offered and older ones are hidden. The app log notes what decided each hidden update.
-- **APK Architecture Labels**: When an F-Droid repo release has several APKs, the APK picker now shows which architecture each one is for, or marks it as universal.
-- **Detection Date Fix**: With "use detection date as release date" on, the first check after adding an app no longer invents a release date for a version that was already out.
-- **Silent Updates via Shizuku on Android 14+**: Apps first installed through Shizuku now claim update ownership, so later updates can install without a prompt.
-- **Fewer Fake "Updates" That Are Really Downgrades**: When an app's installed version has an extra label that its releases don't (for example `1.4.0-gplay`, `2.0.1 (201)` or `1.2.3-fdroid` against a `1.3.9` release), Obtainium+ couldn't tell which was newer and listed the older release as an update. It now compares the version numbers and stops offering older releases, and update notifications and background auto-updates skip them too.
-- **Removing an HTML Source Step or Header No Longer Breaks the Form**: Deleting an intermediate link step or a request header from an HTML-source app (Add App or app options) could replace that part of the form with an error box. It now removes just that entry, and the entries after it keep their own values.
-- **Fixed Error Pop-Ups After Failed Updates**: When an update or install started from the apps list failed, a second hidden error could follow the error message. It's gone.
-- **Backups No Longer Include Per-App Tokens Unless Asked**: Exports, including auto-exports, made without the "include credentials" option no longer contain access tokens saved on individual apps (for example, a token for a self-hosted GitHub or GitLab).
-- **Updated App Icons Show Up**: If an app's icon changes in an update, including updates made outside Obtainium+, the new icon is now loaded instead of the old cached one.
-- **No More Duplicates in the Search Sheet**: An app that's downloading or has an update is now listed once in the search sheet, instead of again under "Updates" and "Recently added". The sheet's update list also uses the same downgrade check as the apps list, so it no longer offers older releases as updates. Searching online also no longer lists apps you've already added a second time under "Discover".
+### 🎨 Design
+- **Settings redesign** — One header, text and icon style throughout.
+- **Settings hero overview** — Installer, update interval and optimization shortcuts.
+- **Smoother navigation** — No layout jumps between settings tabs.
+- **Swipe actions** — Haptic stages and clear threshold on app rows.
+- **Progress polish** — Smoother waves, spinners and finishing animations.
+
+### 🐛 Fixed
+- **Dhizuku mix-up** — No longer mistaken for Shizuku+.
+- **Shizuku+ updates** — No more "App not found" failures.
+- **Downgrade alerts** — Fewer fake updates from extra version labels.
+- **Release dates** — Settle ambiguous version comparisons.
+- **Backup tokens** — Excluded unless credentials are included.
+- **Crash hardening** — Safer parsing, fewer leaks and crashes.
+
+### 🔧 Other
+- **Diagnostics tools** — Play Store, network and multi-user checks.
+- **Online database** — Optional quota-free app registry lookups.
 
 ---
 
 ## [1.7.3-p11] — 2026-10-30
 
-### ⚡ Update Checks
-- **Faster, Lighter Checks for Large App Lists**: Checks are now spread across sources, so a long run of GitHub apps no longer holds up apps from other sites, and no single site gets more than 3 update checks at once. Results are saved in batches instead of once per app, and APKMirror data is fetched once per check.
-- **Fewer Wasted GitHub Requests**: Once GitHub's API rate limit is reached, the remaining GitHub apps go straight to the releases feed until the limit resets, instead of each one failing against the API first.
-- **Excluded Categories & Disabled Apps Are Skipped**: Batch update checks now skip apps in categories you excluded from checks, and apps with checking disabled. Before this fix, both were still checked.
-- **Failing Apps Back Off**: An app whose check fails, or that hits a rate limit, waits one full update interval before it's checked again, instead of being retried on every background run. Connection drops don't count, so those apps are retried as usual. Repeated failures now count toward Update Health's failed-checks warning, which previously never triggered.
-- **Smoother Update Progress**: The update-check bar and counter glide between steps instead of jumping, a live "N updates found" pill appears as updates turn up, and the progress strips on app tiles fade in and out. The bulk download bar also eases between steps.
+### ⚡ Faster
+- **Faster large checks** — Spread across sources, saved in batches.
+- **Rate-limit fallback** — Remaining GitHub apps use the feed.
+- **Failing app backoff** — Failed checks wait one interval.
+- **Smoother progress** — Gliding bar, live "updates found" pill.
 
-### 🎨 Polish
-- **App Font Everywhere**: Buttons, chips, segmented buttons, dialogs, snackbars, tooltips, badges, input labels, the slider value bubble and the navigation bar now use the app's font (or your chosen system font). Before this fix, they used Android's default font, so they didn't match the rest of the app.
-- **Matching Shapes in Dialogs**: The time pickers in the update schedule and quiet hours dialogs, and the GitHub token check result, now follow your corner-radius setting and Material 3 Expressive shapes.
-- **Changelog Page Width**: On tablets and unfolded foldables, the changelog page now uses the same width as Settings.
-- **Translatable Plus Features Sheet**: The Shizuku, binder benchmark, OEM guide and battery optimization rows in the Plus Features sheet can now be translated.
-- **No More Cut-Off Theme Labels**: The theme picker's first option now reads "System" instead of a truncated "Follow …", and the design style switch shows "Obtainium+" and "M3 Expressive" on one line (long-press for the full name).
-- **Translatable GitHub Token Check**: The Verify Token button and its result messages can now be translated.
+### 🎨 Design
+- **App font everywhere** — Buttons, dialogs, chips, navigation bar.
+- **Matching dialog shapes** — Pickers follow your corner radius.
+- **Tablet changelog width** — Matches Settings on wide screens.
+- **Theme labels** — No more cut-off names.
+- **More translations** — Plus Features sheet, token check.
+
+### 🐛 Fixed
+- **Skipped apps** — Excluded categories and disabled apps skipped.
 
 ---
 
 ## [1.7.3-p1] — 2026-10-27
 
-### 🔄 Upstream 1.7.2 & 1.7.3 Full Feature Parity
-- **Complete Upstream Integration** — Audited, ported, and verified all upstream features and bugfixes across commits through `v1.7.3` (`fcd1807c`).
-- **Shizuku Android 14+ Update Ownership** — Set update ownership exclusively during initial installs (`appEntry.installedInfo == null`) to avoid update failures and silent package manager rejections on Android 14+. Pinned `shizuku_apk_installer` ref `447d88a`.
-- **Global Version Trimming RegEx** — Configure a global fallback regular expression (`globalVersionExtractionRegEx` & `globalMatchGroupToUse`) in Settings to extract clean version strings across all sources without needing per-app configuration.
-- **Icon Cache Directory Resilience** — Ensured the app icon cache directory is created safely on disk, with resilient image loading and decoding fallbacks against corrupt or missing icon files.
-- **Store Source Overhauls (Samsung, Vivo, Huawei, Tencent)** — Ported metadata parsing, rate-limiting, and regional China ODS configurations across major store sources.
-- **Single-ABI F-Droid Filter** — Improved ABI filtering for F-Droid repositories with single native architecture assets.
-- **GitHub Draft Releases & RuStore Fixes** — Fixed handling of GitHub draft releases, Uptodown locale date parsing, and RuStore package downloads.
-- **App Market Discovery Intent** — Registered Android launcher market intent filters (`market://details?id=`, `market://search?q=`) for handling store URLs.
-- **Greek (el) Localization** — Added full Greek translation strings.
+### ✨ New
+- **Upstream 1.7.3 parity** — All upstream features and fixes included.
+- **Version trimming regex** — Global fallback to clean version strings.
+- **Tag editing** — From app menus and Add/Edit App.
+- **Store source updates** — Samsung, Vivo, Huawei, Tencent improved.
+- **Market links** — Handles market:// store URLs.
+- **Greek translation** — Full Greek strings added.
 
-### 🎨 Material 3 Expressive (M3E) & UX Enhancements
-- **Settings Fluid Transitions & Hero Mastheads** — Added organic M3 emphasized easing curves, subtle spatial scale transitions, and expressive header masthead cards across all settings subpages.
-- **Home & App Tile Polish** — Unified app tile typography, ensured badges, author names, and version badges never overlap, and smoothed out omnibar progress indicators.
-- **Tag Management & Modal Fixes** — Added tag editing to app context menus and the Add/Edit App flow (#340), and fixed null-safety crash during dialog dismissals (#338, #330).
+### 🎨 Design
+- **Settings transitions** — Smoother motion, expressive headers.
+- **Home tile polish** — Badges and versions no longer overlap.
+
+### 🐛 Fixed
+- **Icon cache** — Resilient to corrupt or missing icons.
+- **F-Droid ABI filter** — Single-architecture assets handled.
+- **GitHub drafts** — Draft releases, RuStore downloads fixed.
+- **Dialog crash** — Fixed when dismissing dialogs.
 
 ---
 
