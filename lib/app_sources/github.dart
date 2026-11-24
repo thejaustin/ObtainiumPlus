@@ -1036,7 +1036,7 @@ class GitHub extends AppSource {
           final latest = jsonDecode(latestRes.body);
           if (latest is Map<String, dynamic>) {
             for (final int age in minAgeDays > 0 ? [minAgeDays, 0] : [0]) {
-              targetRelease = _selectGitHubTargetRelease(
+              targetRelease = selectGitHubTargetRelease(
                 releases: [latest],
                 fallbackToOlderReleases: fallbackToOlderReleases,
                 includePrereleases: includePrereleases,
