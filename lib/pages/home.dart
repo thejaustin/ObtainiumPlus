@@ -452,6 +452,14 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
               context,
             );
           }
+        } else if (action == 'open') {
+          final targetId = uri.queryParameters['id'];
+          final AppsProvider ap = context.read<AppsProvider>();
+          await ap.waitForAppsToLoad();
+          if (targetId == null || !ap.apps.containsKey(targetId)) {
+            throw ObtainiumError(tr('appNotFound'));
+          }
+          await goToExistingApp(targetId);
         } else if (action == 'refresh') {
           final targetId = uri.queryParameters['id'];
           await appsProvider.checkUpdates(
