@@ -307,9 +307,9 @@ jobs:
             RANGE_LABEL="Recent Changes"
           fi
 
-          FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' || true)
-          FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' || true)
-          OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' || true)
+          FEATS=$(git log "$RANGE" --no-merges --grep='^feat' --pretty=format:'- %s (%h)' | sed -E 's/^- (feat|fix|perf|docs|chore|refactor|style|test|ci|build)(\([^)]*\))?!?: /- /' || true)
+          FIXES=$(git log "$RANGE" --no-merges --grep='^fix' --pretty=format:'- %s (%h)' | sed -E 's/^- (feat|fix|perf|docs|chore|refactor|style|test|ci|build)(\([^)]*\))?!?: /- /' || true)
+          OTHERS=$(git log "$RANGE" --no-merges --grep='^feat' --grep='^fix' --grep='^chore: Auto-bump' --invert-grep --pretty=format:'- %s (%h)' | sed -E 's/^- (feat|fix|perf|docs|chore|refactor|style|test|ci|build)(\([^)]*\))?!?: /- /' || true)
 
           {
             if [ -n "$USER_NOTES" ]; then
@@ -343,8 +343,18 @@ jobs:
               echo
             fi
 
-            echo "---"
-            echo "[![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google)"
+            # Badge(s) follow the Co-authored-by trailers actually in range.
+            BADGES=""
+            if git log "$RANGE" --pretty=%B | grep -qi 'co-authored-by: claude'; then
+              BADGES="[![Co-developed with Claude](https://img.shields.io/badge/Co--developed%20with-Claude-D97706?style=flat-square&logo=anthropic&logoColor=white)](https://claude.ai)"
+            fi
+            if git log "$RANGE" --pretty=%B | grep -qi 'co-authored-by: antigravity'; then
+              BADGES="$BADGES [![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?style=flat-square&logo=google&logoColor=white)](https://deepmind.google)"
+            fi
+            if [ -n "$BADGES" ]; then
+              echo "---"
+              echo "$BADGES"
+            fi
           } > release_body.md
 
       - name: Commit version bump
