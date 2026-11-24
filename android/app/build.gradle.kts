@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android Gradle plugin.
     id("dev.flutter.flutter-gradle-plugin")
 }
@@ -36,7 +37,14 @@ kotlin {
 
 android {
     namespace = "dev.thejaustin.obtainiumplus"
-    compileSdk = 37
+    // Versioned form so the SDK's minor-version directory (android-37.0) is
+    // found by tooling that installs platforms as `android-<major>.<minor>`
+    // (F-Droid's build server, GitHub runners). Requires AGP 9.1+.
+    compileSdk {
+        version = release(37) {
+            minorApiLevel = 0
+        }
+    }
     ndkVersion = "28.2.13676358"
 
     compileOptions {

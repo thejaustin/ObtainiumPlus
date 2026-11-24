@@ -1818,3 +1818,9 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Added `.github/FUNDING.yml` (GitHub Sponsors + Buy Me a Coffee, thejaustin), README "Support" section (also points to upstream author's Sponsors), and a Settings footer "Support" link (new key `supportDevelopment`, English placeholder in all locales).
 - Issue templates now link to our issues first, upstream issues/wiki labelled as upstream's. README PGP key relabelled as upstream-only (our builds verify via the signature hash).
 - First-run self-entry now records author `thejaustin`, name `Obtainium+`. Deliberately kept as upstream refs: wiki + crowdsourced app list links, `imranr98_obtainium_github.com` temp-id strings, ImranR98 forks in pubspec, APKMirror UA, README credits.
+
+## 2026-11-23 — Toolchain bump (branch chore/toolchain-3.50)
+- Flutter 3.47.9 → 3.50.1 (CI pins in build-apk/danger/release workflows), Gradle 9.4.1 → 9.5.0, AGP 8.11.1 → 9.3.1, Kotlin plugin 2.2.20 → 2.4.20, versioned `compileSdk { release(37) }`; ported from upstream 921286fb2. Upstream fe9319579 (3.47.9 pin) is superseded.
+- Kept `android.builtInKotlin=false` + standalone Kotlin plugin (cronet_http, flutter_archive, flutter_js, home_widget, sentry_flutter still apply KGP). `kotlin.jvm.target.validation.mode=warning` is needed because flutter_js pins Kotlin 1.8 vs Java 11.
+- Verified locally: analyze-live 0 errors, 964 tests pass on 3.50.1, fdroid debug APK builds (local aapt2 override still works with AGP 9.3.1), installs and launches.
+- Local SDK: second worktree `~/flutter-3.50.1` + wrapper `flutter350` (PATH `~/bin350`). Needed `glibcify` on dart-sdk/bin/{dart,dartaotruntime,dartcliruntime,dartvm} and engine/linux-arm64/{impellerc,flutter_tester,font-subset}, plus shebang patch in bin/*.sh.
