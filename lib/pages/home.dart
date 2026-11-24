@@ -359,6 +359,15 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
           if (apps is! List) throw ObtainiumError(tr('invalidInput'));
           // A link must not be able to weaken security on the apps it adds.
           final stripped = stripLinkUnsafeSettings(apps);
+          // Importing replaces tracked apps with the same ID: warn first.
+          await appsProvider.waitForAppsToLoad();
+          final conflictCount = apps
+              .whereType<Map>()
+              .map((a) => a['id'])
+              .whereType<String>()
+              .where((id) => appsProvider.apps.containsKey(id))
+              .length;
+          if (!mounted) return;
           if (await showDialog(
                 context: context,
                 builder: (BuildContext ctx) {
@@ -372,6 +381,19 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     ),
                     items: const [],
                     additionalWidgets: [
+                      if (conflictCount > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            tr(
+                              'importOverwriteWarning',
+                              args: [conflictCount.toString()],
+                            ),
+                            style: TextStyle(
+                              color: Theme.of(ctx).colorScheme.error,
+                            ),
+                          ),
+                        ),
                       for (final app in apps.whereType<Map>())
                         ListTile(
                           dense: true,
