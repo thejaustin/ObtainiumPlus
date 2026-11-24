@@ -1796,3 +1796,4 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Open: CardMetrics.card/inner/pill clamps still bound several tiles; route them through AppShapes next.
 - 2026-11-23: CardMetrics card/inner/pill clamps loosened (card 0–40, inner 0–20, pill 0–40) so the slider is honored by tiles, Settings cards, chips and floating nav; Settings search bar + SearchBar theme use AppShapes (pill/card). Device-verified at 5dp. `CardMetrics.shape` (134 call sites) still ignores corner-style family; only radius applies there.
 - 2026-11-23: CardMetrics.activeFamily (set from main theme build) makes CardMetrics.shape honour Rounded/Squircle/Bevel; device-verified with Bevel on Apps page (tiles, tabs, FAB). Omnibar search field on Apps still draws its own shape.
+- 2026-11-23: Apps omnibar clip now uses the same shape as its decoration (ClipPath+ShapeBorderClipper) so Bevel/Squircle reach the search field; device-verified. 906 tests pass.

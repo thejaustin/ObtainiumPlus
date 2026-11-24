@@ -328,8 +328,10 @@ class _OmnibarState extends State<Omnibar> {
                       ]
                     : null),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(currentRadius),
+        child: ClipPath(
+          clipper: ShapeBorderClipper(
+            shape: CardMetrics.shape(currentRadius, expressive: isM3E),
+          ),
           child: Stack(
             children: [
               // Backdrop blur clipped to the bar — must stay inside
