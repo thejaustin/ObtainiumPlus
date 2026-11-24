@@ -37,9 +37,40 @@ abstract final class AppPaddings {
   static const EdgeInsets pageHorizontal = EdgeInsets.symmetric(horizontal: 16);
   static const EdgeInsets page = EdgeInsets.fromLTRB(16, 0, 16, 0);
   static const EdgeInsets cardInner = EdgeInsets.all(16);
+  static const EdgeInsets inputContent = EdgeInsets.all(16);
+  static const EdgeInsets listOuter = EdgeInsets.fromLTRB(12, 4, 12, 4);
+  static const EdgeInsets rowHorizontal = EdgeInsets.symmetric(horizontal: 16);
+  static const EdgeInsets sectionHeader = EdgeInsets.fromLTRB(16, 24, 16, 8);
 }
 
 abstract final class AppSpacings {
+  static const double xxs = 2;
+  static const double xs = 4;
+  static const double sm = 8;
+  static const double md = 12;
+  static const double lg = 16;
+  static const double xl = 24;
+  static const double xxl = 32;
+
   static const double sectionGap = 20;
   static const double elementGap = 8;
+  static const double connectedGap = 3;
+  static const double listGap = xs;
 }
+
+abstract final class AppRadii {
+  static const double inline = 4;
+  static const double xs = 8;
+  static const double small = 12;
+  static const double medium = 16;
+  static const double fab = 20;
+  static const double large = 24;
+  static const double xlarge = 28;
+}
+
+/// The type style used for section labels.
+TextStyle? sectionHeaderTextStyle(BuildContext context) =>
+    Theme.of(context).textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.w600,
+      color: Theme.of(context).colorScheme.onSurface,
+    );

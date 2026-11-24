@@ -27,6 +27,8 @@ import 'package:obtainium/services/shizuku_status_service.dart';
 import 'package:obtainium/installers/shizuku_installer.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 import 'package:obtainium/utils/motion.dart';
+import 'package:obtainium/pages/pinned_certificates.dart';
+import 'package:obtainium/utils/nav_helper.dart';
 
 /// App installation and update settings
 class InstallationSection extends StatefulWidget {
@@ -515,7 +517,8 @@ class _InstallationSectionState extends State<InstallationSection>
             tr('androidCertStore'),
             desc: tr('androidCertStoreHelp'),
           ))
-            const _AndroidCertStoreTile(),
+            const _CertificatePinningTile(),
+          const _AndroidCertStoreTile(),
         ];
 
         final List<Widget> moreChildren = [
@@ -1176,6 +1179,34 @@ class _AndroidCertStoreTile extends StatelessWidget {
               v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
               settings.useAndroidCertStore = v;
             },
+    );
+  }
+}
+
+/// Opens the certificate pinning page (built-in and user-managed pin sets).
+class _CertificatePinningTile extends StatelessWidget {
+  const _CertificatePinningTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = context.select<SettingsProvider, bool>(
+      (s) => s.enableCertificatePinning,
+    );
+    return ListTile(
+      leading: buildSettingsIconBadge(
+        context,
+        Icons.push_pin_outlined,
+        active: enabled,
+      ),
+      title: Text(tr('certificatePinning')),
+      subtitle: Text(tr(enabled ? 'enabled' : 'disabled')),
+      trailing: const Icon(Icons.chevron_right_rounded),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          traversalEdgeBehavior: traversalEdgeBehaviorFor(context),
+          builder: (_) => const CertificatePinningPage(),
+        ),
+      ),
     );
   }
 }

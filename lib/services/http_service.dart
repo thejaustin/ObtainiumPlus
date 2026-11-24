@@ -1,5 +1,6 @@
 // HTTP client creation, streaming requests, redirect/error handling.
 
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,6 +9,7 @@ import 'package:obtainium/utils/app_utils.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:obtainium/custom_errors.dart';
+import 'package:obtainium/services/pin_store.dart';
 
 // ========================================================================
 // HttpService — HTTP client creation, streaming requests, and error mapping.
@@ -39,74 +41,36 @@ class HttpService {
     'x-requested-with',
   };
 
-  static final Map<String, Future<List<Uint8List>>> _certificatePins = {
-    'github.com': _loadCertificateFromAsset([
-      'assets/ca-certs/sectigo-pub-serv-auth-r46.crt',
-      'assets/ca-certs/sectigo-pub-serv-auth-e46.crt',
-
-      // redirects from api.github.com for obtaining release assets point to
-      // release-assets.githubusercontent.com which uses ISRG (Let's Encrypt)
-      // adding that as another section doesn't work because of
-      // HttpClient follows redirects (as intended)
-      'assets/ca-certs/isrg-root-x1.crt',
-      'assets/ca-certs/isrg-root-x2.crt',
-      'assets/ca-certs/isrg-root-ye.crt',
-      'assets/ca-certs/isrg-root-yr.crt',
-    ]),
-    'codeberg.org': _loadCertificateFromAsset([
-      'assets/ca-certs/isrg-root-x1.crt',
-      'assets/ca-certs/isrg-root-x2.crt',
-      'assets/ca-certs/isrg-root-ye.crt',
-      'assets/ca-certs/isrg-root-yr.crt',
-    ]),
-    'gitlab.com': _loadCertificateFromAsset([
-      'assets/ca-certs/sectigo-pub-serv-auth-r46.crt',
-      'assets/ca-certs/sectigo-pub-serv-auth-e46.crt',
-    ]),
-    'rustore.ru': _loadCertificateFromAsset([
-      'assets/ca-certs/harica-tls-root-2021-rsa.crt',
-      'assets/ca-certs/harica-tls-root-2021-ecc.crt',
-      'assets/ca-certs/russian-mintsifry-root.crt',
-    ]),
-  };
-
-  static Future<List<Uint8List>> _loadCertificateFromAsset(
-    List<String> assetsPath,
-  ) async {
-    final List<Uint8List> certsBytes = [];
-    for (final certPath in assetsPath) {
-      final cert = await rootBundle.load(certPath);
-      certsBytes.add(cert.buffer.asUint8List());
-    }
-    return certsBytes;
-  }
-
   static String extractRootHost(String host) {
     final parts = host.split('.');
     return parts.length > 2 ? parts.sublist(parts.length - 2).join('.') : host;
   }
 
+  static final Map<String, Future<SecurityContext>> _pinnedContexts = {};
+
+  /// Pinning applies when the request says so, else the app-wide setting.
+  static bool defaultCertificatePinning = false;
+
+  /// The trust context for [host] from the pin store (user sets and built-in
+  /// pins), or null when no pin set covers it.
   Future<SecurityContext?> _createCertPinning(String url) async {
     final uri = Uri.parse(url);
-    final host = uri.host;
-    final rootHost = extractRootHost(host);
-    if (_certificatePins.containsKey(host)) {
-      final certsBytes = await _certificatePins[host]!;
-      final securityContext = SecurityContext();
-      for (final certBytes in certsBytes) {
-        securityContext.setTrustedCertificatesBytes(certBytes);
-      }
-      return securityContext;
-    } else if (_certificatePins.containsKey(rootHost)) {
-      final certsBytes = await _certificatePins[rootHost]!;
-      final securityContext = SecurityContext();
-      for (final certBytes in certsBytes) {
-        securityContext.setTrustedCertificatesBytes(certBytes);
-      }
-      return securityContext;
-    } else {
-      return null;
-    }
+    if (uri.scheme != 'https') return null;
+    final store = PinStore.instance;
+    await store.ensureLoaded();
+    final resolved = store.resolve(uri.host);
+    if (resolved == null) return null;
+    return _pinnedContexts.putIfAbsent(
+      '${resolved.id}:${resolved.revision}',
+      () async {
+        final context = SecurityContext();
+        for (final certificate in resolved.certificates) {
+          final pem = await certificate.loadPem();
+          context.setTrustedCertificatesBytes(utf8.encode(pem));
+        }
+        return context;
+      },
+    );
   }
 
   /* Basically RuStore switched partially (and in the future it may be fully)
@@ -128,12 +92,17 @@ class HttpService {
   ) async {
     final insecure = additionalSettings['allowInsecure'] == true;
     final url = additionalSettings['url'] as String;
-    final pinning = additionalSettings['enableCertificatePinning'] == true;
+    final pinning =
+        (additionalSettings['enableCertificatePinning'] as bool?) ??
+        defaultCertificatePinning;
     SecurityContext? securityContext;
+    var pinned = false;
     final host = Uri.parse(url).host;
     if (pinning) {
       securityContext = await _createCertPinning(url);
-    } else if (extractRootHost(host) == 'rustore.ru') {
+      pinned = securityContext != null;
+    }
+    if (securityContext == null && extractRootHost(host) == 'rustore.ru') {
       securityContext = await _ruStoreWorkaroundSecurityContext();
     }
     final client = securityContext != null
@@ -142,16 +111,9 @@ class HttpService {
     client.connectionTimeout = const Duration(seconds: 30);
     if (insecure) {
       client.badCertificateCallback =
-          (X509Certificate cert, String host, int port) {
-            if (pinning &&
-                (_certificatePins.containsKey(host) ||
-                    _certificatePins.containsKey(extractRootHost(host)))) {
-              // Pinned sites (and subdomains of a pinned root) must still
-              // reject bad certificates even when insecure mode is enabled.
-              return false;
-            }
-            return true;
-          };
+          (X509Certificate cert, String host, int port) =>
+              // Pinned hosts must still reject bad certificates in insecure mode.
+              !pinned;
     }
     return client;
   }

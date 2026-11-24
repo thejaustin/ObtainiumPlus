@@ -11,6 +11,7 @@
 // memory"): cronet_http's FFI trampolines need it and crash at launch
 // without it, which no try/catch can recover from (upstream #3442).
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:cronet_http/cronet_http.dart';
@@ -19,6 +20,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
 import 'package:obtainium/services/dcl_support.dart';
+import 'package:obtainium/services/pin_store.dart';
 import 'package:obtainium/utils/source_utils.dart' show createHttpClient;
 
 typedef HttpClientResolver =
@@ -38,6 +40,11 @@ class HttpClientFactory {
   static http.Client? _cronet;
   static bool _cronetUnavailable = false;
   static bool _androidCertStoreEnabled = true;
+
+  /// The app-wide "certificate pinning" setting. Pinned hosts bypass Cronet:
+  /// it verifies with Android's store, which a pin set must not extend.
+  static bool certificatePinningEnabled = false;
+  static final Map<String, Future<http.Client>> _pinnedClients = {};
   static bool _loggedDclRestricted = false;
   static bool _loggedCertStoreDisabled = false;
   static final Map<String, Future<http.Client>> _ioClients = {};
@@ -81,6 +88,30 @@ class HttpClientFactory {
         'pinned${allowInsecure ? '-insecure' : ''}',
         () async => IOClient(createHttpClient(allowInsecure: allowInsecure)),
       );
+    }
+    if (certificatePinningEnabled && url.scheme == 'https') {
+      final store = PinStore.instance;
+      await store.ensureLoaded();
+      final resolved = store.resolve(url.host);
+      if (resolved != null) {
+        // Keyed on the set's revision so edits apply without a restart.
+        return _pinnedClients.putIfAbsent(
+          '${resolved.id}:${resolved.revision}',
+          () async {
+            final context = SecurityContext();
+            for (final certificate in resolved.certificates) {
+              context.setTrustedCertificatesBytes(
+                utf8.encode(await certificate.loadPem()),
+              );
+            }
+            return IOClient(
+              HttpClient(context: context)
+                ..connectionTimeout = const Duration(seconds: 30)
+                ..badCertificateCallback = (cert, host, port) => false,
+            );
+          },
+        );
+      }
     }
     if (allowInsecure) {
       return _ioClients.putIfAbsent('insecure', () async {

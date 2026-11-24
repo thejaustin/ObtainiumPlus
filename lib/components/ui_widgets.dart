@@ -770,6 +770,26 @@ class CardTile extends StatelessWidget {
   }
 }
 
+/// A labelled section header used to group settings, form rows and lists.
+class SectionHeader extends StatelessWidget {
+  final String label;
+  final EdgeInsetsGeometry padding;
+
+  const SectionHeader(
+    this.label, {
+    super.key,
+    this.padding = AppPaddings.sectionHeader,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding,
+      child: Text(label, style: sectionHeaderTextStyle(context)),
+    );
+  }
+}
+
 class ToggleTile extends StatelessWidget {
   final String label;
   final bool value;

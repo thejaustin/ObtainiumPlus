@@ -658,13 +658,14 @@ Future<int?> getDownloadSize(
   String url, {
   Map<String, String>? headers,
   bool allowInsecure = false,
-  bool enableCertificatePinning = false,
+  bool? enableCertificatePinning,
 }) async {
   final reqHeaders = headers ?? {};
   final Map<String, dynamic> additionalSettings = {
     'allowInsecure': allowInsecure,
     'url': url,
-    'enableCertificatePinning': enableCertificatePinning,
+    if (enableCertificatePinning != null)
+      'enableCertificatePinning': enableCertificatePinning,
   };
   final responseWithClient = await sourceRequestStreamResponse(
     'GET',

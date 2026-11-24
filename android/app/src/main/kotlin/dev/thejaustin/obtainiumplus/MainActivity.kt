@@ -32,6 +32,12 @@ import android.view.HapticFeedbackConstants
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import java.io.File
+import android.provider.MediaStore
+import android.os.Environment
+import android.content.ContentValues
+import java.security.cert.X509Certificate
+import java.security.cert.CertificateFactory
+import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.concurrent.ExecutorService
@@ -48,6 +54,8 @@ class MainActivity : FlutterActivity() {
     private companion object {
         const val EXTERNAL_INSTALL_CHANNEL = "dev.imranr.obtainium/external_install"
         const val DOCUMENT_TREE_CHANNEL = "dev.imranr.obtainium/document_tree"
+        const val CERTIFICATE_CHANNEL = "dev.imranr.obtainium/certificate"
+        const val EXPORT_FOLDER = "Obtainium"
         const val APK_MIME = "application/vnd.android.package-archive"
 
         /** Request code for tracked external-installer launches. */
@@ -310,10 +318,80 @@ class MainActivity : FlutterActivity() {
         }
         MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
+            CERTIFICATE_CHANNEL,
+        ).setMethodCallHandler { call, result ->
+            when (call.method) {
+                "parseCertificates" -> {
+                    val ders = call.argument<List<*>>("ders")
+                        ?.mapNotNull { it as? ByteArray }
+                    if (ders == null || ders.isEmpty()) {
+                        result.error("BAD_ARGS", "Missing certificate data", null)
+                    } else {
+                        runOffThread(
+                            work = { parseCertificates(ders) },
+                            onSuccess = { result.success(it) },
+                            onError = {
+                                result.error("CERT_PARSE_FAILED", it.message, null)
+                            },
+                        )
+                    }
+                }
+                else -> result.notImplemented()
+            }
+        }
+        MethodChannel(
+            flutterEngine.dartExecutor.binaryMessenger,
             DOCUMENT_TREE_CHANNEL,
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "pickDocumentTree" -> pickDocumentTree(result)
+                "exportToDownloads" -> {
+                    val name = call.argument<String>("name")
+                    val mimeType = call.argument<String>("mimeType")
+                        ?: "application/octet-stream"
+                    val bytes = call.argument<ByteArray>("bytes")
+                    if (name.isNullOrEmpty() || bytes == null) {
+                        result.error("BAD_ARGS", "Missing name or bytes", null)
+                    } else {
+                        runOffThread(
+                            work = { exportToDownloads(name, mimeType, bytes) },
+                            onSuccess = { result.success(it) },
+                            onError = { result.error("EXPORT_FAILED", it.message, null) },
+                        )
+                    }
+                }
+                "listDownloadsExports" -> runOffThread(
+                    work = { listDownloadsExports() },
+                    onSuccess = { result.success(it) },
+                    onError = { result.error("LIST_FAILED", it.message, null) },
+                )
+                "readDownloadsExport" -> {
+                    val uri = call.argument<String>("uri")
+                    if (uri.isNullOrEmpty()) {
+                        result.error("BAD_ARGS", "Missing uri", null)
+                    } else {
+                        runOffThread(
+                            work = { readDownloadsExport(uri) },
+                            onSuccess = { result.success(it) },
+                            onError = { result.error("READ_FAILED", it.message, null) },
+                        )
+                    }
+                }
+                "deleteDownloadsExport" -> {
+                    val uri = call.argument<String>("uri")
+                    if (uri.isNullOrEmpty()) {
+                        result.error("BAD_ARGS", "Missing uri", null)
+                    } else {
+                        runOffThread(
+                            work = {
+                                deleteDownloadsExport(uri)
+                                true
+                            },
+                            onSuccess = { result.success(it) },
+                            onError = { result.error("DELETE_FAILED", it.message, null) },
+                        )
+                    }
+                }
                 else -> result.notImplemented()
             }
         }
@@ -1407,6 +1485,120 @@ class MainActivity : FlutterActivity() {
      * directory loses read access after a restart (#3227).
      */
     @Suppress("DEPRECATION")
+    /** Runs [work] off the UI thread and reports through [onSuccess]/[onError]. */
+    private fun <T> runOffThread(
+        work: () -> T,
+        onSuccess: (T) -> Unit,
+        onError: (Exception) -> Unit,
+    ) {
+        Thread {
+            try {
+                val value = work()
+                runOnUiThread { onSuccess(value) }
+            } catch (e: Exception) {
+                runOnUiThread { onError(e) }
+            }
+        }.start()
+    }
+
+    /** Parses DER certificates using the platform X.509 implementation. */
+    private fun parseCertificates(ders: List<ByteArray>): List<Map<String, Any?>> {
+        val factory = CertificateFactory.getInstance("X.509")
+        return ders.map { der ->
+            val certificate = factory.generateCertificate(
+                ByteArrayInputStream(der),
+            ) as X509Certificate
+            mapOf(
+                "der" to der,
+                "subject" to certificate.subjectX500Principal.name,
+                "issuer" to certificate.issuerX500Principal.name,
+                "notBefore" to certificate.notBefore.time,
+                "notAfter" to certificate.notAfter.time,
+                "isCA" to (certificate.basicConstraints >= 0),
+            )
+        }
+    }
+
+    /**
+     * Writes [bytes] to `Downloads/Obtainium/` through MediaStore, for devices
+     * (typically TVs) without a document-tree picker. Returns the display path,
+     * or null below Android 10 where the collection API is unavailable.
+     */
+    private fun exportToDownloads(name: String, mimeType: String, bytes: ByteArray): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+            put(
+                MediaStore.MediaColumns.RELATIVE_PATH,
+                "${Environment.DIRECTORY_DOWNLOADS}/$EXPORT_FOLDER",
+            )
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+        val uri = contentResolver.insert(collection, values)
+            ?: throw IllegalStateException("MediaStore insert failed")
+        try {
+            contentResolver.openOutputStream(uri)?.use { it.write(bytes) }
+                ?: throw IllegalStateException("MediaStore openOutputStream failed")
+        } catch (e: Exception) {
+            contentResolver.delete(uri, null, null)
+            throw e
+        }
+        values.clear()
+        values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+        contentResolver.update(uri, values, null, null)
+        return "${Environment.DIRECTORY_DOWNLOADS}/$EXPORT_FOLDER/$name"
+    }
+
+    /** Lists exports previously written to `Downloads/Obtainium/`. */
+    private fun listDownloadsExports(): List<Map<String, Any>> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return emptyList()
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val projection = arrayOf(
+            MediaStore.MediaColumns._ID,
+            MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.DATE_MODIFIED,
+        )
+        val selection = "${MediaStore.MediaColumns.RELATIVE_PATH} LIKE ?"
+        val args = arrayOf("${Environment.DIRECTORY_DOWNLOADS}/$EXPORT_FOLDER%")
+        val exports = ArrayList<Map<String, Any>>()
+        contentResolver.query(
+            collection,
+            projection,
+            selection,
+            args,
+            "${MediaStore.MediaColumns.DATE_MODIFIED} DESC",
+        )?.use { cursor ->
+            while (cursor.moveToNext()) {
+                val name = cursor.getString(1) ?: continue
+                val modifiedSeconds = cursor.getLong(2)
+                exports.add(
+                    mapOf(
+                        "uri" to ContentUris.withAppendedId(collection, cursor.getLong(0)).toString(),
+                        "name" to name,
+                        "date" to modifiedSeconds * 1000,
+                    ),
+                )
+            }
+        }
+        return exports
+    }
+
+    private fun readDownloadsExport(uri: String): ByteArray? =
+        contentResolver.openInputStream(Uri.parse(uri))?.use { it.readBytes() }
+
+    private fun deleteDownloadsExport(uri: String) {
+        contentResolver.delete(Uri.parse(uri), null, null)
+    }
+
+    /**
+     * Opens the system folder picker requesting read+write persistable access.
+     * shared_storage can only request one of the two, so a persisted export
+     * directory loses read access after a restart (#3227).
+     */
+    @Suppress("DEPRECATION")
+
     private fun pickDocumentTree(methodResult: MethodChannel.Result) {
         if (pendingDocumentTreeResult != null) {
             methodResult.error("BUSY", "A folder picker is already open", null)

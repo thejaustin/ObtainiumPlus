@@ -18,6 +18,7 @@ import 'package:obtainium/providers/source_provider.dart';
 import 'package:obtainium/services/app_file_service.dart';
 import 'package:obtainium/services/dcl_support.dart';
 import 'package:obtainium/services/http_client_factory.dart';
+import 'package:obtainium/services/http_service.dart';
 import 'package:obtainium/utils/device_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -134,6 +135,7 @@ class SettingsProvider with ChangeNotifier {
     prefs = existingPrefs ?? prefs ?? await SharedPreferences.getInstance();
     AppLogger.verbose = enableDeepLogging;
     HttpClientFactory.setAndroidCertStoreEnabled(useAndroidCertStore);
+    _applyCertificatePinning(enableCertificatePinning);
 
     final secureFuture = _loadSecureSettings();
     if (deferSecureStorage) {
@@ -675,7 +677,13 @@ class SettingsProvider with ChangeNotifier {
 
   set enableCertificatePinning(bool enableCertificatePinning) {
     prefs?.setBool('enableCertificatePinning', enableCertificatePinning);
+    _applyCertificatePinning(enableCertificatePinning);
     notifyListeners();
+  }
+
+  void _applyCertificatePinning(bool enabled) {
+    HttpClientFactory.certificatePinningEnabled = enabled;
+    HttpService.defaultCertificatePinning = enabled;
   }
 
   bool get bgUpdatesOnWiFiOnly {
