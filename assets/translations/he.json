@@ -2011,5 +2011,6 @@
     "privilegedOpBattery": "Battery optimisation exemption",
     "privilegedOpBatteryDesc": "Lets Obtainium+ run background update checks reliably without asking each time.",
     "privilegedBackendSystem": "System",
-    "privilegedBackendAuto": "Auto"
+    "privilegedBackendAuto": "Auto",
+    "batteryExemptionGranted": "Battery exemption granted"
 }

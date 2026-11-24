@@ -1036,7 +1036,7 @@ class MainActivity : FlutterActivity() {
         fun fail(status: String) = mapOf<String, Any?>("ok" to false, "status" to status, "backend" to backend)
         if (!privilegedPackageRegex.matches(pkg)) return fail("INVALID_PACKAGE")
         val argv: Array<String> = when (op) {
-            "uninstall" -> arrayOf("pm", "uninstall", pkg)
+            "uninstall" -> arrayOf("pm", "uninstall", "--user", "current", pkg)
             "batteryWhitelist" -> {
                 if (pkg != packageName) return fail("INVALID_PACKAGE")
                 arrayOf("cmd", "deviceidle", "whitelist", "+$pkg")

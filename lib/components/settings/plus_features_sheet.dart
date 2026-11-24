@@ -382,13 +382,22 @@ class _PlusFeaturesSheetContentState extends State<PlusFeaturesSheetContent> {
                   ),
                   subtitle: Text(tr('batteryOptimizationExemptionDescription')),
                   trailing: const Icon(Icons.open_in_new_rounded, size: 18),
-                  onTap: () {
+                  onTap: () async {
                     AppHaptics.lightImpact();
-                    AppInstallService.requestBatteryOptimizationExemption(
-                      backend: context
-                          .read<SettingsProvider>()
-                          .privilegedBackendFor(PrivilegedOp.batteryWhitelist),
-                    );
+                    final messenger = ScaffoldMessenger.of(context);
+                    final done =
+                        await AppInstallService.requestBatteryOptimizationExemption(
+                          backend: context
+                              .read<SettingsProvider>()
+                              .privilegedBackendFor(
+                                PrivilegedOp.batteryWhitelist,
+                              ),
+                        );
+                    if (done) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text(tr('batteryExemptionGranted'))),
+                      );
+                    }
                   },
                 ),
               ],

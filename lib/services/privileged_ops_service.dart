@@ -11,6 +11,13 @@ List<String> privilegedCandidates(PrivilegedBackend pref) => switch (pref) {
   PrivilegedBackend.root => const ['root'],
 };
 
+/// Default backend per operation. Uninstall stays on the system dialog (it is
+/// destructive); the battery exemption only affects this app, so it is auto.
+PrivilegedBackend privilegedDefault(PrivilegedOp op) =>
+    op == PrivilegedOp.batteryWhitelist
+    ? PrivilegedBackend.auto
+    : PrivilegedBackend.system;
+
 /// Runs system operations through Shizuku or root, as the user chose. The
 /// native side only accepts a fixed allowlist of operations, so no shell text
 /// ever crosses this channel.

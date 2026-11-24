@@ -8,6 +8,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_storage/shared_storage.dart' as saf;
 import 'package:obtainium/models/settings_enums.dart';
+import 'package:obtainium/services/privileged_ops_service.dart';
 import 'package:obtainium/providers/settings_provider.dart';
 
 class BehaviorSettingsProvider with ChangeNotifier {
@@ -53,19 +54,12 @@ class BehaviorSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Backend preference for [op]. Uninstall defaults to the system dialog
-  /// (it is destructive); the battery exemption only affects this app, so it
-  /// defaults to auto.
-  PrivilegedBackend privilegedBackendFor(PrivilegedOp op) {
-    final fallback = op == PrivilegedOp.batteryWhitelist
-        ? PrivilegedBackend.auto
-        : PrivilegedBackend.system;
-    return prefs?.safeEnum(
-          'privilegedBackend_${op.name}',
-          PrivilegedBackend.values,
-        ) ??
-        fallback;
-  }
+  PrivilegedBackend privilegedBackendFor(PrivilegedOp op) =>
+      prefs?.safeEnum(
+        'privilegedBackend_${op.name}',
+        PrivilegedBackend.values,
+      ) ??
+      privilegedDefault(op);
 
   void setPrivilegedBackend(PrivilegedOp op, PrivilegedBackend backend) {
     prefs?.setInt('privilegedBackend_${op.name}', backend.index);
