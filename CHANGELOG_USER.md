@@ -1,5 +1,11 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.5-p10] — 2026-11-24
+
 ### ✨ New
 
 - **Scannable What's New** — Bold headlines, short descriptions, Speed group.
@@ -7,8 +13,6 @@
 ### 🎨 Design
 
 - **Cleaner Settings header** — Duplicate popup button removed, clearer icon.
-
-<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
 
