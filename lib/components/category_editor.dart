@@ -228,6 +228,7 @@ class _CategoryEditorSheetState extends State<_CategoryEditorSheet> {
         selected: selected,
         child: TvFocusRing(
           borderRadius: 24,
+          shape: const CircleBorder(),
           child: InkWell(
             onTap: () {
               AppHaptics.selectionClick();
