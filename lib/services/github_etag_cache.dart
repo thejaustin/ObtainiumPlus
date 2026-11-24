@@ -7,6 +7,8 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:http/http.dart';
@@ -97,9 +99,13 @@ class GitHubEtagCache {
     try {
       final file = await _fileFor(url);
       if (!await file.exists()) return null;
-      final decoded = jsonDecode(
-        utf8.decode(gzip.decode(await file.readAsBytes())),
-      );
+      final bytes = await file.readAsBytes();
+      // A busy repo's release list runs to hundreds of KB; gunzip and parse
+      // those off the UI isolate so a batch of update checks doesn't stall
+      // frames (measured up to 1.7 s per lookup on-device).
+      final decoded = bytes.length > _inlineDecodeLimit
+          ? await Isolate.run(() => _decode(bytes))
+          : _decode(bytes);
       if (decoded is! Map<String, dynamic> || decoded['url'] != url) {
         return null;
       }
@@ -109,6 +115,11 @@ class GitHubEtagCache {
       return null;
     }
   }
+
+  static const _inlineDecodeLimit = 16 * 1024;
+
+  static Object? _decode(Uint8List bytes) =>
+      jsonDecode(utf8.decode(gzip.decode(bytes)));
 
   Future<void> _write(String url, String etag, String body) async {
     try {

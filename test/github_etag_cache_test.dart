@@ -18,6 +18,28 @@ void main() {
     if (await dir.exists()) await dir.delete(recursive: true);
   });
 
+  test('round-trips a large release list (decoded off the UI isolate)', () async {
+    // Incompressible-ish body so the gzipped entry exceeds the inline limit.
+    final body =
+        '[${List.generate(4000, (i) => '{"tag_name":"v$i","id":${i * 7919 % 100003}}').join(',')}]';
+    await cache.resolve(
+      url,
+      Response(body, 200, headers: {'etag': 'W/"big"'}),
+      null,
+    );
+    final entry = await dir
+        .list()
+        .where((e) => e.path.endsWith('.gz'))
+        .cast<File>()
+        .single;
+    expect(await entry.length(), greaterThan(16 * 1024));
+
+    final cached = await cache.lookup(url);
+    expect(cached?.etag, 'W/"big"');
+    final resolved = await cache.resolve(url, Response('', 304), cached);
+    expect(resolved.body, body);
+  });
+
   test('stores a 200 with an ETag and answers the 304 from cache', () async {
     expect(await cache.lookup(url), isNull);
 

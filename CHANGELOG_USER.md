@@ -6,7 +6,7 @@
 - Custom certificate pinning (from Obtainium): pin your own certificates per host, turn built-in pins off, and restore them if update checks start failing. If a pinned host is blocked you now get a clear message and a one-tap Restore or Turn off.
 
 ### Improved
-- Settings search, GitLab and F-Droid update checks, and the App details screen load faster, and grid/filter animations follow the animations setting.
+- Settings search, GitLab and F-Droid update checks, and the App details screen load faster, and grid/filter animations follow the animations setting. When GitHub rate-limits update checks, the rest of that run stops asking GitHub instead of waiting on a refusal for every app, and cached GitHub release data no longer stalls the screen while a big library is checked.
 
 ### Fixed
 - "Add to Obtainium" links from app stores such as ShizuStore and ObtainX, and links shared to Obtainium+ from other apps, open correctly again instead of failing with "invalid input".
