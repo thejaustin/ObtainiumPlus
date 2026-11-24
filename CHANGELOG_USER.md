@@ -1,10 +1,14 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.5-p12] — 2026-11-24
+
 ### 🎨 Design
 
 - **Clearer setting names** — Expressive motion, two-column toggles, service banners.
-
-<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
 
