@@ -1839,6 +1839,7 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 ## 2026-11-24 — startup / sync measurements (debug build, real 163-app library, vscreen)
 - Phase 1 (read app JSONs): 0.3–0.7 s warm, 1.3–2.4 s cold cache. Phase 2 (`getAllInstalledInfo`, 1053 pkgs): 0.9 s idle but 4–6 s during startup contention.
 - Full update check, 163 apps: ~70 s wall. GitHub 100 apps avg 2.6 s each at 4 per host; Play Store 62 apps avg 0.8 s. Repeated checks hit GitHub's unauthenticated rate limit (46/107 requests 403/429).
-- Changes: ETag-cache entries >16 KB are gunzipped/parsed in `Isolate.run` (lookups up to 1.7 s on the UI isolate); a RateLimitError makes the rest of that host's apps fail fast for the run.
+- Changes: ETag-cache entries >16 KB are gunzipped/parsed in `Isolate.run` (lookups up to 1.7 s on the UI isolate).  (A per-host fail-fast on RateLimitError was tried and removed: it bypassed the GitHub Atom fallback.)
 - `_startObtainium` now starts `getAllInstalledInfo` first: the query finishes 100–230 ms after phase 1 (was 4–6 s after), measured on-device.
 - Idea left: persist last package list so first paint shows correct update badges.
+- Rate-limit work: repo-info probe (rename/archived) was ~half of the GitHub API requests (only 53/107 were /releases); now once per 24 h per repo (prefs `ghRepoProbeAt`) and skipped while the API is blocked. `x-ratelimit-remaining` <= 3 now blocks the API (Atom fallback takes over) before 403s. Launch auto-check waits 1.5 s after the list loads and passes `ignoreAppsCheckedAfter` = now-30 min (pull-to-refresh still checks all). Release lists > 48 KB are parsed with `Isolate.run`. Debug build on-device: no frames >16 ms during launch; 7 slow frames in 25 s, worst build 164 ms.

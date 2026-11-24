@@ -163,6 +163,9 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
     }
   }
 
+  static const _startupCheckDelay = Duration(milliseconds: 1500);
+  static const _startupCheckFreshness = Duration(minutes: 30);
+  bool _startupRefresh = false;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
       GlobalKey<RefreshIndicatorState>();
 
@@ -334,8 +337,15 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
       AppHaptics.lightImpact();
       var refreshFailed = false;
       final np = context.read<NotificationsProvider>();
+      // The automatic check on launch skips apps that were checked a moment
+      // ago (by the background task or the last launch), which spares the
+      // GitHub rate limit; pulling to refresh still checks everything.
+      final cutoff = _startupRefresh
+          ? DateTime.now().subtract(_startupCheckFreshness)
+          : null;
+      _startupRefresh = false;
       return appsProvider
-          .checkUpdates()
+          .checkUpdates(ignoreAppsCheckedAfter: cutoff)
           .then((updates) {
             unawaited(
               clearStaleUpdateNotification(
@@ -363,8 +373,12 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         appsProvider.apps.isNotEmpty &&
         settingsProvider.checkJustStarted() &&
         updateSettings.checkOnStart) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        // Let the launch animation, icon decoding and the installed-app scan
+        // settle before the check's network and parsing work starts.
+        await Future.delayed(_startupCheckDelay);
         if (!mounted) return;
+        _startupRefresh = true;
         _refreshIndicatorKey.currentState?.show();
       });
     }

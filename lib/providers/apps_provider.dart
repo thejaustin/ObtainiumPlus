@@ -3267,19 +3267,12 @@ class AppsProvider with ChangeNotifier {
         );
         var lastSaveTime = DateTime.now();
 
-        // Once a host has answered with a rate limit, every other request to
-        // it in this run would be refused too (and each costs a round trip),
-        // so the remaining apps on that host fail fast with the same error.
-        final rateLimitedHosts = <String, RateLimitError>{};
-
         Future<void> checkOne(String appId) async {
           final currentApp = apps[appId]?.app;
           if (currentApp == null) return;
           checkingUpdateIds.add(appId);
           _throttledNotify(full: false);
           try {
-            final limited = rateLimitedHosts[hostOf[appId]];
-            if (limited != null) throw limited;
             final newApp = await fetchUpdateWithHandshakeRetry(
               appId,
             ).timeout(_updateCheckTimeout);
@@ -3295,9 +3288,6 @@ class AppsProvider with ChangeNotifier {
               refreshFound.value = updates.length;
             }
           } catch (e) {
-            if (e is RateLimitError) {
-              rateLimitedHosts[hostOf[appId] ?? ''] ??= e;
-            }
             if ((e is RateLimitError || e is SocketException) &&
                 throwErrorsForRetry) {
               // The caller retries the whole run later; stop spending

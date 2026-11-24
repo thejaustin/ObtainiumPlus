@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 import 'package:obtainium/utils/min_update_age.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/utils/string_compare.dart';
 import 'package:obtainium/components/generated_form_model.dart';
 import 'package:obtainium/custom_errors.dart';
@@ -345,7 +347,94 @@ class GitHub extends AppSource {
         if (cached != null) HttpHeaders.ifNoneMatchHeader: cached.etag,
       },
     );
+    _noteQuota(response);
     return cache.resolve(url, response, cached);
+  }
+
+  /// Quota left at or below this switches release lookups to the Atom feed
+  /// before GitHub starts refusing requests.
+  static const int _quotaReserve = 3;
+
+  /// Reads the rate-limit headers of an API response and, when the quota is
+  /// nearly gone, blocks the API (as an actual 403 would) until it resets.
+  @visibleForTesting
+  static void noteQuotaForTest(Response res) => _noteQuota(res);
+
+  @visibleForTesting
+  static int? apiBlockedMinutesForTest(bool authenticated) =>
+      _apiBlockedMinutes(authenticated);
+
+  @visibleForTesting
+  static void clearApiBlockForTest() => _apiBlockedUntil.clear();
+
+  @visibleForTesting
+  static Future<bool> repoProbeDueForTest(String url) => _repoProbeDue(url);
+
+  static void _noteQuota(Response res) {
+    final request = res.request;
+    if (request?.url.host != 'api.github.com') return;
+    final remaining = int.tryParse(res.headers['x-ratelimit-remaining'] ?? '');
+    final reset = int.tryParse(res.headers['x-ratelimit-reset'] ?? '');
+    if (remaining == null || reset == null || remaining > _quotaReserve) {
+      return;
+    }
+    final authenticated = request!.headers.keys.any(
+      (k) => k.toLowerCase() == HttpHeaders.authorizationHeader,
+    );
+    _apiBlockedUntil[authenticated] = DateTime.fromMillisecondsSinceEpoch(
+      reset * 1000,
+    );
+  }
+
+  static const Duration _repoProbeInterval = Duration(hours: 24);
+  static const String _repoProbePrefsKey = 'ghRepoProbeAt';
+
+  /// Whether the repository-info request (rename / archived signals) is due.
+  /// It is a second API request per app, and those signals barely change, so
+  /// it runs at most once per [_repoProbeInterval] per repository and never
+  /// while the API quota is exhausted.
+  static Future<bool> _repoProbeDue(String standardUrl) async {
+    if (_apiBlockedUntil.isNotEmpty) {
+      for (final authenticated in _apiBlockedUntil.keys.toList()) {
+        if (_apiBlockedMinutes(authenticated) != null) return false;
+      }
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final map = _repoProbeTimes(prefs);
+      final last = map[standardUrl];
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (last != null &&
+          now - last < _repoProbeInterval.inMilliseconds &&
+          now >= last) {
+        return false;
+      }
+      map[standardUrl] = now;
+      map.removeWhere(
+        (_, t) => now - t > _repoProbeInterval.inMilliseconds * 2,
+      );
+      await prefs.setString(_repoProbePrefsKey, jsonEncode(map));
+    } catch (_) {}
+    return true;
+  }
+
+  /// Parses [body], off the UI isolate when it is big: a 100-release list is
+  /// hundreds of KB, and a library-wide check parses one per app.
+  static Future<dynamic> _decodeJson(String body) => body.length > 48 * 1024
+      ? Isolate.run(() => jsonDecode(body))
+      : Future.value(jsonDecode(body));
+
+  static Map<String, int> _repoProbeTimes(SharedPreferences prefs) {
+    try {
+      final raw = prefs.getString(_repoProbePrefsKey);
+      if (raw == null) return {};
+      return {
+        for (final e in (jsonDecode(raw) as Map<String, dynamic>).entries)
+          if (e.value is int) e.key: e.value as int,
+      };
+    } catch (_) {
+      return {};
+    }
   }
 
   @override
@@ -907,12 +996,16 @@ class GitHub extends AppSource {
       additionalSettings,
       settingsProvider,
     );
-    Map<String, dynamic>? repoInfo = await checkForRepositoryRename(
-      standardUrl,
-      additionalSettings,
-      sourceConfigSettingValues,
-    );
-    if (repoInfo == null &&
+    final probeDue = await _repoProbeDue(standardUrl);
+    Map<String, dynamic>? repoInfo = probeDue
+        ? await checkForRepositoryRename(
+            standardUrl,
+            additionalSettings,
+            sourceConfigSettingValues,
+          )
+        : null;
+    if (probeDue &&
+        repoInfo == null &&
         !hostChanged &&
         resolveUpdateHealthConfig(
           additionalSettings,
@@ -972,7 +1065,7 @@ class GitHub extends AppSource {
     if (releaseListLoader != null || res!.statusCode == 200) {
       final dynamic decoded = releaseListLoader != null
           ? await releaseListLoader(requestUrl)
-          : jsonDecode(res!.body);
+          : await _decodeJson(res!.body);
       if (decoded is! List) {
         throw NoReleasesError();
       }
@@ -1044,7 +1137,8 @@ class GitHub extends AppSource {
                 regexNotesFilter: regexNotesFilter,
                 includeZips: includeZips,
                 includeTarballs: includeTarballs,
-                useLatestAssetDateAsReleaseDate: useLatestAssetDateAsReleaseDate,
+                useLatestAssetDateAsReleaseDate:
+                    useLatestAssetDateAsReleaseDate,
                 minAgeDays: age,
                 additionalSettings: additionalSettings,
                 sourceConfigSettingValues: sourceConfigSettingValues,
