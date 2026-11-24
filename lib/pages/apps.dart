@@ -378,8 +378,13 @@ class AppsPageState extends State<AppsPage> with AutomaticKeepAliveClientMixin {
         // settle before the check's network and parsing work starts.
         await Future.delayed(_startupCheckDelay);
         if (!mounted) return;
+        final indicator = _refreshIndicatorKey.currentState;
+        if (indicator == null) return;
+        // refresh() consumes the flag; clear it afterwards too, so a show()
+        // that never starts a refresh can't make the user's next manual
+        // pull skip recently checked apps.
         _startupRefresh = true;
-        _refreshIndicatorKey.currentState?.show();
+        indicator.show().whenComplete(() => _startupRefresh = false);
       });
     }
 

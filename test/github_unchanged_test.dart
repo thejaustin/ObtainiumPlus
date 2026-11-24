@@ -98,4 +98,21 @@ void main() {
     GitHub.atomRequestOverride = (_, _) async => throw Exception('offline');
     expect(await source.unchangedSinceLastCheck(_app()), isFalse);
   });
+
+  test(
+    'settings that grow during the check (asset hashes) still skip',
+    () async {
+      expect(await source.unchangedSinceLastCheck(_app()), isFalse);
+      // What the saved app looks like after getApp added assetSha256s.
+      final saved = _app(
+        settings: {
+          'assetSha256s': {'a.apk': 'ff'},
+        },
+      );
+      await source.recordCheckSucceeded(saved);
+      status = 304;
+      expect(await source.unchangedSinceLastCheck(saved), isTrue);
+      expect(await source.unchangedSinceLastCheck(_app()), isFalse);
+    },
+  );
 }

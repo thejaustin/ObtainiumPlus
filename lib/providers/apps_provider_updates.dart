@@ -74,11 +74,14 @@ extension AppsProviderUpdates on AppsProvider {
     } else if (newApp.apkUrls.isNotEmpty) {
       newApp.preferredApkIndex = 0;
     }
-    await source.recordCheckSucceeded(currentApp);
-    return recordLatestVersionChange(
+    final result = recordLatestVersionChange(
       currentApp,
       newApp.copyWith(consecutiveFailedChecks: 0),
     );
+    // Record against the app as it will be saved: getApp adds fields (asset
+    // hashes) to the settings, and the next check sees those.
+    await source.recordCheckSucceeded(result);
+    return result;
   }
 
   /// Fetches [appId] with a short retry for transient TLS handshake failures.
