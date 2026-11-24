@@ -1989,5 +1989,7 @@
   "shapeRole_input": "Text fields",
   "shapeRole_chip": "Chips",
   "shapeRole_fab": "Floating buttons",
-  "shapeRole_segmented": "Segmented controls"
+  "shapeRole_segmented": "Segmented controls",
+    "checkSystemDisabledApps": "Check system-disabled apps for updates",
+    "checkSystemDisabledAppsHelp": "Include apps disabled in Android system settings during full and background update checks. Refreshing a single app individually from its details page is unaffected."
 }

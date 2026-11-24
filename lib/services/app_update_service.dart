@@ -197,9 +197,11 @@ class AppUpdateService {
     DateTime? ignoreAppsCheckedAfter,
     bool onlyCheckInstalledOrTrackOnlyApps = false,
     Set<String> excludedCategories = const {},
+    bool checkSystemDisabledApps = true,
   }) {
     List<String> appIds = apps.values
         .where((app) => !app.app.disabled)
+        .where((app) => checkSystemDisabledApps || !app.isSystemDisabled)
         .where(
           (app) =>
               excludedCategories.isEmpty ||
@@ -296,6 +298,8 @@ class AppUpdateService {
           onlyCheckInstalledOrTrackOnlyApps:
               updateSettings.onlyCheckInstalledOrTrackOnlyApps,
           excludedCategories: excludedCategories,
+          checkSystemDisabledApps:
+              specificIds != null || updateSettings.checkSystemDisabledApps,
         );
         if (specificIds != null) {
           appIds = appIds.where((aId) => specificIds.contains(aId)).toList();

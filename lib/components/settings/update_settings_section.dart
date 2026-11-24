@@ -147,6 +147,23 @@ class UpdateSettingsSection extends StatelessWidget {
             },
           ),
         ),
+      if (_matches(tr('checkSystemDisabledApps')))
+        Consumer<UpdateSettingsProvider>(
+          builder: (context, s, _) => SwitchListTile.adaptive(
+            secondary: buildSettingsIconBadge(
+              context,
+              Icons.block_outlined,
+              active: s.checkSystemDisabledApps,
+            ),
+            title: Text(tr('checkSystemDisabledApps')),
+            subtitle: Text(tr('checkSystemDisabledAppsHelp')),
+            value: s.checkSystemDisabledApps,
+            onChanged: (v) {
+              v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+              s.checkSystemDisabledApps = v;
+            },
+          ),
+        ),
       _buildForegroundServiceSection(context),
     ];
 

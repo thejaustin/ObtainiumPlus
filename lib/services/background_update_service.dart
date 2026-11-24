@@ -127,6 +127,8 @@ class BackgroundUpdateService {
                     excludedCategories: appsProvider
                         .settingsProvider
                         .categoriesExcludedFromChecks,
+                    checkSystemDisabledApps:
+                        appsProvider.updateSettings.checkSystemDisabledApps,
                   ).map((e) => MapEntry(e, 0))
                 : <MapEntry<String, int>>[])),
       ];

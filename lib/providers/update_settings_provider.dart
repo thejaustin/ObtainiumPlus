@@ -136,6 +136,15 @@ class UpdateSettingsProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  bool get checkSystemDisabledApps {
+    return prefs?.safeBool('checkSystemDisabledApps') ?? true;
+  }
+
+  set checkSystemDisabledApps(bool val) {
+    prefs?.setBool('checkSystemDisabledApps', val);
+    notifyListeners();
+  }
+
   bool get checkUpdateOnDetailPage {
     return prefs?.safeBool('checkUpdateOnDetailPage') ?? true;
   }
