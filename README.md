@@ -42,7 +42,6 @@ While the original Obtainium is excellent, Obtainium+ elevates the experience wi
   - [SourceForge](https://sourceforge.net/)
   - Jenkins Jobs
   - [APKMirror](https://apkmirror.com/) *(Track-Only)*
-  - [APKCombo](https://apkcombo.com/)
   - [RockMods](https://rockmods.net/) *(Track-Only)*
 - Other - App-Specific:
   - [Telegram App](https://telegram.org/)

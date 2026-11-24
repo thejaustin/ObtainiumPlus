@@ -38,7 +38,6 @@ export 'package:obtainium/utils/string_utils.dart'
     show getSourceRegex, passesRegExFilter;
 
 import 'package:obtainium/app_sources/apk4free.dart';
-import 'package:obtainium/app_sources/apkcombo.dart';
 import 'package:obtainium/app_sources/apkmirror.dart';
 import 'package:obtainium/app_sources/apkpure.dart';
 import 'package:obtainium/app_sources/aptoide.dart';
@@ -277,7 +276,6 @@ class SourceProvider {
     () => SourceForge(),
     () => Jenkins(),
     () => APKMirror(),
-    () => APKCombo(),
     () => RockMods(),
     () => TelegramApp(),
     () => NeutronCode(),
