@@ -16,6 +16,7 @@ import 'dart:io';
 
 import 'package:cronet_http/cronet_http.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 import 'package:obtainium/core/logging/app_logger.dart';
@@ -105,7 +106,7 @@ class HttpClientFactory {
                 utf8.encode(await certificate.loadPem()),
               );
             }
-            return _PinGuardClient(
+            return PinGuardClient(
               IOClient(
                 HttpClient(context: context)
                   ..connectionTimeout = const Duration(seconds: 30)
@@ -207,8 +208,9 @@ class HttpClientFactory {
 
 /// Turns TLS failures on a pinned connection into a [CertificatePinningError]
 /// and remembers the host so the pinning page can offer a one-tap restore.
-class _PinGuardClient extends http.BaseClient {
-  _PinGuardClient(this._inner);
+@visibleForTesting
+class PinGuardClient extends http.BaseClient {
+  PinGuardClient(this._inner);
   final http.Client _inner;
 
   @override

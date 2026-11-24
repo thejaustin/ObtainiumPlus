@@ -414,6 +414,23 @@ void main() {
     }, timeout: const Timeout(Duration(minutes: 1)));
   });
 
+  testWidgets('settings search is debounced: filters only after 120ms', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'plusSettingsNavPlacement': SettingsNavPlacement.top.index,
+    });
+    await pump(tester, const SettingsPage(initialTab: 0));
+    final title = translations['parallelDownloads'] as String;
+    await tester.enterText(find.byType(SearchBar), 'parallel downloads');
+    await tester.pump(const Duration(milliseconds: 50));
+    // Not applied yet: the header (hidden while searching) is still shown.
+    expect(find.text(title), findsNothing);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.text(title), findsOneWidget);
+  });
+
   testWidgets('Settings page lists the three previews, off', (tester) async {
     SharedPreferences.setMockInitialValues({});
     await pump(
