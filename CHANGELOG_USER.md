@@ -2,6 +2,10 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+---
+
+## [1.7.5-p2] — 2026-11-24
+
 ### Added
 - Custom certificate pinning (from Obtainium): pin your own certificates per host, turn built-in pins off, and restore them if update checks start failing. If a pinned host is blocked you now get a clear message and a one-tap Restore or Turn off.
 
