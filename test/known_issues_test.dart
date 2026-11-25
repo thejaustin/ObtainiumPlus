@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/services/known_issues_service.dart';
 
 void main() {
@@ -90,5 +91,43 @@ void main() {
       expect(compareVersionNames('1.7.5-p10', '1.7.5-p9'), greaterThan(0));
       expect(compareVersionNames('1.7.5', '1.7.5-p0'), 0);
     });
+  });
+
+  group('getCrashIssues (seeded cache)', () {
+    Future<void> seed({List<String> dismissed = const []}) async {
+      SharedPreferences.setMockInitialValues({
+        'known_issues_cache': File('known_issues.json').readAsStringSync(),
+        'known_issues_cache_ts': DateTime.now().millisecondsSinceEpoch,
+        if (dismissed.isNotEmpty) 'dismissed_known_issue_ids': dismissed,
+      });
+    }
+
+    const log = "TypeError: type 'double' is not a subtype of type 'bool?'";
+
+    test('old build + matching crash gets the shipped notice', () async {
+      await seed();
+      final out = await KnownIssuesService.getCrashIssues('1.7.3-p15', log);
+      expect(out.map((i) => i.id), contains('expansion_tile_cast_p1_7_3'));
+    });
+
+    test(
+      'fixed build, other error, or dismissed notice gets nothing',
+      () async {
+        await seed();
+        expect(
+          await KnownIssuesService.getCrashIssues('1.7.5-p32', log),
+          isEmpty,
+        );
+        expect(
+          await KnownIssuesService.getCrashIssues('1.7.3-p15', 'RangeError'),
+          isEmpty,
+        );
+        await seed(dismissed: ['expansion_tile_cast_p1_7_3']);
+        expect(
+          await KnownIssuesService.getCrashIssues('1.7.3-p15', log),
+          isEmpty,
+        );
+      },
+    );
   });
 }

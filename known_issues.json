@@ -46,8 +46,8 @@
     },
     {
       "id": "expansion_tile_cast_p1_7_3",
-      "title": "Settings sections crashed in your version",
-      "description": "Your last session hit a crash that is fixed in newer builds: opening some settings sections (and a few other expandable panels) failed with a 'double is not a subtype of bool?' error.\n\nUpdating takes about 30 seconds via the Updates tab.",
+      "title": "A settings crash is fixed in newer builds",
+      "description": "This version can crash when opening some settings sections or other expandable panels (a 'double is not a subtype of bool?' error).\n\nIt is fixed in 1.7.5-p1 and later. Updating takes about 30 seconds via the Updates tab.",
       "severity": "warning",
       "githubIssueUrl": "https://github.com/thejaustin/ObtainiumPlus/releases",
       "fixedInVersion": "1.7.5-p1",
@@ -55,7 +55,29 @@
         "'double' is not a subtype of type 'bool?'",
         "'bool' is not a subtype of type 'double?'"
       ],
-      "forceUpdate": false
+      "forceUpdate": true,
+      "affectedVersions": [
+        "1.7.1-p31",
+        "1.7.2",
+        "1.7.3",
+        "1.7.3-p1",
+        "1.7.3-p2",
+        "1.7.3-p3",
+        "1.7.3-p4",
+        "1.7.3-p5",
+        "1.7.3-p6",
+        "1.7.3-p7",
+        "1.7.3-p8",
+        "1.7.3-p9",
+        "1.7.3-p10",
+        "1.7.3-p11",
+        "1.7.3-p12",
+        "1.7.3-p13",
+        "1.7.3-p14",
+        "1.7.3-p15",
+        "1.7.4",
+        "1.7.5"
+      ]
     }
   ]
 }
