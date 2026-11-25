@@ -94,7 +94,7 @@ List<(String, String)> splitChangelogSections(String changelog) {
   final body = <String>[];
 
   void flush() {
-    if (current != null) out.add((current!, body.join('\n').trim()));
+    if (current != null) out.add((current, body.join('\n').trim()));
     body.clear();
   }
 

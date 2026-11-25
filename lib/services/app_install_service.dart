@@ -1203,7 +1203,7 @@ class AppInstallService {
               'Installer',
               '',
             ),
-            versionCode: nonNullNewInfo?.versionCode,
+            versionCode: nonNullNewInfo.versionCode,
           ),
         );
         // Persist the new installedVersion and refresh PackageInfo so the UI

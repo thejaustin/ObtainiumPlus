@@ -85,6 +85,6 @@ void main() {
   test('CertificatePinningError carries the CERT_PINNING code and host', () {
     final e = CertificatePinningError('codeberg.org');
     expect(e.code, 'CERT_PINNING');
-    expect(e.data?['host'], 'codeberg.org');
+    expect(e.data['host'], 'codeberg.org');
   });
 }
