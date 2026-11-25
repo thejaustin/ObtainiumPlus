@@ -2,6 +2,10 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+---
+
+## [1.7.5-p28] — 2026-11-25
+
 ### 🎨 Design
 
 - **One drag handle on sheets** — app info, variants, description, actions and a few other sheets showed two grab bars at the top; now one.
