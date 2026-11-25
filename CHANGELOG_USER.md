@@ -2,6 +2,10 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+---
+
+## [1.7.5-p28] — 2026-11-25
+
 ### 🎨 Design
 
 - **Settings list layout (experimental)** — Developer options → Visual Lab → Settings layout: switch from the category bar to one plain list of categories. Off by default.
