@@ -151,6 +151,12 @@ class SettingsPageState extends State<SettingsPage> {
 
   void _selectSection(int index) {
     if (_selectedSectionIndex == index) {
+      // List style: the default category is already "selected" while the
+      // list is showing, so re-selecting it still has to open it.
+      if (!_listOpen) {
+        setState(() => _listOpen = true);
+        return;
+      }
       AppHaptics.lightImpact();
       scrollToTop();
       return;

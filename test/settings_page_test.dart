@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obtainium/components/settings/connected_settings_bar.dart';
 import 'package:obtainium/components/settings/settings_category_bar_host.dart';
+import 'package:obtainium/components/settings/settings_browse_list.dart';
 import 'package:obtainium/components/settings/apps_view_settings_section.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/pages/settings.dart';
@@ -314,6 +315,40 @@ void main() {
       expect(find.byType(SettingsPage), findsOneWidget);
     }, timeout: const Timeout(Duration(minutes: 1)));
   }
+
+  // List browse style: the first category is the default selection, so
+  // tapping it must still open it, and back must return to the list.
+  testWidgets('list layout opens the first category and returns', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'plusLabSettingsBrowseStyle': SettingsBrowseStyle.list.index,
+    });
+    late Widget app;
+    await tester.runAsync(() async {
+      await EasyLocalization.ensureInitialized();
+      app = await buildSettingsApp(0, home: const SettingsPage());
+    });
+    await pumpCapturingErrors(tester, app);
+    expect(find.byType(SettingsBrowseList), findsOneWidget);
+    expect(find.byType(SettingsSectionDock), findsNothing);
+
+    await tester.tap(find.byType(ListTile).first);
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(SettingsBrowseList), findsNothing);
+    expect(find.byType(SettingsBrowseBack), findsOneWidget);
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(SettingsBrowseBack),
+        matching: find.byType(TextButton),
+      ),
+    );
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(SettingsBrowseList), findsOneWidget);
+  }, timeout: const Timeout(Duration(minutes: 1)));
 
   // First screen of every fresh install; restored after being unreachable
   // from May to October.

@@ -1,5 +1,8 @@
 name: Crowdin Sync
 
+# Push-triggered uploads run only once the repo variable CROWDIN_ENABLED is
+# 'true'. The Crowdin project's target languages must be exactly the locale
+# files in assets/translations (see crowdin.yml).
 # Needs repo secrets CROWDIN_PROJECT_ID and CROWDIN_TOKEN (a Crowdin personal
 # access token). CROWDIN_PR_TOKEN (fine-grained, this repo, Contents + Pull
 # requests write) is optional: it makes the translation PR run the normal
@@ -34,9 +37,11 @@ permissions:
 jobs:
   upload-sources:
     name: Upload source strings to Crowdin
+    # Quiet no-op until the repo secrets are set.
     if: |
-      github.event_name == 'push' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.direction == 'upload')
+      (github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.direction == 'upload')) &&
+      vars.CROWDIN_ENABLED == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -99,7 +104,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -q -B crowdin-translations
-          git add assets/translations
+          git add -u assets/translations
           git commit -q -m "chore(i18n): sync translations from Crowdin"
           git push -q --force origin crowdin-translations
           if [ -z "$(gh pr list --head crowdin-translations --state open --json number --jq '.[0].number')" ]; then
