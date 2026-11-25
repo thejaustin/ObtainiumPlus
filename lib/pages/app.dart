@@ -2506,6 +2506,27 @@ class _AppPageState extends State<AppPage> {
       );
     }
 
+    checkNowAction() => IconButton(
+      icon: updating
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2.5),
+            )
+          : const Icon(Icons.refresh_rounded),
+      tooltip: tr('checkUpdates'),
+      onPressed: app == null || updating
+          ? null
+          : () {
+              AppHaptics.selectionClick();
+              if (app.app.disabled) {
+                showMessage(tr('appDisabledNoUpdateCheck'), context);
+                return;
+              }
+              getUpdate(app.app.id);
+            },
+    );
+
     appScreenAppBar() => AppBar(
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
@@ -2514,6 +2535,7 @@ class _AppPageState extends State<AppPage> {
           Navigator.pop(context);
         },
       ),
+      actions: [checkNowAction()],
     );
 
     buildScrollableBody() {
@@ -2596,6 +2618,7 @@ class _AppPageState extends State<AppPage> {
                 ),
                 centerTitle: true,
                 actions: [
+                  checkNowAction(),
                   IconButton(
                     icon: const Icon(Icons.hub_outlined),
                     tooltip: 'Local App & Variants',

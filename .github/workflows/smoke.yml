@@ -1,0 +1,47 @@
+name: Emulator Smoke
+
+# After a release build, install the published x86_64 APK on an emulator and
+# run scripts/dev/device-smoke.sh (launch, wait, check for a live process and
+# no crash lines). Runs after the release exists, so it reports problems but
+# never blocks or races the build's version-bump push.
+on:
+  workflow_run:
+    workflows: ["Build APK"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download the latest release APK (x86_64)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release list --limit 1 --json tagName -q '.[0].tagName')
+          echo "Smoke-testing $tag"
+          gh release download "$tag" --pattern 'app-x86_64-release.apk' --dir apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Install and smoke test on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: |
+            adb install -r apk/app-x86_64-release.apk
+            bash scripts/dev/device-smoke.sh
