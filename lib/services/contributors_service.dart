@@ -23,19 +23,17 @@ class ContributorsService {
   static const upstreamRepo = 'ImranR98/Obtainium';
   static const _ttl = Duration(hours: 24);
 
-  /// Accounts that are the AI pair-programmer's git identity: credited as a
-  /// line of text instead of a person.
-  static const _aiAccounts = {'claude'};
+  static const _perPage = 100;
+  static const _maxPages = 5;
 
-  /// Test hook: returns the raw response body for a repo.
-  static Future<String> Function(String repo)? debugFetch;
+  /// Test hook: returns the raw response body for a repo and page.
+  static Future<String> Function(String repo, int page)? debugFetch;
 
   static bool _isBot(String login, String? type) =>
       type == 'Bot' ||
       login.endsWith('[bot]') ||
       RegExp(r'[-_]bot$', caseSensitive: false).hasMatch(login) ||
-      RegExp(r'[a-z]Bot$').hasMatch(login) ||
-      _aiAccounts.contains(login.toLowerCase());
+      RegExp(r'[a-z]Bot$').hasMatch(login);
 
   /// Parses the API body into people, most contributions first, bots out.
   static List<Contributor> parse(String body) {
@@ -70,6 +68,38 @@ class ContributorsService {
     return out;
   }
 
+  /// Every page of a repo's contributors as one JSON array: upstream has
+  /// more than one page, and a cut-off list would make the fork subtraction
+  /// credit people for work that is really upstream's.
+  static Future<String> _fetchAll(String repo) async {
+    final all = <Object?>[];
+    for (var page = 1; page <= _maxPages; page++) {
+      final String body;
+      final fake = debugFetch;
+      if (fake != null) {
+        body = await fake(repo, page);
+      } else {
+        final r = await http
+            .get(
+              Uri.parse(
+                'https://api.github.com/repos/$repo/contributors?per_page=$_perPage&page=$page',
+              ),
+              headers: {'Accept': 'application/vnd.github+json'},
+            )
+            .timeout(const Duration(seconds: 10));
+        if (r.statusCode != 200) {
+          throw Exception('GitHub returned ${r.statusCode}');
+        }
+        body = r.body;
+      }
+      final decoded = jsonDecode(body);
+      if (decoded is! List) throw const FormatException('Unexpected response');
+      all.addAll(decoded);
+      if (decoded.length < _perPage) break;
+    }
+    return jsonEncode(all);
+  }
+
   static Future<List<Contributor>> _load(String repo) async {
     final prefs = await SharedPreferences.getInstance();
     final key = 'contributors_cache_$repo';
@@ -83,22 +113,7 @@ class ContributorsService {
       return parse(cached);
     }
     try {
-      final body =
-          await (debugFetch?.call(repo) ??
-              http
-                  .get(
-                    Uri.parse(
-                      'https://api.github.com/repos/$repo/contributors?per_page=100',
-                    ),
-                    headers: {'Accept': 'application/vnd.github+json'},
-                  )
-                  .timeout(const Duration(seconds: 10))
-                  .then((r) {
-                    if (r.statusCode != 200) {
-                      throw Exception('GitHub returned ${r.statusCode}');
-                    }
-                    return r.body;
-                  }));
+      final body = await _fetchAll(repo);
       final parsed = parse(body);
       await prefs.setString(key, body);
       await prefs.setInt(tsKey, DateTime.now().millisecondsSinceEpoch);

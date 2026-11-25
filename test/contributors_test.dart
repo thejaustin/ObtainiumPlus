@@ -15,10 +15,10 @@ String _body(Map<String, int> m, {Map<String, String> types = const {}}) =>
     ]);
 
 void main() {
-  test('parse drops bots and the AI account, sorts by contributions', () {
+  test('parse drops bots, sorts by contributions', () {
     final out = ContributorsService.parse(
       _body(
-        {'a': 3, 'CertainBot': 99, 'claude': 50, 'dependabot[bot]': 40, 'b': 7},
+        {'a': 3, 'CertainBot': 99, 'dependabot[bot]': 40, 'b': 7},
         types: {'dependabot[bot]': 'Bot'},
       ),
     );
@@ -46,7 +46,7 @@ void main() {
       SharedPreferences.setMockInitialValues({});
       var calls = 0;
       var offline = false;
-      ContributorsService.debugFetch = (repo) async {
+      ContributorsService.debugFetch = (repo, page) async {
         calls++;
         if (offline) throw Exception('no network');
         return _body({repo.startsWith('thejaustin') ? 'me' : 'them': 5});
@@ -68,4 +68,20 @@ void main() {
       expect(f2.single.login, 'me');
     },
   );
+
+  test('pages through long lists', () async {
+    SharedPreferences.setMockInitialValues({});
+    final pages = <int>[];
+    ContributorsService.debugFetch = (repo, page) async {
+      pages.add(page);
+      return page == 1
+          ? _body({for (var i = 0; i < 100; i++) 'u$i': 200 - i})
+          : _body({'last': 1});
+    };
+    addTearDown(() => ContributorsService.debugFetch = null);
+    final (_, up) = await ContributorsService.loadBoth();
+    expect(up.length, 101);
+    expect(up.last.login, 'last');
+    expect(pages.toSet(), {1, 2});
+  });
 }

@@ -15,7 +15,6 @@ Future<void> showCreditsSheet(BuildContext context) =>
 const _inspiredBy = <(String, String)>[
   ('MorpheApp', 'https://github.com/MorpheApp'),
   ('MarcaDian', 'https://github.com/MarcaDian'),
-  ('LisoUseInAIKyrios', 'https://github.com/LisoUseInAIKyrios'),
 ];
 
 class CreditsSheet extends StatefulWidget {
@@ -73,8 +72,7 @@ class _CreditsSheetState extends State<CreditsSheet> {
           Text('Credits', style: text.headlineSmall),
           const SizedBox(height: 4),
           Text(
-            'Obtainium+ is a hobby fork, built with AI assistance (Claude), '
-            'on top of the work of everyone below.',
+            'Obtainium+ is a hobby fork, built on the work of everyone below.',
             style: text.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
           ),
           const SizedBox(height: 20),
@@ -129,8 +127,9 @@ class _CreditsSheetState extends State<CreditsSheet> {
             for (final (name, url) in _inspiredBy) _person(name, url: url),
           ]),
           Text(
-            'The timeline changelog and the contributor list follow ideas from '
-            "Morphe Manager. We don't use any of their code or branding.",
+            'The timeline changelog and this credits list take design ideas '
+            'from Morphe Manager (GPL-3.0), whose timeline and changelog '
+            'screens MarcaDian wrote.',
             style: text.bodySmall?.copyWith(color: cs.onSurfaceVariant),
           ),
         ],
