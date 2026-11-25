@@ -1,5 +1,11 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.5-p32] — 2026-11-25
+
 ### 🛠️ Fixes
 
 - **Told when an update fixes your crash** — if the app crashed on an older version and a newer build fixes that exact problem, the next launch now says so and points you to the Updates tab.
