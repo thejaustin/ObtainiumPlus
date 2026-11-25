@@ -5,6 +5,14 @@ on:
     branches:
       - main
       - 'feature/*'
+    # Docs, dev scripts and repo-only workflows change nothing in the app, so
+    # they don't need a build and release of their own.
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - 'scripts/dev/**'
+      - '.github/workflows/smoke.yml'
+      - '.github/ISSUE_TEMPLATE/**'
   workflow_dispatch:
     inputs:
       beta:
