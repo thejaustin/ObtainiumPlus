@@ -72,11 +72,11 @@ jobs:
 
   build:
     name: Build and Release
-    needs: quality
     runs-on: ubuntu-latest
     if: "${{ github.event_name != 'push' || !contains(github.event.head_commit.message, 'chore: Auto-bump version') }}"
     permissions:
       contents: write
+      actions: read
 
     steps:
       - name: Checkout repository
@@ -356,6 +356,21 @@ jobs:
               echo "$BADGES"
             fi
           } > release_body.md
+
+      # Build runs alongside Lint and Test to save wall-clock time; nothing is
+      # published (version bump, release) until the tests have passed.
+      - name: Wait for Lint and Test
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 120); do
+            c=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/jobs" \
+              --jq '.jobs[] | select(.name=="Lint and Test") | .conclusion // "pending"')
+            [ "$c" = "success" ] && exit 0
+            if [ "$c" != "pending" ]; then echo "Lint and Test: $c"; exit 1; fi
+            sleep 15
+          done
+          echo "Timed out waiting for Lint and Test"; exit 1
 
       - name: Commit version bump
         if: steps.bump_version.outputs.version_changed == 'true'
