@@ -191,7 +191,8 @@ class MyTaskHandler extends TaskHandler {
 /// Filters out expected Shizuku-related exceptions so they don't pollute
 /// the Sentry dashboard (binder restarts and pre-grant permission errors
 /// are normal operating conditions, not bugs).
-SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
+@visibleForTesting
+SentryEvent? filterShizukuNoise(SentryEvent event, Hint hint) {
   final exceptions = event.exceptions;
   if (exceptions == null || exceptions.isEmpty) return event;
 
@@ -212,6 +213,13 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
     if (type.contains('RemoteException') && hasShizukuFrame(ex)) return null;
     if (type.contains('PlatformException') &&
         (value.contains('shizuku') || hasShizukuFrame(ex))) {
+      return null;
+    }
+    // Batch results that only say "app gone" or "Shizuku is installed
+    // separately" are user situations, not crashes (OBTAINIUMPLUS-3Y).
+    if (type.contains('MultiAppMultiError') &&
+        (value.contains('app not found') ||
+            value.contains('already installed as a separate build'))) {
       return null;
     }
     // Filter out expected validation/user actions (ObtainiumError and subclasses)
@@ -262,7 +270,7 @@ void main() async {
     options.sendDefaultPii = false;
     options.attachScreenshot = false;
     options.environment = kReleaseMode ? 'production' : 'development';
-    options.beforeSend = _filterShizukuNoise;
+    options.beforeSend = filterShizukuNoise;
   }, appRunner: _runObtainium);
 }
 
