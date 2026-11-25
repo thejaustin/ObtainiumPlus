@@ -1,5 +1,11 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.5-p14] — 2026-11-25
+
 ### ✨ New
 
 - **You are here** — Marker shows which releases you haven't installed.
@@ -10,8 +16,6 @@
 
 - **Loading skeletons** — What's New shows placeholders instead of a spinner.
 - **Plus enhancements** — Clearer name and description for the master switch.
-
-<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
 
