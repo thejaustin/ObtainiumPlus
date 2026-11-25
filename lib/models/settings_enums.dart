@@ -123,3 +123,8 @@ extension AppThemeStyleX on AppThemeStyle {
 
   bool get presetEnhancedAnimations => this != AppThemeStyle.obtainium;
 }
+
+/// How Settings is browsed (Visual Lab, experimental). [tabs] is the shipped
+/// category dock; [list] shows one plain list of categories and opens each
+/// on its own.
+enum SettingsBrowseStyle { tabs, list }

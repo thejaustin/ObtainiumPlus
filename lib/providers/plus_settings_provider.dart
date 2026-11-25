@@ -289,6 +289,14 @@ class PlusSettingsProvider with ChangeNotifier {
 
   // ── Visual Lab (developer options). Every default is the shipped look. ──
 
+  SettingsBrowseStyle get plusLabSettingsBrowseStyle => _getEnum(
+    'plusLabSettingsBrowseStyle',
+    SettingsBrowseStyle.values,
+    defaultValue: SettingsBrowseStyle.tabs,
+  );
+  set plusLabSettingsBrowseStyle(SettingsBrowseStyle val) =>
+      _setEnum('plusLabSettingsBrowseStyle', val);
+
   SettingsAppBarActionsStyle get plusLabSettingsAppBarActions => _getEnum(
     'plusLabSettingsAppBarActions',
     SettingsAppBarActionsStyle.values,

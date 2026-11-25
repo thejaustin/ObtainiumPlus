@@ -8,6 +8,7 @@ import 'package:obtainium/components/device_optimization_sheet.dart';
 import 'package:obtainium/components/settings/connected_settings_bar.dart';
 import 'package:obtainium/components/settings/settings_hero_overview.dart';
 import 'package:obtainium/components/settings/settings_search_jump.dart';
+import 'package:obtainium/components/settings/settings_browse_list.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_tab_content.dart';
 import 'package:obtainium/pages/changelog.dart';
@@ -61,6 +62,8 @@ class SettingsPageState extends State<SettingsPage> {
   bool _showIntervalLabel = true;
   late Future<AndroidDeviceInfo> _androidInfoFuture;
   int _selectedSectionIndex = 0;
+  // List browse style only: whether a category is open (else the list).
+  bool _listOpen = false;
   int _previousSectionIndex = 0;
   late final Future<dynamic> _versionFuture = getInstalledInfo(obtainiumId);
   // One key per switcher child: the outgoing and incoming tab both stay
@@ -159,6 +162,7 @@ class SettingsPageState extends State<SettingsPage> {
     setState(() {
       _previousSectionIndex = _selectedSectionIndex;
       _selectedSectionIndex = index;
+      _listOpen = true;
     });
     widget.sectionController?.section.value = index;
     _setDockVisible(true);
@@ -212,6 +216,7 @@ class SettingsPageState extends State<SettingsPage> {
         ? _mapInitialTab(widget.initialTab ?? 0)
         : controller.section.value.clamp(0, kSettingsSections.length - 1);
     _previousSectionIndex = _selectedSectionIndex;
+    _listOpen = widget.initialTab != null;
     if (controller != null) {
       controller.onSelect = _selectSection;
       // Not during build: home's bar listens to these notifiers.
@@ -277,374 +282,414 @@ class SettingsPageState extends State<SettingsPage> {
         !plusSettings.plusTopUILayout &&
         !settingsProvider.isTV;
     final mainNavBarHeight = hasMainBottomNavBar ? 88.0 : 0.0;
+    final listStyle =
+        plusSettings.plusLabSettingsBrowseStyle == SettingsBrowseStyle.list;
     final placement = plusSettings.plusSettingsNavPlacement;
     // Home draws the category bar (separate pill or merged into its nav
     // bar) when this is its tab and its bottom bar is showing.
     final hostedBar =
         widget.sectionController != null &&
         hasMainBottomNavBar &&
+        !listStyle &&
         placement != SettingsNavPlacement.top;
     // Merged needs the main bar; anywhere else it behaves like bottom.
     final effectivePlacement = placement == SettingsNavPlacement.merged
         ? SettingsNavPlacement.bottom
         : placement;
     final useSettingsScaffoldBottomBar =
+        !listStyle &&
         effectivePlacement == SettingsNavPlacement.bottom &&
         !hasMainBottomNavBar;
     final useSettingsFloatingBottomDock =
+        !listStyle &&
         effectivePlacement == SettingsNavPlacement.bottom &&
         hasMainBottomNavBar &&
         !hostedBar;
     final showTopPinnedCategoryBar =
-        effectivePlacement == SettingsNavPlacement.top && _searchQuery.isEmpty;
+        !listStyle &&
+        effectivePlacement == SettingsNavPlacement.top &&
+        _searchQuery.isEmpty;
     final isCompact = plusSettings.plusUseCompactSettings;
     final switcherId = _searchQuery.isNotEmpty
         ? 'search_$_searchQuery'
+        : listStyle
+        ? 'list_${_listOpen ? _selectedSectionIndex : -1}'
         : 'tab_$_selectedSectionIndex';
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      bottomNavigationBar: useSettingsScaffoldBottomBar
-          ? ClipRect(
-              child: AnimatedAlign(
-                duration: Duration(
-                  milliseconds: plusSettings.plusEnableEnhancedAnimations
-                      ? 280
-                      : 0,
+    return PopScope(
+      // List style: back from an opened category returns to the list.
+      canPop: !(listStyle && _listOpen && _searchQuery.isEmpty),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) setState(() => _listOpen = false);
+      },
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        bottomNavigationBar: useSettingsScaffoldBottomBar
+            ? ClipRect(
+                child: AnimatedAlign(
+                  duration: Duration(
+                    milliseconds: plusSettings.plusEnableEnhancedAnimations
+                        ? 280
+                        : 0,
+                  ),
+                  curve: Easing.emphasizedDecelerate,
+                  alignment: Alignment.topCenter,
+                  heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
+                  child: NavigationBar(
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainer,
+                    selectedIndex: _selectedSectionIndex,
+                    onDestinationSelected: _selectSection,
+                    destinations: [
+                      for (final info in kSettingsSections)
+                        NavigationDestination(
+                          icon: Icon(info.icon),
+                          selectedIcon: Icon(info.selectedIcon),
+                          label: tr(info.shortKey),
+                        ),
+                    ],
+                  ),
                 ),
-                curve: Easing.emphasizedDecelerate,
-                alignment: Alignment.topCenter,
-                heightFactor: _searchQuery.isNotEmpty ? 0.0 : 1.0,
-                child: NavigationBar(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainer,
-                  selectedIndex: _selectedSectionIndex,
-                  onDestinationSelected: _selectSection,
-                  destinations: [
-                    for (final info in kSettingsSections)
-                      NavigationDestination(
-                        icon: Icon(info.icon),
-                        selectedIcon: Icon(info.selectedIcon),
-                        label: tr(info.shortKey),
+              )
+            : null,
+        body: Stack(
+          children: [
+            NotificationListener<UserScrollNotification>(
+              onNotification: _onUserScroll,
+              child: CustomScrollView(
+                key: const PageStorageKey<String>('settings_page_scroll'),
+                controller: _scrollController,
+                physics: plusSettings.scrollPhysics,
+                slivers: [
+                  CustomAppBar(
+                    title: tr('settings'),
+                    // Visual Lab: compact = the standard pinned toolbar; large
+                    // follows the one-handed reachability header (today).
+                    forceOneHanded:
+                        plusSettings.plusLabSettingsHeaderSize ==
+                            SettingsHeaderSize.compact
+                        ? false
+                        : null,
+                    actions:
+                        plusSettings.plusLabSettingsAppBarActions ==
+                            SettingsAppBarActionsStyle.labelledChips
+                        ? _buildLabelledChipActions(context, plusSettings)
+                        : _buildIconActions(context, plusSettings),
+                    bottom: PreferredSize(
+                      preferredSize: Size.fromHeight(isCompact ? 54 : 60),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          adaptiveMargin,
+                          0,
+                          adaptiveMargin,
+                          isCompact ? 8 : 12,
+                        ),
+                        child: AnimatedContainer(
+                          duration: Duration(
+                            milliseconds:
+                                plusSettings.plusEnableEnhancedAnimations
+                                ? 280
+                                : 0,
+                          ),
+                          curve: Easing.emphasizedDecelerate,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              _searchQuery.isNotEmpty
+                                  ? AppShapes.of(
+                                      context,
+                                    ).radiusOf(ShapeRole.card)
+                                  : AppShapes.of(
+                                      context,
+                                    ).radiusOf(ShapeRole.pill),
+                            ),
+                            boxShadow: _searchQuery.isNotEmpty
+                                ? [
+                                    BoxShadow(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withValues(alpha: 0.16),
+                                      blurRadius: 14,
+                                      spreadRadius: 1,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: SearchBar(
+                            controller: _searchController,
+                            // A focused field is re-focused when a pushed page
+                            // pops, popping the keyboard up unasked; drop focus
+                            // as soon as the user taps elsewhere.
+                            onTapOutside: (_) =>
+                                FocusManager.instance.primaryFocus?.unfocus(),
+                            constraints: BoxConstraints(
+                              minHeight: isCompact ? 42 : 48,
+                              maxHeight: isCompact ? 46 : 52,
+                            ),
+                            hintText: tr('searchSettings'),
+                            leading: const Icon(Icons.search, size: 20),
+                            trailing: [
+                              if (_searchQuery.isNotEmpty)
+                                IconButton(
+                                  visualDensity: VisualDensity.compact,
+                                  tooltip: tr('clear'),
+                                  icon: const Icon(Icons.clear, size: 18),
+                                  onPressed: () => _searchController.clear(),
+                                ),
+                            ],
+                            elevation: WidgetStateProperty.all(0),
+                            shape: WidgetStateProperty.resolveWith((states) {
+                              final isFocused = states.contains(
+                                WidgetState.focused,
+                              );
+                              final isShifted =
+                                  isFocused || _searchQuery.isNotEmpty;
+                              final shapes = AppShapes.of(context);
+                              return shapes.borderOf(
+                                isShifted ? ShapeRole.card : ShapeRole.pill,
+                                side: BorderSide(
+                                  color: isShifted
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context)
+                                            .colorScheme
+                                            .outlineVariant
+                                            .withValues(alpha: 0.3),
+                                  width: isShifted ? 1.5 : 1.0,
+                                ),
+                              );
+                            }),
+                            backgroundColor: WidgetStateProperty.all(
+                              Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ),
                       ),
-                  ],
-                ),
-              ),
-            )
-          : null,
-      body: Stack(
-        children: [
-          NotificationListener<UserScrollNotification>(
-            onNotification: _onUserScroll,
-            child: CustomScrollView(
-              key: const PageStorageKey<String>('settings_page_scroll'),
-              controller: _scrollController,
-              physics: plusSettings.scrollPhysics,
-              slivers: [
-                CustomAppBar(
-                  title: tr('settings'),
-                  // Visual Lab: compact = the standard pinned toolbar; large
-                  // follows the one-handed reachability header (today).
-                  forceOneHanded:
-                      plusSettings.plusLabSettingsHeaderSize ==
-                          SettingsHeaderSize.compact
-                      ? false
-                      : null,
-                  actions:
-                      plusSettings.plusLabSettingsAppBarActions ==
-                          SettingsAppBarActionsStyle.labelledChips
-                      ? _buildLabelledChipActions(context, plusSettings)
-                      : _buildIconActions(context, plusSettings),
-                  bottom: PreferredSize(
-                    preferredSize: Size.fromHeight(isCompact ? 54 : 60),
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(
-                        adaptiveMargin,
-                        0,
-                        adaptiveMargin,
-                        isCompact ? 8 : 12,
+                    ),
+                  ),
+                  if (showTopPinnedCategoryBar)
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _SettingsCategoryBarDelegate(
+                        height: isCompact ? 48.0 : 54.0,
+                        scrollController: _tabsScrollController,
+                        scrollPhysics: plusSettings.scrollPhysics,
+                        adaptiveMargin: adaptiveMargin,
+                        selectedIndex: _selectedSectionIndex,
+                        isCompact: isCompact,
+                        isM3E: plusSettings.plusEnableMaterialExpressive,
+                        cornerRadius: plusSettings.plusGlobalCornerRadius,
+                        colorScheme: Theme.of(context).colorScheme,
+                        chipKeys: _chipKeys,
+                        onSelect: _selectSection,
                       ),
-                      child: AnimatedContainer(
+                    ),
+                  SliverPadding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: adaptiveMargin,
+                      vertical: plusSettings.plusUseCompactSettings ? 4 : 8,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: AnimatedSwitcher(
                         duration: Duration(
                           milliseconds:
                               plusSettings.plusEnableEnhancedAnimations
                               ? 280
                               : 0,
                         ),
-                        curve: Easing.emphasizedDecelerate,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(
-                            _searchQuery.isNotEmpty
-                                ? AppShapes.of(context).radiusOf(ShapeRole.card)
-                                : AppShapes.of(
-                                    context,
-                                  ).radiusOf(ShapeRole.pill),
-                          ),
-                          boxShadow: _searchQuery.isNotEmpty
-                              ? [
-                                  BoxShadow(
-                                    color: Theme.of(context).colorScheme.primary
-                                        .withValues(alpha: 0.16),
-                                    blurRadius: 14,
-                                    spreadRadius: 1,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: SearchBar(
-                          controller: _searchController,
-                          // A focused field is re-focused when a pushed page
-                          // pops, popping the keyboard up unasked; drop focus
-                          // as soon as the user taps elsewhere.
-                          onTapOutside: (_) =>
-                              FocusManager.instance.primaryFocus?.unfocus(),
-                          constraints: BoxConstraints(
-                            minHeight: isCompact ? 42 : 48,
-                            maxHeight: isCompact ? 46 : 52,
-                          ),
-                          hintText: tr('searchSettings'),
-                          leading: const Icon(Icons.search, size: 20),
-                          trailing: [
-                            if (_searchQuery.isNotEmpty)
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                tooltip: tr('clear'),
-                                icon: const Icon(Icons.clear, size: 18),
-                                onPressed: () => _searchController.clear(),
-                              ),
-                          ],
-                          elevation: WidgetStateProperty.all(0),
-                          shape: WidgetStateProperty.resolveWith((states) {
-                            final isFocused = states.contains(
-                              WidgetState.focused,
-                            );
-                            final isShifted =
-                                isFocused || _searchQuery.isNotEmpty;
-                            final shapes = AppShapes.of(context);
-                            return shapes.borderOf(
-                              isShifted ? ShapeRole.card : ShapeRole.pill,
-                              side: BorderSide(
-                                color: isShifted
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Theme.of(context)
-                                          .colorScheme
-                                          .outlineVariant
-                                          .withValues(alpha: 0.3),
-                                width: isShifted ? 1.5 : 1.0,
-                              ),
-                            );
-                          }),
-                          backgroundColor: WidgetStateProperty.all(
-                            Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest
-                                .withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                if (showTopPinnedCategoryBar)
-                  SliverPersistentHeader(
-                    pinned: true,
-                    delegate: _SettingsCategoryBarDelegate(
-                      height: isCompact ? 48.0 : 54.0,
-                      scrollController: _tabsScrollController,
-                      scrollPhysics: plusSettings.scrollPhysics,
-                      adaptiveMargin: adaptiveMargin,
-                      selectedIndex: _selectedSectionIndex,
-                      isCompact: isCompact,
-                      isM3E: plusSettings.plusEnableMaterialExpressive,
-                      cornerRadius: plusSettings.plusGlobalCornerRadius,
-                      colorScheme: Theme.of(context).colorScheme,
-                      chipKeys: _chipKeys,
-                      onSelect: _selectSection,
-                    ),
-                  ),
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: adaptiveMargin,
-                    vertical: plusSettings.plusUseCompactSettings ? 4 : 8,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: AnimatedSwitcher(
-                      duration: Duration(
-                        milliseconds: plusSettings.plusEnableEnhancedAnimations
-                            ? 280
-                            : 0,
-                      ),
-                      switchInCurve: Easing.emphasizedDecelerate,
-                      switchOutCurve: Easing.emphasizedAccelerate,
-                      layoutBuilder:
-                          (
-                            Widget? currentChild,
-                            List<Widget> previousChildren,
-                          ) {
-                            return Stack(
-                              alignment: Alignment.topCenter,
-                              children: <Widget>[
-                                ...previousChildren,
-                                if (currentChild != null) currentChild,
-                              ],
-                            );
-                          },
-                      transitionBuilder:
-                          (Widget child, Animation<double> animation) {
-                            final bool isForward =
-                                _selectedSectionIndex >= _previousSectionIndex;
-                            final beginOffset = _searchQuery.isNotEmpty
-                                ? const Offset(0.0, 0.03)
-                                : Offset(isForward ? 0.04 : -0.04, 0.0);
-                            return FadeTransition(
-                              opacity: CurvedAnimation(
-                                parent: animation,
-                                curve: Easing.emphasizedDecelerate,
-                              ),
-                              child: SlideTransition(
-                                position:
-                                    Tween<Offset>(
-                                      begin: beginOffset,
-                                      end: Offset.zero,
-                                    ).animate(
-                                      CurvedAnimation(
-                                        parent: animation,
-                                        curve: Easing.emphasizedDecelerate,
-                                      ),
-                                    ),
-                                child: ScaleTransition(
-                                  scale: Tween<double>(begin: 0.985, end: 1.0)
-                                      .animate(
+                        switchInCurve: Easing.emphasizedDecelerate,
+                        switchOutCurve: Easing.emphasizedAccelerate,
+                        layoutBuilder:
+                            (
+                              Widget? currentChild,
+                              List<Widget> previousChildren,
+                            ) {
+                              return Stack(
+                                alignment: Alignment.topCenter,
+                                children: <Widget>[
+                                  ...previousChildren,
+                                  if (currentChild != null) currentChild,
+                                ],
+                              );
+                            },
+                        transitionBuilder:
+                            (Widget child, Animation<double> animation) {
+                              final bool isForward =
+                                  _selectedSectionIndex >=
+                                  _previousSectionIndex;
+                              final beginOffset = _searchQuery.isNotEmpty
+                                  ? const Offset(0.0, 0.03)
+                                  : Offset(isForward ? 0.04 : -0.04, 0.0);
+                              return FadeTransition(
+                                opacity: CurvedAnimation(
+                                  parent: animation,
+                                  curve: Easing.emphasizedDecelerate,
+                                ),
+                                child: SlideTransition(
+                                  position:
+                                      Tween<Offset>(
+                                        begin: beginOffset,
+                                        end: Offset.zero,
+                                      ).animate(
                                         CurvedAnimation(
                                           parent: animation,
                                           curve: Easing.emphasizedDecelerate,
                                         ),
                                       ),
-                                  child: child,
+                                  child: ScaleTransition(
+                                    scale: Tween<double>(begin: 0.985, end: 1.0)
+                                        .animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Easing.emphasizedDecelerate,
+                                          ),
+                                        ),
+                                    child: child,
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                      child: KeyedSubtree(
-                        key: ValueKey<String>(switcherId),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_searchQuery.isNotEmpty && _noResults)
-                              _SettingsEmptyState(
-                                onClear: _searchController.clear,
-                                onSelectSection: (index) {
-                                  _searchController.clear();
-                                  _selectSection(index);
-                                },
-                              ),
-                            // Matching pages first: below every matching
-                            // setting they ended up off-screen on phones.
-                            if (_searchQuery.isNotEmpty)
-                              _buildConnectedSearchResults(context, isCompact),
-                            if (_searchQuery.isEmpty &&
-                                plusSettings.plusLabShowSettingsHero)
-                              SettingsHeroOverview(
-                                onSearchKeyword: (keyword) {
-                                  _searchController.text = keyword;
-                                },
-                                onSelectTab: _selectSection,
-                              ),
-                            KeyedSubtree(
-                              key: _resultsKeyFor(switcherId),
-                              child: SettingsSearchJumpLayer(
-                                enabled:
-                                    plusSettings.plusSettingsSearchJump &&
-                                    _searchQuery.isNotEmpty,
-                                onJump: _jumpToRow,
-                                child: SettingsTabContent(
-                                  section: _selectedSectionIndex,
-                                  searchQuery: _searchQuery,
-                                  androidInfoFuture: _androidInfoFuture,
-                                  showIntervalLabel: _showIntervalLabel,
-                                  onIntervalLabelChange: (val) =>
-                                      setState(() => _showIntervalLabel = val),
-                                  onSetState: (fn) => setState(fn),
+                              );
+                            },
+                        child: KeyedSubtree(
+                          key: ValueKey<String>(switcherId),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (_searchQuery.isNotEmpty && _noResults)
+                                _SettingsEmptyState(
+                                  onClear: _searchController.clear,
+                                  onSelectSection: (index) {
+                                    _searchController.clear();
+                                    _selectSection(index);
+                                  },
                                 ),
+                              // Matching pages first: below every matching
+                              // setting they ended up off-screen on phones.
+                              if (_searchQuery.isNotEmpty)
+                                _buildConnectedSearchResults(
+                                  context,
+                                  isCompact,
+                                ),
+                              if (_searchQuery.isEmpty &&
+                                  !(listStyle && _listOpen) &&
+                                  plusSettings.plusLabShowSettingsHero)
+                                SettingsHeroOverview(
+                                  onSearchKeyword: (keyword) {
+                                    _searchController.text = keyword;
+                                  },
+                                  onSelectTab: _selectSection,
+                                ),
+                              if (listStyle &&
+                                  _searchQuery.isEmpty &&
+                                  !_listOpen)
+                                SettingsBrowseList(onOpen: _selectSection)
+                              else ...[
+                                if (listStyle && _searchQuery.isEmpty)
+                                  SettingsBrowseBack(
+                                    onBack: () =>
+                                        setState(() => _listOpen = false),
+                                  ),
+                                KeyedSubtree(
+                                  key: _resultsKeyFor(switcherId),
+                                  child: SettingsSearchJumpLayer(
+                                    enabled:
+                                        plusSettings.plusSettingsSearchJump &&
+                                        _searchQuery.isNotEmpty,
+                                    onJump: _jumpToRow,
+                                    child: SettingsTabContent(
+                                      section: _selectedSectionIndex,
+                                      searchQuery: _searchQuery,
+                                      androidInfoFuture: _androidInfoFuture,
+                                      showIntervalLabel: _showIntervalLabel,
+                                      onIntervalLabelChange: (val) => setState(
+                                        () => _showIntervalLabel = val,
+                                      ),
+                                      onSetState: (fn) => setState(fn),
+                                    ),
+                                  ),
+                                ),
+                                if (_searchQuery.isEmpty)
+                                  _buildConnectedSettingsForSection(
+                                    context,
+                                    _selectedSectionIndex,
+                                    isCompact,
+                                  ),
+                              ],
+                              const SizedBox(height: 24),
+                              _buildFooter(context),
+                              SizedBox(
+                                // paddingOf(bottom) already includes the main
+                                // nav bar (Home uses extendBody) plus the system
+                                // gesture inset, so only add our own clearance.
+                                // A hosted (home) bar is part of that inset too.
+                                height: useSettingsScaffoldBottomBar
+                                    ? 24.0
+                                    : mainNavBarHeight +
+                                          MediaQuery.paddingOf(context).bottom +
+                                          (useSettingsFloatingBottomDock
+                                              ? kSettingsDockGap +
+                                                    kSettingsDockHeight +
+                                                    16.0
+                                              : 24.0),
                               ),
-                            ),
-                            if (_searchQuery.isEmpty)
-                              _buildConnectedSettingsForSection(
-                                context,
-                                _selectedSectionIndex,
-                                isCompact,
-                              ),
-                            const SizedBox(height: 24),
-                            _buildFooter(context),
-                            SizedBox(
-                              // paddingOf(bottom) already includes the main
-                              // nav bar (Home uses extendBody) plus the system
-                              // gesture inset, so only add our own clearance.
-                              // A hosted (home) bar is part of that inset too.
-                              height: useSettingsScaffoldBottomBar
-                                  ? 24.0
-                                  : mainNavBarHeight +
-                                        MediaQuery.paddingOf(context).bottom +
-                                        (useSettingsFloatingBottomDock
-                                            ? kSettingsDockGap +
-                                                  kSettingsDockHeight +
-                                                  16.0
-                                            : 24.0),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          if (useSettingsFloatingBottomDock && _searchQuery.isEmpty)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom:
-                  mainNavBarHeight +
-                  MediaQuery.paddingOf(context).bottom +
-                  kSettingsDockGap,
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 460),
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: _dockVisible,
-                    builder: (context, visible, child) {
-                      final anims = plusSettings.plusEnableEnhancedAnimations;
-                      return IgnorePointer(
-                        ignoring: !visible,
-                        child: AnimatedSlide(
-                          offset: visible ? Offset.zero : const Offset(0, 1.6),
-                          duration: Duration(milliseconds: anims ? 260 : 0),
-                          curve: visible
-                              ? Easing.emphasizedDecelerate
-                              : Easing.emphasizedAccelerate,
-                          child: AnimatedOpacity(
-                            opacity: visible ? 1 : 0,
-                            duration: Duration(milliseconds: anims ? 200 : 0),
-                            child: child,
+            if (useSettingsFloatingBottomDock && _searchQuery.isEmpty)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom:
+                    mainNavBarHeight +
+                    MediaQuery.paddingOf(context).bottom +
+                    kSettingsDockGap,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: _dockVisible,
+                      builder: (context, visible, child) {
+                        final anims = plusSettings.plusEnableEnhancedAnimations;
+                        return IgnorePointer(
+                          ignoring: !visible,
+                          child: AnimatedSlide(
+                            offset: visible
+                                ? Offset.zero
+                                : const Offset(0, 1.6),
+                            duration: Duration(milliseconds: anims ? 260 : 0),
+                            curve: visible
+                                ? Easing.emphasizedDecelerate
+                                : Easing.emphasizedAccelerate,
+                            child: AnimatedOpacity(
+                              opacity: visible ? 1 : 0,
+                              duration: Duration(milliseconds: anims ? 200 : 0),
+                              child: child,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: SettingsSectionDock(
-                      selectedIndex: _selectedSectionIndex,
-                      isM3E: plusSettings.plusEnableMaterialExpressive,
-                      animsEnabled: plusSettings.plusEnableEnhancedAnimations,
-                      cornerRadius: plusSettings.plusGlobalCornerRadius,
-                      onSelect: _selectSection,
+                        );
+                      },
+                      child: SettingsSectionDock(
+                        selectedIndex: _selectedSectionIndex,
+                        isM3E: plusSettings.plusEnableMaterialExpressive,
+                        animsEnabled: plusSettings.plusEnableEnhancedAnimations,
+                        cornerRadius: plusSettings.plusGlobalCornerRadius,
+                        onSelect: _selectSection,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }

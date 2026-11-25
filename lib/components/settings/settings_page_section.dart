@@ -49,6 +49,21 @@ class SettingsPageSection extends StatelessWidget {
 
     final layoutWidgets = <Widget>[
       if (_matches(
+        tr('visualLabBrowseStyle'),
+        desc: tr('visualLabBrowseStyleDesc'),
+      ))
+        SettingsChoiceRow<SettingsBrowseStyle>(
+          icon: Icons.view_list_outlined,
+          title: tr('visualLabBrowseStyle'),
+          description: tr('visualLabBrowseStyleDesc'),
+          value: plus.plusLabSettingsBrowseStyle,
+          options: {
+            SettingsBrowseStyle.tabs: tr('visualLabBrowseTabs'),
+            SettingsBrowseStyle.list: tr('visualLabBrowseList'),
+          },
+          onChanged: (v) => plus.plusLabSettingsBrowseStyle = v,
+        ),
+      if (_matches(
         tr('visualLabNavPlacement'),
         desc: tr('visualLabNavPlacementDesc'),
       ))

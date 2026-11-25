@@ -4,6 +4,7 @@
 
 ### 🎨 Design
 
+- **Settings list layout (experimental)** — Developer options → Visual Lab → Settings layout: switch from the category bar to one plain list of categories. Off by default.
 - **One drag handle on sheets** — app info, variants, description, actions and a few other sheets showed two grab bars at the top; now one.
 
 ---

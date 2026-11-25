@@ -819,7 +819,10 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
     // tab (SettingsPage hides its own bar then — see its `hostedBar`).
     final placement = plusSettings.plusSettingsNavPlacement;
     final settingsIndex = pages.indexWhere((p) => p.title == 'settings');
-    final hostsSettings = placement != SettingsNavPlacement.top;
+    // The list browse style has no category bar to host.
+    final hostsSettings =
+        placement != SettingsNavPlacement.top &&
+        plusSettings.plusLabSettingsBrowseStyle == SettingsBrowseStyle.tabs;
     final merged = placement == SettingsNavPlacement.merged;
     final settingsRow = hostsSettings
         ? SettingsCategoryBarHost(
