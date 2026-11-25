@@ -188,7 +188,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('sections follow the fixed order; rows expand on tap at 360dp', (
+  testWidgets('sections follow the fixed order; rows show in full at 360dp', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360 * 3, 800 * 3);
@@ -221,11 +221,13 @@ void main() {
     // No-headline entry: first sentence leads.
     expect(find.text('Plain entry.'), findsOneWidget);
 
-    final desc = find.textContaining('a very long description');
-    final collapsedH = tester.getSize(desc).height;
-    await tester.tap(find.text('Shiny thing'));
-    await tester.pump(const Duration(milliseconds: 400));
-    expect(tester.getSize(desc).height, greaterThan(collapsedH));
+    // The description shows in full with no expander to tap.
+    expect(
+      find.textContaining('to reveal the remaining words'),
+      findsOneWidget,
+    );
+    // Only the release card keeps its chevron; the entry has none.
+    expect(find.byIcon(Icons.expand_more_rounded), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

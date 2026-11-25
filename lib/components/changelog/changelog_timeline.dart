@@ -1053,6 +1053,9 @@ class _ReleaseRow extends StatelessWidget {
     }
 
     final children = <Widget>[];
+    // A single-category release needs no category header; the entries speak
+    // for themselves.
+    final showHeaders = _kindOrder.where((k) => r.count(k) > 0).length > 1;
     for (final k in _kindOrder) {
       final items = [
         for (final s in r.sections)
@@ -1060,45 +1063,47 @@ class _ReleaseRow extends StatelessWidget {
       ];
       if (items.isEmpty) continue;
       final (bg, fg) = _kindColors(cs, k);
-      children.add(
-        Padding(
-          padding: EdgeInsets.only(top: children.isEmpty ? 2 : 8, bottom: 2),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(4),
-                decoration: ShapeDecoration(
-                  color: bg,
-                  shape: CardMetrics.shape(8),
+      if (showHeaders) {
+        children.add(
+          Padding(
+            padding: EdgeInsets.only(top: children.isEmpty ? 2 : 8, bottom: 2),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: ShapeDecoration(
+                    color: bg,
+                    shape: CardMetrics.shape(8),
+                  ),
+                  child: Icon(kindIcon(k), size: 13, color: fg),
                 ),
-                child: Icon(kindIcon(k), size: 13, color: fg),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  kindLabel(k),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: text.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: cs.onSurface,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    kindLabel(k),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: cs.onSurface,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${items.length}',
-                style: text.labelSmall?.copyWith(color: cs.onSurfaceVariant),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text(
+                  '${items.length}',
+                  style: text.labelSmall?.copyWith(color: cs.onSurfaceVariant),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
+      }
       for (final item in items) {
         children.add(
           Padding(
             padding: const EdgeInsetsDirectional.only(start: 24),
-            child: _ChangeLine(text: item, animsEnabled: animsEnabled),
+            child: _ChangeLine(text: item),
           ),
         );
       }
@@ -1245,11 +1250,10 @@ class _RailLinePainter extends CustomPainter {
 /// that expands on tap. Entries without a "**Title** — body" shape use their
 /// first sentence as the headline. `**bold**`, `` `code` `` and `#123` render
 /// inline; the first issue reference becomes a chip that opens GitHub.
-class _ChangeLine extends StatefulWidget {
+class _ChangeLine extends StatelessWidget {
   final String text;
-  final bool animsEnabled;
 
-  const _ChangeLine({required this.text, required this.animsEnabled});
+  const _ChangeLine({required this.text});
 
   static final _tokens = RegExp(r'\*\*(.+?)\*\*|`([^`]+)`|#(\d+)\b');
   static final _headline = RegExp(
@@ -1276,13 +1280,6 @@ class _ChangeLine extends StatefulWidget {
     if (m == null) return (t, '');
     return (t.substring(0, m.start).trim(), t.substring(m.end).trim());
   }
-
-  @override
-  State<_ChangeLine> createState() => _ChangeLineState();
-}
-
-class _ChangeLineState extends State<_ChangeLine> {
-  bool _open = false;
 
   List<InlineSpan> _spans(String text, TextStyle? base, ColorScheme cs) {
     final spans = <InlineSpan>[];
@@ -1327,9 +1324,9 @@ class _ChangeLineState extends State<_ChangeLine> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final (headline, body) = _ChangeLine.headlineAndBody(widget.text);
+    final (headline, body) = _ChangeLine.headlineAndBody(text);
     final firstIssue = _ChangeLine._tokens
-        .allMatches(widget.text)
+        .allMatches(text)
         .map((m) => m.group(3))
         .whereType<String>()
         .firstOrNull;
@@ -1354,69 +1351,29 @@ class _ChangeLineState extends State<_ChangeLine> {
           overflow: TextOverflow.ellipsis,
         ),
         if (hasBody)
-          AnimatedSize(
-            duration: Duration(milliseconds: widget.animsEnabled ? 200 : 0),
-            curve: AppConstants.expressiveDecelerate,
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 1),
-              child: Text.rich(
-                TextSpan(
-                  style: bodyStyle,
-                  children: _spans(body, bodyStyle, cs),
-                ),
-                maxLines: _open ? null : 1,
-                overflow: _open ? TextOverflow.clip : TextOverflow.ellipsis,
-              ),
+          Padding(
+            padding: const EdgeInsets.only(top: 1),
+            child: Text.rich(
+              TextSpan(style: bodyStyle, children: _spans(body, bodyStyle, cs)),
             ),
           ),
       ],
     );
 
-    return Semantics(
-      expanded: hasBody ? _open : null,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: hasBody
-            ? () {
-                AppHaptics.selectionClick();
-                setState(() => _open = !_open);
-              }
-            : null,
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: 4,
-            top: 4,
-            bottom: 4,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: content),
-              if (hasBody)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 4, top: 1),
-                  child: AnimatedRotation(
-                    turns: _open ? 0.5 : 0,
-                    duration: Duration(
-                      milliseconds: widget.animsEnabled ? 200 : 0,
-                    ),
-                    curve: AppConstants.expressiveDecelerate,
-                    child: Icon(
-                      Icons.expand_more_rounded,
-                      size: 18,
-                      color: cs.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-              if (firstIssue != null)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 4),
-                  child: _IssueChip(number: firstIssue),
-                ),
-            ],
-          ),
-        ),
+    // Entries are a sentence or two, so they show in full: no per-line
+    // expander to open.
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: 4, top: 4, bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(child: content),
+          if (firstIssue != null)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 4),
+              child: _IssueChip(number: firstIssue),
+            ),
+        ],
       ),
     );
   }
