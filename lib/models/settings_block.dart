@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/app_utils.dart';
 
 /// Categories grouping settings blocks.
 enum SettingsCategory {
@@ -129,7 +130,7 @@ class SettingsLayoutConfiguration {
     );
   }
 
-  String encode() => jsonEncode(toJson());
+  String encode() => safeJsonEncode(toJson());
 
   static SettingsLayoutConfiguration decode(String? raw) {
     if (raw == null || raw.trim().isEmpty) {

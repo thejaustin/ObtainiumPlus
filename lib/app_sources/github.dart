@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
+import 'package:obtainium/utils/app_utils.dart';
 import 'package:obtainium/utils/min_update_age.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
@@ -411,7 +412,7 @@ class GitHub extends AppSource {
   static final Map<String, String> _pendingAtomEtags = {};
 
   static String _settingsHash(Map<String, dynamic> settings) =>
-      sha1.convert(utf8.encode(jsonEncode(settings))).toString();
+      sha1.convert(utf8.encode(safeJsonEncode(settings))).toString();
 
   @visibleForTesting
   static Future<Response> Function(String url, Map<String, String> headers)?
