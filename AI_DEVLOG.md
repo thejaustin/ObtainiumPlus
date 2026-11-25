@@ -1863,3 +1863,4 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - Settings: removed the redundant Obtainium+ popup button (and the Visual Lab "Plus entry" option); renamed confusing labels per docs/SETTINGS_UX_AUDIT.md; deleted 7+ unreferenced en.json keys from every locale. Open: row grouping (#7), sentence-case pass (#12, deferred).
 - Dev flow: docs/RELEASE_CHECKLIST.md, scripts/dev/device-smoke.sh, CONTRIBUTING section. p15 smoke test passed on device; new timeline features not yet eyeballed on screen.
 - Lesson: never run `dart format lib test` wholesale (reformats ~20 unrelated files); format only touched files.
+- Late-uploaded APK vs `releases.atom` ETag: not measurable without a real late upload; risk is bounded by the 24 h `_unchangedMaxAge` in GitHubSource.unchangedSinceLastCheck (state older than a day forces a full check), so worst case is a one-day delay on the rare release whose assets are attached after publish.

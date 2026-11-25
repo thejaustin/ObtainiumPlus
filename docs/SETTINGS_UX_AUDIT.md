@@ -177,3 +177,5 @@ a bulk rename adds churn for little gain; apply it to new strings only. Open: #5
 its section is now titled "Shape and spinner options". Open: #5, #7.
 
 Update: #5 done (master retitled "Plus enhancements"; description lists what it gates: Plus rows via hideWhenPlusOff, notification enhancements and quiet hours, system updates scanner, Plus-only visual groups; layout toggles stay visible). #7 done: rows were already grouped under "Settings page" and the hero-card rename was in place; added Visual Lab <-> Settings pointers in descriptions (strings only, no key changes).
+
+Update (2026-11-25): verified against en.json that cheap win 4 is fully applied (list tile description, "Animated progress bars", "Version pill on update button") and #7 needs no further work. Only #12 (sentence case, new strings only) remains, by decision.
