@@ -1855,3 +1855,11 @@ Verified with `scripts/dev/check-syntax.sh` (parser-only, no local Flutter SDK) 
 - 25 settings-layout strings were missing from en.json (raw keys shown in the customiser sheet); added to every locale (English text).
 - Launch update check is opt-in (`checkOnStart` default false) — not a bug.
 - Skipped: not awaiting appsInitFuture (~187 ms debug, late-field risk); phase-2 final notify stays full (badges need it).
+
+## 2026-11-25 — What's New and settings wording pass
+- What's New is a ShizukuPlus-style timeline: rail node per release, latest/new expanded, older collapsed to icon+count chips, headline + one-line expandable description, `#N` issue chips, "You are here" marker, per-kind filter counts (remembered for the session), skeleton loading, cached copy hint when GitHub is unreachable. Copy-notes was built then removed (not wanted).
+- Parser: stable section order, same-kind headings merged, duplicate titles dropped, conventional-commit prefixes stripped. CHANGELOG_USER.md entries shortened to "**Title** — ≤8 words".
+- CI: release badge now follows Co-authored-by trailers (was hardcoded Antigravity); fallback commit lines drop `feat:`/`fix:` prefixes. An empty `[Upcoming]` still falls back to commit logs, and the first build after a push archives it.
+- Settings: removed the redundant Obtainium+ popup button (and the Visual Lab "Plus entry" option); renamed confusing labels per docs/SETTINGS_UX_AUDIT.md; deleted 7+ unreferenced en.json keys from every locale. Open: row grouping (#7), sentence-case pass (#12, deferred).
+- Dev flow: docs/RELEASE_CHECKLIST.md, scripts/dev/device-smoke.sh, CONTRIBUTING section. p15 smoke test passed on device; new timeline features not yet eyeballed on screen.
+- Lesson: never run `dart format lib test` wholesale (reformats ~20 unrelated files); format only touched files.
