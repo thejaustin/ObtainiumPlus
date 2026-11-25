@@ -1,0 +1,125 @@
+name: Crowdin Sync
+
+# Needs repo secrets CROWDIN_PROJECT_ID and CROWDIN_TOKEN (a Crowdin personal
+# access token). CROWDIN_PR_TOKEN (fine-grained, this repo, Contents + Pull
+# requests write) is optional: it makes the translation PR run the normal
+# checks, which a PR opened with the built-in token doesn't.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assets/translations/en.json'
+  schedule:
+    # Weekly Monday 06:17 UTC: pull translations and open a PR.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      direction:
+        description: 'upload (send English strings), download (pull translations into a PR) or status (progress per language)'
+        required: true
+        default: 'upload'
+        type: choice
+        options: [upload, download, status]
+      upload_translations:
+        description: 'With upload: also send the repo translations (once, to seed Crowdin). Strings equal to English are skipped.'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  upload-sources:
+    name: Upload source strings to Crowdin
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.direction == 'upload')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Translations go up only on request and are never auto-approved.
+      - name: Upload sources
+        uses: crowdin/github-action@8f01d54f70f1713ee3f09d82c2bbb2daeac28689 # v2
+        with:
+          upload_sources: true
+          upload_translations: ${{ github.event.inputs.upload_translations == 'true' }}
+          auto_approve_imported: false
+          import_eq_suggestions: false
+          config: crowdin.yml
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}
+
+  download-translations:
+    name: Download translations from Crowdin → open PR
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.direction == 'download')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          token: ${{ secrets.CROWDIN_PR_TOKEN || github.token }}
+
+      - name: Remember the current translations
+        run: cp -r assets/translations "$RUNNER_TEMP/translations-before"
+
+      # Download only; the merge below decides what is kept (see the script).
+      - name: Download from Crowdin
+        uses: crowdin/github-action@8f01d54f70f1713ee3f09d82c2bbb2daeac28689 # v2
+        with:
+          upload_sources: false
+          download_translations: true
+          create_pull_request: false
+          push_translations: false
+          skip_untranslated_strings: true
+          config: crowdin.yml
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}
+
+      - name: Merge safely and validate
+        run: |
+          sudo chown -R "$(id -u):$(id -g)" "$GITHUB_WORKSPACE"
+          python3 scripts/dev/merge-crowdin-json.py "$RUNNER_TEMP/translations-before"
+          python3 scripts/dev/check-translations.py
+
+      - name: Open a pull request
+        env:
+          GH_TOKEN: ${{ secrets.CROWDIN_PR_TOKEN || github.token }}
+        run: |
+          if git diff --quiet -- assets/translations; then
+            echo "No new translations from Crowdin." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -B crowdin-translations
+          git add assets/translations
+          git commit -q -m "chore(i18n): sync translations from Crowdin"
+          git push -q --force origin crowdin-translations
+          if [ -z "$(gh pr list --head crowdin-translations --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --base main --head crowdin-translations \
+              --title "chore(i18n): sync translations from Crowdin" \
+              --body "Automated sync from Crowdin. Only plain-string translations that differ from English are taken; plural forms and strings Crowdin has no translation for stay as they were in the repo. The translation checker passed. Skim the diff before merging."
+          fi
+          echo "Opened or updated the crowdin-translations PR." >> "$GITHUB_STEP_SUMMARY"
+
+  status:
+    name: Crowdin progress per language
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.direction == 'status'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Crowdin status
+        uses: crowdin/github-action@8f01d54f70f1713ee3f09d82c2bbb2daeac28689 # v2
+        with:
+          command: status
+          config: crowdin.yml
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}

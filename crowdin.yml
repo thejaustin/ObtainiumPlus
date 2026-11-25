@@ -1,0 +1,21 @@
+# Crowdin sync for the app's strings. Project id and token come from the
+# CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN repo secrets, so nothing
+# private lives here. Workflow: .github/workflows/crowdin-sync.yml
+project_id_env: CROWDIN_PROJECT_ID
+api_token_env: CROWDIN_PERSONAL_TOKEN
+preserve_hierarchy: true
+
+files:
+  - source: /assets/translations/en.json
+    translation: /assets/translations/%two_letters_code%.json
+    languages_mapping:
+      two_letters_code:
+        # Crowdin language id → file name. Only codes whose file differs from
+        # the two-letter code are listed. A language is added to the Crowdin
+        # project when its file exists here. Esperanto (en-EO.json) is not
+        # synced: its file name doesn't match a Crowdin language code.
+        es-ES: es
+        pt-PT: pt
+        pt-BR: pt-BR
+        zh-CN: zh
+        zh-TW: zh-Hant-TW
