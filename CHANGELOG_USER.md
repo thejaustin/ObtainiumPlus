@@ -1,5 +1,11 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.5-p18] — 2026-11-25
+
 ### ✨ New
 
 - **Crash reports are opt-in** — Off by default; switch in Troubleshooting.
