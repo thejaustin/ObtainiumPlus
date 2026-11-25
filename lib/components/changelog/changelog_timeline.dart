@@ -838,61 +838,66 @@ class _ReleaseRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          InkWell(
-            onTap: collapsible ? onToggle : null,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 10, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: 4,
-                          crossAxisAlignment: WrapCrossAlignment.center,
-                          children: [
-                            Text(
-                              r.tag,
-                              style: text.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                            ..._badges(cs),
-                          ],
-                        ),
-                        if (meta.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+          Semantics(
+            expanded: collapsible ? expanded : null,
+            child: InkWell(
+              onTap: collapsible ? onToggle : null,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 10, 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Wrap(
-                            spacing: 8,
-                            runSpacing: 2,
+                            spacing: 6,
+                            runSpacing: 4,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Text(
-                                meta,
-                                style: text.labelSmall?.copyWith(
-                                  color: cs.onSurfaceVariant,
+                                r.tag,
+                                style: text.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'monospace',
                                 ),
                               ),
+                              ..._badges(cs),
                             ],
                           ),
+                          if (meta.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 2,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  meta,
+                                  style: text.labelSmall?.copyWith(
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
-                      ],
-                    ),
-                  ),
-                  if (collapsible)
-                    AnimatedRotation(
-                      turns: expanded ? 0.5 : 0,
-                      duration: Duration(milliseconds: animsEnabled ? 220 : 0),
-                      curve: AppConstants.expressiveDecelerate,
-                      child: Icon(
-                        Icons.expand_more_rounded,
-                        color: cs.onSurfaceVariant,
                       ),
                     ),
-                ],
+                    if (collapsible)
+                      AnimatedRotation(
+                        turns: expanded ? 0.5 : 0,
+                        duration: Duration(
+                          milliseconds: animsEnabled ? 220 : 0,
+                        ),
+                        curve: AppConstants.expressiveDecelerate,
+                        child: Icon(
+                          Icons.expand_more_rounded,
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1344,42 +1349,49 @@ class _ChangeLineState extends State<_ChangeLine> {
       ],
     );
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(8),
-      onTap: hasBody
-          ? () {
-              AppHaptics.selectionClick();
-              setState(() => _open = !_open);
-            }
-          : null,
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(start: 4, top: 4, bottom: 4),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: content),
-            if (hasBody)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 4, top: 1),
-                child: AnimatedRotation(
-                  turns: _open ? 0.5 : 0,
-                  duration: Duration(
-                    milliseconds: widget.animsEnabled ? 200 : 0,
-                  ),
-                  curve: AppConstants.expressiveDecelerate,
-                  child: Icon(
-                    Icons.expand_more_rounded,
-                    size: 18,
-                    color: cs.onSurfaceVariant,
+    return Semantics(
+      expanded: hasBody ? _open : null,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: hasBody
+            ? () {
+                AppHaptics.selectionClick();
+                setState(() => _open = !_open);
+              }
+            : null,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.only(
+            start: 4,
+            top: 4,
+            bottom: 4,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: content),
+              if (hasBody)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 4, top: 1),
+                  child: AnimatedRotation(
+                    turns: _open ? 0.5 : 0,
+                    duration: Duration(
+                      milliseconds: widget.animsEnabled ? 200 : 0,
+                    ),
+                    curve: AppConstants.expressiveDecelerate,
+                    child: Icon(
+                      Icons.expand_more_rounded,
+                      size: 18,
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ),
-              ),
-            if (firstIssue != null)
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 4),
-                child: _IssueChip(number: firstIssue),
-              ),
-          ],
+              if (firstIssue != null)
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 4),
+                  child: _IssueChip(number: firstIssue),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1394,26 +1406,29 @@ class _IssueChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-      onTap: () {
-        AppHaptics.selectionClick();
-        launchUrlString(
-          'https://github.com/$_repo/issues/$number',
-          mode: LaunchMode.externalApplication,
-        );
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
-        ),
-        child: Text(
-          '#$number',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: cs.primary,
-            fontWeight: FontWeight.w700,
+    return Semantics(
+      link: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+        onTap: () {
+          AppHaptics.selectionClick();
+          launchUrlString(
+            'https://github.com/$_repo/issues/$number',
+            mode: LaunchMode.externalApplication,
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(CardMetrics.pillRadius),
+          ),
+          child: Text(
+            '#$number',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: cs.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ),
