@@ -646,7 +646,10 @@ class _GeneratedFormState extends State<GeneratedForm> {
     if (item is GeneratedFormSwitch) {
       return ToggleTile(
         label: tr(item.label),
-        value: values[item.key] as bool,
+        // A setting stored as text ("true") must not crash the whole form.
+        value: values[item.key] is bool
+            ? values[item.key] as bool
+            : values[item.key]?.toString() == 'true',
         noPadding: widget.noTilePadding,
         onChanged: item.disabled
             ? null

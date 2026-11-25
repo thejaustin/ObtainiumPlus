@@ -119,6 +119,12 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
       ),
     );
   } else {
+    // Read before the dialog builds: a lookup from the builder's context could
+    // fail if the route outlives its provider scope.
+    bool isTV = false;
+    try {
+      isTV = context.read<SettingsProvider>().isTV;
+    } catch (_) {}
     showDialog(
       context: context,
       builder: (BuildContext ctx) {
@@ -137,7 +143,7 @@ void showMessage(dynamic e, BuildContext context, {bool isError = false}) {
           ),
           actions: [
             FilledButton.tonal(
-              autofocus: ctx.read<SettingsProvider>().isTV,
+              autofocus: isTV,
               onPressed: () {
                 Navigator.of(ctx).pop(null);
               },

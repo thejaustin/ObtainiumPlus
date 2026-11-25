@@ -1427,6 +1427,13 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
     );
   }
 
+  // Null (decode at full size) when the layout hands us a non-finite size, so
+  // round() can't throw "Infinity or NaN toInt" (OBTAINIUMPLUS-3S).
+  int? _decodeWidth(double size) {
+    final px = size * MediaQuery.devicePixelRatioOf(context);
+    return px.isFinite && px > 0 ? px.round() : null;
+  }
+
   Widget _buildIconWidget(Uint8List? icon, double size) {
     if (icon != null) {
       return ClipRRect(
@@ -1436,7 +1443,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
           width: size,
           height: size,
           // Decode at display size, not the bitmap's full resolution.
-          cacheWidth: (size * MediaQuery.devicePixelRatioOf(context)).round(),
+          cacheWidth: _decodeWidth(size),
           gaplessPlayback: true,
           fit: BoxFit.cover,
           filterQuality: FilterQuality.medium,

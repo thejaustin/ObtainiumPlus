@@ -17,6 +17,8 @@
 
 ### 🐛 Fixed
 
+- **App picker crash** — the system app grid no longer crashes on some layouts.
+- **Settings form crash** — a switch with a bad saved value no longer breaks the whole form.
 - **Settings search** — "Corner style" no longer shows for unrelated searches.
 
 ---
