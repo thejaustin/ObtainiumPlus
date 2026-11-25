@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:obtainium/components/changelog/changelog_parser.dart';
 import 'package:obtainium/components/changelog/changelog_timeline.dart';
 import 'package:obtainium/providers/plus_settings_provider.dart';
 import 'package:obtainium/utils/app_localizations_delegates.dart';
@@ -303,21 +302,6 @@ void main() {
     expect(find.text('Shiny'), findsNothing);
     expect(find.text('One'), findsOneWidget);
     expect(tester.takeException(), isNull);
-  });
-
-  test('copy notes builds plain text without markdown', () {
-    final r = ChangelogRelease(
-      tag: 'v9',
-      publishedAt: null,
-      sections: [
-        ChangeSection(ChangeKind.fix, ['fix **a** `b`']),
-        ChangeSection(ChangeKind.feature, ['new thing']),
-      ],
-    );
-    expect(
-      changelogReleaseNotes(r),
-      'v9\n\nFeatures\n- new thing\n\nFixes\n- fix a b',
-    );
   });
 
   testWidgets('shows a skeleton while loading and a saved copy on failure', (

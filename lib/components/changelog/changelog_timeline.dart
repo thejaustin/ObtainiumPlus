@@ -4,7 +4,6 @@ import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:http/http.dart';
 import 'package:obtainium/components/changelog/changelog_parser.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
@@ -237,16 +236,6 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
     _loadMore();
   }
 
-  Future<void> _copyNotes(ChangelogRelease r) async {
-    AppHaptics.selectionClick();
-    final messenger = ScaffoldMessenger.maybeOf(context);
-    await Clipboard.setData(ClipboardData(text: changelogReleaseNotes(r)));
-    if (!mounted) return;
-    messenger
-      ?..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(content: Text(tr('changelogNotesCopied'))));
-  }
-
   bool _isInstalled(ChangelogRelease r) =>
       _bare(r.tag) == _bare(widget.installedVersion);
 
@@ -427,7 +416,6 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
                   collapsible: collapsible,
                   animsEnabled: anims,
                   radius: radius,
-                  onCopy: () => _copyNotes(r),
                   onToggle: () {
                     AppHaptics.segmentTick();
                     setState(() {
@@ -804,7 +792,6 @@ class _ReleaseRow extends StatelessWidget {
   final bool animsEnabled;
   final double radius;
   final VoidCallback onToggle;
-  final VoidCallback onCopy;
 
   const _ReleaseRow({
     super.key,
@@ -820,7 +807,6 @@ class _ReleaseRow extends StatelessWidget {
     required this.animsEnabled,
     required this.radius,
     required this.onToggle,
-    required this.onCopy,
   });
 
   @override
@@ -896,14 +882,6 @@ class _ReleaseRow extends StatelessWidget {
                       ],
                     ),
                   ),
-                  if (collapsible)
-                    IconButton(
-                      icon: const Icon(Icons.copy_rounded, size: 18),
-                      tooltip: tr('changelogCopyNotes'),
-                      visualDensity: VisualDensity.compact,
-                      color: cs.onSurfaceVariant,
-                      onPressed: onCopy,
-                    ),
                   if (collapsible)
                     AnimatedRotation(
                       turns: expanded ? 0.5 : 0,
@@ -1607,25 +1585,6 @@ class _ErrorState extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Plain-text notes for one release: tag, then each kind with its items.
-@visibleForTesting
-String changelogReleaseNotes(ChangelogRelease r) {
-  String clean(String t) => t.replaceAll('**', '').replaceAll('`', '');
-  final b = StringBuffer(r.tag);
-  for (final k in _kindOrder) {
-    final items = [
-      for (final s in r.sections)
-        if (s.kind == k) ...s.items,
-    ];
-    if (items.isEmpty) continue;
-    b.write('\n\n${kindLabel(k)}');
-    for (final i in items) {
-      b.write('\n- ${clean(i)}');
-    }
-  }
-  return b.toString();
 }
 
 /// Boundary between releases the user hasn't installed and the ones they have.

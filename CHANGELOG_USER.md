@@ -3,7 +3,6 @@
 ### ✨ New
 
 - **You are here** — Marker shows which releases you haven't installed.
-- **Copy notes** — Copy any release's notes in one tap.
 - **Filter counts** — Chips show how many changes per type.
 - **Offline notes** — Saved copy stays visible when GitHub is unreachable.
 

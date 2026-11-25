@@ -1721,8 +1721,6 @@
     },
     "changelogScrollToTop": "Back to top",
     "changelogYouAreHere": "You are here",
-    "changelogCopyNotes": "Copy notes",
-    "changelogNotesCopied": "Notes copied",
     "changelogCachedHint": "Saved copy - couldn't refresh",
     "updatesPlacement": "Where updates show",
     "updatesPlacementDescription": "Show apps with updates in the Recent Updates row, at the top of the list, both, or neither",
