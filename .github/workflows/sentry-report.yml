@@ -1,0 +1,49 @@
+name: Sentry Report
+
+# Manual: prints per-issue counts, last-seen dates and releases for unresolved
+# and recently resolved Sentry issues, so a fix can be checked against field
+# data. Read-only; prints no tokens or event payloads.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'af-developments' }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || 'obtainiumplus' }}
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.parse
+          org, proj = os.environ['SENTRY_ORG'], os.environ['SENTRY_PROJECT']
+          tok = os.environ['SENTRY_AUTH_TOKEN']
+          def get(path):
+              req = urllib.request.Request('https://sentry.io/api/0/' + path,
+                  headers={'Authorization': 'Bearer ' + tok})
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  return json.load(r)
+          for q in ('is:unresolved', 'is:resolved'):
+              try:
+                  issues = get(f'projects/{org}/{proj}/issues/?' + urllib.parse.urlencode(
+                      {'query': q, 'statsPeriod': '', 'limit': 100}))
+              except Exception as e:
+                  print(q, 'failed:', type(e).__name__, getattr(e, 'code', ''))
+                  continue
+              print(f'\n== {q}: {len(issues)} issues')
+              print('short | count | users | firstSeen | lastSeen | lastRelease | title')
+              for i in sorted(issues, key=lambda x: x.get('lastSeen',''), reverse=True):
+                  try:
+                      d = get(f"organizations/{org}/issues/{i['id']}/")
+                      rel = (d.get('lastRelease') or {}).get('version', '-')
+                  except Exception:
+                      rel = '?'
+                  print(' | '.join([i['shortId'], str(i['count']), str(i['userCount']),
+                      i['firstSeen'][:10], i['lastSeen'][:16], rel,
+                      i['title'][:70]]))
+          PY
