@@ -1,5 +1,11 @@
 ## [Upcoming]
 
+<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+
+---
+
+## [1.7.5-p20] — 2026-11-25
+
 ### 🎨 Design
 
 - **Pre-releases tucked away** — What's New hides them; tap the chip to show.
@@ -8,8 +14,6 @@
 ### 🐛 Fixed
 
 - **Settings search** — "Corner style" no longer shows for unrelated searches.
-
-<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
 ---
 
