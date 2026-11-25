@@ -1685,6 +1685,7 @@
   "plusGridShowSourceBadgeDescription": "Show the repository source icon next to version pills on app tiles",
   "appTilePreview": "Live Tile & Grid Style Preview",
   "changelogFilterAll": "All",
+  "changelogPrereleases": "Pre-releases",
   "changelogKindFeatures": "Features",
   "changelogKindFixes": "Fixes",
   "changelogKindDesign": "Design",

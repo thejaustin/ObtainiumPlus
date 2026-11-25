@@ -130,6 +130,36 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('pre-releases are hidden until the chip is switched on', (
+    tester,
+  ) async {
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [
+            _release(
+              'v2.0.0',
+              '2026-10-21T20:00:00Z',
+              '### 🐛 Bug Fixes\n- fix: stable fix (1)',
+            ),
+            {
+              ..._release(
+                'dev-901',
+                '2026-10-21T10:00:00Z',
+                '### ✨ New Features\n- feat: nightly only thing (2)',
+              ),
+              'prerelease': true,
+            },
+          ]
+        : [];
+    await pumpTimeline(tester, installed: '2.0.0');
+    expect(find.text('v2.0.0'), findsWidgets);
+    expect(find.text('dev-901'), findsNothing);
+
+    await tester.tap(find.widgetWithText(FilterChip, 'Pre-releases'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('dev-901'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('older releases collapse to kind chips and expand on tap', (
     tester,
   ) async {

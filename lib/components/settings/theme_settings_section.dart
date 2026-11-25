@@ -151,12 +151,13 @@ class ThemeSettingsSection extends StatelessWidget {
           labelBuilder: (v) => '${v.toStringAsFixed(1)}px',
           onChanged: (val) => plusSettings.plusGlobalCornerRadius = val,
         ),
-      _buildShapeFamilyPicker(
-        context,
-        title: tr('shapeFamily'),
-        selected: plusSettings.plusShapeFamily,
-        onSelected: (f) => plusSettings.plusShapeFamily = f!,
-      ),
+      if (_matches(tr('shapeFamily')))
+        _buildShapeFamilyPicker(
+          context,
+          title: tr('shapeFamily'),
+          selected: plusSettings.plusShapeFamily,
+          onSelected: (f) => plusSettings.plusShapeFamily = f!,
+        ),
       if (_matches(
         tr('plusOverrideIndividualCornerRadius'),
         desc: tr('plusOverrideIndividualCornerRadiusDescription'),

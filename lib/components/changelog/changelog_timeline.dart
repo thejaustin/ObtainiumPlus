@@ -128,6 +128,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
   bool _cached = false; // showing a saved copy after a failed refresh
   final Set<String> _toggled = {}; // releases flipped from their default
   bool _showTop = false;
+  bool _showPre = false; // pre-releases are hidden unless asked for
 
   List<ChangelogRelease> get _releases => _ReleaseCache.releases;
 
@@ -262,9 +263,18 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
         (upToInstalled == null || upToInstalled <= 0);
   }
 
+  bool get _hasPrereleases =>
+      _releases.any((r) => r.isPrerelease && r.sections.isNotEmpty);
+
   /// Releases worth showing: something user-facing, or the one installed.
-  List<ChangelogRelease> get _meaningful =>
-      _releases.where((r) => r.sections.isNotEmpty || _isInstalled(r)).toList();
+  /// Pre-releases only when asked for (or when they are the installed one).
+  List<ChangelogRelease> get _meaningful => _releases
+      .where(
+        (r) =>
+            _isInstalled(r) ||
+            (r.sections.isNotEmpty && (_showPre || !r.isPrerelease)),
+      )
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -465,7 +475,8 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
     final present = ChangeKind.values
         .where((k) => all.any((r) => r.count(k) > 0))
         .toList();
-    if (present.length < 2) return const SizedBox(height: 8);
+    final hasPre = _hasPrereleases;
+    if (present.length < 2 && !hasPre) return const SizedBox(height: 8);
     // (a remembered filter whose kind is gone shows the empty state + "All")
     return SizedBox(
       height: 52,
@@ -482,7 +493,7 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
               _setFilter(_filter.clear);
             },
           ),
-          for (final k in present) ...[
+          for (final k in present.length < 2 ? <ChangeKind>[] : present) ...[
             const SizedBox(width: 8),
             FilterChip(
               avatar: Icon(kindIcon(k), size: 16),
@@ -506,6 +517,19 @@ class _ChangelogTimelineState extends State<ChangelogTimeline> {
                 _setFilter(() {
                   if (!_filter.remove(k)) _filter.add(k);
                 });
+              },
+            ),
+          ],
+          if (hasPre) ...[
+            const SizedBox(width: 8),
+            FilterChip(
+              avatar: const Icon(Icons.science_outlined, size: 16),
+              label: Text(tr('changelogPrereleases')),
+              selected: _showPre,
+              showCheckmark: false,
+              onSelected: (_) {
+                AppHaptics.segmentTick();
+                setState(() => _showPre = !_showPre);
               },
             ),
           ],
