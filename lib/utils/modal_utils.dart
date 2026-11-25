@@ -26,6 +26,7 @@ Future<T?> showDraggableModalBottomSheet<T>({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    showDragHandle: false, // the sheet draws its own handle
     useSafeArea: false, // Handled internally
     barrierColor: Theme.of(
       context,

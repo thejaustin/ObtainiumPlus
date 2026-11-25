@@ -25,6 +25,7 @@ Future<void> showAppVariantsSheet({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    showDragHandle: false, // the sheet draws its own handle
     barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.4),
     builder: (ctx) => _AppVariantsSheet(appId: appId),
   );

@@ -32,6 +32,7 @@ Future<void> showAppDescriptionModal({
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
+    showDragHandle: false, // the sheet draws its own handle
     barrierColor: Theme.of(context).colorScheme.scrim.withValues(alpha: 0.45),
     builder: (ctx) => _AppDescriptionModalSheet(app: app),
   );

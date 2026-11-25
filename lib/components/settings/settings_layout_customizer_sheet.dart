@@ -18,6 +18,7 @@ class SettingsLayoutCustomizerSheet extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false, // the sheet draws its own handle
       builder: (context) => const SettingsLayoutCustomizerSheet(),
     );
   }

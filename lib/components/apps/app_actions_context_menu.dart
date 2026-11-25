@@ -32,6 +32,7 @@ class AppActionsContextMenu {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false, // the sheet draws its own handle
       builder: (context) {
         final theme = Theme.of(context);
         final plusSettings = context.watch<PlusSettingsProvider>();

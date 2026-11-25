@@ -352,6 +352,7 @@ class _SystemAppSelectorState extends State<SystemAppSelector> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
+      showDragHandle: false, // the sheet draws its own handle
       builder: (ctx) => StatefulBuilder(
         builder: (context, setSheetState) {
           final selectedLabels = Set<String>.from(currentLabels);
