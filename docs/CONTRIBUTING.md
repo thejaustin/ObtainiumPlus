@@ -21,6 +21,13 @@ Please see the [developer guide](docs/DEVELOPER_GUIDE.md) for in-depth details a
 It is encouraged that all commits have their signature verified, that is signed. 
 Please see the [relevant GitHub documentation](https://docs.github.com/en/authentication/managing-commit-signature-verification/about-commit-signature-verification#ssh-commit-signature-verification); this links to SSH key signing, but other signing is acceptable.
 
+### Commits, changelog and releases
+
+- Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `perf:`, `docs:` ...); CI lints them.
+- User-facing changes go in `CHANGELOG_USER.md` under `[Upcoming]`, in the style of [Keep a Changelog](https://keepachangelog.com/): emoji groups (✨ New, ⚡ Faster, 🎨 Design, 🐛 Fixed, 🔧 Other) and entries like `- **Title** — a few words`. The in-app What's New and the GitHub release notes are built from it; if it is empty, CI falls back to commit subjects.
+- Releases are cut by CI on every push to `main`. Before pushing, and after the build, follow [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md); `scripts/dev/device-smoke.sh` is the quick on-device check.
+- Settings wording follows [SETTINGS_UX_AUDIT.md](SETTINGS_UX_AUDIT.md): one meaning per word, sentence case for new strings, and never rename a setting's storage key.
+
 ### Logging
 
 Please use our [AppLogger](lib/core/logging/app_logger.dart) for any internal logging.
