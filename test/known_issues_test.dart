@@ -56,4 +56,39 @@ void main() {
     expect(byRange.affects('x', 15), isTrue);
     expect(byRange.affects('x', 21), isFalse);
   });
+
+  group('crash-matched notices', () {
+    final issue = KnownIssue.fromJson({
+      'id': 'c',
+      'title': 't',
+      'description': 'd',
+      'githubIssueUrl': 'https://example.com',
+      'fixedInVersion': '1.7.5-p1',
+      'errorPatterns': ["'double' is not a subtype of type 'bool?'"],
+    });
+    const log = "TypeError: type 'double' is not a subtype of type 'bool?'";
+
+    test('shown to an older build whose crash log matches', () {
+      expect(issue.matchesCrash('1.7.3-p15', log), isTrue);
+      expect(issue.matchesCrash('1.7.1-p31', log), isTrue);
+    });
+
+    test('not shown on the fixed or a newer build, or for another error', () {
+      expect(issue.matchesCrash('1.7.5-p1', log), isFalse);
+      expect(issue.matchesCrash('1.7.5-p30', log), isFalse);
+      expect(issue.matchesCrash('1.8.0', log), isFalse);
+      expect(issue.matchesCrash('1.7.3-p15', 'Null check operator'), isFalse);
+      expect(issue.matchesCrash('weird', log), isFalse);
+    });
+
+    test('never affects a launch without a crash', () {
+      expect(issue.affects('1.7.3-p15', 25283), isFalse);
+    });
+
+    test('compareVersionNames orders by name, not build number', () {
+      expect(compareVersionNames('1.7.3-p15', '1.7.5-p1'), lessThan(0));
+      expect(compareVersionNames('1.7.5-p10', '1.7.5-p9'), greaterThan(0));
+      expect(compareVersionNames('1.7.5', '1.7.5-p0'), 0);
+    });
+  });
 }

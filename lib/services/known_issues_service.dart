@@ -29,6 +29,12 @@ class KnownIssue {
   /// optional "don't show again" toggle) or tap "Update Now".
   final bool forceUpdate;
 
+  /// Case-insensitive substrings of an error message. When the crash log left
+  /// by the previous run contains one, the notice is shown even though the
+  /// running version isn't listed in [affectedVersions], as long as it is older
+  /// than [fixedInVersion]. This reaches users on old builds that crashed.
+  final List<String> errorPatterns;
+
   const KnownIssue({
     required this.id,
     required this.title,
@@ -40,6 +46,7 @@ class KnownIssue {
     required this.githubIssueUrl,
     this.fixedInVersion,
     this.forceUpdate = false,
+    this.errorPatterns = const [],
   });
 
   factory KnownIssue.fromJson(Map<String, dynamic> json) => KnownIssue(
@@ -56,7 +63,20 @@ class KnownIssue {
     githubIssueUrl: json['githubIssueUrl'] as String,
     fixedInVersion: json['fixedInVersion'] as String?,
     forceUpdate: (json['forceUpdate'] as bool?) ?? false,
+    errorPatterns:
+        (json['errorPatterns'] as List<dynamic>?)?.cast<String>() ?? [],
   );
+
+  /// True when [crashLog] matches one of [errorPatterns] and [versionName] is
+  /// older than [fixedInVersion] (versions look like `1.7.3-p15`).
+  bool matchesCrash(String versionName, String crashLog) {
+    final fixed = fixedInVersion;
+    if (errorPatterns.isEmpty || fixed == null) return false;
+    final log = crashLog.toLowerCase();
+    if (!errorPatterns.any((p) => log.contains(p.toLowerCase()))) return false;
+    final cmp = compareVersionNames(versionName, fixed);
+    return cmp != null && cmp < 0;
+  }
 
   bool affects(String versionName, int buildNumber) {
     if (affectedVersions.isNotEmpty) {
@@ -69,6 +89,23 @@ class KnownIssue {
     }
     return false;
   }
+}
+
+/// Compares `major.minor.patch[-pN]` names; null if either doesn't parse.
+/// Build numbers are not used: they aren't monotonic across releases.
+int? compareVersionNames(String a, String b) {
+  List<int>? parse(String v) {
+    final m = RegExp(r'^(\d+)\.(\d+)\.(\d+)(?:-p(\d+))?').firstMatch(v);
+    if (m == null) return null;
+    return [for (var i = 1; i <= 4; i++) int.tryParse(m.group(i) ?? '') ?? 0];
+  }
+
+  final x = parse(a), y = parse(b);
+  if (x == null || y == null) return null;
+  for (var i = 0; i < 4; i++) {
+    if (x[i] != y[i]) return x[i].compareTo(y[i]);
+  }
+  return 0;
 }
 
 class KnownIssuesService {
@@ -112,6 +149,34 @@ class KnownIssuesService {
               i.affects(versionName, buildNumber) && !dismissed.contains(i.id),
         )
         .toList();
+  }
+
+  /// Notices whose [KnownIssue.errorPatterns] match [crashLog] (the crash the
+  /// previous run left behind) for the running [versionName].
+  static Future<List<KnownIssue>> getCrashIssues(
+    String versionName,
+    String crashLog,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    final cachedJson = await _fetchWithCache(prefs);
+    if (cachedJson == null) return [];
+    try {
+      final decoded = jsonDecode(cachedJson) as Map<String, dynamic>;
+      final dismissed = prefs.safeStringList(_dismissedKey) ?? [];
+      final out = <KnownIssue>[];
+      for (final e in decoded['issues'] as List<dynamic>) {
+        try {
+          final i = KnownIssue.fromJson(e as Map<String, dynamic>);
+          if (!dismissed.contains(i.id) &&
+              i.matchesCrash(versionName, crashLog)) {
+            out.add(i);
+          }
+        } catch (_) {}
+      }
+      return out;
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Marks an issue as dismissed so it won't be shown again on this device.

@@ -280,12 +280,25 @@ Future<void> _runObtainium() async {
   // Replace the release-mode ErrorWidget (a bare grey rectangle — see issue
   // #217) with a card that names the failure, so a broken widget is
   // reportable instead of an anonymous blank page.
+  String? lastBuildError;
   ErrorWidget.builder = (FlutterErrorDetails details) {
     AppLogger.error(
       details.exception,
       stackTrace: details.stack,
       message: 'Widget build error',
     );
+    // Leave a crash log so the next launch can tell the user whether a newer
+    // build fixes this error (known_issues.json errorPatterns). Builders rerun
+    // on every rebuild, so write each distinct message once.
+    final message = details.exception.toString();
+    if (message != lastBuildError) {
+      lastBuildError = message;
+      CrashFileHandler.writeCrashLog(
+        errorType: details.exception.runtimeType.toString(),
+        message: message,
+        stackTrace: (details.stack ?? StackTrace.empty).toString(),
+      );
+    }
     return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: Center(

@@ -16,6 +16,7 @@ import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/components/force_update_dialog.dart';
 import 'package:obtainium/components/critical_issue_dialog.dart';
 import 'package:obtainium/services/known_issues_service.dart';
+import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/utils/motion.dart';
 import 'package:animations/animations.dart';
 import 'package:flutter/services.dart';
@@ -258,10 +259,23 @@ class HomePageState extends State<HomePage> with TickerProviderStateMixin {
         printErr: false,
       );
       if (info == null || !mounted) return;
-      final issues = await KnownIssuesService.getActiveIssues(
-        info.versionName ?? '',
-        info.versionCode ?? 0,
-      );
+      final crashLog = await CrashFileHandler.getCrashLog();
+      final issues = [
+        ...await KnownIssuesService.getActiveIssues(
+          info.versionName ?? '',
+          info.versionCode ?? 0,
+        ),
+        // The previous run crashed with an error a newer build fixes.
+        if (crashLog != null)
+          ...await KnownIssuesService.getCrashIssues(
+            info.versionName ?? '',
+            crashLog,
+          ),
+      ];
+      // Told once; the log is also kept for the crash screen's own use.
+      if (crashLog != null && issues.isNotEmpty) {
+        await CrashFileHandler.clearCrashLog();
+      }
       for (final issue in issues) {
         if (!mounted) return;
         if (issue.forceUpdate) {
