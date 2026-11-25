@@ -114,8 +114,8 @@ class SettingsHeroOverview extends StatelessWidget {
                   child: _buildStatusPill(
                     context: context,
                     icon: Icons.insights_rounded,
-                    label: tr('diagnostics'),
-                    subLabel: tr('system'),
+                    label: tr('system'),
+                    subLabel: tr('diagnostics'),
                     color: colorScheme.primary,
                     onTap: () {
                       AppHaptics.selectionClick();
