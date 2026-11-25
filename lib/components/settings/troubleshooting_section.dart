@@ -12,6 +12,9 @@ import 'package:obtainium/pages/statistics.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/utils/app_utils.dart';
+import 'package:obtainium/utils/crash_reporting.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obtainium/utils/app_constants.dart';
 import 'package:provider/provider.dart';
 
@@ -36,6 +39,16 @@ class TroubleshootingSection extends StatefulWidget {
 }
 
 class _TroubleshootingSectionState extends State<TroubleshootingSection> {
+  bool _crashReporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    isCrashReportingEnabled().then((v) {
+      if (mounted) setState(() => _crashReporting = v);
+    });
+  }
+
   int _devModeTapCount = 0;
 
   bool _matches(String text, {bool isAdvanced = false, String? desc}) {
@@ -132,6 +145,27 @@ class _TroubleshootingSectionState extends State<TroubleshootingSection> {
           onChanged: (v) {
             v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             plusSettings.plusShowChangelogAfterUpdate = v;
+          },
+        ),
+      if (_matches(
+        tr('crashReporting'),
+        desc: tr('crashReportingDescription'),
+      ))
+        SwitchListTile.adaptive(
+          secondary: buildSettingsIconBadge(
+            context,
+            Icons.report_gmailerrorred_outlined,
+            active: _crashReporting,
+          ),
+          title: Text(tr('crashReporting')),
+          subtitle: Text(tr('crashReportingDescription')),
+          value: _crashReporting,
+          onChanged: (v) async {
+            v ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
+            setState(() => _crashReporting = v);
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setBool(crashReportingPrefKey, v);
+            if (!v) await Sentry.close();
           },
         ),
       ...widget.extraRows,

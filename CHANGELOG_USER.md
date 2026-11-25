@@ -1,6 +1,9 @@
 ## [Upcoming]
 
-<!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
+### ✨ New
+
+- **Crash reports are opt-in** — Off by default; switch in Troubleshooting.
+- **Privacy page** — What's stored, what's sent, and where.
 
 ---
 

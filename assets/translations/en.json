@@ -703,6 +703,8 @@
   "resetToDefault": "Reset to default",
   "help": "Help",
   "appLogsDescription": "View detailed application logs for troubleshooting background updates and installation issues.",
+  "crashReporting": "Send crash reports",
+  "crashReportingDescription": "Off by default. When on, crashes are sent to the developer's Sentry (error details and device model, no app list, no personal data). Applies after restart.",
   "clearAPKCache": "Clear APK Cache",
   "clearAPKCacheDescription": "Delete all cached installation files to free up space.",
   "clearIconCache": "Clear Icon Cache",

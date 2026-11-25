@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/dynamic_color_utils.dart';
+import 'package:obtainium/utils/crash_reporting.dart';
 import 'package:obtainium/utils/crash_analytics.dart';
 import 'package:obtainium/utils/crash_file_handler.dart';
 import 'package:obtainium/components/error_app.dart';
@@ -244,16 +245,19 @@ SentryEvent? _filterShizukuNoise(SentryEvent event, Hint hint) {
 void main() async {
   // Crash reporting was silently dropped in a May refactor (fb5a91c2) —
   // without it, release-mode build failures like issue #217 are invisible.
+  // Reporting is opt-in: off unless the user enabled it in Settings, and
+  // only crash reports are sent (no traces, profiles or session tracking).
   const sentryDsn = String.fromEnvironment('SENTRY_DSN');
-  if (sentryDsn.isEmpty) {
+  WidgetsFlutterBinding.ensureInitialized();
+  if (sentryDsn.isEmpty || !await isCrashReportingEnabled()) {
     await _runObtainium();
     return;
   }
   await SentryFlutter.init((options) {
     options.dsn = sentryDsn;
-    options.tracesSampleRate = 0.2;
-    options.profilesSampleRate = 0.1;
-    options.enableAutoSessionTracking = true;
+    options.tracesSampleRate = 0;
+    options.profilesSampleRate = 0;
+    options.enableAutoSessionTracking = false;
     options.attachStacktrace = true;
     options.sendDefaultPii = false;
     options.attachScreenshot = false;

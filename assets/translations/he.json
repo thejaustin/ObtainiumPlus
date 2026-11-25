@@ -726,6 +726,8 @@
     "resetToDefault": "איפוס לברירת המחדל",
     "help": "עזרה",
     "appLogsDescription": "הצגת יומני יישום מפורטים לאיתור תקלות בעדכוני רקע ובהתקנות.",
+    "crashReporting": "Send crash reports",
+    "crashReportingDescription": "Off by default. When on, crashes are sent to the developer's Sentry (error details and device model, no app list, no personal data). Applies after restart.",
     "clearAPKCache": "ניקוי מטמון קובצי APK",
     "clearAPKCacheDescription": "מחיקת כל קובצי ההתקנה השמורים במטמון לפינוי מקום.",
     "clearIconCache": "ניקוי מטמון סמלים",

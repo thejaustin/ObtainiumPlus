@@ -156,7 +156,7 @@ Obtainium+ is built on the shoulders of giants. We are deeply grateful to the or
 *   **[Dynamic Color](https://pub.dev/packages/dynamic_color):** Enables the app interface to blend seamlessly with your Android system theme (Material You).
 *   **[Background Fetch](https://pub.dev/packages/background_fetch) & [Flutter Foreground Task](https://pub.dev/packages/flutter_foreground_task):** Power the reliable, battery-efficient background update checker.
 *   **[Easy Localization](https://pub.dev/packages/easy_localization):** Manages translation assets to make the app accessible in dozens of languages.
-*   **[Sentry Flutter](https://pub.dev/packages/sentry_flutter):** Powers our opt-in, telemetry-free crash analytics engine.
+*   **[Sentry Flutter](https://pub.dev/packages/sentry_flutter):** Powers the opt-in crash reports (off by default; see [Privacy](docs/PRIVACY.md)).
 
 </details>
 
