@@ -67,12 +67,26 @@ class _ReleaseCache {
 Future<List<Object?>> _fetchPage(int page) async {
   final override = ChangelogTimeline.debugFetchPage;
   if (override != null) return override(page);
-  final res = await get(
-    Uri.parse(
-      'https://api.github.com/repos/$_repo/releases?per_page=$_perPage&page=$page',
-    ),
+  final uri = Uri.parse(
+    'https://api.github.com/repos/$_repo/releases?per_page=$_perPage&page=$page',
+  );
+  Future<Response> once() => get(
+    uri,
     headers: {'Accept': 'application/vnd.github+json'},
   ).timeout(const Duration(seconds: 10));
+  // A request right after launch can fail while the network is still coming
+  // up; one quiet retry beats showing an error screen for that.
+  final Response res;
+  try {
+    res = await once();
+  } catch (_) {
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+    return _decodePage(await once());
+  }
+  return _decodePage(res);
+}
+
+List<Object?> _decodePage(Response res) {
   if (res.statusCode != 200) {
     throw Exception('GitHub returned ${res.statusCode}');
   }
