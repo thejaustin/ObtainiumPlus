@@ -22,7 +22,12 @@ class SelectionModal extends StatefulWidget {
     this.titlesAreLinks = true,
     this.title,
     this.deselectThese = const [],
+    this.showPickDifferentSources = false,
   });
+
+  /// Returned (as the only entry) when the user taps "Pick different sources".
+  static const pickSourcesSentinel = '__pick_different_sources__';
+  bool showPickDifferentSources;
 
   String? title;
   Map<String, List<String>> entries;
@@ -442,21 +447,26 @@ class _SelectionModalState extends State<SelectionModal> {
                       ),
                     ),
                   ),
-                  child: CheckboxListTile(
-                    value: entrySelections[entry],
-                    onChanged: (value) {
-                      AppHaptics.selectionClick();
-                      selectThis(value);
-                    },
-                    title: urlLink,
-                    subtitle: entry.value.length <= 1 ? null : descriptionText,
-                    controlAffinity: ListTileControlAffinity.leading,
-                    shape: shapes.borderOf(ShapeRole.card),
-                    activeColor: colorScheme.primary,
-                    checkColor: colorScheme.onPrimary,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: CheckboxListTile(
+                      value: entrySelections[entry],
+                      onChanged: (value) {
+                        AppHaptics.selectionClick();
+                        selectThis(value);
+                      },
+                      title: urlLink,
+                      subtitle: entry.value.length <= 1
+                          ? null
+                          : descriptionText,
+                      controlAffinity: ListTileControlAffinity.leading,
+                      shape: shapes.borderOf(ShapeRole.card),
+                      activeColor: colorScheme.primary,
+                      checkColor: colorScheme.onPrimary,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                     ),
                   ),
                 );
@@ -479,6 +489,18 @@ class _SelectionModalState extends State<SelectionModal> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          if (widget.showPickDifferentSources)
+            Expanded(
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: TextButton(
+                  onPressed: () => Navigator.of(
+                    context,
+                  ).pop([SelectionModal.pickSourcesSentinel]),
+                  child: Text(tr('pickDifferentSources')),
+                ),
+              ),
+            ),
           _getSelectAllButton(),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

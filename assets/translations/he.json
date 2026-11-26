@@ -1220,6 +1220,7 @@
     "cardTintStandard": "Standard",
     "cardTintTinted": "Tinted",
     "cardTintVivid": "Vivid",
+    "pickDifferentSources": "Pick different sources",
     "themeDescription": "בחירה בין ערכת נושא בהירה, כהה או כמו המערכת",
     "useBlackThemeDescription": "שימוש ברקע שחור מוחלט למסכי OLED במצב כהה",
     "disablePageTransitionsDescription": "כיבוי ההנפשות בעת ניווט בין עמודים",

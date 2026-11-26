@@ -741,9 +741,16 @@ class AddAppPageState extends State<AddAppPage> {
                       entries: res.map((k, v) => MapEntry(k, v.value)),
                       selectedByDefault: false,
                       onlyOneSelectionAllowed: true,
+                      showPickDifferentSources: true,
                     );
                   },
                 );
+          if (selectedUrls != null &&
+              selectedUrls.length == 1 &&
+              selectedUrls[0] == SelectionModal.pickSourcesSentinel) {
+            if (mounted) await runSearch();
+            return;
+          }
           if (selectedUrls != null && selectedUrls.isNotEmpty) {
             var sourceName = res[selectedUrls[0]]?.key;
             changeUserInput(

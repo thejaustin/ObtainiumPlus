@@ -10,6 +10,7 @@
 
 - **Credits** — Settings → the Credits icon at the bottom lists who built Obtainium+, Obtainium and Claude, who co-developed it, and whose ideas we borrowed, with links to their GitHub profiles.
 - **Credit where it's due in release notes** — a `@name` in a note shows in a soft colour and opens that person's profile. The timeline changelog and credits list were inspired by Morphe Manager by @MorpheApp, whose timeline and changelog screens @MarcaDian wrote.
+- **Pick different sources** — the Add App search results now have a button to go back and search other sources, and the selection rows show a proper tap ripple. Thanks to @omeritzics for the idea in Updatium.
 
 ### 🎨 Design
 

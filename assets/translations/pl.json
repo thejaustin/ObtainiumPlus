@@ -1231,6 +1231,7 @@
     "cardTintStandard": "Standard",
     "cardTintTinted": "Tinted",
     "cardTintVivid": "Vivid",
+    "pickDifferentSources": "Pick different sources",
     "themeDescription": "Choose between light, dark, or system-following themes",
     "useBlackThemeDescription": "Use a pitch black background for OLED screens in dark mode",
     "disablePageTransitionsDescription": "Turn off animations when navigating between pages",
