@@ -2,6 +2,10 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+---
+
+## [1.7.5-p34] — 2026-11-26
+
 ### ✨ Features
 
 - **Credits** — Settings → the Credits icon at the bottom lists who built Obtainium+, Obtainium and Claude, who co-developed it, and whose ideas we borrowed, with links to their GitHub profiles.
