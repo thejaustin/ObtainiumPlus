@@ -414,6 +414,36 @@ void main() {
     expect(find.byIcon(Icons.cloud_off_rounded), findsOneWidget);
     expect(find.text('Retry'), findsOneWidget);
   });
+
+  testWidgets('@handles in an entry show as tappable credits', (tester) async {
+    ChangelogTimeline.debugFetchPage = (page) async => page == 1
+        ? [
+            _release(
+              'v3',
+              '2026-10-21T00:00:00Z',
+              '### New Features\n'
+                  '- feat: Timeline changelog. Inspired by @MarcaDian of '
+                  '@MorpheApp, mail a@b.com',
+            ),
+          ]
+        : [];
+    await pumpTimeline(tester, installed: '3');
+
+    TextSpan? find0(String text) {
+      TextSpan? hit;
+      for (final w in tester.widgetList<RichText>(find.byType(RichText))) {
+        w.text.visitChildren((s) {
+          if (s is TextSpan && s.text == text) hit = s;
+          return true;
+        });
+      }
+      return hit;
+    }
+
+    expect(find0('@MarcaDian')?.recognizer, isNotNull);
+    expect(find0('@MorpheApp')?.recognizer, isNotNull);
+    expect(find0('@b.com'), isNull, reason: 'emails are not handles');
+  });
 }
 
 class _MemoryAssetLoader extends AssetLoader {

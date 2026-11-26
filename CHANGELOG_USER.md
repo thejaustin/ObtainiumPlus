@@ -2,6 +2,19 @@
 
 <!-- Add upcoming user-facing release notes here. When empty, CI automatically generates clean release notes from commit logs. -->
 
+### ✨ Features
+
+- **Credits** — Settings → the Credits icon at the bottom lists who built Obtainium+, Obtainium and Claude, who co-developed it, and whose ideas we borrowed, with links to their GitHub profiles.
+- **Credit where it's due in release notes** — a `@name` in a note shows in a soft colour and opens that person's profile. The timeline changelog and credits list were inspired by Morphe Manager by @MorpheApp, whose timeline and changelog screens @MarcaDian wrote.
+
+### 🎨 Design
+
+- **What's New is simpler** — entries show in full with no per-line dropdowns, and a release with one kind of change no longer repeats its heading.
+
+### 🛠️ Fixes
+
+- **Changelog retries once** — a network hiccup right after launch no longer lands on the error screen.
+
 ---
 
 ## [1.7.5-p32] — 2026-11-25

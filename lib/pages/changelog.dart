@@ -1,4 +1,3 @@
-import 'package:obtainium/components/changelog/credits_sheet.dart';
 import 'package:obtainium/utils/app_shapes.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -249,12 +248,6 @@ class _WhatsNewSheetState extends State<_WhatsNewSheet> {
         top: false,
         child: Row(
           children: [
-            IconButton.outlined(
-              tooltip: 'Credits',
-              icon: const Icon(Icons.groups_rounded),
-              onPressed: () => showCreditsSheet(context),
-            ),
-            const SizedBox(width: 8),
             Expanded(
               child: ScaleTouchWrapper(
                 hapticOnPressDown: true,

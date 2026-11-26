@@ -11,6 +11,7 @@ import 'package:obtainium/components/settings/settings_search_jump.dart';
 import 'package:obtainium/components/settings/settings_browse_list.dart';
 import 'package:obtainium/components/settings/settings_sections.dart';
 import 'package:obtainium/components/settings/settings_tab_content.dart';
+import 'package:obtainium/components/changelog/credits_sheet.dart';
 import 'package:obtainium/pages/changelog.dart';
 import 'package:obtainium/pages/developer_settings.dart';
 import 'package:obtainium/pages/import_export.dart';
@@ -893,6 +894,12 @@ class SettingsPageState extends State<SettingsPage> {
         color: colorScheme.primary,
       ),
       _SettingsLink(
+        icon: Icons.groups_rounded,
+        label: 'Credits',
+        color: colorScheme.primary,
+        onTap: () => showCreditsSheet(context),
+      ),
+      _SettingsLink(
         icon: Icons.apps_rounded,
         label: tr('crowdsourcedConfigsLabel'),
         url: 'https://apps.obtainium.imranr.dev/',
@@ -924,6 +931,7 @@ class SettingsPageState extends State<SettingsPage> {
                 icon: link.icon,
                 label: link.label,
                 url: link.url,
+                onTap: link.onTap,
                 accentColor: link.color,
               ),
             );
@@ -1076,11 +1084,15 @@ class _SettingsLink {
   final String label;
   final String url;
   final Color color;
+
+  /// Opens something in the app instead of a web page; [url] is then unused.
+  final VoidCallback? onTap;
   const _SettingsLink({
     required this.icon,
     required this.label,
-    required this.url,
     required this.color,
+    this.url = '',
+    this.onTap,
   });
 }
 
@@ -1456,12 +1468,14 @@ class _FooterIcon extends StatelessWidget {
   final IconData icon;
   final String label;
   final String url;
+  final VoidCallback? onTap;
   final Color? accentColor;
 
   const _FooterIcon({
     required this.icon,
     required this.label,
     required this.url,
+    this.onTap,
     this.accentColor,
   });
 
@@ -1478,7 +1492,11 @@ class _FooterIcon extends StatelessWidget {
         customBorder: CardMetrics.shape(16, expressive: isM3E),
         onTap: () {
           AppHaptics.selectionClick();
-          _openSettingsUrl(url);
+          if (onTap != null) {
+            onTap!();
+          } else {
+            _openSettingsUrl(url);
+          }
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),

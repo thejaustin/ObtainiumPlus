@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:obtainium/components/changelog/changelog_parser.dart';
@@ -1264,12 +1265,19 @@ class _RailLinePainter extends CustomPainter {
 /// that expands on tap. Entries without a "**Title** — body" shape use their
 /// first sentence as the headline. `**bold**`, `` `code` `` and `#123` render
 /// inline; the first issue reference becomes a chip that opens GitHub.
-class _ChangeLine extends StatelessWidget {
+class _ChangeLine extends StatefulWidget {
   final String text;
 
   const _ChangeLine({required this.text});
 
-  static final _tokens = RegExp(r'\*\*(.+?)\*\*|`([^`]+)`|#(\d+)\b');
+  @override
+  State<_ChangeLine> createState() => _ChangeLineState();
+
+  // `@login` credits a contributor or an idea's source by their GitHub
+  // profile; emails and paths before the @ don't count.
+  static final _tokens = RegExp(
+    r'\*\*(.+?)\*\*|`([^`]+)`|#(\d+)\b|(?<![\w@/.])@([A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?)',
+  );
   static final _headline = RegExp(
     r'^\*\*([^*]+)\*\*\s*[—–:-]\s+(.+)$',
     dotAll: true,
@@ -1293,6 +1301,18 @@ class _ChangeLine extends StatelessWidget {
     final m = _sentenceEnd.firstMatch(t);
     if (m == null) return (t, '');
     return (t.substring(0, m.start).trim(), t.substring(m.end).trim());
+  }
+}
+
+class _ChangeLineState extends State<_ChangeLine> {
+  final _recognizers = <TapGestureRecognizer>[];
+
+  @override
+  void dispose() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    super.dispose();
   }
 
   List<InlineSpan> _spans(String text, TextStyle? base, ColorScheme cs) {
@@ -1320,6 +1340,28 @@ class _ChangeLine extends StatelessWidget {
             ),
           ),
         );
+      } else if (m.group(4) != null) {
+        final login = m.group(4)!;
+        final tap = TapGestureRecognizer()
+          ..onTap = () {
+            AppHaptics.selectionClick();
+            launchUrlString(
+              'https://github.com/$login',
+              mode: LaunchMode.externalApplication,
+            );
+          };
+        _recognizers.add(tap);
+        spans.add(
+          TextSpan(
+            text: '@$login',
+            recognizer: tap,
+            style: TextStyle(
+              color: cs.tertiary,
+              fontWeight: FontWeight.w600,
+              backgroundColor: cs.tertiary.withValues(alpha: 0.10),
+            ),
+          ),
+        );
       } else {
         spans.add(
           TextSpan(
@@ -1338,6 +1380,11 @@ class _ChangeLine extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+    final text = widget.text;
     final (headline, body) = _ChangeLine.headlineAndBody(text);
     final firstIssue = _ChangeLine._tokens
         .allMatches(text)
