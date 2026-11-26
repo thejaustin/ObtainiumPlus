@@ -39,7 +39,13 @@ class _CreditsSheetState extends State<CreditsSheet> {
   Widget _person(String login, {String? tooltip, String? url}) => Tooltip(
     message: tooltip ?? login,
     child: ActionChip(
-      avatar: CircleAvatar(child: Text(login.characters.first.toUpperCase())),
+      avatar: CircleAvatar(
+        radius: 12,
+        child: Text(
+          login.characters.first.toUpperCase(),
+          style: const TextStyle(fontSize: 12, height: 1),
+        ),
+      ),
       label: Text(login),
       onPressed: () => _open(url ?? 'https://github.com/$login'),
     ),
