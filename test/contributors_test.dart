@@ -15,10 +15,10 @@ String _body(Map<String, int> m, {Map<String, String> types = const {}}) =>
     ]);
 
 void main() {
-  test('parse drops bots, sorts by contributions', () {
+  test('parse drops bots and the AI account, sorts by contributions', () {
     final out = ContributorsService.parse(
       _body(
-        {'a': 3, 'CertainBot': 99, 'dependabot[bot]': 40, 'b': 7},
+        {'a': 3, 'CertainBot': 99, 'claude': 50, 'dependabot[bot]': 40, 'b': 7},
         types: {'dependabot[bot]': 'Bot'},
       ),
     );

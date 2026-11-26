@@ -29,11 +29,14 @@ class ContributorsService {
   /// Test hook: returns the raw response body for a repo and page.
   static Future<String> Function(String repo, int page)? debugFetch;
 
+  /// The AI pair-programmer's git account is credited by its own line in the
+  /// sheet ("Co-developed with Claude"), not as a person.
   static bool _isBot(String login, String? type) =>
       type == 'Bot' ||
       login.endsWith('[bot]') ||
       RegExp(r'[-_]bot$', caseSensitive: false).hasMatch(login) ||
-      RegExp(r'[a-z]Bot$').hasMatch(login);
+      RegExp(r'[a-z]Bot$').hasMatch(login) ||
+      login.toLowerCase() == 'claude';
 
   /// Parses the API body into people, most contributions first, bots out.
   static List<Contributor> parse(String body) {

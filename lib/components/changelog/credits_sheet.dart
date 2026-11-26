@@ -123,6 +123,13 @@ class _CreditsSheetState extends State<CreditsSheet> {
               );
             },
           ),
+          _group(context, 'Co-developed with', [
+            ActionChip(
+              avatar: const Icon(Icons.auto_awesome_rounded, size: 18),
+              label: const Text('Claude by Anthropic'),
+              onPressed: () => _open('https://claude.ai'),
+            ),
+          ]),
           _group(context, "Inspired by Morphe Manager's design", [
             for (final (name, url) in _inspiredBy) _person(name, url: url),
           ]),
