@@ -22,6 +22,7 @@ import 'package:obtainium/utils/card_metrics.dart';
 import 'package:obtainium/models/settings_enums.dart';
 import 'package:obtainium/utils/app_shapes.dart';
 import 'package:obtainium/utils/theme_style.dart';
+import 'package:obtainium/utils/card_tint.dart';
 
 /// Theme & Colors settings section widget
 /// PERFORMANCE: Extracted to reduce unnecessary rebuilds
@@ -121,6 +122,8 @@ class ThemeSettingsSection extends StatelessWidget {
           value: (s) => s.plusEnableGlassmorphism,
           onChanged: (s, v) => s.plusEnableGlassmorphism = v,
         ),
+      if (_matches(tr('cardTint'), desc: tr('cardTintDescription')))
+        _buildCardTint(context),
     ];
 
     final textWidgets = <Widget>[
@@ -865,6 +868,74 @@ class ThemeSettingsSection extends StatelessWidget {
             value ? AppHaptics.toggleOn() : AppHaptics.toggleOff();
             settings.matchSystemMaterialStyle = value;
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildCardTint(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final labels = {
+      AppCardTint.standard: tr('cardTintStandard'),
+      AppCardTint.tinted: tr('cardTintTinted'),
+      AppCardTint.vivid: tr('cardTintVivid'),
+    };
+    return Consumer<PlusSettingsProvider>(
+      builder: (context, settings, _) {
+        final tint = settings.plusAppCardTint;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ListTile(
+              leading: buildSettingsIconBadge(context, Icons.format_color_fill),
+              title: Text(tr('cardTint')),
+              subtitle: Text(tr('cardTintDescription')),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: AnimatedContainer(
+                duration: Duration(
+                  milliseconds: settings.plusEnableEnhancedAnimations ? 200 : 0,
+                ),
+                key: const ValueKey('cardTintPreview'),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: tint.apply(cs.surfaceContainerLow, cs),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: cs.primaryContainer,
+                      child: Icon(Icons.apps_rounded, color: cs.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Obtainium+',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<AppCardTint>(
+                  segments: [
+                    for (final t in AppCardTint.values)
+                      ButtonSegment(value: t, label: Text(labels[t]!)),
+                  ],
+                  selected: {tint},
+                  onSelectionChanged: (v) {
+                    AppHaptics.selectionClick();
+                    settings.plusAppCardTint = v.first;
+                  },
+                ),
+              ),
+            ),
+          ],
         );
       },
     );

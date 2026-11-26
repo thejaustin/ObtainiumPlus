@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/card_tint.dart';
 import 'package:flutter/services.dart';
 import 'package:obtainium/components/common/expressive_progress_indicator.dart';
 import 'package:obtainium/models/settings_enums.dart';
@@ -642,11 +643,18 @@ class _AppListTileState extends State<AppListTile>
                                 ? 0.45
                                 : 1.0,
                           )
-                        : plusSettings.plusEnableGlassmorphism
-                        ? Theme.of(context).colorScheme.surface.withValues(
-                            alpha: AppConstants.glassSurfaceAlpha,
-                          )
-                        : Theme.of(context).colorScheme.surfaceContainerLow,
+                        : plusSettings.plusAppCardTint.apply(
+                            plusSettings.plusEnableGlassmorphism
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.surface.withValues(
+                                    alpha: AppConstants.glassSurfaceAlpha,
+                                  )
+                                : Theme.of(
+                                    context,
+                                  ).colorScheme.surfaceContainerLow,
+                            Theme.of(context).colorScheme,
+                          ),
                     shadows: isSelected && plusSettings.plusEnableGlassmorphism
                         ? AppShadows.glow(
                             color: Theme.of(context).colorScheme.primary,

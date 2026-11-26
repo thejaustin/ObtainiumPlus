@@ -10,6 +10,7 @@
 ### 🎨 Design
 
 - **What's New is simpler** — entries show in full with no per-line dropdowns, and a release with one kind of change no longer repeats its heading.
+- **Card tint** — Settings → Appearance can now tint app cards with your accent colour (Standard, Tinted or Vivid), with a live preview. The idea came from Morphe Manager by @MorpheApp.
 
 ### 🛠️ Fixes
 

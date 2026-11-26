@@ -329,6 +329,13 @@ class PlusSettingsProvider with ChangeNotifier {
   set plusLabCompactDescriptionLines(int val) =>
       _setInt('plusLabCompactDescriptionLines', val.clamp(1, 3));
 
+  AppCardTint get plusAppCardTint => _getEnum(
+    'plusAppCardTint',
+    AppCardTint.values,
+    defaultValue: AppCardTint.standard,
+  );
+  set plusAppCardTint(AppCardTint val) => _setEnum('plusAppCardTint', val);
+
   NavBarBlurStrength get plusLabNavBarBlur => _getEnum(
     'plusLabNavBarBlur',
     NavBarBlurStrength.values,

@@ -71,6 +71,10 @@ enum SettingsHeaderSize { large, compact }
 
 enum NavBarBlurStrength { off, soft, strong }
 
+/// How strongly app cards pick up the accent colour. Stored by index, so only
+/// ever append members.
+enum AppCardTint { standard, tinted, vivid }
+
 // ── Expressive settings kit (opt-in previews). Stored by index, so only ever
 // append members; the first member is the shipped look. ──
 
