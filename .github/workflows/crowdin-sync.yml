@@ -93,6 +93,15 @@ jobs:
           python3 scripts/dev/merge-crowdin-json.py "$RUNNER_TEMP/translations-before"
           python3 scripts/dev/check-translations.py
 
+      # Who typed what in Crowdin, with machine-made strings counted separately.
+      # Best effort: a failure here must not block the translations.
+      - name: Crowdin contributor report
+        continue-on-error: true
+        env:
+          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}
+        run: python3 scripts/dev/crowdin-contributors.py | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Open a pull request
         env:
           GH_TOKEN: ${{ secrets.CROWDIN_PR_TOKEN || github.token }}
@@ -105,12 +114,16 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -q -B crowdin-translations
           git add -u assets/translations
-          git commit -q -m "chore(i18n): sync translations from Crowdin"
+          git add docs/CROWDIN_CONTRIBUTORS.md 2>/dev/null || true
+          { echo "chore(i18n): sync translations from Crowdin"; echo;
+            echo "Translators (see docs/CROWDIN_CONTRIBUTORS.md):";
+            sed -n 's/^| \[\([^]]*\)\](.*/- \1/p' docs/CROWDIN_CONTRIBUTORS.md 2>/dev/null || true; } > "$RUNNER_TEMP/msg"
+          git commit -q -F "$RUNNER_TEMP/msg"
           git push -q --force origin crowdin-translations
           if [ -z "$(gh pr list --head crowdin-translations --state open --json number --jq '.[0].number')" ]; then
             gh pr create --base main --head crowdin-translations \
               --title "chore(i18n): sync translations from Crowdin" \
-              --body "Automated sync from Crowdin. Only plain-string translations that differ from English are taken; plural forms and strings Crowdin has no translation for stay as they were in the repo. The translation checker passed. Skim the diff before merging."
+              --body "Automated sync from Crowdin. Only plain-string translations that differ from English are taken; plural forms and strings Crowdin has no translation for stay as they were in the repo. The translation checker passed. Contributors are listed in docs/CROWDIN_CONTRIBUTORS.md (Crowdin) and docs/TRANSLATION_CREDITS.md (git history); machine-made strings are counted separately and credited to no one. Skim the diff before merging."
           fi
           echo "Opened or updated the crowdin-translations PR." >> "$GITHUB_STEP_SUMMARY"
 

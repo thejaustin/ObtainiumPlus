@@ -1,0 +1,11 @@
+{
+  "anonymousLoginTokensAAS": "Anonyme Schlüssel für den Zugriff auf den Google Play Store",
+  "dispenserBanWarningChannel": "Verbindungssicherheitswarnungen",
+  "dispenserBanWarningDescription": "Warnt, bevor eine große Anzahl von Google Play-Updates ausgeführt wird, um Ihre IP-Adresse vor temporären Sperren zu schützen.",
+  "dispenserBanWarningMessage": "Obtainium+ ist im Begriff, {} Google Play-Apps auf Updates zu prüfen. Wenn Sie dies zu schnell oder auf einmal tun, kann dies dazu führen, dass Google Ihre Internetadresse (IP) vorübergehend sperrt.",
+  "dispenserBanWarningTitle": "Verbindungssicherheitswarnung",
+  "plusEnableBanWarnings": "Play Store Sperrschutz",
+  "plusEnableBanWarningsDescription": "Warnen, bevor eine große Anzahl von Update-Prüfungen an Google Play gesendet wird, um Ihre IP-Adresse vor temporären Sperren zu schützen.",
+  "releaseDateDateFormat": "Date format for release date (intl pattern, e.g. 'EEE. MMMM do, yyyy - h:mma')",
+  "viewTalkerLogs": "System- und Netzwerkprotokolle anzeigen"
+}

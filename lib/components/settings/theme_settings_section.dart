@@ -129,6 +129,8 @@ class ThemeSettingsSection extends StatelessWidget {
     final textWidgets = <Widget>[
       if (_matches(tr('useSystemFont'))) _buildSystemFontToggle(context),
       if (_matches(tr('language'))) _buildLanguagePicker(context),
+      if (_matches(tr('machineTranslations')))
+        _buildMachineTranslationsToggle(context),
       if (_matches(
             tr('navigationLabels'),
             desc: tr('navigationLabelsDescription'),
@@ -1182,6 +1184,22 @@ class ThemeSettingsSection extends StatelessWidget {
           },
         );
       },
+    );
+  }
+
+  Widget _buildMachineTranslationsToggle(BuildContext context) {
+    return Selector<SettingsProvider, bool>(
+      selector: (_, s) => s.useMachineTranslations,
+      builder: (context, enabled, _) => SwitchListTile(
+        secondary: buildSettingsIconBadge(context, Icons.translate_outlined),
+        title: Text(tr('machineTranslations')),
+        subtitle: Text(tr('machineTranslationsDesc')),
+        value: enabled,
+        onChanged: (v) {
+          AppHaptics.selectionClick();
+          context.read<SettingsProvider>().useMachineTranslations = v;
+        },
+      ),
     );
   }
 

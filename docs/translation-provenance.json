@@ -1,0 +1,403 @@
+{
+ "counts": {
+  "ar.json": {
+   "upstream-human": 387,
+   "untranslated": 1605
+  },
+  "bn.json": {
+   "upstream-human": 420,
+   "untranslated": 1553,
+   "AI-generated": 19
+  },
+  "bs.json": {
+   "upstream-human": 444,
+   "untranslated": 1547,
+   "AI-generated": 1
+  },
+  "ca.json": {
+   "upstream-human": 337,
+   "untranslated": 1655
+  },
+  "cs.json": {
+   "upstream-human": 339,
+   "untranslated": 1653
+  },
+  "da.json": {
+   "upstream-human": 334,
+   "untranslated": 1658
+  },
+  "de.json": {
+   "upstream-human": 439,
+   "untranslated": 1544,
+   "AI-generated": 9
+  },
+  "el.json": {
+   "upstream-human": 595,
+   "untranslated": 1397
+  },
+  "en-EO.json": {
+   "upstream-human": 317,
+   "untranslated": 1675
+  },
+  "es.json": {
+   "upstream-human": 420,
+   "untranslated": 1563,
+   "AI-generated": 9
+  },
+  "fa.json": {
+   "upstream-human": 348,
+   "untranslated": 1644
+  },
+  "fr.json": {
+   "upstream-human": 511,
+   "untranslated": 1399,
+   "AI-generated": 82
+  },
+  "gl.json": {
+   "upstream-human": 338,
+   "untranslated": 1654
+  },
+  "he.json": {
+   "fork-human": 1357,
+   "untranslated": 623,
+   "AI-generated": 12
+  },
+  "hu.json": {
+   "upstream-human": 577,
+   "AI-generated": 14,
+   "untranslated": 1401
+  },
+  "id.json": {
+   "upstream-human": 337,
+   "untranslated": 1655
+  },
+  "it.json": {
+   "upstream-human": 406,
+   "untranslated": 1578,
+   "AI-generated": 8
+  },
+  "ja.json": {
+   "upstream-human": 587,
+   "untranslated": 1405
+  },
+  "ko.json": {
+   "upstream-human": 384,
+   "untranslated": 1608
+  },
+  "ml.json": {
+   "upstream-human": 333,
+   "untranslated": 1659
+  },
+  "nl.json": {
+   "upstream-human": 494,
+   "untranslated": 1496,
+   "AI-generated": 2
+  },
+  "pl.json": {
+   "upstream-human": 439,
+   "untranslated": 1552,
+   "AI-generated": 1
+  },
+  "pt-BR.json": {
+   "upstream-human": 388,
+   "untranslated": 1596,
+   "AI-generated": 8
+  },
+  "pt.json": {
+   "upstream-human": 409,
+   "untranslated": 1575,
+   "AI-generated": 8
+  },
+  "ru.json": {
+   "upstream-human": 578,
+   "untranslated": 1391,
+   "AI-generated": 23
+  },
+  "sv.json": {
+   "upstream-human": 337,
+   "untranslated": 1655
+  },
+  "tr.json": {
+   "upstream-human": 407,
+   "untranslated": 1585
+  },
+  "uk.json": {
+   "upstream-human": 341,
+   "untranslated": 1651
+  },
+  "vi.json": {
+   "upstream-human": 338,
+   "untranslated": 1654
+  },
+  "zh-Hant-TW.json": {
+   "upstream-human": 358,
+   "untranslated": 1626,
+   "AI-generated": 8
+  },
+  "zh.json": {
+   "upstream-human": 596,
+   "untranslated": 1388,
+   "AI-generated": 8
+  }
+ },
+ "ai_keys": {
+  "ar.json": [],
+  "bn.json": [
+   "appsFromSourceAreTrackOnly",
+   "authorName",
+   "batteryOptimizationNote",
+   "byX",
+   "checkOnStart",
+   "checkUpdateOnDetailPage",
+   "dontShowTrackOnlyWarnings",
+   "enableCertificatePinning",
+   "filterAPKsByRegEx",
+   "insecureRedirect",
+   "markXTrackOnlyAsUpdated",
+   "moveNonInstalledAppsToBottom",
+   "nameAuthor",
+   "rustoreAggregatedAppNoApk",
+   "trackOnly",
+   "trackOnlyInBrackets",
+   "trackOnlyUpdatesAvailable",
+   "xIsTrackOnly",
+   "youPickedTrackOnly"
+  ],
+  "bs.json": [
+   "rustoreAggregatedAppNoApk"
+  ],
+  "ca.json": [],
+  "cs.json": [],
+  "da.json": [],
+  "de.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "releaseDateDateFormat",
+   "viewTalkerLogs"
+  ],
+  "el.json": [],
+  "en-EO.json": [],
+  "es.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "reorder",
+   "viewTalkerLogs"
+  ],
+  "fa.json": [],
+  "fr.json": [
+   "actualSigningCertHash",
+   "addWithoutCheckExplanation",
+   "allowAddingAppsWithoutCheck",
+   "allowAddingAppsWithoutCheckHelp",
+   "allowedSigningCertHashes",
+   "anonymousLoginTokensAAS",
+   "appDisabledNoUpdateCheck",
+   "appListDensityDense",
+   "autoExportFileName",
+   "bgGuardChecksAndUpdates",
+   "bgGuardChecksOnly",
+   "disableSwipeActions",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "downloadedXNotifChannel",
+   "expectedSigningCertHash",
+   "exportIncludesSecretsWarning",
+   "forgejoTokenLabel",
+   "globalApkFilterRegEx",
+   "hideDowngrades",
+   "huaweiAppGalleryApiError",
+   "ignoreForThisVersion",
+   "importFromDownloads",
+   "importOverwriteWarning",
+   "insecureRedirect",
+   "invalidSigningCertHash",
+   "minimumUpdateAgeDays",
+   "moveNonInstalledAppsToBottom",
+   "noDownloadsExports",
+   "openReleasePage",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "releaseDateDateFormat",
+   "releaseDateRegEx",
+   "releaseTooYoungForMinAge",
+   "repoRenamedExplanation",
+   "rootNotGranted",
+   "rustoreAggregatedAppNoApk",
+   "samsungGalaxyStoreApiError",
+   "samsungGalaxyStoreLoginRequired",
+   "sectionApkSelection",
+   "sectionReleaseOptions",
+   "sectionReleaseSelection",
+   "sectionRequestHeaders",
+   "sectionUpdateHealthDetection",
+   "sectionVersionSelection",
+   "sectionZipOptions",
+   "selectAppForDetails",
+   "shizukuBackend",
+   "shizukuBackendAuto",
+   "showUpdateHealthIndicator",
+   "showWebInAppView",
+   "signingCertMismatchHardBlock",
+   "signingCertMismatchHardBlockBody",
+   "signingCertMismatchTitle",
+   "signingCertMismatchWarningBody",
+   "skipUpdateChecks",
+   "splitApksUnsupportedByExternalInstaller",
+   "storeHandshakeNoSign",
+   "tactileFeedbackEnabled",
+   "tarballedApkFilterRegEx",
+   "unexpectedStoreApiResponse",
+   "updateHealth",
+   "updateHealthFailedChecksCheck",
+   "updateHealthFilteredReleasesCheck",
+   "updateHealthIgnoredForVersion",
+   "updateHealthIgnoredNote",
+   "updateHealthIgnoredPermanently",
+   "updateHealthNoApps",
+   "updateHealthOverrideArchived",
+   "updateHealthOverrideFailedChecks",
+   "updateHealthOverrideFilteredReleases",
+   "updateHealthOverrideStaleRelease",
+   "updateHealthOverrideStaleVersion",
+   "useGlobalDefault",
+   "verifySigningCertHashes",
+   "verifySigningCertHashesHelp",
+   "viewTalkerLogs",
+   "whenNotCharging",
+   "whenNotOnWiFi"
+  ],
+  "gl.json": [],
+  "he.json": [
+   "installMethodShizukuDescription",
+   "obtainiumReleaseChannelDescription",
+   "openShizukuPlus",
+   "openShizukuPlusAuthorize",
+   "rootlessSilentUpdatesDesc",
+   "shizukuDirectIpc",
+   "shizukuNotInstalled",
+   "shizukuNotInstalledDesc",
+   "shizukuPermissionDenied",
+   "shizukuPlusDetected",
+   "shizukuPlusServiceRunning",
+   "shizukuPlusServiceStopped"
+  ],
+  "hu.json": [
+   "addAnyway",
+   "addWithoutCheckExplanation",
+   "allowAddingAppsWithoutCheckHelp",
+   "releaseDateDateFormat",
+   "sectionApkSelection",
+   "updateHealthIgnoredNote",
+   "updateHealthOverrideArchived",
+   "updateHealthOverrideFailedChecks",
+   "updateHealthOverrideFilteredReleases",
+   "updateHealthOverrideStaleRelease",
+   "updateHealthOverrideStaleVersion",
+   "updateHealthReasonStaleRelease",
+   "updateHealthStaleVersionCheck",
+   "updateHealthViewDetails"
+  ],
+  "id.json": [],
+  "it.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "viewTalkerLogs"
+  ],
+  "ja.json": [],
+  "ko.json": [],
+  "ml.json": [],
+  "nl.json": [
+   "downloadX",
+   "rustoreAggregatedAppNoApk"
+  ],
+  "pl.json": [
+   "rustoreAggregatedAppNoApk"
+  ],
+  "pt-BR.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "viewTalkerLogs"
+  ],
+  "pt.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "viewTalkerLogs"
+  ],
+  "ru.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "pickExportDir",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "sectionUpdateHealthDetection",
+   "updateHealth",
+   "updateHealthFailedChecksCheck",
+   "updateHealthFilteredReleasesCheck",
+   "updateHealthIgnoredForVersion",
+   "updateHealthIgnoredPermanently",
+   "updateHealthOverrideArchived",
+   "updateHealthOverrideFailedChecks",
+   "updateHealthOverrideFilteredReleases",
+   "updateHealthOverrideStaleRelease",
+   "updateHealthOverrideStaleVersion",
+   "updateHealthReasonStaleRelease",
+   "updateHealthStaleReleaseCheck",
+   "updateHealthStaleVersionCheck",
+   "viewTalkerLogs"
+  ],
+  "sv.json": [],
+  "tr.json": [],
+  "uk.json": [],
+  "vi.json": [],
+  "zh-Hant-TW.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "viewTalkerLogs"
+  ],
+  "zh.json": [
+   "anonymousLoginTokensAAS",
+   "dispenserBanWarningChannel",
+   "dispenserBanWarningDescription",
+   "dispenserBanWarningMessage",
+   "dispenserBanWarningTitle",
+   "plusEnableBanWarnings",
+   "plusEnableBanWarningsDescription",
+   "viewTalkerLogs"
+  ]
+ }
+}

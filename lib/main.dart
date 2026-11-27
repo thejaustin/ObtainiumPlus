@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 import 'package:background_fetch/background_fetch.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:obtainium/utils/human_first_asset_loader.dart';
 import 'package:obtainium/services/app_install_service.dart';
 import 'package:obtainium/utils/dynamic_color_utils.dart';
 import 'package:obtainium/utils/crash_reporting.dart';
@@ -118,7 +119,7 @@ Future<void> loadTranslations() async {
     forceLocale: forceLocale,
     fallbackLocale: fallbackLocale,
     supportedLocales: supportedLocales.map((e) => e.key).toList(),
-    assetLoader: const RootBundleAssetLoader(),
+    assetLoader: const HumanFirstAssetLoader(),
     useOnlyLangCode: false,
     useFallbackTranslations: true,
     path: localeDir,
@@ -520,6 +521,7 @@ Future<void> _startObtainium() async {
       child: EasyLocalization(
         supportedLocales: supportedLocales.map((e) => e.key).toList(),
         path: localeDir,
+        assetLoader: const HumanFirstAssetLoader(),
         fallbackLocale: fallbackLocale,
         useOnlyLangCode: false,
         useFallbackTranslations: true,

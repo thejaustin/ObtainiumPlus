@@ -1,0 +1,16 @@
+{
+  "addAnyway": "Hozzáadás",
+  "addWithoutCheckExplanation": "A kiadások ellenőrzése váratlanul meghiúsult. Hozzáadja az alkalmazást ennek ellenére? A frissítések ellenőrzése a kapcsolat helyreállta után megtörténik, a csomagazonosítója pedig az első telepítéskor oldódik fel.",
+  "allowAddingAppsWithoutCheckHelp": "Ha egy alkalmazás kiadásainak ellenőrzése váratlanul meghiúsul a hozzáadás közben, akkor az Obtainium rákérdez, hogy hozzáadja-e az alkalmazást ettől függetlenül. Az alkalmazás a kapcsolat helyreállta után a szokásos módon lesz ellenőrizve és frissítve; a csomagazonosítója az első telepítéskor oldódik fel.",
+  "releaseDateDateFormat": "Kiadás dátumának formátuma (nemzetközi minta alapján, például: „EEE. MMMM do, yyyy - h:mma”)",
+  "sectionApkSelection": "APK kiválasztása",
+  "updateHealthIgnoredNote": "Az esetleges hibákra vonatkozó ellenőrzések mellőzve vannak ennél az alkalmazásnál",
+  "updateHealthOverrideArchived": "Esetlegesen hibás – archivált forrás",
+  "updateHealthOverrideFailedChecks": "Esetlegesen hibás – sikertelen ellenőrzések",
+  "updateHealthOverrideFilteredReleases": "Esetlegesen hibás – elrejtett újabb kiadások",
+  "updateHealthOverrideStaleRelease": "Esetlegesen hibás – a kiadás régebbi, mint",
+  "updateHealthOverrideStaleVersion": "Esetlegesen hibás – nincs új verzió ennyi ideje:",
+  "updateHealthReasonStaleRelease": "A legújabb kiadás több mint {} napos",
+  "updateHealthStaleVersionCheck": "Alkalmazások megjelölése, amelyekhez nincs új verzió ennyi ideje:",
+  "updateHealthViewDetails": "Az alkalmazás konfigurációja hibás lehet – részletek megtekintése"
+}

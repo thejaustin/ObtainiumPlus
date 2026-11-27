@@ -1,0 +1,14 @@
+{
+  "installMethodShizukuDescription": "התקנות שקטות ברקע ללא הרשאת שורש דרך Shizuku, Shizuku+ או Dhizuku. ללא חלונות.",
+  "obtainiumReleaseChannelDescription": "בחירה בין גרסאות יציבות לגרסאות מפתחים של Obtainium+",
+  "openShizukuPlus": "פתיחת Shizuku+",
+  "openShizukuPlusAuthorize": "אישור ב־Shizuku+",
+  "rootlessSilentUpdatesDesc": "יש להפעיל את „בעלות על עדכונים” ואת „אישור מראש מהמשתמש” בהגדרות ההתקנה של Obtainium+. לאחר אישור מראש, היישומים שלך יתעדכנו בשקט ברקע בלי צורך בשורש או ב־Shizuku!",
+  "shizukuDirectIpc": "‏Shizuku+ Direct IPC",
+  "shizukuNotInstalled": "לא הותקן לא Shizuku+ ולא Shizuku",
+  "shizukuNotInstalledDesc": "יש להתקין Shizuku+,‏ Shizuku או Dhizuku להתקנות מורשות",
+  "shizukuPermissionDenied": "ההרשאה ל־Shizuku נדחתה. נא לאשר את Obtainium+ במנהל.",
+  "shizukuPlusDetected": "זוהה Shizuku+",
+  "shizukuPlusServiceRunning": "שירות Shizuku+ פועל",
+  "shizukuPlusServiceStopped": "שירות Shizuku+ אינו פעיל. יש להפעיל אותו דרך Root או ADB loopback."
+}

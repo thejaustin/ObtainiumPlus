@@ -1,0 +1,11 @@
+{
+  "anonymousLoginTokensAAS": "Claves anónimas para el acceso a Google Play Store",
+  "dispenserBanWarningChannel": "Advertencias de seguridad de conexión",
+  "dispenserBanWarningDescription": "Advierte antes de realizar un gran número de actualizaciones de Google Play para proteger tu dirección IP de bloqueos temporales.",
+  "dispenserBanWarningMessage": "Obtainium+ está a punto de comprobar {} aplicaciones de Google Play para actualizaciones. Hacer esto demasiado rápido o todo a la vez puede hacer que Google bloquee temporalmente tu dirección de internet (IP).",
+  "dispenserBanWarningTitle": "Advertencia de seguridad de conexión",
+  "plusEnableBanWarnings": "Protección contra bloqueos de Play Store",
+  "plusEnableBanWarningsDescription": "Avisar antes de enviar un gran número de comprobaciones de actualización a Google Play para proteger tu dirección IP de bloqueos temporales.",
+  "reorder": "Reordenar",
+  "viewTalkerLogs": "Ver registros del sistema y de red"
+}

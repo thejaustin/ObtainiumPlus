@@ -106,6 +106,7 @@ flutter:
 
   assets:
     - assets/translations/
+    - assets/translations/machine/
     - assets/graphics/icon_small.png
     - assets/ca-certs/
 

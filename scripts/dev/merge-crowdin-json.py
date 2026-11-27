@@ -43,18 +43,31 @@ def main():
             continue
         before = json.load(open(before_path, encoding="utf-8"))
         downloaded = json.load(open(path, encoding="utf-8"))
+        machine_path = os.path.join(out_dir, "machine", name)
+        machine = {}
+        if os.path.exists(machine_path):
+            machine = json.load(open(machine_path, encoding="utf-8"))
         merged = {}
-        for key, source in en.items():
+        # Keep the repo's key order (new keys go last) so a no-op download is a no-op diff.
+        order = [k for k in before if k in en] + [k for k in en if k not in before]
+        for key in order:
+            source = en[key]
             if isinstance(source, dict):
                 merged[key] = before.get(key) if isinstance(before.get(key), dict) else source
                 continue
             new = downloaded.get(key)
-            if isinstance(new, str) and new.strip() and new != source:
+            # Crowdin still holds the AI-written seed strings as translations;
+            # they live in machine/ and must not come back as human text.
+            if isinstance(new, str) and new.strip() and new != source and new != machine.get(key):
                 merged[key] = new
                 taken += new != before.get(key)
             else:
                 merged[key] = before.get(key, source)
                 kept += 1
+        if merged == before:
+            with open(before_path, encoding="utf-8") as src, open(path, "w", encoding="utf-8") as f:
+                f.write(src.read())  # unchanged: restore the exact bytes
+            continue
         with open(path, "w", encoding="utf-8") as f:
             json.dump(merged, f, ensure_ascii=False, indent=indent_of(before_path))
             f.write("\n")

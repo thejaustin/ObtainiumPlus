@@ -1,0 +1,21 @@
+{
+  "appsFromSourceAreTrackOnly": "এই সোর্সের অ্যাপগুলো 'track-only'।",
+  "authorName": "লেখক/নাম",
+  "batteryOptimizationNote": "মনে রাখবেন, আপনি যদি Obtainium সেটিংসে \"foreground service\"-এ পরিবর্তন করেন এবং/অথবা আপনার OS সেটিংসে Obtainium-এর জন্য ব্যাটারি অপ্টিমাইজেশন বন্ধ করেন, তবে ব্যাকগ্রাউন্ড ডাউনলোড আরও নির্ভরযোগ্যভাবে কাজ করতে পারে।",
+  "byX": "{}-এর দ্বারা",
+  "checkOnStart": "অ্যাপ চালুর সময় আপডেটের খোঁজ করুন",
+  "checkUpdateOnDetailPage": "অ্যাপের বিস্তারিত পেজ খোলার সময় আপডেটের খোঁজ করুন",
+  "dontShowTrackOnlyWarnings": "'track-only' সতর্কতা দেখাবেন না",
+  "enableCertificatePinning": "সারтификаকেট পিনিং সক্রিয় করুন",
+  "filterAPKsByRegEx": "রেগুলার এক্সপ্রেশন দিয়ে APK ফিল্টার করুন",
+  "insecureRedirect": "HTTPS থেকে অনিরাপদ HTTP-তে রিডাইরেক্ট অনুসরণ করতে অস্বীকৃতি জানানো হয়েছে। প্রতিটি অ্যাপের জন্য নির্দিষ্ট 'Allow insecure connections' সেটিংসের মাধ্যমে এটির অনুমতি দেওয়া যেতে পারে।",
+  "markXTrackOnlyAsUpdated": "{}\n(শুধুমাত্র ট্র্যাক)\nআপডেট হয়েছে হিসেবে চিহ্নিত করুন",
+  "moveNonInstalledAppsToBottom": "ইনস্টল না করা অ্যাপগুলো অ্যাপস ভিউয়ের নিচে নিয়ে যান",
+  "nameAuthor": "নাম/লেখক",
+  "rustoreAggregatedAppNoApk": "RuStore এই অ্যাপটি বহিরাগত সোর্স থেকে তালিকাভুক্ত করে এবং এর APK হোস্ট করে না",
+  "trackOnly": "শুধুমাত্র ট্র্যাক",
+  "trackOnlyInBrackets": "(শুধুমাত্র ট্র্যাক)",
+  "trackOnlyUpdatesAvailable": "শুধুমাত্র ট্র্যাক করা অ্যাপের আপডেট উপলব্ধ",
+  "xIsTrackOnly": "{} শুধুমাত্র ট্র্যাক করার জন্য",
+  "youPickedTrackOnly": "আপনি 'শুধুমাত্র ট্র্যাক' বিকল্পটি নির্বাচন করেছেন।"
+}

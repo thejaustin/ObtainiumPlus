@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:obtainium/utils/human_first_asset_loader.dart';
 import 'package:obtainium/utils/safe_prefs.dart';
 import 'package:obtainium/utils/logger.dart';
 
@@ -564,6 +565,16 @@ class SettingsProvider with ChangeNotifier {
         .isNotEmpty) {
       prefs?.setString('forcedLocale', fl.toLanguageTag());
     }
+    notifyListeners();
+  }
+
+  /// Use AI-written translations where no human translation exists yet.
+  /// Read by HumanFirstAssetLoader straight from SharedPreferences.
+  bool get useMachineTranslations =>
+      prefs?.safeBool(machineTranslationsPrefKey) ?? false;
+
+  set useMachineTranslations(bool value) {
+    prefs?.setBool(machineTranslationsPrefKey, value);
     notifyListeners();
   }
 

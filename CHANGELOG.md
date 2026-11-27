@@ -4,6 +4,9 @@ All notable changes to Obtainium+ are documented in this file.
 
 ## [Unreleased]
 
+### 🌐 Languages
+- **Human Translations First**: Where nobody has translated a string yet, the app now shows English instead of an AI-written translation. If you'd rather see a translated string than English, turn on Machine translations in Settings, next to Language (applies after restarting the app). Human translations always take priority over machine ones, and translators are credited in `docs/TRANSLATION_CREDITS.md`.
+
 ### ⚡ Update Checks
 - **Asks When Another Version Is Installed**: Before installing a build of an app that's already on your phone under another package name, Obtainium+ now asks instead of quietly adding a second copy. Examples are Shizuku+ and its drop-in "Shizuku" build, or an app's F-Droid and GitHub builds. You can replace the installed build (it's uninstalled only after the new one installs), keep the installed build and pick its file from the release, or keep both. "Don't ask again" remembers Keep both for that app. Background updates no longer install a second copy without asking; they wait and tell you to choose. You can turn the question off or forget your choices in Settings → Updates & Install.
 - **Smoother Scrolling in the Apps List**: App rows no longer fade in again every time they scroll back into view (rows near the top could sit blank for up to a third of a second). The fade now plays once, when the list first opens. When an install finishes and an app moves in the list, its row moves with it instead of flashing in again, and the progress banner stays put in the short gap between one app's install and the next download instead of collapsing and reopening.

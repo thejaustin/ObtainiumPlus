@@ -2110,5 +2110,7 @@
   "themeShapesDesc": "Corner radius and shape style for cards, tiles and buttons",
   "updateCheckFrequency": "Update check frequency",
   "updateCheckFrequencyDescription": "How often apps are checked for updates in the background",
-  "changelogKindSpeed": "Speed"
+  "changelogKindSpeed": "Speed",
+  "machineTranslations": "Machine translations",
+  "machineTranslationsDesc": "Where no person has translated a string yet, show an AI-written translation instead of English. Human translations always take priority. Applies after restarting the app."
 }

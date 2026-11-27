@@ -4,6 +4,7 @@ import 'package:easy_localization/src/easy_localization_controller.dart';
 // ignore: implementation_imports
 import 'package:easy_localization/src/localization.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:obtainium/utils/human_first_asset_loader.dart';
 import 'package:obtainium/custom_errors.dart';
 import 'package:obtainium/main.dart';
 import 'package:obtainium/providers/settings_provider.dart';
@@ -19,7 +20,7 @@ class TranslationLoader {
       forceLocale: forceLocale,
       fallbackLocale: fallbackLocale,
       supportedLocales: supportedLocales.map((e) => e.key).toList(),
-      assetLoader: const RootBundleAssetLoader(),
+      assetLoader: const HumanFirstAssetLoader(),
       useOnlyLangCode: false,
       useFallbackTranslations: true,
       path: localeDir,
